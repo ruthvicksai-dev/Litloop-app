@@ -1,33 +1,67 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
+import { Colors } from "@/constants/theme";
+import { useAuth } from "@/context/AuthContext";
+import { Tabs, useRouter } from "expo-router";
+import { useEffect } from "react";
+import { Text } from "react-native";
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+export default function TabsLayout() {
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  useEffect(() => {
+    if (isLoading) return;
+    if (!user) {
+      router.replace("/(auth)/sign-in");
+    } else if (user.role === "admin") {
+      router.replace("/(admin)/dashboard");
+    }
+  }, [user, isLoading]);
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
+        tabBarActiveTintColor: Colors.primary,
+        tabBarInactiveTintColor: Colors.textLight,
+        tabBarStyle: {
+          backgroundColor: Colors.white,
+          borderTopColor: Colors.border,
+          paddingBottom: 8,
+          paddingTop: 8,
+          height: 60,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: "600",
+        },
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: "Home",
+          tabBarIcon: () => <Text style={{ fontSize: 20 }}>📚</Text>,
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="my-rentals"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: "My Rentals",
+          tabBarIcon: () => <Text style={{ fontSize: 20 }}>📋</Text>,
+        }}
+      />
+      <Tabs.Screen
+        name="history"
+        options={{
+          title: "History",
+          tabBarIcon: () => <Text style={{ fontSize: 20 }}>📜</Text>,
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+          tabBarIcon: () => <Text style={{ fontSize: 20 }}>👤</Text>,
         }}
       />
     </Tabs>

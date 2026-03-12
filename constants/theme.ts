@@ -1,53 +1,61 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
-import { Platform } from 'react-native';
-
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
-
 export const Colors = {
-  light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
-  },
-  dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
-  },
+  primary: "#F97316",
+  primaryDark: "#EA580C",
+  primaryLight: "#FED7AA",
+  white: "#FFFFFF",
+  background: "#FFF7ED",
+  card: "#FFFFFF",
+  text: "#1C1917",
+  textSecondary: "#78716C",
+  textLight: "#A8A29E",
+  border: "#E7E5E4",
+  error: "#EF4444",
+  success: "#22C55E",
+  warning: "#F59E0B",
+  shadow: "#000000",
 };
 
-export const Fonts = Platform.select({
-  ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
-  },
-  default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
-  },
-  web: {
-    sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-    serif: "Georgia, 'Times New Roman', serif",
-    rounded: "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
-    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
-  },
-});
+export const Fonts = {
+  regular: { fontSize: 14, color: Colors.text },
+  medium: { fontSize: 16, color: Colors.text },
+  large: { fontSize: 18, color: Colors.text, fontWeight: "600" as const },
+  title: { fontSize: 22, color: Colors.text, fontWeight: "700" as const },
+  caption: { fontSize: 12, color: Colors.textSecondary },
+};
+
+export const Spacing = {
+  xs: 4,
+  sm: 8,
+  md: 16,
+  lg: 24,
+  xl: 32,
+};
+
+export const ZONES = [
+  "Hostel A",
+  "Hostel B",
+  "Engineering Block",
+  "Apartments",
+  "Library Block",
+  "Main Campus",
+];
+
+export const RENTAL_STATUS_LABELS: Record<string, string> = {
+  requested: "Requested",
+  delivery_scheduled: "Delivery Scheduled",
+  delivered: "Delivered",
+  pickup_scheduled: "Pickup Scheduled",
+  payment_pending: "Payment Pending",
+  paid: "Paid",
+  returned: "Returned",
+};
+
+export const STATUS_COLORS: Record<string, string> = {
+  requested: "#F59E0B",
+  delivery_scheduled: "#3B82F6",
+  delivered: "#8B5CF6",
+  pickup_scheduled: "#06B6D4",
+  payment_pending: "#F97316",
+  paid: "#22C55E",
+  returned: "#6B7280",
+};
