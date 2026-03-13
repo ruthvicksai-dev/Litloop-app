@@ -2,8 +2,9 @@ import CoverGalleryField from "@/components/books/CoverGalleryField";
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
 import { Colors, Spacing } from "@/constants/theme";
-import { useFadeSlideIn } from "@/hooks/useFadeSlideIn";
 import { useEditBookScreen } from "@/hooks/useEditBookScreen";
+import { useFadeSlideIn } from "@/hooks/useFadeSlideIn";
+import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
@@ -57,15 +58,39 @@ export default function EditBookScreen() {
         );
     }
 
+    if (book === null) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <View style={styles.header}>
+                    <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+                        <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+                    </TouchableOpacity>
+                    <Text style={styles.headerTitle}>Edit Book</Text>
+                    <View style={{ width: 40 }} />
+                </View>
+                <View style={[styles.center, { paddingHorizontal: 40 }]}>
+                    <Ionicons name="book-outline" size={60} color={Colors.textLight} style={{ marginBottom: 20 }} />
+                    <Text style={{ fontSize: 18, fontWeight: "700", color: Colors.text, marginBottom: 8 }}>
+                        Book not found
+                    </Text>
+                    <Text style={{ fontSize: 14, color: Colors.textSecondary, textAlign: "center", marginBottom: 24 }}>
+                        The book you are looking for doesn't exist or has been removed.
+                    </Text>
+                    <Button title="Go Back" onPress={() => router.back()} style={{ width: "100%" }} />
+                </View>
+            </SafeAreaView>
+        );
+    }
+
     return (
         <SafeAreaView style={styles.container}>
             <Animated.View style={[styles.header, { opacity: fadeAnim }]}>
-                <TouchableOpacity onPress={() => router.back()}>
-                    <Text style={styles.back}>â† Back</Text>
+                <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+                    <Ionicons name="arrow-back" size={24} color={Colors.primary} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Edit Book</Text>
                 <TouchableOpacity onPress={handleDelete} disabled={deleting}>
-                    <Text style={styles.deleteText}>Delete</Text>
+                    <Ionicons name="trash-outline" size={22} color={Colors.error} />
                 </TouchableOpacity>
             </Animated.View>
 
@@ -95,10 +120,10 @@ export default function EditBookScreen() {
                             onChangeText={setDescription}
                             multiline
                             numberOfLines={4}
-                            containerStyle={{ height: 120, marginBottom: Spacing.xl }}
+                            containerStyle={{ height: 95, marginBottom: Spacing.xs }}
                         />
                         <InputField
-                            label="Rent Per Day (â‚¹)"
+                            label="Rent Per Day ₹"
                             value={rentPerDay}
                             onChangeText={setRentPerDay}
                             keyboardType="number-pad"
@@ -145,6 +170,10 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
         paddingHorizontal: SCREEN_WIDTH * 0.06,
         paddingVertical: Spacing.md,
+    },
+    backBtn: {
+        padding: 4,
+        marginLeft: -4,
     },
     back: { fontSize: 16, color: Colors.primary, fontWeight: "600" },
     headerTitle: { fontSize: 18, fontWeight: "800", color: Colors.text },

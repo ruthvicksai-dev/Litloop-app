@@ -1,6 +1,14 @@
 import { Colors, RENTAL_STATUS_LABELS, STATUS_COLORS } from "@/constants/theme";
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+    Dimensions,
+    Image,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from "react-native";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -20,20 +28,61 @@ export default function AdminRentalCard({
     onMarkReturned,
 }: AdminRentalCardProps) {
     const statusColor = STATUS_COLORS[item.status] || Colors.textSecondary;
+    const coverUri = item.coverUrl || item.coverUrls?.[0] || null;
 
     return (
         <View style={styles.rentalCard}>
             <View style={styles.rentalTop}>
+                <View style={styles.coverWrap}>
+                    {coverUri ? (
+                        <Image
+                            source={{ uri: coverUri }}
+                            style={styles.cover}
+                        />
+                    ) : (
+                        <View style={[styles.cover, styles.coverPlaceholder]}>
+                            <Ionicons
+                                name="book-outline"
+                                size={SCREEN_WIDTH * 0.08}
+                                color={Colors.primary}
+                            />
+                        </View>
+                    )}
+                </View>
                 <View style={styles.rentalInfo}>
                     <Text style={styles.rentalTitle} numberOfLines={1}>
                         {item.book?.title || "Unknown"}
                     </Text>
-                    <Text style={styles.rentalUser}>
-                        ðŸ‘¤ {item.user?.name || "Unknown"} â€¢ {item.user?.phone}
-                    </Text>
-                    <Text style={styles.rentalLocation}>
-                        ðŸ“ {item.deliveryLocation?.area}, {item.deliveryLocation?.city}
-                    </Text>
+                    <View style={styles.subInfo}>
+                        <Ionicons
+                            name="person-outline"
+                            size={14}
+                            color={Colors.textSecondary}
+                        />
+                        <Text style={styles.rentalUser}>
+                            {item.user?.name || "Unknown"}
+                        </Text>
+                    </View>
+
+                    <View style={styles.subInfo}>
+                        <Ionicons
+                            name="call-outline"
+                            size={14}
+                            color={Colors.textSecondary}
+                        />
+                        <Text style={styles.rentalUser}>{item.user?.phone}</Text>
+                    </View>
+
+                    <View style={styles.subInfo}>
+                        <Ionicons
+                            name="location-outline"
+                            size={14}
+                            color={Colors.textSecondary}
+                        />
+                        <Text style={styles.rentalLocation}>
+                            {item.deliveryLocation?.area}, {item.deliveryLocation?.city}
+                        </Text>
+                    </View>
                 </View>
                 <View style={[styles.statusBadge, { backgroundColor: statusColor + "18" }]}>
                     <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
@@ -47,35 +96,39 @@ export default function AdminRentalCard({
                 item.status === "delivery_scheduled" ||
                 item.status === "paid" ||
                 item.status === "payment_pending") && (
-                <View style={styles.actionRow}>
-                    {item.status === "requested" ? (
-                        <TouchableOpacity style={styles.actionBtn} onPress={onScheduleDelivery}>
-                            <Text style={styles.actionBtnText}>ðŸ“… Schedule Delivery</Text>
-                        </TouchableOpacity>
-                    ) : null}
-                    {item.status === "delivery_scheduled" ? (
-                        <TouchableOpacity
-                            style={[styles.actionBtn, styles.successBtn]}
-                            onPress={onMarkDelivered}
-                        >
-                            <Text style={styles.actionBtnText}>âœ… Mark Delivered</Text>
-                        </TouchableOpacity>
-                    ) : null}
-                    {item.status === "paid" ? (
-                        <TouchableOpacity
-                            style={[styles.actionBtn, styles.successBtn]}
-                            onPress={onMarkReturned}
-                        >
-                            <Text style={styles.actionBtnText}>ðŸ“¦ Mark Returned</Text>
-                        </TouchableOpacity>
-                    ) : null}
-                    {item.status === "payment_pending" ? (
-                        <TouchableOpacity style={styles.actionBtn} onPress={onVerifyPayment}>
-                            <Text style={styles.actionBtnText}>ðŸ’³ Verify Payment</Text>
-                        </TouchableOpacity>
-                    ) : null}
-                </View>
-            )}
+                    <View style={styles.actionRow}>
+                        {item.status === "requested" ? (
+                            <TouchableOpacity style={styles.actionBtn} onPress={onScheduleDelivery}>
+                                <Ionicons name="calendar-outline" size={14} color={Colors.white} style={{ marginRight: 4 }} />
+                                <Text style={styles.actionBtnText}>Schedule Delivery</Text>
+                            </TouchableOpacity>
+                        ) : null}
+                        {item.status === "delivery_scheduled" ? (
+                            <TouchableOpacity
+                                style={[styles.actionBtn, styles.successBtn]}
+                                onPress={onMarkDelivered}
+                            >
+                                <Ionicons name="checkmark-done" size={14} color={Colors.white} style={{ marginRight: 4 }} />
+                                <Text style={styles.actionBtnText}>Mark Delivered</Text>
+                            </TouchableOpacity>
+                        ) : null}
+                        {item.status === "paid" ? (
+                            <TouchableOpacity
+                                style={[styles.actionBtn, styles.successBtn]}
+                                onPress={onMarkReturned}
+                            >
+                                <Ionicons name="archive-outline" size={14} color={Colors.white} style={{ marginRight: 4 }} />
+                                <Text style={styles.actionBtnText}>Mark Returned</Text>
+                            </TouchableOpacity>
+                        ) : null}
+                        {item.status === "payment_pending" ? (
+                            <TouchableOpacity style={styles.actionBtn} onPress={onVerifyPayment}>
+                                <Ionicons name="card-outline" size={14} color={Colors.white} style={{ marginRight: 4 }} />
+                                <Text style={styles.actionBtnText}>Verify Payment</Text>
+                            </TouchableOpacity>
+                        ) : null}
+                    </View>
+                )}
         </View>
     );
 }
@@ -95,8 +148,23 @@ const styles = StyleSheet.create({
     },
     rentalTop: {
         flexDirection: "row",
-        justifyContent: "space-between",
         alignItems: "flex-start",
+    },
+    coverWrap: {
+        marginRight: 12,
+    },
+    cover: {
+        width: 58,
+        height: 82,
+        borderRadius: 10,
+        backgroundColor: Colors.border,
+    },
+    coverPlaceholder: {
+        backgroundColor: Colors.background,
+        borderWidth: 1,
+        borderColor: Colors.border,
+        alignItems: "center",
+        justifyContent: "center",
     },
     rentalInfo: {
         flex: 1,
@@ -108,10 +176,15 @@ const styles = StyleSheet.create({
         color: Colors.text,
         marginBottom: 4,
     },
+    subInfo: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+        marginBottom: 2,
+    },
     rentalUser: {
         fontSize: 12,
         color: Colors.textSecondary,
-        marginBottom: 2,
     },
     rentalLocation: {
         fontSize: 12,
@@ -148,6 +221,8 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         borderRadius: 10,
         alignItems: "center",
+        flexDirection: "row",
+        justifyContent: "center",
     },
     successBtn: {
         backgroundColor: "#10B981",

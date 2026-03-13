@@ -1,9 +1,10 @@
-import BookCard from "@/components/ui/BookCard";
 import SearchInput from "@/components/shared/SearchInput";
+import BookCard from "@/components/ui/BookCard";
 import { Colors, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { useHomeEntrance } from "@/hooks/useHomeEntrance";
 import { useHomeScreen } from "@/hooks/useHomeScreen";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
@@ -45,7 +46,7 @@ export default function HomeScreen() {
         ]}
       >
         <Text style={styles.greeting}>
-          Hello, {user?.name?.split(" ")[0] || "Reader"} ðŸ‘‹
+          Hello, {user?.name?.split(" ")[0] || "Reader"}
         </Text>
         <Text style={styles.title}>Discover Books</Text>
       </Animated.View>
@@ -93,7 +94,7 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyIcon}>ðŸ“–</Text>
+            <Ionicons name="book-outline" size={SCREEN_WIDTH * 0.15} color={Colors.textLight} style={{ marginBottom: Spacing.md }} />
             <Text style={styles.emptyText}>No books available yet</Text>
           </View>
         }

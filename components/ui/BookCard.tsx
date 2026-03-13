@@ -1,4 +1,5 @@
 import { Colors, Spacing } from "@/constants/theme";
+import { Ionicons } from "@expo/vector-icons";
 import React, { useRef } from "react";
 import {
     Animated,
@@ -63,7 +64,7 @@ export default function BookCard({
                         />
                     ) : (
                         <View style={[styles.cover, styles.placeholder]}>
-                            <Text style={styles.placeholderText}>📖</Text>
+                            <Ionicons name="book-outline" size={32} color={Colors.primary} />
                         </View>
                     )}
                     <View style={styles.info}>

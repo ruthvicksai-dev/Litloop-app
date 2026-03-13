@@ -10,6 +10,27 @@ function daysBetween(dateStr1: string, dateStr2: string): number {
     return Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
 }
 
+async function getBookWithCoverUrls(ctx: any, bookId: any) {
+    const book = await ctx.db.get(bookId);
+    if (!book) return null;
+
+    let coverUrl: string | null = null;
+    const coverUrls: string[] = [];
+
+    if (book.coverImages && book.coverImages.length > 0) {
+        for (const imageId of book.coverImages) {
+            const url = await ctx.storage.getUrl(imageId);
+            if (url) coverUrls.push(url);
+        }
+        if (coverUrls.length > 0) coverUrl = coverUrls[0];
+    } else if (book.coverImage) {
+        coverUrl = await ctx.storage.getUrl(book.coverImage);
+        if (coverUrl) coverUrls.push(coverUrl);
+    }
+
+    return { ...book, coverUrl, coverUrls };
+}
+
 export const requestRental = mutation({
     args: {
         userId: v.id("users"),
@@ -201,14 +222,12 @@ export const getUserRentals = query({
         // Attach book info
         const rentalsWithBooks = await Promise.all(
             activeRentals.map(async (rental) => {
-                const book = await ctx.db.get(rental.bookId);
-                let coverUrl: string | null = null;
-                if (book?.coverImage) {
-                    coverUrl = await ctx.storage.getUrl(book.coverImage);
-                }
+                const book = await getBookWithCoverUrls(ctx, rental.bookId);
                 return {
                     ...rental,
-                    book: book ? { ...book, coverUrl } : null,
+                    coverUrl: book?.coverUrl ?? null,
+                    coverUrls: book?.coverUrls ?? [],
+                    book,
                 };
             })
         );
@@ -232,14 +251,12 @@ export const getRentalHistory = query({
 
         const rentalsWithBooks = await Promise.all(
             completed.map(async (rental) => {
-                const book = await ctx.db.get(rental.bookId);
-                let coverUrl: string | null = null;
-                if (book?.coverImage) {
-                    coverUrl = await ctx.storage.getUrl(book.coverImage);
-                }
+                const book = await getBookWithCoverUrls(ctx, rental.bookId);
                 return {
                     ...rental,
-                    book: book ? { ...book, coverUrl } : null,
+                    coverUrl: book?.coverUrl ?? null,
+                    coverUrls: book?.coverUrls ?? [],
+                    book,
                 };
             })
         );
@@ -255,15 +272,13 @@ export const getAllRentals = query({
 
         const rentalsWithDetails = await Promise.all(
             rentals.map(async (rental) => {
-                const book = await ctx.db.get(rental.bookId);
+                const book = await getBookWithCoverUrls(ctx, rental.bookId);
                 const user = await ctx.db.get(rental.userId);
-                let coverUrl: string | null = null;
-                if (book?.coverImage) {
-                    coverUrl = await ctx.storage.getUrl(book.coverImage);
-                }
                 return {
                     ...rental,
-                    book: book ? { ...book, coverUrl } : null,
+                    coverUrl: book?.coverUrl ?? null,
+                    coverUrls: book?.coverUrls ?? [],
+                    book,
                     user: user
                         ? { name: user.name, email: user.email, phone: user.phone }
                         : null,
@@ -281,12 +296,8 @@ export const getRental = query({
         const rental = await ctx.db.get(args.rentalId);
         if (!rental) throw new Error("Rental not found.");
 
-        const book = await ctx.db.get(rental.bookId);
+        const book = await getBookWithCoverUrls(ctx, rental.bookId);
         const user = await ctx.db.get(rental.userId);
-        let coverUrl: string | null = null;
-        if (book?.coverImage) {
-            coverUrl = await ctx.storage.getUrl(book.coverImage);
-        }
         let screenshotUrl: string | null = null;
         if (rental.paymentScreenshot) {
             screenshotUrl = await ctx.storage.getUrl(rental.paymentScreenshot);
@@ -294,7 +305,9 @@ export const getRental = query({
 
         return {
             ...rental,
-            book: book ? { ...book, coverUrl } : null,
+            coverUrl: book?.coverUrl ?? null,
+            coverUrls: book?.coverUrls ?? [],
+            book,
             user: user
                 ? { name: user.name, email: user.email, phone: user.phone }
                 : null,

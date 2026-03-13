@@ -3,6 +3,7 @@ import { Colors, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { useFadeSlideScaleIn } from "@/hooks/useFadeSlideScaleIn";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
@@ -88,7 +89,8 @@ export default function ProfileScreen() {
                         style={styles.adminLink}
                         onPress={() => router.push("/(admin)/dashboard")}
                     >
-                        <Text style={styles.adminLinkText}>ðŸ›  Go to Admin Dashboard</Text>
+                        <Ionicons name="settings-outline" size={20} color={Colors.white} style={{ marginRight: 8 }} />
+                        <Text style={styles.adminLinkText}>Go to Admin Dashboard</Text>
                     </TouchableOpacity>
                 </Animated.View>
             ) : null}
@@ -180,6 +182,8 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         paddingVertical: 14,
         alignItems: "center",
+        flexDirection: "row",
+        justifyContent: "center",
     },
     adminLinkText: {
         color: Colors.white,

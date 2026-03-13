@@ -1,12 +1,47 @@
 import { useState } from "react";
 import * as ImagePicker from "expo-image-picker";
 
+const MAX_COVERS = 2;
+const MIN_HD_WIDTH = 400;
+const SERP_API_KEY = process.env.EXPO_PUBLIC_SERPAPI_KEY;
+
 type UseBookCoverManagerOptions = {
     title: string;
     author: string;
     initialCoverUris?: string[];
     onError: (message: string) => void;
     onSuccess: (message: string) => void;
+};
+
+type GoogleBooksItem = {
+    volumeInfo?: {
+        industryIdentifiers?: Array<{
+            type: string;
+            identifier: string;
+        }>;
+        imageLinks?: {
+            extraLarge?: string;
+            large?: string;
+            medium?: string;
+            small?: string;
+            thumbnail?: string;
+            smallThumbnail?: string;
+        };
+    };
+};
+
+type GoogleBooksResponse = {
+    items?: GoogleBooksItem[];
+};
+
+type SerpImageResult = {
+    original?: string;
+    original_width?: number;
+    width?: number;
+};
+
+type SerpApiResponse = {
+    images_results?: SerpImageResult[];
 };
 
 export function useBookCoverManager({
@@ -20,6 +55,121 @@ export function useBookCoverManager({
     const [isFetchingCover, setIsFetchingCover] = useState(false);
     const [newImagesSelected, setNewImagesSelected] = useState(false);
 
+    const normalizeGoogleCoverUrl = (url: string) => {
+        const secureUrl = url.replace(/^http:\/\//i, "https://");
+        const withoutEdge = secureUrl.replace(/([?&])edge=curl/gi, "");
+
+        if (/([?&])zoom=\d+/i.test(withoutEdge)) {
+            return withoutEdge.replace(/([?&])zoom=\d+/i, "$1zoom=5");
+        }
+
+        return `${withoutEdge}${withoutEdge.includes("?") ? "&" : "?"}zoom=5`;
+    };
+
+    const toLimitedUniqueUrls = (urls: string[]) => {
+        return Array.from(new Set(urls.filter(Boolean))).slice(0, MAX_COVERS);
+    };
+
+    const appendCandidates = (existing: string[], incoming: string[]) => {
+        return toLimitedUniqueUrls([...existing, ...incoming]);
+    };
+
+    const fetchGoogleBooksData = async () => {
+        const query = `intitle:${encodeURIComponent(title.trim())}`;
+        const authorQuery = author.trim()
+            ? `+inauthor:${encodeURIComponent(author.trim())}`
+            : "";
+        const url = `https://www.googleapis.com/books/v1/volumes?q=${query}${authorQuery}`;
+
+        const response = await fetch(url);
+        return (await response.json()) as GoogleBooksResponse;
+    };
+
+    const getIsbnFromBookInfo = (bookInfo?: GoogleBooksItem["volumeInfo"]) => {
+        if (!bookInfo?.industryIdentifiers) {
+            return "";
+        }
+
+        const isbn13 = bookInfo.industryIdentifiers.find(
+            (identifier) => identifier.type === "ISBN_13"
+        );
+        const isbn10 = bookInfo.industryIdentifiers.find(
+            (identifier) => identifier.type === "ISBN_10"
+        );
+
+        return isbn13?.identifier || isbn10?.identifier || "";
+    };
+
+    const getGoogleCoverCandidates = (
+        bookInfo?: GoogleBooksItem["volumeInfo"]
+    ) => {
+        if (!bookInfo?.imageLinks) {
+            return [];
+        }
+
+        return [
+            bookInfo.imageLinks.extraLarge,
+            bookInfo.imageLinks.large,
+            bookInfo.imageLinks.medium,
+        ]
+            .filter(Boolean)
+            .map((curr) => normalizeGoogleCoverUrl(curr as string));
+    };
+
+    const fetchOpenLibraryCovers = async (isbn: string) => {
+        if (!isbn) {
+            return [];
+        }
+
+        const largeCoverUrl = `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg?default=false`;
+
+        try {
+            const response = await fetch(largeCoverUrl);
+            if (response.ok) {
+                return [largeCoverUrl.replace("?default=false", "")];
+            }
+        } catch (error) {
+            console.log("OpenLibrary cover fetch skipped", error);
+        }
+
+        return [];
+    };
+
+    const fetchHdSearchResults = async () => {
+        if (!SERP_API_KEY) {
+            return [];
+        }
+
+        const query = `${title.trim()} ${author.trim()} book cover`.trim();
+        if (!query) {
+            return [];
+        }
+
+        try {
+            const params = new URLSearchParams({
+                engine: "google_images",
+                q: query,
+                api_key: SERP_API_KEY,
+                num: "10",
+                safe: "active",
+            });
+            const response = await fetch(`https://serpapi.com/search.json?${params.toString()}`);
+            const data = (await response.json()) as SerpApiResponse;
+
+            const urls = (data.images_results || [])
+                .filter((result) => {
+                    const width = result.original_width || result.width || 0;
+                    return Boolean(result.original) && width > MIN_HD_WIDTH;
+                })
+                .map((result) => result.original as string);
+
+            return toLimitedUniqueUrls(urls);
+        } catch (error) {
+            console.log("HD image search fallback skipped", error);
+            return [];
+        }
+    };
+
     const fetchCover = async () => {
         if (!title.trim()) {
             onError("Please enter a title to fetch cover.");
@@ -28,67 +178,45 @@ export function useBookCoverManager({
 
         setIsFetchingCover(true);
         try {
-            const query = `intitle:${encodeURIComponent(title.trim())}`;
-            const authorQuery = author.trim()
-                ? `+inauthor:${encodeURIComponent(author.trim())}`
-                : "";
-            const url = `https://www.googleapis.com/books/v1/volumes?q=${query}${authorQuery}`;
+            let fetchedUrls: string[] = [];
+            const data = await fetchGoogleBooksData();
+            const items = data.items || [];
 
-            const response = await fetch(url);
-            const data = await response.json();
+            for (const item of items) {
+                const bookInfo = item.volumeInfo;
 
-            if (data.items && data.items.length > 0) {
-                const bookInfo = data.items[0].volumeInfo;
+                fetchedUrls = appendCandidates(
+                    fetchedUrls,
+                    getGoogleCoverCandidates(bookInfo)
+                );
 
-                let isbn = "";
-                if (bookInfo.industryIdentifiers) {
-                    const isbn13 = bookInfo.industryIdentifiers.find(
-                        (identifier: { type: string; identifier: string }) =>
-                            identifier.type === "ISBN_13"
-                    );
-                    const isbn10 = bookInfo.industryIdentifiers.find(
-                        (identifier: { type: string; identifier: string }) =>
-                            identifier.type === "ISBN_10"
-                    );
-                    isbn = isbn13?.identifier || isbn10?.identifier || "";
+                if (fetchedUrls.length >= MAX_COVERS) {
+                    break;
                 }
 
-                let urls: string[] = [];
-                let hasHDCovers = false;
+                const isbn = getIsbnFromBookInfo(bookInfo);
+                fetchedUrls = appendCandidates(
+                    fetchedUrls,
+                    await fetchOpenLibraryCovers(isbn)
+                );
 
-                if (isbn) {
-                    const testUrl = `https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg?default=false`;
-                    try {
-                        const res = await fetch(testUrl);
-                        if (res.ok) {
-                            urls = [
-                                `https://covers.openlibrary.org/b/isbn/${isbn}-S.jpg`,
-                                `https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg`,
-                                `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg`,
-                            ];
-                            hasHDCovers = true;
-                        }
-                    } catch (error) {
-                        console.log("OpenLibrary cover fetch skipped", error);
-                    }
+                if (fetchedUrls.length >= MAX_COVERS) {
+                    break;
                 }
+            }
 
-                if (!hasHDCovers && bookInfo?.imageLinks) {
-                    let thumbUrl =
-                        bookInfo.imageLinks.thumbnail ||
-                        bookInfo.imageLinks.smallThumbnail;
-                    if (thumbUrl) {
-                        thumbUrl = thumbUrl.replace(/^http:\/\//i, "https://");
-                        urls = [thumbUrl];
-                    }
-                }
+            if (fetchedUrls.length < MAX_COVERS) {
+                fetchedUrls = appendCandidates(
+                    fetchedUrls,
+                    await fetchHdSearchResults()
+                );
+            }
 
-                if (urls.length > 0) {
-                    setCoverUris(urls);
-                    setNewImagesSelected(true);
-                    onSuccess("Book cover(s) fetched successfully!");
-                    return;
-                }
+            if (fetchedUrls.length > 0) {
+                setCoverUris(fetchedUrls);
+                setNewImagesSelected(true);
+                onSuccess("Book cover(s) fetched successfully!");
+                return;
             }
 
             onError("No cover found. Please upload manually.");
@@ -103,11 +231,14 @@ export function useBookCoverManager({
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsMultipleSelection: true,
-            quality: 0.8,
+            quality: 1,
+            selectionLimit: MAX_COVERS,
         });
 
         if (!result.canceled && result.assets.length > 0) {
-            setCoverUris(result.assets.map((asset) => asset.uri));
+            setCoverUris(
+                toLimitedUniqueUrls(result.assets.map((asset) => asset.uri))
+            );
             setNewImagesSelected(true);
         }
     };

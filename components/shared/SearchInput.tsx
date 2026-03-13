@@ -1,6 +1,7 @@
 import { Colors, Spacing } from "@/constants/theme";
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Dimensions, StyleProp, StyleSheet, Text, TextInput, TextStyle, View, ViewStyle } from "react-native";
+import { Dimensions, StyleProp, StyleSheet, TextInput, TextStyle, View, ViewStyle } from "react-native";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -19,11 +20,10 @@ export default function SearchInput({
     placeholder,
     containerStyle,
     inputStyle,
-    icon,
 }: SearchInputProps) {
     return (
         <View style={[styles.container, containerStyle]}>
-            {icon ? <Text style={styles.icon}>{icon}</Text> : null}
+            <Ionicons name="search" size={18} color={Colors.textLight} />
             <TextInput
                 style={[styles.input, inputStyle]}
                 placeholder={placeholder}

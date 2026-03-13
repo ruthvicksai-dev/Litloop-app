@@ -5,6 +5,7 @@ import AdminStatusFilters from "@/components/admin/AdminStatusFilters";
 import { Colors, Spacing } from "@/constants/theme";
 import { useAdminDashboard } from "@/hooks/useAdminDashboard";
 import { useFadeSlideIn } from "@/hooks/useFadeSlideIn";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
@@ -66,14 +67,14 @@ export default function AdminDashboard() {
                                 style={styles.quickAction}
                                 onPress={() => router.push("/(admin)/verify-payment")}
                             >
-                                <Text style={styles.quickActionIcon}>ðŸ’³</Text>
+                                <Ionicons name="card" size={20} color={Colors.primary} />
                                 <Text style={styles.quickActionText}>Verify Payments</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.quickAction}
                                 onPress={() => router.push("/(admin)/books")}
                             >
-                                <Text style={styles.quickActionIcon}>ðŸ“š</Text>
+                                <Ionicons name="book" size={20} color={Colors.primary} />
                                 <Text style={styles.quickActionText}>View Books</Text>
                             </TouchableOpacity>
                         </View>
@@ -89,7 +90,8 @@ export default function AdminDashboard() {
                 }
                 renderSectionHeader={({ section }) => (
                     <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>ðŸ“ {section.title}</Text>
+                        <Ionicons name="location" size={18} color={Colors.primary} />
+                        <Text style={styles.sectionTitle}>{section.title}</Text>
                         <View style={styles.sectionBadge}>
                             <Text style={styles.sectionCount}>{section.data.length}</Text>
                         </View>
@@ -111,7 +113,7 @@ export default function AdminDashboard() {
                 contentContainerStyle={styles.list}
                 ListEmptyComponent={
                     <View style={styles.empty}>
-                        <Text style={styles.emptyIcon}>ðŸ“‹</Text>
+                        <Ionicons name="clipboard-outline" size={SCREEN_WIDTH * 0.12} color={Colors.textLight} style={{ marginBottom: Spacing.md }} />
                         <Text style={styles.emptyText}>No rentals found</Text>
                     </View>
                 }

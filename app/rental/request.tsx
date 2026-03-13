@@ -3,6 +3,7 @@ import InputField from "@/components/ui/InputField";
 import { Colors, Spacing, ZONES } from "@/constants/theme";
 import { useFadeSlideIn } from "@/hooks/useFadeSlideIn";
 import { useRequestRentalScreen } from "@/hooks/useRequestRentalScreen";
+import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
@@ -52,8 +53,8 @@ export default function RequestRentalScreen() {
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
                 >
-                    <TouchableOpacity onPress={() => router.back()}>
-                        <Text style={styles.backText}>â† Back</Text>
+                    <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+                        <Ionicons name="arrow-back" size={24} color={Colors.primary} />
                     </TouchableOpacity>
 
                     <Animated.View
@@ -65,7 +66,7 @@ export default function RequestRentalScreen() {
                         <Text style={styles.title}>Request Rental</Text>
                         {book ? (
                             <Text style={styles.bookInfo}>
-                                {book.title} â€¢ â‚¹{book.rentPerDay}/day
+                                {book.title}  {"\u20B9"}{book.rentPerDay}/day
                             </Text>
                         ) : null}
 
@@ -145,6 +146,12 @@ const styles = StyleSheet.create({
         paddingHorizontal: SCREEN_WIDTH * 0.06,
         paddingTop: SCREEN_HEIGHT * 0.02,
         paddingBottom: SCREEN_HEIGHT * 0.04,
+    },
+    backBtn: {
+        marginBottom: Spacing.md,
+        alignSelf: "flex-start",
+        padding: 4,
+        marginLeft: -4,
     },
     backText: {
         fontSize: 16,

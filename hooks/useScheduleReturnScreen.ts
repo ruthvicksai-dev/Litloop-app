@@ -5,6 +5,8 @@ import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 
+const TIME_PATTERN = /^(0?[1-9]|1[0-2]):[0-5]\d (AM|PM)$/;
+
 export function useScheduleReturnScreen(rentalId: string) {
     const rental = useQuery(api.rentals.getRental, {
         rentalId: rentalId as Id<"rentals">,
@@ -46,6 +48,11 @@ export function useScheduleReturnScreen(rentalId: string) {
 
         if (!/^\d{4}-\d{2}-\d{2}$/.test(pickupDate)) {
             showToast("Date should be in YYYY-MM-DD format.", "error");
+            return;
+        }
+
+        if (!TIME_PATTERN.test(pickupTime)) {
+            showToast("Please select a valid time.", "error");
             return;
         }
 

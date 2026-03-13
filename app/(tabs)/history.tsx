@@ -3,6 +3,7 @@ import { Colors, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";
 import { useFadeSlideIn } from "@/hooks/useFadeSlideIn";
+import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";
 import React from "react";
 import {
@@ -79,7 +80,7 @@ export default function RentalHistoryScreen() {
                 showsVerticalScrollIndicator={false}
                 ListEmptyComponent={
                     <View style={styles.empty}>
-                        <Text style={styles.emptyIcon}>ðŸ“œ</Text>
+                        <Ionicons name="time-outline" size={SCREEN_WIDTH * 0.12} color={Colors.textLight} style={{ marginBottom: Spacing.md }} />
                         <Text style={styles.emptyText}>No rental history yet</Text>
                     </View>
                 }

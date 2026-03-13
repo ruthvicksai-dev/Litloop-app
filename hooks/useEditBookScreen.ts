@@ -42,7 +42,9 @@ export function useEditBookScreen(bookId: string) {
     });
 
     useEffect(() => {
-        if (book && !initialized) {
+        if (book === undefined || book === null) return;
+
+        if (!initialized) {
             setTitle(book.title);
             setAuthor(book.author);
             setDescription(book.description);
@@ -52,8 +54,8 @@ export function useEditBookScreen(bookId: string) {
                 book.coverUrls && book.coverUrls.length > 0
                     ? book.coverUrls
                     : book.coverUrl
-                      ? [book.coverUrl]
-                      : []
+                        ? [book.coverUrl]
+                        : []
             );
             setNewImagesSelected(false);
             setInitialized(true);

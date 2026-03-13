@@ -1,7 +1,8 @@
 import { Colors } from "@/constants/theme";
 import { useTabsRouteGuard } from "@/hooks/useRouteGuards";
+import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
-import { Text } from "react-native";
+import React from "react";
 
 export default function TabsLayout() {
   useTabsRouteGuard();
@@ -29,28 +30,36 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: () => <Text style={{ fontSize: 20 }}>📚</Text>,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="book-outline" size={size} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="my-rentals"
         options={{
           title: "My Rentals",
-          tabBarIcon: () => <Text style={{ fontSize: 20 }}>📋</Text>,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="list-outline" size={size} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="history"
         options={{
           title: "History",
-          tabBarIcon: () => <Text style={{ fontSize: 20 }}>📜</Text>,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="time-outline" size={size} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",
-          tabBarIcon: () => <Text style={{ fontSize: 20 }}>👤</Text>,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person-outline" size={size} color={color} />
+          ),
         }}
       />
     </Tabs>

@@ -17,7 +17,7 @@ export function useBookDetailsScreen(bookId: string) {
             book?.coverUrls && book.coverUrls.length > 0
                 ? book.coverUrls
                 : book?.coverUrl
-                  ? [book.coverUrl]
-                  : [],
+                    ? [book.coverUrl]
+                    : [],
     };
 }

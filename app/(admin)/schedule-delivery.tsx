@@ -1,7 +1,9 @@
 import Button from "@/components/ui/Button";
-import InputField from "@/components/ui/InputField";
+import DatePickerField from "@/components/ui/DatePickerField";
+import TimePickerField from "@/components/ui/TimePickerField";
 import { Colors, Spacing } from "@/constants/theme";
 import { useScheduleDeliveryScreen } from "@/hooks/useScheduleDeliveryScreen";
+import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
@@ -27,6 +29,11 @@ export default function ScheduleDeliveryScreen() {
         handleSchedule,
     } = useScheduleDeliveryScreen(rentalId);
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const maxDeliveryDate = new Date(today);
+    maxDeliveryDate.setDate(today.getDate() + 9);
+
     if (!rental) {
         return (
             <View style={styles.center}>
@@ -41,38 +48,59 @@ export default function ScheduleDeliveryScreen() {
                 contentContainerStyle={styles.scroll}
                 keyboardShouldPersistTaps="handled"
             >
-                <TouchableOpacity onPress={() => router.back()}>
-                    <Text style={styles.backText}>â† Back</Text>
+                <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+                    <Ionicons name="arrow-back" size={24} color={Colors.primary} />
                 </TouchableOpacity>
 
                 <Text style={styles.title}>Schedule Delivery</Text>
 
-                <View style={styles.infoCard}>
-                    <Text style={styles.infoTitle}>{rental.book?.title}</Text>
-                    <Text style={styles.infoSub}>
-                        For: {rental.user?.name} â€¢ {rental.user?.phone}
-                    </Text>
-                    <Text style={styles.infoSub}>
-                        ðŸ“ {rental.zone} â€” {rental.deliveryLocation?.area}, {rental.deliveryLocation?.city}
-                    </Text>
-                    {rental.deliveryLocation?.landmark ? (
-                        <Text style={styles.infoSub}>
-                            Landmark: {rental.deliveryLocation.landmark}
-                        </Text>
-                    ) : null}
-                </View>
+<View style={styles.infoCard}>
+    <Text style={styles.infoTitle}>{rental.book?.title}</Text>
 
-                <InputField
+    {/* User name */}
+    <View style={styles.infoLine}>
+        <Ionicons name="person-outline" size={14} color={Colors.textSecondary} />
+        <Text style={styles.infoSub}>{rental.user?.name}</Text>
+    </View>
+
+    {/* Phone */}
+    <View style={styles.infoLine}>
+        <Ionicons name="call-outline" size={14} color={Colors.textSecondary} />
+        <Text style={styles.infoSub}>{rental.user?.phone}</Text>
+    </View>
+
+    {/* Location */}
+    <View style={styles.infoLine}>
+        <Ionicons name="location-outline" size={14} color={Colors.textSecondary} />
+        <Text style={styles.infoSub}>
+            {rental.zone} {rental.deliveryLocation?.area}, {rental.deliveryLocation?.city}
+        </Text>
+    </View>
+
+    {/* Landmark */}
+    {rental.deliveryLocation?.landmark ? (
+        <View style={styles.infoLine}>
+            <Ionicons name="navigate-outline" size={14} color={Colors.textSecondary} />
+            <Text style={styles.infoSub}>
+                {rental.deliveryLocation.landmark}
+            </Text>
+        </View>
+    ) : null}
+</View>
+
+                <DatePickerField
                     label="Delivery Date"
-                    placeholder="YYYY-MM-DD"
+                    placeholder="Select delivery date"
                     value={deliveryDate}
-                    onChangeText={setDeliveryDate}
+                    minimumDate={today}
+                    maximumDate={maxDeliveryDate}
+                    onChange={setDeliveryDate}
                 />
-                <InputField
+                <TimePickerField
                     label="Delivery Time"
-                    placeholder="e.g. 2:00 PM"
+                    placeholder="Select delivery time"
                     value={deliveryTime}
-                    onChangeText={setDeliveryTime}
+                    onChange={setDeliveryTime}
                 />
 
                 <Button
@@ -102,11 +130,23 @@ const styles = StyleSheet.create({
         paddingTop: Spacing.lg,
         paddingBottom: Spacing.xl,
     },
+    backBtn: {
+        marginBottom: Spacing.md,
+        alignSelf: "flex-start",
+        padding: 4,
+        marginLeft: -4,
+    },
     backText: {
         fontSize: 16,
         color: Colors.primary,
         fontWeight: "600",
         marginBottom: Spacing.md,
+    },
+    infoLine: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+        marginTop: 4,
     },
     title: {
         fontSize: 24,

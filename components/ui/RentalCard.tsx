@@ -4,6 +4,7 @@ import {
     Spacing,
     STATUS_COLORS,
 } from "@/constants/theme";
+import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
@@ -33,7 +34,6 @@ export default function RentalCard({
     const [currentDays, setCurrentDays] = useState(0);
     const [currentRent, setCurrentRent] = useState(0);
 
-    // Live rent timer for delivered status
     useEffect(() => {
         if (status === "delivered" && deliveryDate) {
             const updateTimer = () => {
@@ -46,7 +46,7 @@ export default function RentalCard({
             };
 
             updateTimer();
-            const interval = setInterval(updateTimer, 60000); // Update every minute
+            const interval = setInterval(updateTimer, 60000);
             return () => clearInterval(interval);
         }
     }, [status, deliveryDate, rentPerDay]);
@@ -80,33 +80,39 @@ export default function RentalCard({
                     <Text style={styles.detailLabel}>Zone</Text>
                     <Text style={styles.detailValue}>{zone}</Text>
                 </View>
-                {deliveryDate && (
+                {deliveryDate ? (
                     <View style={styles.detailRow}>
                         <Text style={styles.detailLabel}>Delivery</Text>
                         <Text style={styles.detailValue}>{deliveryDate}</Text>
                     </View>
-                )}
-                {pickupDate && (
+                ) : null}
+                {pickupDate ? (
                     <View style={styles.detailRow}>
                         <Text style={styles.detailLabel}>Pickup</Text>
                         <Text style={styles.detailValue}>{pickupDate}</Text>
                     </View>
-                )}
+                ) : null}
                 <View style={styles.detailRow}>
                     <Text style={styles.detailLabel}>Rate</Text>
                     <Text style={styles.detailValue}>₹{rentPerDay}/day</Text>
                 </View>
 
-                {/* Live timer for delivered books */}
-                {status === "delivered" && deliveryDate && (
+                {status === "delivered" && deliveryDate ? (
                     <View style={styles.timerContainer}>
-                        <Text style={styles.timerLabel}>📍 Live Timer</Text>
+                        <View style={styles.timerHeader}>
+                            <Ionicons
+                                name="stopwatch-outline"
+                                size={14}
+                                color={Colors.primaryDark}
+                            />
+                            <Text style={styles.timerLabel}>Live Timer</Text>
+                        </View>
                         <Text style={styles.timerDays}>{currentDays} days</Text>
                         <Text style={styles.timerRent}>₹{currentRent}</Text>
                     </View>
-                )}
+                ) : null}
 
-                {totalRent !== undefined && totalRent > 0 && (
+                {totalRent !== undefined && totalRent > 0 ? (
                     <View style={styles.detailRow}>
                         <Text style={[styles.detailLabel, styles.totalLabel]}>
                             Total Rent
@@ -115,7 +121,7 @@ export default function RentalCard({
                             ₹{totalRent}
                         </Text>
                     </View>
-                )}
+                ) : null}
             </View>
         </TouchableOpacity>
     );
@@ -198,6 +204,11 @@ const styles = StyleSheet.create({
         alignItems: "center",
         flexDirection: "row",
         justifyContent: "space-between",
+    },
+    timerHeader: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 4,
     },
     timerLabel: {
         fontSize: 12,

@@ -33,7 +33,7 @@ export const get = query({
     args: { bookId: v.id("books") },
     handler: async (ctx, args) => {
         const book = await ctx.db.get(args.bookId);
-        if (!book) throw new Error("Book not found.");
+        if (!book) return null;
 
         let coverUrl: string | null = null;
         const coverUrls: string[] = [];
@@ -107,8 +107,28 @@ export const update = mutation({
         if (args.description !== undefined)
             updates.description = args.description.trim();
         if (args.rentPerDay !== undefined) updates.rentPerDay = args.rentPerDay;
-        if (args.coverImage !== undefined) updates.coverImage = args.coverImage;
-        if (args.coverImages !== undefined) updates.coverImages = args.coverImages;
+
+        // Cleanup storage for single cover image if replaced
+        if (args.coverImage !== undefined && book.coverImage && args.coverImage !== book.coverImage) {
+            await ctx.storage.delete(book.coverImage);
+            updates.coverImage = args.coverImage;
+        } else if (args.coverImage !== undefined) {
+            updates.coverImage = args.coverImage;
+        }
+
+        // Cleanup storage for multiple cover images if removed/shuffled
+        if (args.coverImages !== undefined) {
+            if (book.coverImages) {
+                const removedIds = book.coverImages.filter(
+                    (id) => !args.coverImages!.includes(id)
+                );
+                for (const id of removedIds) {
+                    await ctx.storage.delete(id);
+                }
+            }
+            updates.coverImages = args.coverImages;
+        }
+
         if (args.totalCopies !== undefined) {
             const diff = args.totalCopies - book.totalCopies;
             updates.totalCopies = args.totalCopies;

@@ -3,6 +3,7 @@ import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
 import { Colors, Spacing } from "@/constants/theme";
 import { useAddBookScreen } from "@/hooks/useAddBookScreen";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity } from "react-native";
@@ -36,8 +37,8 @@ export default function AddBookScreen() {
                 contentContainerStyle={styles.scroll}
                 keyboardShouldPersistTaps="handled"
             >
-                <TouchableOpacity onPress={() => router.back()}>
-                    <Text style={styles.backText}>â† Back</Text>
+                <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+                    <Ionicons name="arrow-back" size={24} color={Colors.primary} />
                 </TouchableOpacity>
 
                 <Text style={styles.title}>Add New Book</Text>
@@ -72,7 +73,7 @@ export default function AddBookScreen() {
                     numberOfLines={4}
                 />
                 <InputField
-                    label="Rent Per Day (â‚¹)"
+                    label="Rent Per Day ₹"
                     placeholder="e.g. 10"
                     value={rentPerDay}
                     onChangeText={setRentPerDay}
@@ -106,6 +107,12 @@ const styles = StyleSheet.create({
         paddingHorizontal: Spacing.lg,
         paddingTop: Spacing.lg,
         paddingBottom: Spacing.xl,
+    },
+    backBtn: {
+        marginBottom: Spacing.md,
+        alignSelf: "flex-start",
+        padding: 4,
+        marginLeft: -4,
     },
     backText: {
         fontSize: 16,

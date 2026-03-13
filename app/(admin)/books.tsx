@@ -2,6 +2,7 @@ import SearchInput from "@/components/shared/SearchInput";
 import { Colors, Spacing } from "@/constants/theme";
 import { useAdminBooksScreen } from "@/hooks/useAdminBooksScreen";
 import { useFadeSlideIn } from "@/hooks/useFadeSlideIn";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
@@ -40,15 +41,16 @@ export default function AdminBooksScreen() {
                     { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
                 ]}
             >
-                <TouchableOpacity onPress={() => router.back()}>
-                    <Text style={styles.back}>â† Back</Text>
+                <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+                    <Ionicons name="arrow-back" size={24} color={Colors.primary} />
                 </TouchableOpacity>
                 <Text style={styles.title}>Manage Books</Text>
                 <TouchableOpacity
                     style={styles.addBtn}
                     onPress={() => router.push("/(admin)/add-book")}
                 >
-                    <Text style={styles.addBtnText}>+ Add</Text>
+                    <Ionicons name="add" size={20} color={Colors.white} />
+                    <Text style={styles.addBtnText}>Add</Text>
                 </TouchableOpacity>
             </Animated.View>
 
@@ -90,7 +92,7 @@ export default function AdminBooksScreen() {
                                 <Image source={{ uri: item.coverUrl }} style={styles.cover} />
                             ) : (
                                 <View style={[styles.cover, styles.coverPlaceholder]}>
-                                    <Text style={styles.coverEmoji}>ðŸ“–</Text>
+                                    <Ionicons name="book-outline" size={SCREEN_WIDTH * 0.08} color={Colors.primary} />
                                 </View>
                             )}
                             <View style={styles.info}>
@@ -100,28 +102,19 @@ export default function AdminBooksScreen() {
                                 <Text style={styles.bookAuthor} numberOfLines={1}>
                                     {item.author}
                                 </Text>
-                                <View style={styles.statsRow}>
-                                    <View style={styles.stat}>
-                                        <Text style={styles.statValue}>â‚¹{item.rentPerDay}</Text>
-                                        <Text style={styles.statLabel}>/day</Text>
-                                    </View>
-                                    <View style={styles.stat}>
-                                        <Text style={styles.statValue}>{item.availableCopies}</Text>
-                                        <Text style={styles.statLabel}>avail</Text>
-                                    </View>
-                                    <View style={styles.stat}>
-                                        <Text style={styles.statValue}>{item.totalCopies}</Text>
-                                        <Text style={styles.statLabel}>total</Text>
-                                    </View>
-                                </View>
+                               <View style={styles.statsRow}>
+  <Text style={styles.statText}>₹{item.rentPerDay}/day</Text>
+  <Text style={styles.statText}>{item.availableCopies} available</Text>
+  <Text style={styles.statText}>{item.totalCopies} total</Text>
+</View>
                             </View>
-                            <Text style={styles.chevron}>â€º</Text>
+                            <Ionicons name="chevron-forward" size={20} color={Colors.textLight} />
                         </TouchableOpacity>
                     </Animated.View>
                 )}
                 ListEmptyComponent={
                     <View style={styles.empty}>
-                        <Text style={styles.emptyIcon}>ðŸ“š</Text>
+                        <Ionicons name="book-outline" size={SCREEN_WIDTH * 0.15} color={Colors.textLight} style={{ marginBottom: Spacing.md }} />
                         <Text style={styles.emptyText}>No books found</Text>
                     </View>
                 }
@@ -138,12 +131,22 @@ const styles = StyleSheet.create({
         alignItems: "center",
         backgroundColor: Colors.background,
     },
+   statText: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    fontWeight: "600",
+    marginRight: 8
+},
     header: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
         paddingHorizontal: SCREEN_WIDTH * 0.06,
         paddingVertical: Spacing.md,
+    },
+    backBtn: {
+        padding: 4,
+        marginLeft: -4,
     },
     back: { fontSize: 16, color: Colors.primary, fontWeight: "600" },
     title: {
@@ -153,9 +156,12 @@ const styles = StyleSheet.create({
     },
     addBtn: {
         backgroundColor: Colors.primary,
-        paddingHorizontal: 14,
+        paddingHorizontal: 12,
         paddingVertical: 8,
         borderRadius: 10,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 4,
     },
     addBtnText: { color: Colors.white, fontWeight: "700", fontSize: 13 },
     searchBox: {
@@ -211,8 +217,17 @@ const styles = StyleSheet.create({
         color: Colors.textSecondary,
         marginBottom: Spacing.sm,
     },
-    statsRow: { flexDirection: "row", gap: 12 },
-    stat: { flexDirection: "row", alignItems: "baseline", gap: 2 },
+   statsRow: {
+    flexDirection: "row",
+    gap: 10,
+    flexWrap: "wrap",
+},
+stat: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: 2,
+},
     statValue: { fontSize: 13, fontWeight: "700", color: Colors.primary },
     statLabel: { fontSize: 10, color: Colors.textSecondary },
     chevron: {

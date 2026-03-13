@@ -1,10 +1,10 @@
 export const Colors = {
-  primary: "#F97316",
-  primaryDark: "#EA580C",
-  primaryLight: "#FED7AA",
+  primary: "#754043",
+  primaryDark: "#754043",
+  primaryLight: "#eadbc3ff",
   white: "#FFFFFF",
-  background: "#FFF7ED",
-  card: "#FFFFFF",
+  background: "#F9EEDC",
+  card: "#754043",
   text: "#1C1917",
   textSecondary: "#78716C",
   textLight: "#A8A29E",
@@ -32,12 +32,8 @@ export const Spacing = {
 };
 
 export const ZONES = [
-  "Hostel A",
-  "Hostel B",
-  "Engineering Block",
-  "Apartments",
-  "Library Block",
-  "Main Campus",
+  "Home",
+  "College",
 ];
 
 export const RENTAL_STATUS_LABELS: Record<string, string> = {

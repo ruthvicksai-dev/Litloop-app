@@ -1,8 +1,11 @@
 import Button from "@/components/ui/Button";
 import { Colors, Spacing } from "@/constants/theme";
-import React from "react";
+import { Ionicons } from "@expo/vector-icons";
+import React, { useState } from "react";
 import {
     Image,
+    Modal,
+    Pressable,
     ScrollView,
     StyleProp,
     StyleSheet,
@@ -29,6 +32,8 @@ export default function CoverGalleryField({
     isFetchingCover = false,
     containerStyle,
 }: CoverGalleryFieldProps) {
+    const [previewUri, setPreviewUri] = useState<string | null>(null);
+
     return (
         <View style={[styles.coverSection, containerStyle]}>
             <Text style={styles.coverSectionTitle}>Book Covers</Text>
@@ -36,19 +41,24 @@ export default function CoverGalleryField({
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.galleryScroll}>
                     {coverUris.map((uri, idx) => (
                         <View key={`${uri}-${idx}`} style={styles.coverContainer}>
-                            <Image source={{ uri }} style={styles.coverPreview} />
+                            <Pressable
+                                style={styles.previewTapArea}
+                                onPress={() => setPreviewUri(uri)}
+                            >
+                                <Image source={{ uri }} style={styles.coverPreview} />
+                            </Pressable>
                             <TouchableOpacity
                                 style={styles.removeBtn}
                                 onPress={() => onRemove(idx)}
                             >
-                                <Text style={styles.removeBtnText}>âœ•</Text>
+                                <Ionicons name="close" size={16} color={Colors.white} />
                             </TouchableOpacity>
                         </View>
                     ))}
                 </ScrollView>
             ) : (
                 <View style={styles.coverPlaceholder}>
-                    <Text style={styles.coverIcon}>ðŸ“š</Text>
+                    <Ionicons name="images-outline" size={40} color={Colors.border} style={{ marginBottom: 8 }} />
                     <Text style={styles.coverText}>No covers selected</Text>
                 </View>
             )}
@@ -68,6 +78,34 @@ export default function CoverGalleryField({
                     variant="outline"
                 />
             </View>
+
+            <Modal
+                visible={Boolean(previewUri)}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setPreviewUri(null)}
+            >
+                <View style={styles.previewOverlay}>
+                    <TouchableOpacity
+                        style={styles.previewClose}
+                        onPress={() => setPreviewUri(null)}
+                    >
+                        <Ionicons name="close" size={24} color={Colors.white} />
+                    </TouchableOpacity>
+                    <Pressable
+                        style={styles.previewBackdrop}
+                        onPress={() => setPreviewUri(null)}
+                    >
+                        {previewUri ? (
+                            <Image
+                                source={{ uri: previewUri }}
+                                style={styles.previewImage}
+                                resizeMode="contain"
+                            />
+                        ) : null}
+                    </Pressable>
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -97,6 +135,9 @@ const styles = StyleSheet.create({
         height: 180,
         marginRight: Spacing.sm,
         backgroundColor: Colors.white,
+    },
+    previewTapArea: {
+        flex: 1,
     },
     coverPreview: {
         width: "100%",
@@ -151,5 +192,32 @@ const styles = StyleSheet.create({
         flex: 1,
         minHeight: 44,
         paddingVertical: 10,
+    },
+    previewOverlay: {
+        flex: 1,
+        backgroundColor: "rgba(0,0,0,0.92)",
+    },
+    previewClose: {
+        position: "absolute",
+        top: 56,
+        right: 20,
+        zIndex: 1,
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: "rgba(0,0,0,0.45)",
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    previewBackdrop: {
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        paddingHorizontal: Spacing.md,
+        paddingVertical: Spacing.xl,
+    },
+    previewImage: {
+        width: "100%",
+        height: "80%",
     },
 });

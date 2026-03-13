@@ -46,7 +46,7 @@ export default function PaymentScreen() {
                 keyboardShouldPersistTaps="handled"
             >
                 <TouchableOpacity onPress={() => router.back()}>
-                    <Text style={styles.backText}>â† Back</Text>
+                    <Text style={styles.backText}>Back</Text>
                 </TouchableOpacity>
 
                 <Text style={styles.title}>Payment</Text>
@@ -54,7 +54,7 @@ export default function PaymentScreen() {
 
                 <View style={styles.amountCard}>
                     <Text style={styles.amountLabel}>Total Amount</Text>
-                    <Text style={styles.amountValue}>â‚¹{rental.totalRent || 0}</Text>
+                    <Text style={styles.amountValue}>₹{rental.totalRent || 0}</Text>
                 </View>
 
                 <Text style={styles.sectionTitle}>Choose Payment Method</Text>
@@ -66,7 +66,7 @@ export default function PaymentScreen() {
                         ]}
                         onPress={() => setPaymentMethod("upi")}
                     >
-                        <Text style={styles.methodIcon}>ðŸ“±</Text>
+                        <Text style={styles.methodIcon}>UPI</Text>
                         <Text
                             style={[
                                 styles.methodText,
@@ -83,7 +83,7 @@ export default function PaymentScreen() {
                         ]}
                         onPress={() => setPaymentMethod("cash")}
                     >
-                        <Text style={styles.methodIcon}>ðŸ’µ</Text>
+                        <Text style={styles.methodIcon}>Cash</Text>
                         <Text
                             style={[
                                 styles.methodText,
@@ -100,11 +100,11 @@ export default function PaymentScreen() {
                         <View style={styles.qrCard}>
                             <Text style={styles.qrTitle}>Scan QR to Pay</Text>
                             <View style={styles.qrPlaceholder}>
-                                <Text style={styles.qrIcon}>ðŸ“²</Text>
+                                <Text style={styles.qrIcon}>QR</Text>
                                 <Text style={styles.qrUpi}>library@upi</Text>
                             </View>
                             <Text style={styles.qrNote}>
-                                Pay â‚¹{rental.totalRent || 0} to the above UPI ID
+                                Pay ₹{rental.totalRent || 0} to the above UPI ID
                             </Text>
                         </View>
 
@@ -121,7 +121,7 @@ export default function PaymentScreen() {
                                 <Image source={{ uri: screenshot }} style={styles.screenshotPreview} />
                             ) : (
                                 <View style={styles.uploadPlaceholder}>
-                                    <Text style={styles.uploadIcon}>ðŸ“·</Text>
+                                    <Text style={styles.uploadIcon}>IMG</Text>
                                     <Text style={styles.uploadText}>Tap to upload screenshot</Text>
                                 </View>
                             )}
@@ -139,10 +139,10 @@ export default function PaymentScreen() {
                 {paymentMethod === "cash" ? (
                     <View style={styles.section}>
                         <View style={styles.cashCard}>
-                            <Text style={styles.cashIcon}>ðŸ’µ</Text>
+                            <Text style={styles.cashIcon}>Cash</Text>
                             <Text style={styles.cashTitle}>Cash on Pickup</Text>
                             <Text style={styles.cashDesc}>
-                                Pay â‚¹{rental.totalRent || 0} in cash when the book is picked up. Our
+                                Pay ₹{rental.totalRent || 0} in cash when the book is picked up. Our
                                 delivery agent will collect the amount.
                             </Text>
                         </View>
@@ -235,8 +235,10 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.primaryLight,
     },
     methodIcon: {
-        fontSize: 28,
+        fontSize: 20,
         marginBottom: 4,
+        fontWeight: "700",
+        color: Colors.text,
     },
     methodText: {
         fontSize: 14,
@@ -272,8 +274,10 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.md,
     },
     qrIcon: {
-        fontSize: 48,
+        fontSize: 32,
+        fontWeight: "700",
         marginBottom: 8,
+        color: Colors.primary,
     },
     qrUpi: {
         fontSize: 14,
@@ -305,8 +309,10 @@ const styles = StyleSheet.create({
         justifyContent: "center",
     },
     uploadIcon: {
-        fontSize: 32,
+        fontSize: 24,
+        fontWeight: "700",
         marginBottom: 8,
+        color: Colors.primary,
     },
     uploadText: {
         fontSize: 14,
@@ -324,8 +330,10 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     cashIcon: {
-        fontSize: 48,
+        fontSize: 24,
+        fontWeight: "700",
         marginBottom: Spacing.sm,
+        color: Colors.primary,
     },
     cashTitle: {
         fontSize: 18,

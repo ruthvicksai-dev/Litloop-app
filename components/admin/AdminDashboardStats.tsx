@@ -1,4 +1,5 @@
 import { Colors, Spacing } from "@/constants/theme";
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Dimensions, StyleSheet, Text, View } from "react-native";
 
@@ -19,18 +20,22 @@ export default function AdminDashboardStats({
     return (
         <View style={styles.statsRow}>
             <View style={[styles.statCard, { backgroundColor: Colors.primary + "15" }]}>
+                <Ionicons name="apps" size={18} color={Colors.primary} />
                 <Text style={[styles.statNumber, { color: Colors.primary }]}>{stats.total}</Text>
                 <Text style={styles.statLabel}>Total</Text>
             </View>
             <View style={[styles.statCard, { backgroundColor: "#3B82F615" }]}>
+                <Ionicons name="bicycle" size={18} color="#3B82F6" />
                 <Text style={[styles.statNumber, { color: "#3B82F6" }]}>{stats.active}</Text>
                 <Text style={styles.statLabel}>Active</Text>
             </View>
             <View style={[styles.statCard, { backgroundColor: "#F59E0B15" }]}>
+                <Ionicons name="time" size={18} color="#F59E0B" />
                 <Text style={[styles.statNumber, { color: "#F59E0B" }]}>{stats.pending}</Text>
                 <Text style={styles.statLabel}>Pending</Text>
             </View>
             <View style={[styles.statCard, { backgroundColor: "#10B98115" }]}>
+                <Ionicons name="checkmark-circle" size={18} color="#10B981" />
                 <Text style={[styles.statNumber, { color: "#10B981" }]}>{stats.completed}</Text>
                 <Text style={styles.statLabel}>Done</Text>
             </View>
@@ -52,8 +57,9 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     statNumber: {
-        fontSize: SCREEN_WIDTH * 0.055,
+        fontSize: SCREEN_WIDTH * 0.05,
         fontWeight: "800",
+        marginTop: 4,
     },
     statLabel: {
         fontSize: 11,

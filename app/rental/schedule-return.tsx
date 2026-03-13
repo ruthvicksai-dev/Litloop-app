@@ -1,5 +1,6 @@
 import Button from "@/components/ui/Button";
-import InputField from "@/components/ui/InputField";
+import DatePickerField from "@/components/ui/DatePickerField";
+import TimePickerField from "@/components/ui/TimePickerField";
 import { Colors, Spacing } from "@/constants/theme";
 import { useScheduleReturnScreen } from "@/hooks/useScheduleReturnScreen";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -28,6 +29,30 @@ export default function ScheduleReturnScreen() {
         handleSchedule,
     } = useScheduleReturnScreen(rentalId);
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const maxPickupDate = new Date(today);
+    maxPickupDate.setDate(today.getDate() + 9);
+
+    const minimumPickupDate = rental?.deliveryDate
+        ? new Date(
+              Math.max(
+                  new Date(`${rental.deliveryDate}T00:00:00`).getTime() +
+                      24 * 60 * 60 * 1000,
+                  new Date(
+                      today.getFullYear(),
+                      today.getMonth(),
+                      today.getDate()
+                  ).getTime()
+              )
+          )
+        : today;
+
+    const pickupMaximumDate =
+        minimumPickupDate.getTime() <= maxPickupDate.getTime()
+            ? maxPickupDate
+            : minimumPickupDate;
+
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView
@@ -35,7 +60,7 @@ export default function ScheduleReturnScreen() {
                 keyboardShouldPersistTaps="handled"
             >
                 <TouchableOpacity onPress={() => router.back()}>
-                    <Text style={styles.backText}>â† Back</Text>
+                    <Text style={styles.backText}>Back</Text>
                 </TouchableOpacity>
 
                 <Text style={styles.title}>Schedule Return</Text>
@@ -48,17 +73,19 @@ export default function ScheduleReturnScreen() {
                     </View>
                 ) : null}
 
-                <InputField
+                <DatePickerField
                     label="Pickup Date"
-                    placeholder="YYYY-MM-DD"
+                    placeholder="Select pickup date"
                     value={pickupDate}
-                    onChangeText={setPickupDate}
+                    minimumDate={minimumPickupDate}
+                    maximumDate={pickupMaximumDate}
+                    onChange={setPickupDate}
                 />
-                <InputField
+                <TimePickerField
                     label="Pickup Time"
-                    placeholder="e.g. 10:00 AM"
+                    placeholder="Select pickup time"
                     value={pickupTime}
-                    onChangeText={setPickupTime}
+                    onChange={setPickupTime}
                 />
 
                 {estimatedDays > 0 ? (
@@ -70,16 +97,11 @@ export default function ScheduleReturnScreen() {
                         </View>
                         <View style={styles.estimateRow}>
                             <Text style={styles.estimateLabel}>Rate</Text>
-                            <Text style={styles.estimateValue}>â‚¹{rental?.rentPerDay}/day</Text>
+                            <Text style={styles.estimateValue}>₹{rental?.rentPerDay}/day</Text>
                         </View>
-                        <View
-                            style={[
-                                styles.estimateRow,
-                                styles.totalRow,
-                            ]}
-                        >
+                        <View style={[styles.estimateRow, styles.totalRow]}>
                             <Text style={[styles.estimateLabel, styles.totalLabel]}>Total</Text>
-                            <Text style={styles.totalValue}>â‚¹{estimatedRent}</Text>
+                            <Text style={styles.totalValue}>₹{estimatedRent}</Text>
                         </View>
                     </View>
                 ) : null}

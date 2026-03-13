@@ -1,4 +1,5 @@
 import { Colors, Spacing } from "@/constants/theme";
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
@@ -21,10 +22,10 @@ export default function AdminDashboardHeader({
             </View>
             <View style={styles.headerActions}>
                 <TouchableOpacity style={styles.iconBtn} onPress={onAddBook}>
-                    <Text style={styles.iconBtnText}>+ Book</Text>
+                    <Ionicons name="add" size={20} color={Colors.white} />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.logoutBtn} onPress={onSignOut}>
-                    <Text style={styles.logoutText}>Logout</Text>
+                    <Ionicons name="log-out-outline" size={20} color={Colors.textSecondary} />
                 </TouchableOpacity>
             </View>
         </View>
@@ -57,9 +58,11 @@ const styles = StyleSheet.create({
     },
     iconBtn: {
         backgroundColor: Colors.primary,
-        paddingHorizontal: 14,
-        paddingVertical: 8,
+        width: 40,
+        height: 40,
         borderRadius: 10,
+        justifyContent: "center",
+        alignItems: "center",
     },
     iconBtnText: {
         color: Colors.white,
@@ -67,11 +70,13 @@ const styles = StyleSheet.create({
         fontSize: 13,
     },
     logoutBtn: {
-        paddingHorizontal: 12,
-        paddingVertical: 8,
+        width: 40,
+        height: 40,
         borderRadius: 10,
         borderWidth: 1.5,
         borderColor: Colors.border,
+        justifyContent: "center",
+        alignItems: "center",
     },
     logoutText: {
         color: Colors.textSecondary,

@@ -1,6 +1,7 @@
 import Button from "@/components/ui/Button";
 import { Colors, Spacing } from "@/constants/theme";
 import { useVerifyPaymentScreen } from "@/hooks/useVerifyPaymentScreen";
+import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
@@ -25,8 +26,8 @@ export default function VerifyPaymentScreen() {
         return (
             <SafeAreaView style={styles.container}>
                 <View style={styles.scroll}>
-                    <TouchableOpacity onPress={() => router.back()}>
-                        <Text style={styles.backText}>â† Back</Text>
+                    <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+                        <Ionicons name="arrow-back" size={24} color={Colors.primary} />
                     </TouchableOpacity>
 
                     <Text style={styles.title}>Verify Payment</Text>
@@ -34,7 +35,7 @@ export default function VerifyPaymentScreen() {
                     <View style={styles.detailCard}>
                         <Text style={styles.detailTitle}>{singleRental.book?.title}</Text>
                         <Text style={styles.detailSub}>
-                            User: {singleRental.user?.name} â€¢ {singleRental.user?.phone}
+                            User: {singleRental.user?.name} • {singleRental.user?.phone}
                         </Text>
                         <Text style={styles.detailSub}>
                             Method: {singleRental.paymentMethod?.toUpperCase()}
@@ -42,7 +43,7 @@ export default function VerifyPaymentScreen() {
                         {singleRental.utrNumber ? (
                             <Text style={styles.detailSub}>UTR: {singleRental.utrNumber}</Text>
                         ) : null}
-                        <Text style={styles.detailSub}>Amount: â‚¹{singleRental.totalRent}</Text>
+                        <Text style={styles.detailSub}>Amount: ₹{singleRental.totalRent}</Text>
                     </View>
 
                     {singleRental.screenshotUrl ? (
@@ -84,8 +85,8 @@ export default function VerifyPaymentScreen() {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()}>
-                    <Text style={styles.backText}>â† Back</Text>
+                <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+                    <Ionicons name="arrow-back" size={24} color={Colors.primary} />
                 </TouchableOpacity>
                 <Text style={styles.title}>Pending Payments</Text>
                 <Text style={styles.subtitle}>
@@ -103,10 +104,10 @@ export default function VerifyPaymentScreen() {
                             <View style={styles.paymentHeaderInfo}>
                                 <Text style={styles.paymentTitle}>{item.book?.title}</Text>
                                 <Text style={styles.paymentSub}>
-                                    {item.user?.name} â€¢ {item.paymentMethod?.toUpperCase()}
+                                    {item.user?.name} • {item.paymentMethod?.toUpperCase()}
                                 </Text>
                             </View>
-                            <Text style={styles.paymentAmount}>â‚¹{item.totalRent}</Text>
+                            <Text style={styles.paymentAmount}>₹{item.totalRent}</Text>
                         </View>
 
                         {item.utrNumber ? (
@@ -125,13 +126,25 @@ export default function VerifyPaymentScreen() {
                                 style={styles.approveBtn}
                                 onPress={() => handleVerify(item._id, true)}
                             >
-                                <Text style={styles.approveBtnText}>âœ“ Approve</Text>
+                                <Ionicons
+                                    name="checkmark"
+                                    size={16}
+                                    color={Colors.white}
+                                    style={{ marginRight: 4 }}
+                                />
+                                <Text style={styles.approveBtnText}>Approve</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.rejectBtn}
                                 onPress={() => handleVerify(item._id, false)}
                             >
-                                <Text style={styles.rejectBtnText}>âœ• Reject</Text>
+                                <Ionicons
+                                    name="close"
+                                    size={16}
+                                    color={Colors.error}
+                                    style={{ marginRight: 4 }}
+                                />
+                                <Text style={styles.rejectBtnText}>Reject</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -139,7 +152,12 @@ export default function VerifyPaymentScreen() {
                 contentContainerStyle={styles.list}
                 ListEmptyComponent={
                     <View style={styles.empty}>
-                        <Text style={styles.emptyIcon}>âœ…</Text>
+                        <Ionicons
+                            name="checkmark-circle-outline"
+                            size={48}
+                            color={Colors.textLight}
+                            style={{ marginBottom: Spacing.md }}
+                        />
                         <Text style={styles.emptyText}>No payments pending verification</Text>
                     </View>
                 }
@@ -168,6 +186,12 @@ const styles = StyleSheet.create({
         paddingHorizontal: Spacing.lg,
         paddingTop: Spacing.lg,
         paddingBottom: Spacing.md,
+    },
+    backBtn: {
+        marginBottom: Spacing.sm,
+        alignSelf: "flex-start",
+        padding: 4,
+        marginLeft: -4,
     },
     backText: {
         fontSize: 16,
@@ -279,6 +303,8 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         borderRadius: 8,
         alignItems: "center",
+        flexDirection: "row",
+        justifyContent: "center",
     },
     approveBtnText: {
         color: Colors.white,
@@ -291,6 +317,8 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         borderRadius: 8,
         alignItems: "center",
+        flexDirection: "row",
+        justifyContent: "center",
         borderWidth: 1,
         borderColor: Colors.error,
     },

@@ -3,6 +3,7 @@ import Button from "@/components/ui/Button";
 import { Colors, Spacing } from "@/constants/theme";
 import { useBookDetailsScreen } from "@/hooks/useBookDetailsScreen";
 import { useFadeSlideScaleIn } from "@/hooks/useFadeSlideScaleIn";
+import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
@@ -13,7 +14,7 @@ import {
     StyleSheet,
     Text,
     TouchableOpacity,
-    View,
+    View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -36,16 +37,43 @@ export default function BookDetailsScreen() {
         );
     }
 
+    if (book === null) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <View style={styles.header}>
+                    <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+                        <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+                    </TouchableOpacity>
+                    <Text style={styles.headerTitle}>Book Details</Text>
+                    <View style={{ width: 40 }} />
+                </View>
+                <View style={[styles.center, { paddingHorizontal: 40 }]}>
+                    <Ionicons name="book-outline" size={60} color={Colors.textLight} style={{ marginBottom: 20 }} />
+                    <Text style={{ fontSize: 18, fontWeight: "700", color: Colors.text, marginBottom: 8 }}>
+                        Book not found
+                    </Text>
+                    <Text style={{ textAlign: "center", color: Colors.textSecondary, marginBottom: 24 }}>
+                        The book you're looking for might have been removed or doesn't exist.
+                    </Text>
+                    <Button title="Go Back" onPress={() => router.back()} style={{ width: "100%" }} />
+                </View>
+            </SafeAreaView>
+        );
+    }
+
     return (
         <SafeAreaView style={styles.container}>
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 60 }}
+            >
                 <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-                    <Text style={styles.backText}>â† Back</Text>
+                    <Ionicons name="arrow-back" size={24} color={Colors.primary} />
                 </TouchableOpacity>
 
                 <Animated.View
                     style={[
-                        styles.galleryWrapper,
+                        styles.carouselSection,
                         { transform: [{ scale: scaleAnim }] },
                     ]}
                 >
@@ -68,18 +96,21 @@ export default function BookDetailsScreen() {
                     <Text style={styles.title}>{book.title}</Text>
                     <Text style={styles.author}>by {book.author}</Text>
 
-                    <View style={styles.statsRow}>
-                        <View style={styles.stat}>
-                            <Text style={styles.statValue}>â‚¹{book.rentPerDay}</Text>
+                    <View style={styles.statsContainer}>
+                        <View style={styles.statItem}>
+                            <Ionicons name="pricetag-outline" size={20} color={Colors.primary} />
+                            <Text style={styles.statValue}>₹{book.rentPerDay}</Text>
                             <Text style={styles.statLabel}>per day</Text>
                         </View>
-                        <View style={styles.divider} />
-                        <View style={styles.stat}>
+                        <View style={styles.statDivider} />
+                        <View style={styles.statItem}>
+                            <Ionicons name="checkmark-circle-outline" size={20} color={Colors.success} />
                             <Text style={styles.statValue}>{book.availableCopies}</Text>
                             <Text style={styles.statLabel}>available</Text>
                         </View>
-                        <View style={styles.divider} />
-                        <View style={styles.stat}>
+                        <View style={styles.statDivider} />
+                        <View style={styles.statItem}>
+                            <Ionicons name="library-outline" size={20} color={Colors.textSecondary} />
                             <Text style={styles.statValue}>{book.totalCopies}</Text>
                             <Text style={styles.statLabel}>total</Text>
                         </View>
@@ -111,76 +142,99 @@ const styles = StyleSheet.create({
         alignItems: "center",
         backgroundColor: Colors.background,
     },
-    backBtn: {
-        paddingHorizontal: SCREEN_WIDTH * 0.06,
-        paddingTop: Spacing.md,
-    },
-    backText: {
-        fontSize: 16,
-        color: Colors.primary,
-        fontWeight: "600",
-    },
-    galleryWrapper: {
-        width: SCREEN_WIDTH,
+    header: {
+        flexDirection: "row",
+        justifyContent: "space-between",
         alignItems: "center",
-        paddingVertical: Spacing.lg,
+        paddingHorizontal: SCREEN_WIDTH * 0.06,
+        paddingVertical: Spacing.md,
+    },
+    headerTitle: { fontSize: 18, fontWeight: "800", color: Colors.text },
+    backBtn: {
+        padding: 8,
+        position: 'absolute',
+        top: 10,
+        left: 10,
+        zIndex: 10,
+        backgroundColor: 'rgba(255,255,255,0.85)',
+        borderRadius: 20,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    carouselSection: {
+        width: SCREEN_WIDTH,
+        backgroundColor: Colors.white,
     },
     info: {
-        paddingHorizontal: SCREEN_WIDTH * 0.06,
-        paddingBottom: SCREEN_HEIGHT * 0.04,
+        paddingHorizontal: SCREEN_WIDTH * 0.07,
+        paddingTop: Spacing.xl,
+        paddingBottom: Spacing.xl,
+        borderTopLeftRadius: 30,
+        borderTopRightRadius: 30,
+        backgroundColor: Colors.background,
+        marginTop: -30,
     },
     title: {
-        fontSize: SCREEN_WIDTH * 0.06,
+        fontSize: 28,
         fontWeight: "800",
         color: Colors.text,
-        marginBottom: 4,
+        lineHeight: 34,
+        marginBottom: 6,
     },
     author: {
-        fontSize: 16,
+        fontSize: 18,
         color: Colors.textSecondary,
+        fontWeight: "500",
         marginBottom: Spacing.lg,
     },
-    statsRow: {
+    statsContainer: {
         flexDirection: "row",
         backgroundColor: Colors.white,
-        borderRadius: 16,
-        paddingVertical: Spacing.md,
+        borderRadius: 20,
+        paddingVertical: Spacing.lg,
         alignItems: "center",
         shadowColor: Colors.shadow,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
-        shadowRadius: 6,
-        elevation: 2,
-        marginBottom: Spacing.lg,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 10,
+        elevation: 4,
+        marginBottom: Spacing.xl,
     },
-    stat: {
+    statItem: {
         flex: 1,
         alignItems: "center",
+        gap: 4,
     },
     statValue: {
-        fontSize: SCREEN_WIDTH * 0.05,
+        fontSize: 18,
         fontWeight: "700",
-        color: Colors.primary,
+        color: Colors.text,
     },
     statLabel: {
-        fontSize: 12,
+        fontSize: 11,
         color: Colors.textSecondary,
-        marginTop: 2,
+        textTransform: "uppercase",
+        letterSpacing: 0.5,
     },
-    divider: {
+    statDivider: {
         width: 1,
-        height: 32,
+        height: 30,
         backgroundColor: Colors.border,
+        opacity: 0.6,
     },
     descTitle: {
-        fontSize: 16,
+        fontSize: 18,
         fontWeight: "700",
         color: Colors.text,
         marginBottom: Spacing.sm,
     },
     description: {
-        fontSize: 14,
+        fontSize: 15,
         color: Colors.textSecondary,
-        lineHeight: 22,
+        lineHeight: 24,
+        letterSpacing: 0.2,
     },
 });
