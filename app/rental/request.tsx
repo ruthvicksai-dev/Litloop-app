@@ -18,6 +18,7 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Fonts } from "@/constants/fonts";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -156,23 +157,25 @@ const styles = StyleSheet.create({
     backText: {
         fontSize: 16,
         color: Colors.primary,
-        fontWeight: "600",
+        fontFamily: Fonts.medium,
         marginBottom: Spacing.md,
     },
     title: {
         fontSize: SCREEN_WIDTH * 0.06,
-        fontWeight: "800",
+        
         color: Colors.text,
         marginBottom: 4,
+      fontFamily: Fonts.bold,
     },
     bookInfo: {
         fontSize: 14,
         color: Colors.textSecondary,
         marginBottom: Spacing.lg,
+      fontFamily: Fonts.regular,
     },
     sectionTitle: {
         fontSize: 16,
-        fontWeight: "700",
+        fontFamily: Fonts.bold,
         color: Colors.text,
         marginBottom: Spacing.sm,
         marginTop: Spacing.sm,
@@ -197,7 +200,7 @@ const styles = StyleSheet.create({
     },
     zoneChipText: {
         fontSize: 13,
-        fontWeight: "600",
+        fontFamily: Fonts.medium,
         color: Colors.text,
     },
     zoneChipTextActive: {

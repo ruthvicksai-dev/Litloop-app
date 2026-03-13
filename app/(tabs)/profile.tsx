@@ -15,6 +15,7 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Fonts } from "@/constants/fonts";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -119,8 +120,9 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: SCREEN_WIDTH * 0.065,
-        fontWeight: "800",
+        
         color: Colors.text,
+      fontFamily: Fonts.bold,
     },
     card: {
         backgroundColor: Colors.white,
@@ -145,12 +147,12 @@ const styles = StyleSheet.create({
     },
     avatarText: {
         fontSize: SCREEN_WIDTH * 0.07,
-        fontWeight: "700",
+        fontFamily: Fonts.bold,
         color: Colors.white,
     },
     name: {
         fontSize: SCREEN_WIDTH * 0.05,
-        fontWeight: "700",
+        fontFamily: Fonts.bold,
         color: Colors.text,
         marginBottom: 4,
     },
@@ -158,11 +160,13 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: Colors.textSecondary,
         marginBottom: 2,
+      fontFamily: Fonts.regular,
     },
     phone: {
         fontSize: 14,
         color: Colors.textSecondary,
         marginBottom: Spacing.sm,
+      fontFamily: Fonts.regular,
     },
     roleBadge: {
         paddingHorizontal: 12,
@@ -172,7 +176,7 @@ const styles = StyleSheet.create({
     },
     roleText: {
         fontSize: 12,
-        fontWeight: "600",
+        fontFamily: Fonts.medium,
         color: Colors.textSecondary,
     },
     adminLink: {
@@ -187,7 +191,7 @@ const styles = StyleSheet.create({
     },
     adminLinkText: {
         color: Colors.white,
-        fontWeight: "600",
+        fontFamily: Fonts.medium,
         fontSize: 15,
     },
     actions: {

@@ -7,6 +7,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Fonts } from "@/constants/fonts";
 
 interface RentalCardProps {
     bookTitle: string;
@@ -151,13 +152,14 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 16,
-        fontWeight: "700",
+        fontFamily: Fonts.bold,
         color: Colors.text,
     },
     author: {
         fontSize: 13,
         color: Colors.textSecondary,
         marginTop: 2,
+      fontFamily: Fonts.regular,
     },
     badge: {
         paddingHorizontal: 10,
@@ -166,7 +168,7 @@ const styles = StyleSheet.create({
     },
     badgeText: {
         fontSize: 11,
-        fontWeight: "700",
+        fontFamily: Fonts.bold,
     },
     details: {
         borderTopWidth: 1,
@@ -181,19 +183,20 @@ const styles = StyleSheet.create({
     detailLabel: {
         fontSize: 13,
         color: Colors.textSecondary,
+      fontFamily: Fonts.regular,
     },
     detailValue: {
         fontSize: 13,
-        fontWeight: "600",
+        fontFamily: Fonts.medium,
         color: Colors.text,
     },
     totalLabel: {
-        fontWeight: "600",
+        fontFamily: Fonts.medium,
         color: Colors.text,
     },
     totalValue: {
         color: Colors.primary,
-        fontWeight: "700",
+        fontFamily: Fonts.bold,
         fontSize: 15,
     },
     timerContainer: {
@@ -212,17 +215,17 @@ const styles = StyleSheet.create({
     },
     timerLabel: {
         fontSize: 12,
-        fontWeight: "600",
+        fontFamily: Fonts.medium,
         color: Colors.primaryDark,
     },
     timerDays: {
         fontSize: 14,
-        fontWeight: "700",
+        fontFamily: Fonts.bold,
         color: Colors.text,
     },
     timerRent: {
         fontSize: 16,
-        fontWeight: "700",
+        fontFamily: Fonts.bold,
         color: Colors.primary,
     },
 });

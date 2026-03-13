@@ -13,6 +13,7 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Fonts } from "@/constants/fonts";
 
 export default function ScheduleReturnScreen() {
     const { rentalId } = useLocalSearchParams<{ rentalId: string }>();
@@ -130,19 +131,21 @@ const styles = StyleSheet.create({
     backText: {
         fontSize: 16,
         color: Colors.primary,
-        fontWeight: "600",
+        fontFamily: Fonts.medium,
         marginBottom: Spacing.md,
     },
     title: {
         fontSize: 24,
-        fontWeight: "800",
+        
         color: Colors.text,
         marginBottom: 4,
+      fontFamily: Fonts.bold,
     },
     subtitle: {
         fontSize: 14,
         color: Colors.textSecondary,
         marginBottom: Spacing.lg,
+      fontFamily: Fonts.regular,
     },
     infoCard: {
         backgroundColor: Colors.white,
@@ -155,10 +158,11 @@ const styles = StyleSheet.create({
     infoLabel: {
         fontSize: 14,
         color: Colors.textSecondary,
+      fontFamily: Fonts.regular,
     },
     infoValue: {
         fontSize: 14,
-        fontWeight: "600",
+        fontFamily: Fonts.medium,
         color: Colors.text,
     },
     estimateCard: {
@@ -169,7 +173,7 @@ const styles = StyleSheet.create({
     },
     estimateTitle: {
         fontSize: 16,
-        fontWeight: "700",
+        fontFamily: Fonts.bold,
         color: Colors.text,
         marginBottom: Spacing.sm,
     },
@@ -181,10 +185,11 @@ const styles = StyleSheet.create({
     estimateLabel: {
         fontSize: 14,
         color: Colors.textSecondary,
+      fontFamily: Fonts.regular,
     },
     estimateValue: {
         fontSize: 14,
-        fontWeight: "600",
+        fontFamily: Fonts.medium,
         color: Colors.text,
     },
     totalRow: {
@@ -194,11 +199,11 @@ const styles = StyleSheet.create({
         marginTop: 4,
     },
     totalLabel: {
-        fontWeight: "700",
+        fontFamily: Fonts.bold,
     },
     totalValue: {
         fontSize: 18,
-        fontWeight: "700",
+        fontFamily: Fonts.bold,
         color: Colors.primary,
     },
 });

@@ -1,6 +1,7 @@
 import { Colors, RENTAL_STATUS_LABELS, Spacing } from "@/constants/theme";
 import React from "react";
 import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity } from "react-native";
+import { Fonts } from "@/constants/fonts";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -72,7 +73,7 @@ const styles = StyleSheet.create({
     },
     filterChipText: {
         fontSize: 12,
-        fontWeight: "600",
+        fontFamily: Fonts.medium,
         color: Colors.textSecondary,
     },
     filterChipTextActive: {

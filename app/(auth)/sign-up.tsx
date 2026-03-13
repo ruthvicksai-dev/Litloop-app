@@ -18,6 +18,7 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Fonts } from "@/constants/fonts";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -157,5 +158,6 @@ const styles = StyleSheet.create({
         color: Colors.textSecondary,
         textAlign: "center",
         marginBottom: Spacing.md,
+      fontFamily: Fonts.regular,
     },
 });

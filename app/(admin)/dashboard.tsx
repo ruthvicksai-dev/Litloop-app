@@ -2,6 +2,7 @@ import AdminDashboardHeader from "@/components/admin/AdminDashboardHeader";
 import AdminDashboardStats from "@/components/admin/AdminDashboardStats";
 import AdminRentalCard from "@/components/admin/AdminRentalCard";
 import AdminStatusFilters from "@/components/admin/AdminStatusFilters";
+import { Fonts } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useAdminDashboard } from "@/hooks/useAdminDashboard";
 import { useFadeSlideIn } from "@/hooks/useFadeSlideIn";
@@ -162,7 +163,7 @@ const styles = StyleSheet.create({
     },
     quickActionText: {
         fontSize: 13,
-        fontWeight: "700",
+        fontFamily: Fonts.bold,
         color: Colors.text,
     },
     sectionHeader: {
@@ -175,7 +176,7 @@ const styles = StyleSheet.create({
     },
     sectionTitle: {
         fontSize: 15,
-        fontWeight: "700",
+        fontFamily: Fonts.bold,
         color: Colors.text,
     },
     sectionBadge: {
@@ -186,7 +187,7 @@ const styles = StyleSheet.create({
     },
     sectionCount: {
         fontSize: 11,
-        fontWeight: "700",
+        fontFamily: Fonts.bold,
         color: Colors.primary,
     },
     list: {
@@ -203,5 +204,6 @@ const styles = StyleSheet.create({
     emptyText: {
         fontSize: 16,
         color: Colors.textSecondary,
+      fontFamily: Fonts.regular,
     },
 });

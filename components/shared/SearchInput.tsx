@@ -2,6 +2,7 @@ import { Colors, Spacing } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Dimensions, StyleProp, StyleSheet, TextInput, TextStyle, View, ViewStyle } from "react-native";
+import { Fonts } from "@/constants/fonts";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -54,5 +55,6 @@ const styles = StyleSheet.create({
         paddingVertical: SCREEN_WIDTH * 0.04,
         fontSize: 15,
         color: Colors.text,
+      fontFamily: Fonts.regular,
     },
 });

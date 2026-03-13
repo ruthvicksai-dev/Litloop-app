@@ -1,6 +1,8 @@
+import CarouselDots from "@/components/books/CarouselDots";
 import { Colors } from "@/constants/theme";
 import React, { useRef } from "react";
 import { Animated, Dimensions, FlatList, Image, Platform, StyleSheet, Text, View } from "react-native";
+import { Fonts } from "@/constants/fonts";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CAROUSEL_WIDTH = SCREEN_WIDTH;
@@ -19,6 +21,7 @@ export default function BookImageCarousel({
     onIndexChange,
 }: BookImageCarouselProps) {
     const scrollX = useRef(new Animated.Value(0)).current;
+    const flatListRef = useRef<FlatList<string>>(null);
 
     if (images.length === 0) {
         return (
@@ -41,6 +44,7 @@ export default function BookImageCarousel({
             </View>
 
             <FlatList
+                ref={flatListRef}
                 data={images}
                 horizontal
                 pagingEnabled
@@ -69,41 +73,17 @@ export default function BookImageCarousel({
                 )}
             />
 
-            {images.length > 1 ? (
-                <View style={styles.pagination}>
-                    {images.map((_, index) => {
-                        const width = scrollX.interpolate({
-                            inputRange: [
-                                CAROUSEL_WIDTH * (index - 1),
-                                CAROUSEL_WIDTH * index,
-                                CAROUSEL_WIDTH * (index + 1),
-                            ],
-                            outputRange: [8, 20, 8],
-                            extrapolate: "clamp",
-                        });
-
-                        const opacity = scrollX.interpolate({
-                            inputRange: [
-                                CAROUSEL_WIDTH * (index - 1),
-                                CAROUSEL_WIDTH * index,
-                                CAROUSEL_WIDTH * (index + 1),
-                            ],
-                            outputRange: [0.4, 1, 0.4],
-                            extrapolate: "clamp",
-                        });
-
-                        return (
-                            <Animated.View
-                                key={index}
-                                style={[
-                                    styles.dot,
-                                    { width, opacity },
-                                ]}
-                            />
-                        );
-                    })}
-                </View>
-            ) : null}
+            <CarouselDots
+                images={images}
+                activeIndex={activeIndex}
+                onIndexChange={(index) => {
+                    flatListRef.current?.scrollToIndex({
+                        index,
+                        animated: true,
+                    });
+                    onIndexChange(index);
+                }}
+            />
         </View>
     );
 }
@@ -114,6 +94,7 @@ const styles = StyleSheet.create({
         height: IMAGE_HEIGHT + 80,
         justifyContent: "center",
         overflow: "hidden",
+        position: "relative",
     },
     backgroundLayer: {
         ...StyleSheet.absoluteFillObject,
@@ -134,7 +115,8 @@ const styles = StyleSheet.create({
         width: CAROUSEL_WIDTH,
         alignItems: "center",
         justifyContent: "center",
-        paddingVertical: 20,
+        paddingTop: 20,
+        paddingBottom: 44,
     },
     imageShadow: {
         shadowColor: "#000",
@@ -151,21 +133,6 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         backgroundColor: Colors.primaryLight,
     },
-    pagination: {
-        flexDirection: "row",
-        justifyContent: "center",
-        alignItems: "center",
-        height: 20,
-        gap: 8,
-        position: 'absolute',
-        bottom: 10,
-        width: '100%',
-    },
-    dot: {
-        height: 8,
-        borderRadius: 4,
-        backgroundColor: Colors.primary,
-    },
     placeholder: {
         alignItems: "center",
         justifyContent: "center",
@@ -176,5 +143,6 @@ const styles = StyleSheet.create({
     },
     placeholderText: {
         fontSize: SCREEN_WIDTH * 0.2,
+      fontFamily: Fonts.regular,
     },
 });

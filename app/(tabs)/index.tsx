@@ -1,5 +1,6 @@
 import SearchInput from "@/components/shared/SearchInput";
 import BookCard from "@/components/ui/BookCard";
+import { Fonts } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { useHomeEntrance } from "@/hooks/useHomeEntrance";
@@ -123,11 +124,13 @@ const styles = StyleSheet.create({
     fontSize: SCREEN_WIDTH * 0.035,
     color: Colors.textSecondary,
     marginBottom: 4,
-  },
+    fontFamily: Fonts.regular,
+    },
   title: {
     fontSize: SCREEN_WIDTH * 0.065,
-    fontWeight: "800",
+    
     color: Colors.text,
+    fontFamily: Fonts.bold,
   },
   searchContainer: {
     paddingHorizontal: SCREEN_WIDTH * 0.06,
@@ -150,5 +153,6 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     color: Colors.textSecondary,
-  },
+    fontFamily: Fonts.regular,
+    },
 });

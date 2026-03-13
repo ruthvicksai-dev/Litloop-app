@@ -1,7 +1,8 @@
+import { Fonts } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import React, { useRef } from "react";
 import {
-    ActivityIndicator,
+ActivityIndicator,
     Animated,
     StyleSheet,
     Text,
@@ -116,7 +117,7 @@ const styles = StyleSheet.create({
     },
     text: {
         fontSize: 16,
-        fontWeight: "600",
+        fontFamily: Fonts.medium,
     },
     primaryText: {
         color: Colors.white,

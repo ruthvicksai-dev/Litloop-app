@@ -1,7 +1,8 @@
+import { Fonts } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import React from "react";
 import {
-    StyleSheet,
+StyleSheet,
     StyleProp,
     Text,
     TextInput,
@@ -46,7 +47,7 @@ const styles = StyleSheet.create({
     },
     label: {
         fontSize: 14,
-        fontWeight: "600",
+        fontFamily: Fonts.medium,
         color: Colors.text,
         marginBottom: Spacing.xs,
     },
@@ -59,6 +60,7 @@ const styles = StyleSheet.create({
         paddingVertical: 14,
         fontSize: 16,
         color: Colors.text,
+      fontFamily: Fonts.regular,
     },
     inputError: {
         borderColor: Colors.error,
@@ -67,5 +69,6 @@ const styles = StyleSheet.create({
         color: Colors.error,
         fontSize: 12,
         marginTop: Spacing.xs,
+      fontFamily: Fonts.regular,
     },
 });

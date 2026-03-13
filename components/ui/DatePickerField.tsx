@@ -1,3 +1,4 @@
+import { Fonts } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import DateTimePicker, {
     DateTimePickerEvent,
@@ -5,7 +6,7 @@ import DateTimePicker, {
 import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo, useState } from "react";
 import {
-    Platform,
+Platform,
     Pressable,
     StyleProp,
     StyleSheet,
@@ -142,7 +143,7 @@ const styles = StyleSheet.create({
     },
     label: {
         fontSize: 14,
-        fontWeight: "600",
+        fontFamily: Fonts.medium,
         color: Colors.text,
         marginBottom: Spacing.xs,
     },
@@ -158,6 +159,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
+      fontFamily: Fonts.regular,
     },
     inputError: {
         borderColor: Colors.error,
@@ -165,10 +167,12 @@ const styles = StyleSheet.create({
     valueText: {
         fontSize: 16,
         color: Colors.text,
+      fontFamily: Fonts.regular,
     },
     placeholderText: {
         fontSize: 16,
         color: Colors.textLight,
+      fontFamily: Fonts.regular,
     },
     pickerWrap: {
         marginTop: Spacing.sm,
@@ -185,12 +189,13 @@ const styles = StyleSheet.create({
     },
     doneText: {
         fontSize: 14,
-        fontWeight: "700",
+        fontFamily: Fonts.bold,
         color: Colors.primary,
     },
     errorText: {
         color: Colors.error,
         fontSize: 12,
         marginTop: Spacing.xs,
+      fontFamily: Fonts.regular,
     },
 });

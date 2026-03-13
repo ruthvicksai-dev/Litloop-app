@@ -1,3 +1,4 @@
+import { Fonts } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
@@ -25,7 +26,7 @@ export default function AdminDashboardStats({
                 <Text style={styles.statLabel}>Total</Text>
             </View>
             <View style={[styles.statCard, { backgroundColor: "#3B82F615" }]}>
-                <Ionicons name="bicycle" size={18} color="#3B82F6" />
+                <Ionicons name="reader" size={18} color="#3B82F6" />
                 <Text style={[styles.statNumber, { color: "#3B82F6" }]}>{stats.active}</Text>
                 <Text style={styles.statLabel}>Active</Text>
             </View>
@@ -58,12 +59,13 @@ const styles = StyleSheet.create({
     },
     statNumber: {
         fontSize: SCREEN_WIDTH * 0.05,
-        fontWeight: "800",
+
         marginTop: 4,
+        fontFamily: Fonts.bold,
     },
     statLabel: {
         fontSize: 11,
-        fontWeight: "600",
+        fontFamily: Fonts.medium,
         color: Colors.textSecondary,
         marginTop: 2,
     },

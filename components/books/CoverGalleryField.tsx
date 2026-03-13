@@ -1,9 +1,10 @@
+import { Fonts } from "@/constants/fonts";
 import Button from "@/components/ui/Button";
 import { Colors, Spacing } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
-    Image,
+Image,
     Modal,
     Pressable,
     ScrollView,
@@ -116,7 +117,7 @@ const styles = StyleSheet.create({
     },
     coverSectionTitle: {
         fontSize: 15,
-        fontWeight: "600",
+        fontFamily: Fonts.medium,
         color: Colors.text,
         marginBottom: Spacing.sm,
         marginLeft: 4,
@@ -165,6 +166,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: Colors.textSecondary,
         textAlign: "center",
+      fontFamily: Fonts.regular,
     },
     removeBtn: {
         position: "absolute",
@@ -180,7 +182,7 @@ const styles = StyleSheet.create({
     removeBtnText: {
         color: Colors.white,
         fontSize: 14,
-        fontWeight: "bold",
+        fontFamily: Fonts.bold,
         marginTop: -2,
     },
     coverActions: {

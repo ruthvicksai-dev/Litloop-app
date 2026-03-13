@@ -1,8 +1,9 @@
+import { Fonts } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useRef } from "react";
 import {
-    Animated,
+Animated,
     Image,
     StyleSheet,
     Text,
@@ -134,6 +135,7 @@ const styles = StyleSheet.create({
     },
     placeholderText: {
         fontSize: 32,
+      fontFamily: Fonts.regular,
     },
     info: {
         flex: 1,
@@ -142,7 +144,7 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 16,
-        fontWeight: "700",
+        fontFamily: Fonts.bold,
         color: Colors.text,
         marginBottom: 4,
     },
@@ -150,17 +152,18 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: Colors.textSecondary,
         marginBottom: 8,
+      fontFamily: Fonts.regular,
     },
     rent: {
         fontSize: 16,
-        fontWeight: "600",
+        fontFamily: Fonts.medium,
         color: Colors.primary,
         marginBottom: 4,
     },
     availability: {
         fontSize: 12,
         color: Colors.success,
-        fontWeight: "500",
+        fontFamily: Fonts.medium,
     },
     unavailable: {
         color: Colors.error,
@@ -180,7 +183,7 @@ const styles = StyleSheet.create({
     },
     detailsBtnText: {
         color: Colors.primary,
-        fontWeight: "600",
+        fontFamily: Fonts.medium,
         fontSize: 13,
     },
     requestBtn: {
@@ -192,7 +195,7 @@ const styles = StyleSheet.create({
     },
     requestBtnText: {
         color: Colors.white,
-        fontWeight: "600",
+        fontFamily: Fonts.medium,
         fontSize: 13,
     },
     disabledBtn: {

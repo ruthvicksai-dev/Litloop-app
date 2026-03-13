@@ -1,5 +1,6 @@
 import BookImageCarousel from "@/components/books/BookImageCarousel";
 import Button from "@/components/ui/Button";
+import { Fonts } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useBookDetailsScreen } from "@/hooks/useBookDetailsScreen";
 import { useFadeSlideScaleIn } from "@/hooks/useFadeSlideScaleIn";
@@ -49,7 +50,7 @@ export default function BookDetailsScreen() {
                 </View>
                 <View style={[styles.center, { paddingHorizontal: 40 }]}>
                     <Ionicons name="book-outline" size={60} color={Colors.textLight} style={{ marginBottom: 20 }} />
-                    <Text style={{ fontSize: 18, fontWeight: "700", color: Colors.text, marginBottom: 8 }}>
+                    <Text style={{ fontSize: 18, fontFamily: Fonts.bold, color: Colors.text, marginBottom: 8 }}>
                         Book not found
                     </Text>
                     <Text style={{ textAlign: "center", color: Colors.textSecondary, marginBottom: 24 }}>
@@ -149,20 +150,15 @@ const styles = StyleSheet.create({
         paddingHorizontal: SCREEN_WIDTH * 0.06,
         paddingVertical: Spacing.md,
     },
-    headerTitle: { fontSize: 18, fontWeight: "800", color: Colors.text },
+    headerTitle: {
+        fontSize: 18,  color: Colors.text, fontFamily: Fonts.bold,
+    },
     backBtn: {
         padding: 8,
         position: 'absolute',
         top: 10,
         left: 10,
         zIndex: 10,
-        backgroundColor: 'rgba(255,255,255,0.85)',
-        borderRadius: 20,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
     },
     carouselSection: {
         width: SCREEN_WIDTH,
@@ -175,26 +171,26 @@ const styles = StyleSheet.create({
         borderTopLeftRadius: 30,
         borderTopRightRadius: 30,
         backgroundColor: Colors.background,
-        marginTop: -30,
+        marginTop: -20,
     },
     title: {
         fontSize: 28,
-        fontWeight: "800",
         color: Colors.text,
         lineHeight: 34,
         marginBottom: 6,
+        fontFamily: Fonts.bold,
     },
     author: {
         fontSize: 18,
         color: Colors.textSecondary,
-        fontWeight: "500",
+        fontFamily: Fonts.medium,
         marginBottom: Spacing.lg,
     },
     statsContainer: {
         flexDirection: "row",
         backgroundColor: Colors.white,
         borderRadius: 20,
-        paddingVertical: Spacing.lg,
+        paddingVertical: Spacing.md,
         alignItems: "center",
         shadowColor: Colors.shadow,
         shadowOffset: { width: 0, height: 4 },
@@ -210,7 +206,7 @@ const styles = StyleSheet.create({
     },
     statValue: {
         fontSize: 18,
-        fontWeight: "700",
+        fontFamily: Fonts.bold,
         color: Colors.text,
     },
     statLabel: {
@@ -218,6 +214,7 @@ const styles = StyleSheet.create({
         color: Colors.textSecondary,
         textTransform: "uppercase",
         letterSpacing: 0.5,
+        fontFamily: Fonts.regular,
     },
     statDivider: {
         width: 1,
@@ -227,7 +224,7 @@ const styles = StyleSheet.create({
     },
     descTitle: {
         fontSize: 18,
-        fontWeight: "700",
+        fontFamily: Fonts.bold,
         color: Colors.text,
         marginBottom: Spacing.sm,
     },
@@ -236,5 +233,6 @@ const styles = StyleSheet.create({
         color: Colors.textSecondary,
         lineHeight: 24,
         letterSpacing: 0.2,
+        fontFamily: Fonts.regular,
     },
 });

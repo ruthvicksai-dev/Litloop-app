@@ -1,6 +1,7 @@
 import CoverGalleryField from "@/components/books/CoverGalleryField";
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
+import { Fonts } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useEditBookScreen } from "@/hooks/useEditBookScreen";
 import { useFadeSlideIn } from "@/hooks/useFadeSlideIn";
@@ -70,7 +71,7 @@ export default function EditBookScreen() {
                 </View>
                 <View style={[styles.center, { paddingHorizontal: 40 }]}>
                     <Ionicons name="book-outline" size={60} color={Colors.textLight} style={{ marginBottom: 20 }} />
-                    <Text style={{ fontSize: 18, fontWeight: "700", color: Colors.text, marginBottom: 8 }}>
+                    <Text style={{ fontSize: 18, fontFamily: Fonts.bold, color: Colors.text, marginBottom: 8 }}>
                         Book not found
                     </Text>
                     <Text style={{ fontSize: 14, color: Colors.textSecondary, textAlign: "center", marginBottom: 24 }}>
@@ -175,9 +176,11 @@ const styles = StyleSheet.create({
         padding: 4,
         marginLeft: -4,
     },
-    back: { fontSize: 16, color: Colors.primary, fontWeight: "600" },
-    headerTitle: { fontSize: 18, fontWeight: "800", color: Colors.text },
-    deleteText: { fontSize: 15, color: Colors.error, fontWeight: "700" },
+    back: { fontSize: 16, color: Colors.primary, fontFamily: Fonts.medium },
+    headerTitle: {
+        fontSize: 18,  color: Colors.text, fontFamily: Fonts.bold,
+    },
+    deleteText: { fontSize: 15, color: Colors.error, fontFamily: Fonts.bold },
     scroll: {
         paddingHorizontal: SCREEN_WIDTH * 0.06,
         paddingTop: Spacing.md,
@@ -193,7 +196,9 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: Colors.border,
     },
-    statLabel: { fontSize: 13, color: Colors.textSecondary },
-    statBold: { fontWeight: "700", color: Colors.primary },
+    statLabel: {
+        fontSize: 13, color: Colors.textSecondary, fontFamily: Fonts.regular,
+    },
+    statBold: { fontFamily: Fonts.bold, color: Colors.primary },
     saveBtn: { marginTop: Spacing.sm },
 });

@@ -1,4 +1,5 @@
 import Button from "@/components/ui/Button";
+import { Fonts } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useVerifyPaymentScreen } from "@/hooks/useVerifyPaymentScreen";
 import { Ionicons } from "@expo/vector-icons";
@@ -196,18 +197,20 @@ const styles = StyleSheet.create({
     backText: {
         fontSize: 16,
         color: Colors.primary,
-        fontWeight: "600",
+        fontFamily: Fonts.medium,
         marginBottom: Spacing.md,
     },
     title: {
         fontSize: 24,
-        fontWeight: "800",
+        
         color: Colors.text,
         marginBottom: 4,
+      fontFamily: Fonts.bold,
     },
     subtitle: {
         fontSize: 13,
         color: Colors.textSecondary,
+      fontFamily: Fonts.regular,
     },
     list: {
         paddingHorizontal: Spacing.lg,
@@ -221,7 +224,7 @@ const styles = StyleSheet.create({
     },
     detailTitle: {
         fontSize: 18,
-        fontWeight: "700",
+        fontFamily: Fonts.bold,
         color: Colors.text,
         marginBottom: 4,
     },
@@ -229,13 +232,14 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: Colors.textSecondary,
         marginTop: 2,
+      fontFamily: Fonts.regular,
     },
     screenshotCard: {
         marginBottom: Spacing.md,
     },
     screenshotLabel: {
         fontSize: 14,
-        fontWeight: "600",
+        fontFamily: Fonts.medium,
         color: Colors.text,
         marginBottom: Spacing.sm,
     },
@@ -272,23 +276,25 @@ const styles = StyleSheet.create({
     },
     paymentTitle: {
         fontSize: 15,
-        fontWeight: "700",
+        fontFamily: Fonts.bold,
         color: Colors.text,
     },
     paymentSub: {
         fontSize: 12,
         color: Colors.textSecondary,
         marginTop: 2,
+      fontFamily: Fonts.regular,
     },
     paymentAmount: {
         fontSize: 18,
-        fontWeight: "700",
+        fontFamily: Fonts.bold,
         color: Colors.primary,
     },
     paymentUtr: {
         fontSize: 12,
         color: Colors.textSecondary,
         marginTop: 6,
+      fontFamily: Fonts.regular,
     },
     paymentScreenshot: {
         width: "100%",
@@ -308,7 +314,7 @@ const styles = StyleSheet.create({
     },
     approveBtnText: {
         color: Colors.white,
-        fontWeight: "600",
+        fontFamily: Fonts.medium,
         fontSize: 14,
     },
     rejectBtn: {
@@ -324,7 +330,7 @@ const styles = StyleSheet.create({
     },
     rejectBtnText: {
         color: Colors.error,
-        fontWeight: "600",
+        fontFamily: Fonts.medium,
         fontSize: 14,
     },
     empty: {
@@ -338,5 +344,6 @@ const styles = StyleSheet.create({
     emptyText: {
         fontSize: 16,
         color: Colors.textSecondary,
+      fontFamily: Fonts.regular,
     },
 });

@@ -7,6 +7,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity } from "react-native";
+import { Fonts } from "@/constants/fonts";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function AddBookScreen() {
@@ -117,13 +118,14 @@ const styles = StyleSheet.create({
     backText: {
         fontSize: 16,
         color: Colors.primary,
-        fontWeight: "600",
+        fontFamily: Fonts.medium,
         marginBottom: Spacing.md,
     },
     title: {
         fontSize: 24,
-        fontWeight: "800",
+        
         color: Colors.text,
         marginBottom: Spacing.lg,
+      fontFamily: Fonts.bold,
     },
 });

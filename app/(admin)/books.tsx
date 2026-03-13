@@ -1,4 +1,5 @@
 import SearchInput from "@/components/shared/SearchInput";
+import { Fonts } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useAdminBooksScreen } from "@/hooks/useAdminBooksScreen";
 import { useFadeSlideIn } from "@/hooks/useFadeSlideIn";
@@ -102,11 +103,11 @@ export default function AdminBooksScreen() {
                                 <Text style={styles.bookAuthor} numberOfLines={1}>
                                     {item.author}
                                 </Text>
-                               <View style={styles.statsRow}>
-  <Text style={styles.statText}>₹{item.rentPerDay}/day</Text>
-  <Text style={styles.statText}>{item.availableCopies} available</Text>
-  <Text style={styles.statText}>{item.totalCopies} total</Text>
-</View>
+                                <View style={styles.statsRow}>
+                                    <Text style={styles.statText}>₹{item.rentPerDay}/day</Text>
+                                    <Text style={styles.statText}>{item.availableCopies} available</Text>
+                                    <Text style={styles.statText}>{item.totalCopies} total</Text>
+                                </View>
                             </View>
                             <Ionicons name="chevron-forward" size={20} color={Colors.textLight} />
                         </TouchableOpacity>
@@ -131,12 +132,12 @@ const styles = StyleSheet.create({
         alignItems: "center",
         backgroundColor: Colors.background,
     },
-   statText: {
-    fontSize: 12,
-    color: Colors.textSecondary,
-    fontWeight: "600",
-    marginRight: 8
-},
+    statText: {
+        fontSize: 12,
+        color: Colors.textSecondary,
+        fontFamily: Fonts.medium,
+        marginRight: 8
+    },
     header: {
         flexDirection: "row",
         alignItems: "center",
@@ -148,11 +149,11 @@ const styles = StyleSheet.create({
         padding: 4,
         marginLeft: -4,
     },
-    back: { fontSize: 16, color: Colors.primary, fontWeight: "600" },
+    back: { fontSize: 16, color: Colors.primary, fontFamily: Fonts.medium },
     title: {
         fontSize: SCREEN_WIDTH * 0.055,
-        fontWeight: "800",
         color: Colors.text,
+        fontFamily: Fonts.bold,
     },
     addBtn: {
         backgroundColor: Colors.primary,
@@ -163,7 +164,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         gap: 4,
     },
-    addBtnText: { color: Colors.white, fontWeight: "700", fontSize: 13 },
+    addBtnText: { color: Colors.white, fontFamily: Fonts.bold, fontSize: 13 },
     searchBox: {
         marginHorizontal: SCREEN_WIDTH * 0.06,
         marginBottom: Spacing.sm,
@@ -175,6 +176,7 @@ const styles = StyleSheet.create({
     searchInput: {
         paddingVertical: 0,
         fontSize: 14,
+        fontFamily: Fonts.regular,
     },
     list: {
         paddingHorizontal: SCREEN_WIDTH * 0.06,
@@ -208,7 +210,7 @@ const styles = StyleSheet.create({
     info: { flex: 1 },
     bookTitle: {
         fontSize: 15,
-        fontWeight: "700",
+        fontFamily: Fonts.bold,
         color: Colors.text,
         marginBottom: 2,
     },
@@ -216,29 +218,34 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: Colors.textSecondary,
         marginBottom: Spacing.sm,
+        fontFamily: Fonts.regular,
     },
-   statsRow: {
-    flexDirection: "row",
-    gap: 10,
-    flexWrap: "wrap",
-},
-stat: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "baseline",
-    gap: 2,
-},
-    statValue: { fontSize: 13, fontWeight: "700", color: Colors.primary },
-    statLabel: { fontSize: 10, color: Colors.textSecondary },
+    statsRow: {
+        flexDirection: "row",
+        gap: 10,
+        flexWrap: "wrap",
+    },
+    stat: {
+        flex: 1,
+        flexDirection: "row",
+        alignItems: "baseline",
+        gap: 2,
+    },
+    statValue: { fontSize: 13, fontFamily: Fonts.bold, color: Colors.primary },
+    statLabel: {
+        fontSize: 10, color: Colors.textSecondary, fontFamily: Fonts.regular,
+    },
     chevron: {
         fontSize: 22,
         color: Colors.textLight,
-        fontWeight: "600",
+        fontFamily: Fonts.medium,
     },
     empty: {
         alignItems: "center",
         paddingTop: SCREEN_HEIGHT * 0.12,
     },
     emptyIcon: { fontSize: SCREEN_WIDTH * 0.12, marginBottom: Spacing.md },
-    emptyText: { fontSize: 16, color: Colors.textSecondary },
+    emptyText: {
+        fontSize: 16, color: Colors.textSecondary, fontFamily: Fonts.regular,
+    },
 });

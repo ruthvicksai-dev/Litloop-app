@@ -1,3 +1,4 @@
+import { Fonts } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
@@ -44,12 +45,12 @@ const styles = StyleSheet.create({
     headerGreeting: {
         fontSize: 13,
         color: Colors.textSecondary,
-        fontWeight: "500",
+        fontFamily: Fonts.medium,
     },
     title: {
         fontSize: SCREEN_WIDTH * 0.065,
-        fontWeight: "800",
         color: Colors.text,
+        fontFamily: Fonts.bold,
     },
     headerActions: {
         flexDirection: "row",
@@ -66,7 +67,7 @@ const styles = StyleSheet.create({
     },
     iconBtnText: {
         color: Colors.white,
-        fontWeight: "700",
+        fontFamily: Fonts.bold,
         fontSize: 13,
     },
     logoutBtn: {
@@ -81,6 +82,6 @@ const styles = StyleSheet.create({
     logoutText: {
         color: Colors.textSecondary,
         fontSize: 13,
-        fontWeight: "600",
+        fontFamily: Fonts.medium,
     },
 });

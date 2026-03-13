@@ -1,5 +1,5 @@
-import { useState } from "react";
 import * as ImagePicker from "expo-image-picker";
+import { useState } from "react";
 
 const MAX_COVERS = 2;
 const MIN_HD_WIDTH = 400;
@@ -213,7 +213,7 @@ export function useBookCoverManager({
             }
 
             if (fetchedUrls.length > 0) {
-                setCoverUris(fetchedUrls);
+                setCoverUris((prev) => toLimitedUniqueUrls([...prev, ...fetchedUrls]));
                 setNewImagesSelected(true);
                 onSuccess("Book cover(s) fetched successfully!");
                 return;
@@ -227,21 +227,25 @@ export function useBookCoverManager({
         }
     };
 
-    const pickImages = async () => {
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsMultipleSelection: true,
-            quality: 1,
-            selectionLimit: MAX_COVERS,
-        });
+  const pickImages = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsMultipleSelection: true,
+        quality: 1,
+        selectionLimit: MAX_COVERS,
+    });
 
-        if (!result.canceled && result.assets.length > 0) {
-            setCoverUris(
-                toLimitedUniqueUrls(result.assets.map((asset) => asset.uri))
-            );
-            setNewImagesSelected(true);
-        }
-    };
+    if (!result.canceled && result.assets.length > 0) {
+        setCoverUris((prev) =>
+            toLimitedUniqueUrls([
+                ...prev,
+                ...result.assets.map((asset) => asset.uri),
+            ])
+        );
+
+        setNewImagesSelected(true);
+    }
+};
 
     const removeCover = (index: number) => {
         setCoverUris((current) => current.filter((_, itemIndex) => itemIndex !== index));

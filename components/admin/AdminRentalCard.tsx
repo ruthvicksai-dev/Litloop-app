@@ -1,8 +1,9 @@
+import { Fonts } from "@/constants/fonts";
 import { Colors, RENTAL_STATUS_LABELS, STATUS_COLORS } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
-    Dimensions,
+Dimensions,
     Image,
     StyleSheet,
     Text,
@@ -172,7 +173,7 @@ const styles = StyleSheet.create({
     },
     rentalTitle: {
         fontSize: 15,
-        fontWeight: "700",
+        fontFamily: Fonts.bold,
         color: Colors.text,
         marginBottom: 4,
     },
@@ -185,10 +186,12 @@ const styles = StyleSheet.create({
     rentalUser: {
         fontSize: 12,
         color: Colors.textSecondary,
+      fontFamily: Fonts.regular,
     },
     rentalLocation: {
         fontSize: 12,
         color: Colors.textSecondary,
+      fontFamily: Fonts.regular,
     },
     statusBadge: {
         flexDirection: "row",
@@ -205,7 +208,7 @@ const styles = StyleSheet.create({
     },
     statusText: {
         fontSize: 10,
-        fontWeight: "700",
+        fontFamily: Fonts.bold,
     },
     actionRow: {
         flexDirection: "row",
@@ -230,6 +233,6 @@ const styles = StyleSheet.create({
     actionBtnText: {
         color: Colors.white,
         fontSize: 12,
-        fontWeight: "700",
+        fontFamily: Fonts.bold,
     },
 });

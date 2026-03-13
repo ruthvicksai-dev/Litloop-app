@@ -16,6 +16,7 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Fonts } from "@/constants/fonts";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -107,13 +108,15 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: SCREEN_WIDTH * 0.065,
-        fontWeight: "800",
+        
         color: Colors.text,
+      fontFamily: Fonts.bold,
     },
     subtitle: {
         fontSize: SCREEN_WIDTH * 0.035,
         color: Colors.textSecondary,
         marginTop: 4,
+      fontFamily: Fonts.regular,
     },
     list: {
         paddingHorizontal: SCREEN_WIDTH * 0.06,
@@ -132,5 +135,6 @@ const styles = StyleSheet.create({
     emptyText: {
         fontSize: 16,
         color: Colors.textSecondary,
+      fontFamily: Fonts.regular,
     },
 });

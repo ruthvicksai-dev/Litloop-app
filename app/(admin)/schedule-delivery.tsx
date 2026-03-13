@@ -1,6 +1,7 @@
 import Button from "@/components/ui/Button";
 import DatePickerField from "@/components/ui/DatePickerField";
 import TimePickerField from "@/components/ui/TimePickerField";
+import { Fonts } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useScheduleDeliveryScreen } from "@/hooks/useScheduleDeliveryScreen";
 import { Ionicons } from "@expo/vector-icons";
@@ -139,7 +140,7 @@ const styles = StyleSheet.create({
     backText: {
         fontSize: 16,
         color: Colors.primary,
-        fontWeight: "600",
+        fontFamily: Fonts.medium,
         marginBottom: Spacing.md,
     },
     infoLine: {
@@ -150,9 +151,10 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 24,
-        fontWeight: "800",
+        
         color: Colors.text,
         marginBottom: Spacing.lg,
+      fontFamily: Fonts.bold,
     },
     infoCard: {
         backgroundColor: Colors.white,
@@ -162,7 +164,7 @@ const styles = StyleSheet.create({
     },
     infoTitle: {
         fontSize: 16,
-        fontWeight: "700",
+        fontFamily: Fonts.bold,
         color: Colors.text,
         marginBottom: 4,
     },
@@ -170,5 +172,6 @@ const styles = StyleSheet.create({
         fontSize: 13,
         color: Colors.textSecondary,
         marginTop: 2,
+      fontFamily: Fonts.regular,
     },
 });

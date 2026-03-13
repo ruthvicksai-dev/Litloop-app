@@ -2,6 +2,7 @@ import AuthFooter from "@/components/auth/AuthFooter";
 import AuthHeader from "@/components/auth/AuthHeader";
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
+import { Fonts } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { useFadeSlideScaleIn } from "@/hooks/useFadeSlideScaleIn";
@@ -129,6 +130,7 @@ const styles = StyleSheet.create({
     formHint: {
         fontSize: 14,
         color: Colors.textSecondary,
+        fontFamily: Fonts.regular,
         textAlign: "center",
         marginBottom: Spacing.md,
     },

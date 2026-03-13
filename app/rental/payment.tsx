@@ -14,6 +14,7 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Fonts } from "@/constants/fonts";
 
 export default function PaymentScreen() {
     const { rentalId } = useLocalSearchParams<{ rentalId: string }>();
@@ -179,19 +180,21 @@ const styles = StyleSheet.create({
     backText: {
         fontSize: 16,
         color: Colors.primary,
-        fontWeight: "600",
+        fontFamily: Fonts.medium,
         marginBottom: Spacing.md,
     },
     title: {
         fontSize: 24,
-        fontWeight: "800",
+        
         color: Colors.text,
         marginBottom: 4,
+      fontFamily: Fonts.bold,
     },
     subtitle: {
         fontSize: 14,
         color: Colors.textSecondary,
         marginBottom: Spacing.lg,
+      fontFamily: Fonts.regular,
     },
     amountCard: {
         backgroundColor: Colors.primary,
@@ -204,15 +207,17 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: Colors.white,
         opacity: 0.9,
+      fontFamily: Fonts.bold,
     },
     amountValue: {
         fontSize: 36,
-        fontWeight: "800",
+        
         color: Colors.white,
+      fontFamily: Fonts.bold,
     },
     sectionTitle: {
         fontSize: 16,
-        fontWeight: "700",
+        fontFamily: Fonts.bold,
         color: Colors.text,
         marginBottom: Spacing.sm,
     },
@@ -237,12 +242,12 @@ const styles = StyleSheet.create({
     methodIcon: {
         fontSize: 20,
         marginBottom: 4,
-        fontWeight: "700",
+        fontFamily: Fonts.bold,
         color: Colors.text,
     },
     methodText: {
         fontSize: 14,
-        fontWeight: "600",
+        fontFamily: Fonts.medium,
         color: Colors.text,
     },
     methodTextActive: {
@@ -260,7 +265,7 @@ const styles = StyleSheet.create({
     },
     qrTitle: {
         fontSize: 16,
-        fontWeight: "700",
+        fontFamily: Fonts.bold,
         color: Colors.text,
         marginBottom: Spacing.md,
     },
@@ -275,23 +280,24 @@ const styles = StyleSheet.create({
     },
     qrIcon: {
         fontSize: 32,
-        fontWeight: "700",
+        fontFamily: Fonts.bold,
         marginBottom: 8,
         color: Colors.primary,
     },
     qrUpi: {
         fontSize: 14,
-        fontWeight: "600",
+        fontFamily: Fonts.medium,
         color: Colors.primary,
     },
     qrNote: {
         fontSize: 13,
         color: Colors.textSecondary,
         textAlign: "center",
+      fontFamily: Fonts.regular,
     },
     uploadLabel: {
         fontSize: 14,
-        fontWeight: "600",
+        fontFamily: Fonts.medium,
         color: Colors.text,
         marginBottom: Spacing.xs,
     },
@@ -310,13 +316,14 @@ const styles = StyleSheet.create({
     },
     uploadIcon: {
         fontSize: 24,
-        fontWeight: "700",
+        fontFamily: Fonts.bold,
         marginBottom: 8,
         color: Colors.primary,
     },
     uploadText: {
         fontSize: 14,
         color: Colors.textSecondary,
+      fontFamily: Fonts.regular,
     },
     screenshotPreview: {
         width: "100%",
@@ -331,13 +338,13 @@ const styles = StyleSheet.create({
     },
     cashIcon: {
         fontSize: 24,
-        fontWeight: "700",
+        fontFamily: Fonts.bold,
         marginBottom: Spacing.sm,
         color: Colors.primary,
     },
     cashTitle: {
         fontSize: 18,
-        fontWeight: "700",
+        fontFamily: Fonts.bold,
         color: Colors.text,
         marginBottom: Spacing.sm,
     },
@@ -346,5 +353,6 @@ const styles = StyleSheet.create({
         color: Colors.textSecondary,
         textAlign: "center",
         lineHeight: 20,
+      fontFamily: Fonts.regular,
     },
 });

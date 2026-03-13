@@ -1,6 +1,7 @@
 import { Colors } from "@/constants/theme";
 import React from "react";
 import { Animated, StyleSheet, Text } from "react-native";
+import { Fonts } from "@/constants/fonts";
 
 type AuthFooterProps = {
     fadeAnim: Animated.Value;
@@ -33,11 +34,12 @@ const styles = StyleSheet.create({
     },
     footerText: {
         fontSize: 14,
+        fontFamily: Fonts.regular,
         color: Colors.textSecondary,
     },
     link: {
         fontSize: 14,
         color: Colors.primary,
-        fontWeight: "600",
+        fontFamily: Fonts.medium,
     },
 });
