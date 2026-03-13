@@ -1,18 +1,9 @@
 import { Colors } from "@/constants/theme";
-import { useAuth } from "@/context/AuthContext";
-import { Stack, useRouter } from "expo-router";
-import { useEffect } from "react";
+import { useAdminRouteGuard } from "@/hooks/useRouteGuards";
+import { Stack } from "expo-router";
 
 export default function AdminLayout() {
-    const { user, isLoading, isAdmin } = useAuth();
-    const router = useRouter();
-
-    // Protect admin routes
-    useEffect(() => {
-        if (!isLoading && (!user || !isAdmin)) {
-            router.replace("/(auth)/sign-in");
-        }
-    }, [user, isLoading, isAdmin]);
+    useAdminRouteGuard();
 
     return (
         <Stack

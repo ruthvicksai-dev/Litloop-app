@@ -1,13 +1,10 @@
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
 import { Colors, Spacing, ZONES } from "@/constants/theme";
-import { useAuth } from "@/context/AuthContext";
-import { useToast } from "@/context/ToastContext";
-import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
+import { useFadeSlideIn } from "@/hooks/useFadeSlideIn";
+import { useRequestRentalScreen } from "@/hooks/useRequestRentalScreen";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
 import {
     Animated,
     Dimensions,
@@ -25,74 +22,23 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function RequestRentalScreen() {
     const { bookId } = useLocalSearchParams<{ bookId: string }>();
-    const book = useQuery(api.books.get, {
-        bookId: bookId as Id<"books">,
-    });
-    const { userId } = useAuth();
-    const { showToast } = useToast();
     const router = useRouter();
-    const requestRental = useMutation(api.rentals.requestRental);
-
-    const [zone, setZone] = useState("");
-    const [area, setArea] = useState("");
-    const [city, setCity] = useState("");
-    const [landmark, setLandmark] = useState("");
-    const [phone, setPhone] = useState("");
-    const [loading, setLoading] = useState(false);
-
-    // Entrance animations
-    const fadeAnim = useRef(new Animated.Value(0)).current;
-    const slideAnim = useRef(new Animated.Value(30)).current;
-
-    useEffect(() => {
-        Animated.parallel([
-            Animated.timing(fadeAnim, {
-                toValue: 1,
-                duration: 500,
-                useNativeDriver: true,
-            }),
-            Animated.timing(slideAnim, {
-                toValue: 0,
-                duration: 500,
-                useNativeDriver: true,
-            }),
-        ]).start();
-    }, []);
-
-    const handleRequest = async () => {
-        if (!zone) {
-            showToast("Please select a zone.", "error");
-            return;
-        }
-        if (!area.trim()) {
-            showToast("Area/Hostel/Apartment is required.", "error");
-            return;
-        }
-        if (!city.trim()) {
-            showToast("City is required.", "error");
-            return;
-        }
-        if (!phone.trim()) {
-            showToast("Phone number is required.", "error");
-            return;
-        }
-
-        setLoading(true);
-        try {
-            await requestRental({
-                userId: userId! as Id<"users">,
-                bookId: bookId as Id<"books">,
-                zone,
-                deliveryLocation: { area, city, landmark, phone },
-            });
-            showToast("Book requested successfully!", "success");
-            router.replace("/(tabs)/my-rentals");
-        } catch (error: any) {
-            showToast(error.message || "Failed to request book.", "error");
-        } finally {
-            setLoading(false);
-        }
-    };
+    const { fadeAnim, slideAnim } = useFadeSlideIn();
+    const {
+        book,
+        zone,
+        setZone,
+        area,
+        setArea,
+        city,
+        setCity,
+        landmark,
+        setLandmark,
+        phone,
+        setPhone,
+        loading,
+        handleRequest,
+    } = useRequestRentalScreen(bookId);
 
     return (
         <SafeAreaView style={styles.container}>
@@ -107,7 +53,7 @@ export default function RequestRentalScreen() {
                     showsVerticalScrollIndicator={false}
                 >
                     <TouchableOpacity onPress={() => router.back()}>
-                        <Text style={styles.backText}>← Back</Text>
+                        <Text style={styles.backText}>â† Back</Text>
                     </TouchableOpacity>
 
                     <Animated.View
@@ -117,39 +63,36 @@ export default function RequestRentalScreen() {
                         }}
                     >
                         <Text style={styles.title}>Request Rental</Text>
-                        {book && (
+                        {book ? (
                             <Text style={styles.bookInfo}>
-                                {book.title} • ₹{book.rentPerDay}/day
+                                {book.title} â€¢ â‚¹{book.rentPerDay}/day
                             </Text>
-                        )}
+                        ) : null}
 
                         <Text style={styles.sectionTitle}>Delivery Zone</Text>
                         <View style={styles.zoneGrid}>
-                            {ZONES.map((z) => (
+                            {ZONES.map((item) => (
                                 <TouchableOpacity
-                                    key={z}
+                                    key={item}
                                     style={[
                                         styles.zoneChip,
-                                        zone === z && styles.zoneChipActive,
+                                        zone === item && styles.zoneChipActive,
                                     ]}
-                                    onPress={() => setZone(z)}
+                                    onPress={() => setZone(item)}
                                 >
                                     <Text
                                         style={[
                                             styles.zoneChipText,
-                                            zone === z &&
-                                            styles.zoneChipTextActive,
+                                            zone === item && styles.zoneChipTextActive,
                                         ]}
                                     >
-                                        {z}
+                                        {item}
                                     </Text>
                                 </TouchableOpacity>
                             ))}
                         </View>
 
-                        <Text style={styles.sectionTitle}>
-                            Delivery Address
-                        </Text>
+                        <Text style={styles.sectionTitle}>Delivery Address</Text>
                         <InputField
                             label="Area / Hostel / Apartment"
                             placeholder="e.g. Room 205, Hostel A"

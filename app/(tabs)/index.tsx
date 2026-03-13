@@ -1,10 +1,11 @@
 import BookCard from "@/components/ui/BookCard";
+import SearchInput from "@/components/shared/SearchInput";
 import { Colors, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
-import { api } from "@/convex/_generated/api";
-import { useQuery } from "convex/react";
+import { useHomeEntrance } from "@/hooks/useHomeEntrance";
+import { useHomeScreen } from "@/hooks/useHomeScreen";
 import { useRouter } from "expo-router";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React from "react";
 import {
   ActivityIndicator,
   Animated,
@@ -12,7 +13,6 @@ import {
   FlatList,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -20,48 +20,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function HomeScreen() {
-  const books = useQuery(api.books.list);
   const { user } = useAuth();
   const router = useRouter();
-  const [search, setSearch] = useState("");
-
-  // Entrance animations
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(30)).current;
-  const searchFade = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.stagger(150, [
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-      ]),
-      Animated.timing(searchFade, {
-        toValue: 1,
-        duration: 400,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
-
-  const filteredBooks = useMemo(() => {
-    if (!books) return [];
-    if (!search.trim()) return books;
-    const query = search.toLowerCase();
-    return books.filter(
-      (b) =>
-        b.title.toLowerCase().includes(query) ||
-        b.author.toLowerCase().includes(query)
-    );
-  }, [books, search]);
+  const { books, search, setSearch, filteredBooks } = useHomeScreen();
+  const { fadeAnim, slideAnim, searchFade } = useHomeEntrance();
 
   if (books === undefined) {
     return (
@@ -83,20 +45,16 @@ export default function HomeScreen() {
         ]}
       >
         <Text style={styles.greeting}>
-          Hello, {user?.name?.split(" ")[0] || "Reader"} 👋
+          Hello, {user?.name?.split(" ")[0] || "Reader"} ðŸ‘‹
         </Text>
         <Text style={styles.title}>Discover Books</Text>
       </Animated.View>
 
-      <Animated.View
-        style={[styles.searchContainer, { opacity: searchFade }]}
-      >
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search books or authors..."
-          placeholderTextColor={Colors.textLight}
+      <Animated.View style={[styles.searchContainer, { opacity: searchFade }]}>
+        <SearchInput
           value={search}
           onChangeText={setSearch}
+          placeholder="Search books or authors..."
         />
       </Animated.View>
 
@@ -135,7 +93,7 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyIcon}>📖</Text>
+            <Text style={styles.emptyIcon}>ðŸ“–</Text>
             <Text style={styles.emptyText}>No books available yet</Text>
           </View>
         }
@@ -173,16 +131,6 @@ const styles = StyleSheet.create({
   searchContainer: {
     paddingHorizontal: SCREEN_WIDTH * 0.06,
     paddingBottom: Spacing.md,
-  },
-  searchInput: {
-    backgroundColor: Colors.white,
-    borderRadius: 12,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: SCREEN_HEIGHT * 0.015,
-    fontSize: 15,
-    color: Colors.text,
-    borderWidth: 1,
-    borderColor: Colors.border,
   },
   list: {
     paddingHorizontal: SCREEN_WIDTH * 0.06,

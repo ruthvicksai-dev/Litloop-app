@@ -2,8 +2,9 @@ import RentalCard from "@/components/ui/RentalCard";
 import { Colors, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";
+import { useFadeSlideIn } from "@/hooks/useFadeSlideIn";
 import { useQuery } from "convex/react";
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import {
     ActivityIndicator,
     Animated,
@@ -19,29 +20,8 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function RentalHistoryScreen() {
     const { userId } = useAuth();
-    const history = useQuery(
-        api.rentals.getRentalHistory,
-        userId ? { userId } : "skip"
-    );
-
-    // Entrance animations
-    const fadeAnim = useRef(new Animated.Value(0)).current;
-    const slideAnim = useRef(new Animated.Value(30)).current;
-
-    useEffect(() => {
-        Animated.parallel([
-            Animated.timing(fadeAnim, {
-                toValue: 1,
-                duration: 500,
-                useNativeDriver: true,
-            }),
-            Animated.timing(slideAnim, {
-                toValue: 0,
-                duration: 500,
-                useNativeDriver: true,
-            }),
-        ]).start();
-    }, []);
+    const history = useQuery(api.rentals.getRentalHistory, userId ? { userId } : "skip");
+    const { fadeAnim, slideAnim } = useFadeSlideIn();
 
     if (history === undefined) {
         return (
@@ -99,10 +79,8 @@ export default function RentalHistoryScreen() {
                 showsVerticalScrollIndicator={false}
                 ListEmptyComponent={
                     <View style={styles.empty}>
-                        <Text style={styles.emptyIcon}>📜</Text>
-                        <Text style={styles.emptyText}>
-                            No rental history yet
-                        </Text>
+                        <Text style={styles.emptyIcon}>ðŸ“œ</Text>
+                        <Text style={styles.emptyText}>No rental history yet</Text>
                     </View>
                 }
             />

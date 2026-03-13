@@ -1,85 +1,32 @@
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
 import { Colors, Spacing } from "@/constants/theme";
-import { useToast } from "@/context/ToastContext";
-import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
+import { useScheduleReturnScreen } from "@/hooks/useScheduleReturnScreen";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useState } from "react";
+import React from "react";
 import {
     ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
-    View
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ScheduleReturnScreen() {
     const { rentalId } = useLocalSearchParams<{ rentalId: string }>();
-    const rental = useQuery(api.rentals.getRental, {
-        rentalId: rentalId as Id<"rentals">,
-    });
-    const { showToast } = useToast();
     const router = useRouter();
-    const schedulePickup = useMutation(api.rentals.schedulePickup);
-
-    const [pickupDate, setPickupDate] = useState("");
-    const [pickupTime, setPickupTime] = useState("");
-    const [loading, setLoading] = useState(false);
-
-    const handleSchedule = async () => {
-        if (!pickupDate) {
-            showToast("Pickup date is required.", "error");
-            return;
-        }
-        if (!pickupTime) {
-            showToast("Pickup time is required.", "error");
-            return;
-        }
-
-        // Validate date format (YYYY-MM-DD)
-        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-        if (!dateRegex.test(pickupDate)) {
-            showToast("Date should be in YYYY-MM-DD format.", "error");
-            return;
-        }
-
-        if (rental?.deliveryDate && new Date(pickupDate) <= new Date(rental.deliveryDate)) {
-            showToast("Pickup date must be after delivery date.", "error");
-            return;
-        }
-
-        setLoading(true);
-        try {
-            await schedulePickup({
-                rentalId: rentalId as Id<"rentals">,
-                pickupDate,
-                pickupTime,
-            });
-            showToast("Pickup scheduled! Proceed to payment.", "success");
-            router.replace(`/rental/payment?rentalId=${rentalId}`);
-        } catch (error: any) {
-            showToast(error.message || "Failed to schedule pickup.", "error");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const estimatedDays =
-        rental?.deliveryDate && pickupDate
-            ? Math.max(
-                0,
-                Math.ceil(
-                    (new Date(pickupDate).getTime() -
-                        new Date(rental.deliveryDate).getTime()) /
-                    (1000 * 60 * 60 * 24)
-                )
-            )
-            : 0;
-
-    const estimatedRent = estimatedDays * (rental?.rentPerDay || 0);
+    const {
+        rental,
+        pickupDate,
+        setPickupDate,
+        pickupTime,
+        setPickupTime,
+        loading,
+        estimatedDays,
+        estimatedRent,
+        handleSchedule,
+    } = useScheduleReturnScreen(rentalId);
 
     return (
         <SafeAreaView style={styles.container}>
@@ -88,20 +35,18 @@ export default function ScheduleReturnScreen() {
                 keyboardShouldPersistTaps="handled"
             >
                 <TouchableOpacity onPress={() => router.back()}>
-                    <Text style={styles.backText}>← Back</Text>
+                    <Text style={styles.backText}>â† Back</Text>
                 </TouchableOpacity>
 
                 <Text style={styles.title}>Schedule Return</Text>
-                <Text style={styles.subtitle}>
-                    {rental?.book?.title || "Loading..."}
-                </Text>
+                <Text style={styles.subtitle}>{rental?.book?.title || "Loading..."}</Text>
 
-                {rental?.deliveryDate && (
+                {rental?.deliveryDate ? (
                     <View style={styles.infoCard}>
                         <Text style={styles.infoLabel}>Delivered on</Text>
                         <Text style={styles.infoValue}>{rental.deliveryDate}</Text>
                     </View>
-                )}
+                ) : null}
 
                 <InputField
                     label="Pickup Date"
@@ -116,7 +61,7 @@ export default function ScheduleReturnScreen() {
                     onChangeText={setPickupTime}
                 />
 
-                {estimatedDays > 0 && (
+                {estimatedDays > 0 ? (
                     <View style={styles.estimateCard}>
                         <Text style={styles.estimateTitle}>Rent Estimate</Text>
                         <View style={styles.estimateRow}>
@@ -125,20 +70,19 @@ export default function ScheduleReturnScreen() {
                         </View>
                         <View style={styles.estimateRow}>
                             <Text style={styles.estimateLabel}>Rate</Text>
-                            <Text style={styles.estimateValue}>
-                                ₹{rental?.rentPerDay}/day
-                            </Text>
+                            <Text style={styles.estimateValue}>â‚¹{rental?.rentPerDay}/day</Text>
                         </View>
                         <View
-                            style={[styles.estimateRow, { borderTopWidth: 1, borderTopColor: Colors.border, paddingTop: 8, marginTop: 4 }]}
+                            style={[
+                                styles.estimateRow,
+                                styles.totalRow,
+                            ]}
                         >
-                            <Text style={[styles.estimateLabel, { fontWeight: "700" }]}>
-                                Total
-                            </Text>
-                            <Text style={styles.totalValue}>₹{estimatedRent}</Text>
+                            <Text style={[styles.estimateLabel, styles.totalLabel]}>Total</Text>
+                            <Text style={styles.totalValue}>â‚¹{estimatedRent}</Text>
                         </View>
                     </View>
-                )}
+                ) : null}
 
                 <Button
                     title="Schedule Pickup"
@@ -220,6 +164,15 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: "600",
         color: Colors.text,
+    },
+    totalRow: {
+        borderTopWidth: 1,
+        borderTopColor: Colors.border,
+        paddingTop: 8,
+        marginTop: 4,
+    },
+    totalLabel: {
+        fontWeight: "700",
     },
     totalValue: {
         fontSize: 18,

@@ -1,12 +1,9 @@
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
 import { Colors, Spacing } from "@/constants/theme";
-import { useToast } from "@/context/ToastContext";
-import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
+import { useScheduleDeliveryScreen } from "@/hooks/useScheduleDeliveryScreen";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useState } from "react";
+import React from "react";
 import {
     ActivityIndicator,
     ScrollView,
@@ -19,48 +16,16 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ScheduleDeliveryScreen() {
     const { rentalId } = useLocalSearchParams<{ rentalId: string }>();
-    const rental = useQuery(api.rentals.getRental, {
-        rentalId: rentalId as Id<"rentals">,
-    });
-    const { showToast } = useToast();
     const router = useRouter();
-    const scheduleDelivery = useMutation(api.rentals.scheduleDelivery);
-
-    const [deliveryDate, setDeliveryDate] = useState("");
-    const [deliveryTime, setDeliveryTime] = useState("");
-    const [loading, setLoading] = useState(false);
-
-    const handleSchedule = async () => {
-        if (!deliveryDate) {
-            showToast("Delivery date is required.", "error");
-            return;
-        }
-        if (!deliveryTime) {
-            showToast("Delivery time is required.", "error");
-            return;
-        }
-
-        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-        if (!dateRegex.test(deliveryDate)) {
-            showToast("Date should be in YYYY-MM-DD format.", "error");
-            return;
-        }
-
-        setLoading(true);
-        try {
-            await scheduleDelivery({
-                rentalId: rentalId as Id<"rentals">,
-                deliveryDate,
-                deliveryTime,
-            });
-            showToast("Delivery scheduled!", "success");
-            router.back();
-        } catch (error: any) {
-            showToast(error.message || "Failed to schedule delivery.", "error");
-        } finally {
-            setLoading(false);
-        }
-    };
+    const {
+        rental,
+        deliveryDate,
+        setDeliveryDate,
+        deliveryTime,
+        setDeliveryTime,
+        loading,
+        handleSchedule,
+    } = useScheduleDeliveryScreen(rentalId);
 
     if (!rental) {
         return (
@@ -77,7 +42,7 @@ export default function ScheduleDeliveryScreen() {
                 keyboardShouldPersistTaps="handled"
             >
                 <TouchableOpacity onPress={() => router.back()}>
-                    <Text style={styles.backText}>← Back</Text>
+                    <Text style={styles.backText}>â† Back</Text>
                 </TouchableOpacity>
 
                 <Text style={styles.title}>Schedule Delivery</Text>
@@ -85,17 +50,16 @@ export default function ScheduleDeliveryScreen() {
                 <View style={styles.infoCard}>
                     <Text style={styles.infoTitle}>{rental.book?.title}</Text>
                     <Text style={styles.infoSub}>
-                        For: {rental.user?.name} • {rental.user?.phone}
+                        For: {rental.user?.name} â€¢ {rental.user?.phone}
                     </Text>
                     <Text style={styles.infoSub}>
-                        📍 {rental.zone} — {rental.deliveryLocation?.area},{" "}
-                        {rental.deliveryLocation?.city}
+                        ðŸ“ {rental.zone} â€” {rental.deliveryLocation?.area}, {rental.deliveryLocation?.city}
                     </Text>
-                    {rental.deliveryLocation?.landmark && (
+                    {rental.deliveryLocation?.landmark ? (
                         <Text style={styles.infoSub}>
                             Landmark: {rental.deliveryLocation.landmark}
                         </Text>
-                    )}
+                    ) : null}
                 </View>
 
                 <InputField

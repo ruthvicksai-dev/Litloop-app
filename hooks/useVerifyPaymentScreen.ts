@@ -1,0 +1,37 @@
+import { useToast } from "@/context/ToastContext";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
+import { useMutation, useQuery } from "convex/react";
+
+export function useVerifyPaymentScreen(rentalId?: string) {
+    const { showToast } = useToast();
+    const verifyPayment = useMutation(api.payments.verifyPayment);
+    const pendingPayments = useQuery(api.payments.getPendingPayments);
+    const singleRental = useQuery(
+        api.rentals.getRental,
+        rentalId ? { rentalId: rentalId as Id<"rentals"> } : "skip"
+    );
+
+    const handleVerify = async (targetRentalId: string, approved: boolean) => {
+        try {
+            await verifyPayment({
+                rentalId: targetRentalId as Id<"rentals">,
+                approved,
+            });
+            showToast(
+                approved ? "Payment approved!" : "Payment rejected.",
+                approved ? "success" : "error"
+            );
+        } catch (error: unknown) {
+            const message =
+                error instanceof Error ? error.message : "Failed to verify payment.";
+            showToast(message, "error");
+        }
+    };
+
+    return {
+        pendingPayments,
+        singleRental,
+        handleVerify,
+    };
+}

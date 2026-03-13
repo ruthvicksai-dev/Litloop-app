@@ -1,21 +1,10 @@
 import { Colors } from "@/constants/theme";
-import { useAuth } from "@/context/AuthContext";
-import { Tabs, useRouter } from "expo-router";
-import { useEffect } from "react";
+import { useTabsRouteGuard } from "@/hooks/useRouteGuards";
+import { Tabs } from "expo-router";
 import { Text } from "react-native";
 
 export default function TabsLayout() {
-  const { user, isLoading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (isLoading) return;
-    if (!user) {
-      router.replace("/(auth)/sign-in");
-    } else if (user.role === "admin") {
-      router.replace("/(admin)/dashboard");
-    }
-  }, [user, isLoading]);
+  useTabsRouteGuard();
 
   return (
     <Tabs

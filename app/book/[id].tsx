@@ -1,16 +1,14 @@
+import BookImageCarousel from "@/components/books/BookImageCarousel";
 import Button from "@/components/ui/Button";
 import { Colors, Spacing } from "@/constants/theme";
-import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
-import { useQuery } from "convex/react";
+import { useBookDetailsScreen } from "@/hooks/useBookDetailsScreen";
+import { useFadeSlideScaleIn } from "@/hooks/useFadeSlideScaleIn";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import {
     ActivityIndicator,
     Animated,
     Dimensions,
-    FlatList,
-    Image,
     ScrollView,
     StyleSheet,
     Text,
@@ -23,37 +21,12 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function BookDetailsScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
-    const book = useQuery(api.books.get, {
-        bookId: id as Id<"books">,
-    });
     const router = useRouter();
-
-    // Entrance animations
-    const fadeAnim = useRef(new Animated.Value(0)).current;
-    const slideAnim = useRef(new Animated.Value(40)).current;
-    const coverScale = useRef(new Animated.Value(0.8)).current;
-    const [activeIndex, setActiveIndex] = React.useState(0);
-
-    useEffect(() => {
-        Animated.parallel([
-            Animated.timing(fadeAnim, {
-                toValue: 1,
-                duration: 500,
-                useNativeDriver: true,
-            }),
-            Animated.timing(slideAnim, {
-                toValue: 0,
-                duration: 500,
-                useNativeDriver: true,
-            }),
-            Animated.spring(coverScale, {
-                toValue: 1,
-                friction: 5,
-                tension: 60,
-                useNativeDriver: true,
-            }),
-        ]).start();
-    }, []);
+    const { fadeAnim, slideAnim, scaleAnim } = useFadeSlideScaleIn({
+        slideFrom: 40,
+        scaleFrom: 0.8,
+    });
+    const { book, activeIndex, setActiveIndex, images } = useBookDetailsScreen(id);
 
     if (book === undefined) {
         return (
@@ -66,61 +39,21 @@ export default function BookDetailsScreen() {
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView showsVerticalScrollIndicator={false}>
-                <TouchableOpacity
-                    style={styles.backBtn}
-                    onPress={() => router.back()}
-                >
-                    <Text style={styles.backText}>← Back</Text>
+                <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+                    <Text style={styles.backText}>â† Back</Text>
                 </TouchableOpacity>
 
                 <Animated.View
                     style={[
                         styles.galleryWrapper,
-                        { transform: [{ scale: coverScale }] },
+                        { transform: [{ scale: scaleAnim }] },
                     ]}
                 >
-                    {((book.coverUrls && book.coverUrls.length > 0) || book.coverUrl) ? (
-                        <View>
-                            <FlatList
-                                data={book.coverUrls && book.coverUrls.length > 0 ? book.coverUrls : [book.coverUrl!]}
-                                horizontal
-                                pagingEnabled
-                                showsHorizontalScrollIndicator={false}
-                                keyExtractor={(_, index) => index.toString()}
-                                onScroll={(e) => {
-                                    const x = e.nativeEvent.contentOffset.x;
-                                    setActiveIndex(Math.round(x / SCREEN_WIDTH));
-                                }}
-                                scrollEventThrottle={16}
-                                renderItem={({ item }) => (
-                                    <View style={styles.galleryItem}>
-                                        <Image
-                                            source={{ uri: item }}
-                                            style={styles.cover}
-                                        />
-                                    </View>
-                                )}
-                            />
-                            {/* Pagination Dots */}
-                            {(book.coverUrls && book.coverUrls.length > 1) && (
-                                <View style={styles.pagination}>
-                                    {book.coverUrls.map((_, i) => (
-                                        <View
-                                            key={i}
-                                            style={[
-                                                styles.dot,
-                                                activeIndex === i && styles.activeDot,
-                                            ]}
-                                        />
-                                    ))}
-                                </View>
-                            )}
-                        </View>
-                    ) : (
-                        <View style={[styles.cover, styles.placeholder]}>
-                            <Text style={styles.placeholderText}>📖</Text>
-                        </View>
-                    )}
+                    <BookImageCarousel
+                        images={images}
+                        activeIndex={activeIndex}
+                        onIndexChange={setActiveIndex}
+                    />
                 </Animated.View>
 
                 <Animated.View
@@ -137,23 +70,17 @@ export default function BookDetailsScreen() {
 
                     <View style={styles.statsRow}>
                         <View style={styles.stat}>
-                            <Text style={styles.statValue}>
-                                ₹{book.rentPerDay}
-                            </Text>
+                            <Text style={styles.statValue}>â‚¹{book.rentPerDay}</Text>
                             <Text style={styles.statLabel}>per day</Text>
                         </View>
                         <View style={styles.divider} />
                         <View style={styles.stat}>
-                            <Text style={styles.statValue}>
-                                {book.availableCopies}
-                            </Text>
+                            <Text style={styles.statValue}>{book.availableCopies}</Text>
                             <Text style={styles.statLabel}>available</Text>
                         </View>
                         <View style={styles.divider} />
                         <View style={styles.stat}>
-                            <Text style={styles.statValue}>
-                                {book.totalCopies}
-                            </Text>
+                            <Text style={styles.statValue}>{book.totalCopies}</Text>
                             <Text style={styles.statLabel}>total</Text>
                         </View>
                     </View>
@@ -162,14 +89,8 @@ export default function BookDetailsScreen() {
                     <Text style={styles.description}>{book.description}</Text>
 
                     <Button
-                        title={
-                            book.availableCopies > 0
-                                ? "Request Book"
-                                : "Unavailable"
-                        }
-                        onPress={() =>
-                            router.push(`/rental/request?bookId=${book._id}`)
-                        }
+                        title={book.availableCopies > 0 ? "Request Book" : "Unavailable"}
+                        onPress={() => router.push(`/rental/request?bookId=${book._id}`)}
                         disabled={book.availableCopies <= 0}
                         style={{ marginTop: Spacing.lg }}
                     />
@@ -203,43 +124,6 @@ const styles = StyleSheet.create({
         width: SCREEN_WIDTH,
         alignItems: "center",
         paddingVertical: Spacing.lg,
-    },
-    galleryItem: {
-        width: SCREEN_WIDTH,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    cover: {
-        width: SCREEN_WIDTH * 0.6,
-        height: SCREEN_WIDTH * 0.6 * 1.5,
-        borderRadius: 16,
-        backgroundColor: Colors.primaryLight,
-    },
-    pagination: {
-        flexDirection: "row",
-        justifyContent: "center",
-        marginTop: Spacing.md,
-        gap: 6,
-    },
-    dot: {
-        width: 6,
-        height: 6,
-        borderRadius: 3,
-        backgroundColor: Colors.border,
-    },
-    activeDot: {
-        width: 14,
-        backgroundColor: Colors.primary,
-    },
-    placeholder: {
-        alignItems: "center",
-        justifyContent: "center",
-        width: SCREEN_WIDTH * 0.6,
-        height: SCREEN_WIDTH * 0.6 * 1.5,
-        borderRadius: 16,
-    },
-    placeholderText: {
-        fontSize: SCREEN_WIDTH * 0.2,
     },
     info: {
         paddingHorizontal: SCREEN_WIDTH * 0.06,

@@ -1,8 +1,9 @@
+import SearchInput from "@/components/shared/SearchInput";
 import { Colors, Spacing } from "@/constants/theme";
-import { api } from "@/convex/_generated/api";
-import { useQuery } from "convex/react";
+import { useAdminBooksScreen } from "@/hooks/useAdminBooksScreen";
+import { useFadeSlideIn } from "@/hooks/useFadeSlideIn";
 import { useRouter } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
 import {
     ActivityIndicator,
     Animated,
@@ -11,7 +12,6 @@ import {
     Image,
     StyleSheet,
     Text,
-    TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
@@ -20,26 +20,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function AdminBooksScreen() {
-    const books = useQuery(api.books.list);
     const router = useRouter();
-    const [search, setSearch] = useState("");
-
-    const fadeAnim = useRef(new Animated.Value(0)).current;
-    const slideAnim = useRef(new Animated.Value(20)).current;
-
-    useEffect(() => {
-        Animated.parallel([
-            Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }),
-            Animated.timing(slideAnim, { toValue: 0, duration: 400, useNativeDriver: true }),
-        ]).start();
-    }, []);
-
-    const filtered = books?.filter(
-        (b) =>
-            !search ||
-            b.title.toLowerCase().includes(search.toLowerCase()) ||
-            b.author.toLowerCase().includes(search.toLowerCase())
-    );
+    const { books, search, setSearch, filteredBooks } = useAdminBooksScreen();
+    const { fadeAnim, slideAnim } = useFadeSlideIn({ slideFrom: 20, duration: 400 });
 
     if (books === undefined) {
         return (
@@ -58,7 +41,7 @@ export default function AdminBooksScreen() {
                 ]}
             >
                 <TouchableOpacity onPress={() => router.back()}>
-                    <Text style={styles.back}>← Back</Text>
+                    <Text style={styles.back}>â† Back</Text>
                 </TouchableOpacity>
                 <Text style={styles.title}>Manage Books</Text>
                 <TouchableOpacity
@@ -70,18 +53,18 @@ export default function AdminBooksScreen() {
             </Animated.View>
 
             <Animated.View style={[styles.searchBox, { opacity: fadeAnim }]}>
-                <Text style={styles.searchIcon}>🔍</Text>
-                <TextInput
-                    style={styles.searchInput}
-                    placeholder="Search by title or author..."
-                    placeholderTextColor={Colors.textLight}
+                <SearchInput
                     value={search}
                     onChangeText={setSearch}
+                    placeholder="Search by title or author..."
+                    icon="ðŸ”"
+                    containerStyle={styles.searchInputContainer}
+                    inputStyle={styles.searchInput}
                 />
             </Animated.View>
 
             <FlatList
-                data={filtered}
+                data={filteredBooks}
                 keyExtractor={(item) => item._id}
                 contentContainerStyle={styles.list}
                 renderItem={({ item, index }) => (
@@ -100,21 +83,14 @@ export default function AdminBooksScreen() {
                     >
                         <TouchableOpacity
                             style={styles.card}
-                            onPress={() =>
-                                router.push(
-                                    `/(admin)/edit-book?bookId=${item._id}`
-                                )
-                            }
+                            onPress={() => router.push(`/(admin)/edit-book?bookId=${item._id}`)}
                             activeOpacity={0.8}
                         >
                             {item.coverUrl ? (
-                                <Image
-                                    source={{ uri: item.coverUrl }}
-                                    style={styles.cover}
-                                />
+                                <Image source={{ uri: item.coverUrl }} style={styles.cover} />
                             ) : (
                                 <View style={[styles.cover, styles.coverPlaceholder]}>
-                                    <Text style={styles.coverEmoji}>📖</Text>
+                                    <Text style={styles.coverEmoji}>ðŸ“–</Text>
                                 </View>
                             )}
                             <View style={styles.info}>
@@ -126,7 +102,7 @@ export default function AdminBooksScreen() {
                                 </Text>
                                 <View style={styles.statsRow}>
                                     <View style={styles.stat}>
-                                        <Text style={styles.statValue}>₹{item.rentPerDay}</Text>
+                                        <Text style={styles.statValue}>â‚¹{item.rentPerDay}</Text>
                                         <Text style={styles.statLabel}>/day</Text>
                                     </View>
                                     <View style={styles.stat}>
@@ -139,13 +115,13 @@ export default function AdminBooksScreen() {
                                     </View>
                                 </View>
                             </View>
-                            <Text style={styles.chevron}>›</Text>
+                            <Text style={styles.chevron}>â€º</Text>
                         </TouchableOpacity>
                     </Animated.View>
                 )}
                 ListEmptyComponent={
                     <View style={styles.empty}>
-                        <Text style={styles.emptyIcon}>📚</Text>
+                        <Text style={styles.emptyIcon}>ðŸ“š</Text>
                         <Text style={styles.emptyText}>No books found</Text>
                     </View>
                 }
@@ -183,20 +159,17 @@ const styles = StyleSheet.create({
     },
     addBtnText: { color: Colors.white, fontWeight: "700", fontSize: 13 },
     searchBox: {
-        flexDirection: "row",
-        alignItems: "center",
         marginHorizontal: SCREEN_WIDTH * 0.06,
         marginBottom: Spacing.sm,
-        backgroundColor: Colors.white,
-        borderRadius: 12,
-        borderWidth: 1.5,
-        borderColor: Colors.border,
-        paddingHorizontal: Spacing.md,
-        height: 44,
-        gap: 8,
     },
-    searchIcon: { fontSize: 16 },
-    searchInput: { flex: 1, fontSize: 14, color: Colors.text },
+    searchInputContainer: {
+        borderWidth: 1.5,
+        height: 44,
+    },
+    searchInput: {
+        paddingVertical: 0,
+        fontSize: 14,
+    },
     list: {
         paddingHorizontal: SCREEN_WIDTH * 0.06,
         paddingBottom: 20,
@@ -254,4 +227,3 @@ const styles = StyleSheet.create({
     emptyIcon: { fontSize: SCREEN_WIDTH * 0.12, marginBottom: Spacing.md },
     emptyText: { fontSize: 16, color: Colors.textSecondary },
 });
-

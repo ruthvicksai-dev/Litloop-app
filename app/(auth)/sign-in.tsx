@@ -1,12 +1,14 @@
+import AuthFooter from "@/components/auth/AuthFooter";
+import AuthHeader from "@/components/auth/AuthHeader";
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
 import { Colors, Spacing } from "@/constants/theme";
-import { useAuth } from "@/context/AuthContext";
-import { useToast } from "@/context/ToastContext";
+import { useAuthRedirect } from "@/hooks/useAuthRedirect";
+import { useFadeSlideScaleIn } from "@/hooks/useFadeSlideScaleIn";
+import { useSignInScreen } from "@/hooks/useSignInScreen";
 import { useRouter } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
 import {
-    Animated,
     Dimensions,
     KeyboardAvoidingView,
     Platform,
@@ -20,70 +22,23 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function SignInScreen() {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [loading, setLoading] = useState(false);
-    const { signIn, user } = useAuth();
-    const { showToast } = useToast();
     const router = useRouter();
+    const { fadeAnim, slideAnim, scaleAnim } = useFadeSlideScaleIn({
+        slideFrom: 40,
+        scaleFrom: 0.5,
+        duration: 600,
+    });
+    const {
+        email,
+        setEmail,
+        password,
+        setPassword,
+        loading,
+        user,
+        handleSignIn,
+    } = useSignInScreen();
 
-    // Navigate reactively once user is populated
-    useEffect(() => {
-        if (user) {
-            if (user.role === "admin") {
-                router.replace("/(admin)/dashboard");
-            } else {
-                router.replace("/(tabs)");
-            }
-        }
-    }, [user]);
-
-    // Entrance animations
-    const fadeAnim = useRef(new Animated.Value(0)).current;
-    const slideAnim = useRef(new Animated.Value(40)).current;
-    const logoScale = useRef(new Animated.Value(0.5)).current;
-
-    useEffect(() => {
-        Animated.parallel([
-            Animated.timing(fadeAnim, {
-                toValue: 1,
-                duration: 600,
-                useNativeDriver: true,
-            }),
-            Animated.timing(slideAnim, {
-                toValue: 0,
-                duration: 600,
-                useNativeDriver: true,
-            }),
-            Animated.spring(logoScale, {
-                toValue: 1,
-                friction: 4,
-                tension: 60,
-                useNativeDriver: true,
-            }),
-        ]).start();
-    }, []);
-
-    const handleSignIn = async () => {
-        if (!email.trim()) {
-            showToast("Email is required.", "error");
-            return;
-        }
-        if (!password) {
-            showToast("Password is required.", "error");
-            return;
-        }
-
-        setLoading(true);
-        try {
-            await signIn(email, password);
-            showToast("Welcome back!", "success");
-        } catch (error: any) {
-            showToast(error.message || "Sign in failed.", "error");
-        } finally {
-            setLoading(false);
-        }
-    };
+    useAuthRedirect(user);
 
     return (
         <SafeAreaView style={styles.safeArea}>
@@ -98,28 +53,13 @@ export default function SignInScreen() {
                     showsVerticalScrollIndicator={false}
                     bounces={false}
                 >
-                    <Animated.View
-                        style={[
-                            styles.header,
-                            {
-                                opacity: fadeAnim,
-                                transform: [{ translateY: slideAnim }],
-                            },
-                        ]}
-                    >
-                        <Animated.Text
-                            style={[
-                                styles.logo,
-                                { transform: [{ scale: logoScale }] },
-                            ]}
-                        >
-                            📚
-                        </Animated.Text>
-                        <Text style={styles.title}>Litloop</Text>
-                        <Text style={styles.subtitle}>
-                            Sign in to your account
-                        </Text>
-                    </Animated.View>
+                    <AuthHeader
+                        title="Litloop"
+                        subtitle="Sign in to your account"
+                        fadeAnim={fadeAnim}
+                        slideAnim={slideAnim}
+                        scaleAnim={scaleAnim}
+                    />
 
                     <Text style={styles.formHint}>Use your email and password to continue.</Text>
 
@@ -148,19 +88,12 @@ export default function SignInScreen() {
                         />
                     </View>
 
-                    <Animated.View
-                        style={[styles.footer, { opacity: fadeAnim }]}
-                    >
-                        <Text style={styles.footerText}>
-                            Don't have an account?{" "}
-                        </Text>
-                        <Text
-                            style={styles.link}
-                            onPress={() => router.push("/(auth)/sign-up")}
-                        >
-                            Sign Up
-                        </Text>
-                    </Animated.View>
+                    <AuthFooter
+                        fadeAnim={fadeAnim}
+                        prefix="Don't have an account?"
+                        linkLabel="Sign Up"
+                        onPress={() => router.push("/(auth)/sign-up")}
+                    />
                 </ScrollView>
             </KeyboardAvoidingView>
         </SafeAreaView>
@@ -182,24 +115,6 @@ const styles = StyleSheet.create({
         paddingBottom: SCREEN_HEIGHT * 0.04,
         justifyContent: "center",
     },
-    header: {
-        alignItems: "center",
-        marginBottom: SCREEN_HEIGHT * 0.04,
-    },
-    logo: {
-        fontSize: SCREEN_WIDTH * 0.14,
-        marginBottom: Spacing.sm,
-    },
-    title: {
-        fontSize: SCREEN_WIDTH * 0.08,
-        fontWeight: "800",
-        color: Colors.primary,
-        marginBottom: Spacing.xs,
-    },
-    subtitle: {
-        fontSize: SCREEN_WIDTH * 0.04,
-        color: Colors.textSecondary,
-    },
     form: {
         backgroundColor: Colors.white,
         borderRadius: 20,
@@ -216,19 +131,5 @@ const styles = StyleSheet.create({
         color: Colors.textSecondary,
         textAlign: "center",
         marginBottom: Spacing.md,
-    },
-    footer: {
-        flexDirection: "row",
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    footerText: {
-        fontSize: 14,
-        color: Colors.textSecondary,
-    },
-    link: {
-        fontSize: 14,
-        color: Colors.primary,
-        fontWeight: "600",
     },
 });

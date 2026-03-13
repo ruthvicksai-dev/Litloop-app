@@ -2,9 +2,10 @@ import RentalCard from "@/components/ui/RentalCard";
 import { Colors, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";
+import { useFadeSlideIn } from "@/hooks/useFadeSlideIn";
 import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import {
     ActivityIndicator,
     Animated,
@@ -21,30 +22,9 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function MyRentalsScreen() {
     const { userId } = useAuth();
-    const rentals = useQuery(
-        api.rentals.getUserRentals,
-        userId ? { userId } : "skip"
-    );
+    const rentals = useQuery(api.rentals.getUserRentals, userId ? { userId } : "skip");
     const router = useRouter();
-
-    // Entrance animations
-    const fadeAnim = useRef(new Animated.Value(0)).current;
-    const slideAnim = useRef(new Animated.Value(30)).current;
-
-    useEffect(() => {
-        Animated.parallel([
-            Animated.timing(fadeAnim, {
-                toValue: 1,
-                duration: 500,
-                useNativeDriver: true,
-            }),
-            Animated.timing(slideAnim, {
-                toValue: 0,
-                duration: 500,
-                useNativeDriver: true,
-            }),
-        ]).start();
-    }, []);
+    const { fadeAnim, slideAnim } = useFadeSlideIn();
 
     if (rentals === undefined) {
         return (
@@ -54,7 +34,7 @@ export default function MyRentalsScreen() {
         );
     }
 
-    const handleRentalPress = (rental: any) => {
+    const handleRentalPress = (rental: (typeof rentals)[number]) => {
         if (rental.status === "delivered") {
             router.push(`/rental/schedule-return?rentalId=${rental._id}`);
         } else if (rental.status === "pickup_scheduled") {
@@ -111,11 +91,9 @@ export default function MyRentalsScreen() {
                 showsVerticalScrollIndicator={false}
                 ListEmptyComponent={
                     <View style={styles.empty}>
-                        <Text style={styles.emptyIcon}>📋</Text>
+                        <Text style={styles.emptyIcon}>ðŸ“‹</Text>
                         <Text style={styles.emptyText}>No active rentals</Text>
-                        <TouchableOpacity
-                            onPress={() => router.push("/(tabs)")}
-                        >
+                        <TouchableOpacity onPress={() => router.push("/(tabs)")}>
                             <Text style={styles.browseLink}>Browse Books</Text>
                         </TouchableOpacity>
                     </View>

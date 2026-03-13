@@ -1,9 +1,6 @@
 import Button from "@/components/ui/Button";
 import { Colors, Spacing } from "@/constants/theme";
-import { useToast } from "@/context/ToastContext";
-import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
+import { useVerifyPaymentScreen } from "@/hooks/useVerifyPaymentScreen";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
@@ -19,67 +16,36 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function VerifyPaymentScreen() {
     const params = useLocalSearchParams<{ rentalId?: string }>();
-    const { showToast } = useToast();
     const router = useRouter();
-    const verifyPayment = useMutation(api.payments.verifyPayment);
-
-    // If rentalId is given, show single rental
-    // Otherwise show all pending payments
-    const pendingPayments = useQuery(api.payments.getPendingPayments);
-    const singleRental = useQuery(
-        api.rentals.getRental,
+    const { pendingPayments, singleRental, handleVerify } = useVerifyPaymentScreen(
         params.rentalId
-            ? { rentalId: params.rentalId as Id<"rentals"> }
-            : "skip"
     );
 
-    const handleVerify = async (rentalId: string, approved: boolean) => {
-        try {
-            await verifyPayment({
-                rentalId: rentalId as any,
-                approved,
-            });
-            showToast(
-                approved ? "Payment approved!" : "Payment rejected.",
-                approved ? "success" : "error"
-            );
-        } catch (error: any) {
-            showToast(error.message, "error");
-        }
-    };
-
-    // Single rental view
     if (params.rentalId && singleRental) {
         return (
             <SafeAreaView style={styles.container}>
                 <View style={styles.scroll}>
                     <TouchableOpacity onPress={() => router.back()}>
-                        <Text style={styles.backText}>← Back</Text>
+                        <Text style={styles.backText}>â† Back</Text>
                     </TouchableOpacity>
 
                     <Text style={styles.title}>Verify Payment</Text>
 
                     <View style={styles.detailCard}>
-                        <Text style={styles.detailTitle}>
-                            {singleRental.book?.title}
-                        </Text>
+                        <Text style={styles.detailTitle}>{singleRental.book?.title}</Text>
                         <Text style={styles.detailSub}>
-                            User: {singleRental.user?.name} • {singleRental.user?.phone}
+                            User: {singleRental.user?.name} â€¢ {singleRental.user?.phone}
                         </Text>
                         <Text style={styles.detailSub}>
                             Method: {singleRental.paymentMethod?.toUpperCase()}
                         </Text>
-                        {singleRental.utrNumber && (
-                            <Text style={styles.detailSub}>
-                                UTR: {singleRental.utrNumber}
-                            </Text>
-                        )}
-                        <Text style={styles.detailSub}>
-                            Amount: ₹{singleRental.totalRent}
-                        </Text>
+                        {singleRental.utrNumber ? (
+                            <Text style={styles.detailSub}>UTR: {singleRental.utrNumber}</Text>
+                        ) : null}
+                        <Text style={styles.detailSub}>Amount: â‚¹{singleRental.totalRent}</Text>
                     </View>
 
-                    {singleRental.screenshotUrl && (
+                    {singleRental.screenshotUrl ? (
                         <View style={styles.screenshotCard}>
                             <Text style={styles.screenshotLabel}>Payment Screenshot</Text>
                             <Image
@@ -87,7 +53,7 @@ export default function VerifyPaymentScreen() {
                                 style={styles.screenshot}
                             />
                         </View>
-                    )}
+                    ) : null}
 
                     <View style={styles.actionRow}>
                         <Button
@@ -107,7 +73,6 @@ export default function VerifyPaymentScreen() {
         );
     }
 
-    // List view
     if (pendingPayments === undefined) {
         return (
             <View style={styles.center}>
@@ -120,12 +85,12 @@ export default function VerifyPaymentScreen() {
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()}>
-                    <Text style={styles.backText}>← Back</Text>
+                    <Text style={styles.backText}>â† Back</Text>
                 </TouchableOpacity>
                 <Text style={styles.title}>Pending Payments</Text>
                 <Text style={styles.subtitle}>
-                    {pendingPayments.length} payment{pendingPayments.length !== 1 ? "s" : ""}{" "}
-                    to verify
+                    {pendingPayments.length} payment{pendingPayments.length !== 1 ? "s" : ""} to
+                    verify
                 </Text>
             </View>
 
@@ -135,42 +100,38 @@ export default function VerifyPaymentScreen() {
                 renderItem={({ item }) => (
                     <View style={styles.paymentCard}>
                         <View style={styles.paymentHeader}>
-                            <View style={{ flex: 1 }}>
-                                <Text style={styles.paymentTitle}>
-                                    {item.book?.title}
-                                </Text>
+                            <View style={styles.paymentHeaderInfo}>
+                                <Text style={styles.paymentTitle}>{item.book?.title}</Text>
                                 <Text style={styles.paymentSub}>
-                                    {item.user?.name} • {item.paymentMethod?.toUpperCase()}
+                                    {item.user?.name} â€¢ {item.paymentMethod?.toUpperCase()}
                                 </Text>
                             </View>
-                            <Text style={styles.paymentAmount}>
-                                ₹{item.totalRent}
-                            </Text>
+                            <Text style={styles.paymentAmount}>â‚¹{item.totalRent}</Text>
                         </View>
 
-                        {item.utrNumber && (
+                        {item.utrNumber ? (
                             <Text style={styles.paymentUtr}>UTR: {item.utrNumber}</Text>
-                        )}
+                        ) : null}
 
-                        {item.screenshotUrl && (
+                        {item.screenshotUrl ? (
                             <Image
                                 source={{ uri: item.screenshotUrl }}
                                 style={styles.paymentScreenshot}
                             />
-                        )}
+                        ) : null}
 
                         <View style={styles.actionRow}>
                             <TouchableOpacity
-                                style={[styles.approveBtn]}
+                                style={styles.approveBtn}
                                 onPress={() => handleVerify(item._id, true)}
                             >
-                                <Text style={styles.approveBtnText}>✓ Approve</Text>
+                                <Text style={styles.approveBtnText}>âœ“ Approve</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.rejectBtn}
                                 onPress={() => handleVerify(item._id, false)}
                             >
-                                <Text style={styles.rejectBtnText}>✕ Reject</Text>
+                                <Text style={styles.rejectBtnText}>âœ• Reject</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -178,10 +139,8 @@ export default function VerifyPaymentScreen() {
                 contentContainerStyle={styles.list}
                 ListEmptyComponent={
                     <View style={styles.empty}>
-                        <Text style={styles.emptyIcon}>✅</Text>
-                        <Text style={styles.emptyText}>
-                            No payments pending verification
-                        </Text>
+                        <Text style={styles.emptyIcon}>âœ…</Text>
+                        <Text style={styles.emptyText}>No payments pending verification</Text>
                     </View>
                 }
             />
@@ -283,6 +242,9 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "flex-start",
+    },
+    paymentHeaderInfo: {
+        flex: 1,
     },
     paymentTitle: {
         fontSize: 15,

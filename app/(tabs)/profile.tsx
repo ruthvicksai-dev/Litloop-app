@@ -2,8 +2,9 @@ import Button from "@/components/ui/Button";
 import { Colors, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
+import { useFadeSlideScaleIn } from "@/hooks/useFadeSlideScaleIn";
 import { useRouter } from "expo-router";
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import {
     Animated,
     Dimensions,
@@ -20,32 +21,7 @@ export default function ProfileScreen() {
     const { user, signOut, isAdmin } = useAuth();
     const { showToast } = useToast();
     const router = useRouter();
-
-    // Entrance animations
-    const fadeAnim = useRef(new Animated.Value(0)).current;
-    const slideAnim = useRef(new Animated.Value(30)).current;
-    const avatarScale = useRef(new Animated.Value(0.6)).current;
-
-    useEffect(() => {
-        Animated.parallel([
-            Animated.timing(fadeAnim, {
-                toValue: 1,
-                duration: 500,
-                useNativeDriver: true,
-            }),
-            Animated.timing(slideAnim, {
-                toValue: 0,
-                duration: 500,
-                useNativeDriver: true,
-            }),
-            Animated.spring(avatarScale, {
-                toValue: 1,
-                friction: 4,
-                tension: 60,
-                useNativeDriver: true,
-            }),
-        ]).start();
-    }, []);
+    const { fadeAnim, slideAnim, scaleAnim } = useFadeSlideScaleIn();
 
     const handleSignOut = async () => {
         await signOut();
@@ -79,7 +55,7 @@ export default function ProfileScreen() {
                 <Animated.View
                     style={[
                         styles.avatar,
-                        { transform: [{ scale: avatarScale }] },
+                        { transform: [{ scale: scaleAnim }] },
                     ]}
                 >
                     <Text style={styles.avatarText}>
@@ -106,22 +82,18 @@ export default function ProfileScreen() {
                 </View>
             </Animated.View>
 
-            {isAdmin && (
+            {isAdmin ? (
                 <Animated.View style={{ opacity: fadeAnim }}>
                     <TouchableOpacity
                         style={styles.adminLink}
                         onPress={() => router.push("/(admin)/dashboard")}
                     >
-                        <Text style={styles.adminLinkText}>
-                            🛠 Go to Admin Dashboard
-                        </Text>
+                        <Text style={styles.adminLinkText}>ðŸ›  Go to Admin Dashboard</Text>
                     </TouchableOpacity>
                 </Animated.View>
-            )}
+            ) : null}
 
-            <Animated.View
-                style={[styles.actions, { opacity: fadeAnim }]}
-            >
+            <Animated.View style={[styles.actions, { opacity: fadeAnim }]}>
                 <Button
                     title="Sign Out"
                     onPress={handleSignOut}

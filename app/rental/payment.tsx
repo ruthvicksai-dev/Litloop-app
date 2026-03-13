@@ -1,13 +1,9 @@
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
 import { Colors, Spacing } from "@/constants/theme";
-import { useToast } from "@/context/ToastContext";
-import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
-import * as ImagePicker from "expo-image-picker";
+import { usePaymentScreen } from "@/hooks/usePaymentScreen";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useState } from "react";
+import React from "react";
 import {
     ActivityIndicator,
     Image,
@@ -21,86 +17,19 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function PaymentScreen() {
     const { rentalId } = useLocalSearchParams<{ rentalId: string }>();
-    const rental = useQuery(api.rentals.getRental, {
-        rentalId: rentalId as Id<"rentals">,
-    });
-    const { showToast } = useToast();
     const router = useRouter();
-
-    const submitUpiPayment = useMutation(api.payments.submitUpiPayment);
-    const selectCashPayment = useMutation(api.payments.selectCashPayment);
-    const generateUploadUrl = useMutation(api.payments.generateUploadUrl);
-
-    const [utrNumber, setUtrNumber] = useState("");
-    const [screenshot, setScreenshot] = useState<string | null>(null);
-    const [uploading, setUploading] = useState(false);
-    const [paymentMethod, setPaymentMethod] = useState<"upi" | "cash" | null>(
-        null
-    );
-
-    const pickImage = async () => {
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            quality: 0.8,
-        });
-
-        if (!result.canceled && result.assets[0]) {
-            setScreenshot(result.assets[0].uri);
-        }
-    };
-
-    const handleUpiPayment = async () => {
-        if (!utrNumber.trim()) {
-            showToast("UTR number is required.", "error");
-            return;
-        }
-        if (!screenshot) {
-            showToast("Payment screenshot is required.", "error");
-            return;
-        }
-
-        setUploading(true);
-        try {
-            // Upload screenshot to Convex
-            const uploadUrl = await generateUploadUrl();
-            const response = await fetch(screenshot);
-            const blob = await response.blob();
-            const uploadResult = await fetch(uploadUrl, {
-                method: "POST",
-                headers: { "Content-Type": blob.type || "image/jpeg" },
-                body: blob,
-            });
-            const { storageId } = await uploadResult.json();
-
-            await submitUpiPayment({
-                rentalId: rentalId as Id<"rentals">,
-                utrNumber,
-                paymentScreenshot: storageId,
-            });
-
-            showToast("Payment submitted for verification!", "success");
-            router.replace("/(tabs)/my-rentals");
-        } catch (error: any) {
-            showToast(error.message || "Payment submission failed.", "error");
-        } finally {
-            setUploading(false);
-        }
-    };
-
-    const handleCashPayment = async () => {
-        setUploading(true);
-        try {
-            await selectCashPayment({
-                rentalId: rentalId as Id<"rentals">,
-            });
-            showToast("Cash on pickup selected. Pay on pickup day.", "success");
-            router.replace("/(tabs)/my-rentals");
-        } catch (error: any) {
-            showToast(error.message || "Failed to select cash payment.", "error");
-        } finally {
-            setUploading(false);
-        }
-    };
+    const {
+        rental,
+        utrNumber,
+        setUtrNumber,
+        screenshot,
+        uploading,
+        paymentMethod,
+        setPaymentMethod,
+        pickImage,
+        handleUpiPayment,
+        handleCashPayment,
+    } = usePaymentScreen(rentalId);
 
     if (!rental) {
         return (
@@ -117,7 +46,7 @@ export default function PaymentScreen() {
                 keyboardShouldPersistTaps="handled"
             >
                 <TouchableOpacity onPress={() => router.back()}>
-                    <Text style={styles.backText}>← Back</Text>
+                    <Text style={styles.backText}>â† Back</Text>
                 </TouchableOpacity>
 
                 <Text style={styles.title}>Payment</Text>
@@ -125,10 +54,9 @@ export default function PaymentScreen() {
 
                 <View style={styles.amountCard}>
                     <Text style={styles.amountLabel}>Total Amount</Text>
-                    <Text style={styles.amountValue}>₹{rental.totalRent || 0}</Text>
+                    <Text style={styles.amountValue}>â‚¹{rental.totalRent || 0}</Text>
                 </View>
 
-                {/* Payment Method Selection */}
                 <Text style={styles.sectionTitle}>Choose Payment Method</Text>
                 <View style={styles.methodRow}>
                     <TouchableOpacity
@@ -138,7 +66,7 @@ export default function PaymentScreen() {
                         ]}
                         onPress={() => setPaymentMethod("upi")}
                     >
-                        <Text style={styles.methodIcon}>📱</Text>
+                        <Text style={styles.methodIcon}>ðŸ“±</Text>
                         <Text
                             style={[
                                 styles.methodText,
@@ -155,7 +83,7 @@ export default function PaymentScreen() {
                         ]}
                         onPress={() => setPaymentMethod("cash")}
                     >
-                        <Text style={styles.methodIcon}>💵</Text>
+                        <Text style={styles.methodIcon}>ðŸ’µ</Text>
                         <Text
                             style={[
                                 styles.methodText,
@@ -167,17 +95,16 @@ export default function PaymentScreen() {
                     </TouchableOpacity>
                 </View>
 
-                {/* UPI Payment Form */}
-                {paymentMethod === "upi" && (
+                {paymentMethod === "upi" ? (
                     <View style={styles.section}>
                         <View style={styles.qrCard}>
                             <Text style={styles.qrTitle}>Scan QR to Pay</Text>
                             <View style={styles.qrPlaceholder}>
-                                <Text style={styles.qrIcon}>📲</Text>
+                                <Text style={styles.qrIcon}>ðŸ“²</Text>
                                 <Text style={styles.qrUpi}>library@upi</Text>
                             </View>
                             <Text style={styles.qrNote}>
-                                Pay ₹{rental.totalRent || 0} to the above UPI ID
+                                Pay â‚¹{rental.totalRent || 0} to the above UPI ID
                             </Text>
                         </View>
 
@@ -191,16 +118,11 @@ export default function PaymentScreen() {
                         <Text style={styles.uploadLabel}>Payment Screenshot</Text>
                         <TouchableOpacity style={styles.uploadBtn} onPress={pickImage}>
                             {screenshot ? (
-                                <Image
-                                    source={{ uri: screenshot }}
-                                    style={styles.screenshotPreview}
-                                />
+                                <Image source={{ uri: screenshot }} style={styles.screenshotPreview} />
                             ) : (
                                 <View style={styles.uploadPlaceholder}>
-                                    <Text style={styles.uploadIcon}>📷</Text>
-                                    <Text style={styles.uploadText}>
-                                        Tap to upload screenshot
-                                    </Text>
+                                    <Text style={styles.uploadIcon}>ðŸ“·</Text>
+                                    <Text style={styles.uploadText}>Tap to upload screenshot</Text>
                                 </View>
                             )}
                         </TouchableOpacity>
@@ -212,17 +134,16 @@ export default function PaymentScreen() {
                             style={{ marginTop: Spacing.md }}
                         />
                     </View>
-                )}
+                ) : null}
 
-                {/* Cash Payment */}
-                {paymentMethod === "cash" && (
+                {paymentMethod === "cash" ? (
                     <View style={styles.section}>
                         <View style={styles.cashCard}>
-                            <Text style={styles.cashIcon}>💵</Text>
+                            <Text style={styles.cashIcon}>ðŸ’µ</Text>
                             <Text style={styles.cashTitle}>Cash on Pickup</Text>
                             <Text style={styles.cashDesc}>
-                                Pay ₹{rental.totalRent || 0} in cash when the book is picked
-                                up. Our delivery agent will collect the amount.
+                                Pay â‚¹{rental.totalRent || 0} in cash when the book is picked up. Our
+                                delivery agent will collect the amount.
                             </Text>
                         </View>
 
@@ -233,7 +154,7 @@ export default function PaymentScreen() {
                             style={{ marginTop: Spacing.md }}
                         />
                     </View>
-                )}
+                ) : null}
             </ScrollView>
         </SafeAreaView>
     );
