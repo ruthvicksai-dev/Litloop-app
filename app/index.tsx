@@ -1,13 +1,14 @@
+import BookLoader from "@/components/ui/BookLoader";
 import { Colors } from "@/constants/theme";
 import { useRootRedirect } from "@/hooks/useRouteGuards";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 export default function Index() {
     useRootRedirect();
 
     return (
         <View style={styles.container}>
-            <ActivityIndicator size="large" color={Colors.primary} />
+            <BookLoader label="Opening Litloop..." />
         </View>
     );
 }

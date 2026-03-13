@@ -2,17 +2,17 @@ import AdminDashboardHeader from "@/components/admin/AdminDashboardHeader";
 import AdminDashboardStats from "@/components/admin/AdminDashboardStats";
 import AdminRentalCard from "@/components/admin/AdminRentalCard";
 import AdminStatusFilters from "@/components/admin/AdminStatusFilters";
-import { Fonts } from "@/constants/fonts";
+import BookLoader from "@/components/ui/BookLoader";
+import ConfirmActionModal from "@/components/ui/ConfirmActionModal";
+import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useAdminDashboard } from "@/hooks/useAdminDashboard";
 import { useFadeSlideIn } from "@/hooks/useFadeSlideIn";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import {
-    ActivityIndicator,
     Animated,
-    Dimensions,
     SectionList,
     StyleSheet,
     Text,
@@ -21,13 +21,12 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
-
 export default function AdminDashboard() {
     const router = useRouter();
     const {
         rentals,
         stats,
+        revenue,
         statusFilter,
         setStatusFilter,
         groupedByZone,
@@ -37,11 +36,12 @@ export default function AdminDashboard() {
         statusFilters,
     } = useAdminDashboard();
     const { fadeAnim, slideAnim } = useFadeSlideIn();
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
     if (rentals === undefined) {
         return (
             <View style={styles.center}>
-                <ActivityIndicator size="large" color={Colors.primary} />
+                <BookLoader label="Loading dashboard..." />
             </View>
         );
     }
@@ -58,10 +58,14 @@ export default function AdminDashboard() {
                     >
                         <AdminDashboardHeader
                             onAddBook={() => router.push("/(admin)/add-book")}
-                            onSignOut={handleSignOut}
+                            onSignOut={() => setShowLogoutConfirm(true)}
                         />
 
-                        <AdminDashboardStats stats={stats} />
+                        <AdminDashboardStats
+                            stats={stats}
+                            revenue={revenue}
+                            onPressRevenue={() => router.push("/(admin)/analytics")}
+                        />
 
                         <View style={styles.quickActions}>
                             <TouchableOpacity
@@ -114,10 +118,24 @@ export default function AdminDashboard() {
                 contentContainerStyle={styles.list}
                 ListEmptyComponent={
                     <View style={styles.empty}>
-                        <Ionicons name="clipboard-outline" size={SCREEN_WIDTH * 0.12} color={Colors.textLight} style={{ marginBottom: Spacing.md }} />
+                        <Ionicons name="clipboard-outline" size={48} color={Colors.textLight} style={{ marginBottom: Spacing.md }} />
                         <Text style={styles.emptyText}>No rentals found</Text>
                     </View>
                 }
+            />
+
+            <ConfirmActionModal
+                visible={showLogoutConfirm}
+                title="Sign Out?"
+                message="Are you sure you want to log out of the admin panel?"
+                confirmLabel="Log Out"
+                cancelLabel="Cancel"
+                tone="danger"
+                onCancel={() => setShowLogoutConfirm(false)}
+                onConfirm={async () => {
+                    setShowLogoutConfirm(false);
+                    await handleSignOut();
+                }}
             />
         </SafeAreaView>
     );
@@ -139,12 +157,14 @@ const styles = StyleSheet.create({
     },
     quickActions: {
         flexDirection: "row",
-        paddingHorizontal: SCREEN_WIDTH * 0.06,
+        paddingHorizontal: 20,
         gap: 10,
         marginBottom: Spacing.md,
+        flexWrap: "wrap",
     },
     quickAction: {
         flex: 1,
+        minWidth: 160,
         backgroundColor: Colors.white,
         borderRadius: 14,
         paddingVertical: 14,
@@ -159,10 +179,10 @@ const styles = StyleSheet.create({
         elevation: 2,
     },
     quickActionIcon: {
-        fontSize: 20,
+        fontSize: FontSizes.titleLarge,
     },
     quickActionText: {
-        fontSize: 13,
+        fontSize: FontSizes.small,
         fontFamily: Fonts.bold,
         color: Colors.text,
     },
@@ -171,11 +191,11 @@ const styles = StyleSheet.create({
         alignItems: "center",
         gap: 8,
         paddingVertical: Spacing.sm,
-        paddingHorizontal: SCREEN_WIDTH * 0.06,
+        paddingHorizontal: 20,
         backgroundColor: Colors.background,
     },
     sectionTitle: {
-        fontSize: 15,
+        fontSize: FontSizes.bodyLarge,
         fontFamily: Fonts.bold,
         color: Colors.text,
     },
@@ -186,24 +206,26 @@ const styles = StyleSheet.create({
         paddingVertical: 2,
     },
     sectionCount: {
-        fontSize: 11,
+        fontSize: FontSizes.caption,
         fontFamily: Fonts.bold,
         color: Colors.primary,
     },
     list: {
+        flexGrow: 1,
         paddingBottom: 20,
     },
     empty: {
         alignItems: "center",
-        paddingTop: SCREEN_HEIGHT * 0.1,
+        paddingHorizontal: 24,
+        paddingVertical: 56,
     },
     emptyIcon: {
-        fontSize: SCREEN_WIDTH * 0.12,
+        fontSize: FontSizes.display,
         marginBottom: Spacing.md,
     },
     emptyText: {
-        fontSize: 16,
+        fontSize: FontSizes.subtitle,
         color: Colors.textSecondary,
-      fontFamily: Fonts.regular,
+        fontFamily: Fonts.regular,
     },
 });

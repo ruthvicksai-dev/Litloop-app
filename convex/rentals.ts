@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { recordRentalCreated, recordUserActivity } from "./analytics";
 
 const LATE_FEE_PER_DAY = 3; // ₹3 per day
 
@@ -90,6 +91,8 @@ export const requestRental = mutation({
             status: "requested",
             createdAt: Date.now(),
         });
+
+        await recordRentalCreated(ctx, args.userId, Date.now());
 
         return rentalId;
     },
@@ -196,6 +199,8 @@ export const markReturned = mutation({
             status: "returned",
             lateFee: lateFee > 0 ? lateFee : undefined,
         });
+
+        await recordUserActivity(ctx, rental.userId, Date.now());
     },
 });
 

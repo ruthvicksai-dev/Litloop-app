@@ -1,4 +1,4 @@
-import { Fonts } from "@/constants/fonts";
+import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import DateTimePicker, {
     DateTimePickerEvent,
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.md,
     },
     label: {
-        fontSize: 14,
+        fontSize: FontSizes.body,
         fontFamily: Fonts.medium,
         color: Colors.text,
         marginBottom: Spacing.xs,
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         paddingHorizontal: Spacing.md,
         paddingVertical: 14,
-        fontSize: 16,
+        fontSize: FontSizes.subtitle,
         color: Colors.text,
         flexDirection: "row",
         alignItems: "center",
@@ -165,14 +165,14 @@ const styles = StyleSheet.create({
         borderColor: Colors.error,
     },
     valueText: {
-        fontSize: 16,
+        fontSize: FontSizes.subtitle,
         color: Colors.text,
-      fontFamily: Fonts.regular,
+        fontFamily: Fonts.regular,
     },
     placeholderText: {
-        fontSize: 16,
+        fontSize: FontSizes.subtitle,
         color: Colors.textLight,
-      fontFamily: Fonts.regular,
+        fontFamily: Fonts.regular,
     },
     pickerWrap: {
         marginTop: Spacing.sm,
@@ -188,14 +188,14 @@ const styles = StyleSheet.create({
         alignItems: "flex-end",
     },
     doneText: {
-        fontSize: 14,
+        fontSize: FontSizes.body,
         fontFamily: Fonts.bold,
         color: Colors.primary,
     },
     errorText: {
         color: Colors.error,
-        fontSize: 12,
+        fontSize: FontSizes.caption,
         marginTop: Spacing.xs,
-      fontFamily: Fonts.regular,
+        fontFamily: Fonts.regular,
     },
 });

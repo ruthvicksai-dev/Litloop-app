@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
+import { recordUserRegistered } from "./analytics";
 import { createToken, sha256, verifyToken } from "./lib/jwt";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -110,6 +111,8 @@ export const signUp = mutation({
             role: "user",
             createdAt: Date.now(),
         });
+
+        await recordUserRegistered(ctx, userId, Date.now());
 
         const tokens = await createSessionTokens(ctx, userId);
         return { userId, ...tokens };

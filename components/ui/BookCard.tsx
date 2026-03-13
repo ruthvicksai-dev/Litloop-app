@@ -1,14 +1,16 @@
-import { Fonts } from "@/constants/fonts";
+import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useRef } from "react";
 import {
 Animated,
     Image,
+    StyleProp,
     StyleSheet,
     Text,
     TouchableOpacity,
     View,
+    ViewStyle,
 } from "react-native";
 
 interface BookCardProps {
@@ -20,6 +22,10 @@ interface BookCardProps {
     coverUrls?: string[];
     onViewDetails: () => void;
     onRequestBook: () => void;
+    style?: StyleProp<ViewStyle>;
+    viewDetailsLabel?: string;
+    requestLabel?: string;
+    showRequestButton?: boolean;
 }
 
 export default function BookCard({
@@ -31,6 +37,10 @@ export default function BookCard({
     coverUrls,
     onViewDetails,
     onRequestBook,
+    style,
+    viewDetailsLabel = "View Details",
+    requestLabel = "Request Book",
+    showRequestButton = true,
 }: BookCardProps) {
     const scale = useRef(new Animated.Value(1)).current;
 
@@ -50,8 +60,9 @@ export default function BookCard({
     };
 
     return (
-        <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
+        <Animated.View style={[styles.card, style, { transform: [{ scale }] }]}>
             <TouchableOpacity
+                style={styles.touchable}
                 activeOpacity={0.9}
                 onPress={onViewDetails}
                 onPressIn={handlePressIn}
@@ -90,18 +101,20 @@ export default function BookCard({
                 </View>
                 <View style={styles.actions}>
                     <TouchableOpacity style={styles.detailsBtn} onPress={onViewDetails}>
-                        <Text style={styles.detailsBtnText}>View Details</Text>
+                        <Text style={styles.detailsBtnText}>{viewDetailsLabel}</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[
-                            styles.requestBtn,
-                            availableCopies === 0 && styles.disabledBtn,
-                        ]}
-                        onPress={onRequestBook}
-                        disabled={availableCopies === 0}
-                    >
-                        <Text style={styles.requestBtnText}>Request Book</Text>
-                    </TouchableOpacity>
+                    {showRequestButton ? (
+                        <TouchableOpacity
+                            style={[
+                                styles.requestBtn,
+                                availableCopies === 0 && styles.disabledBtn,
+                            ]}
+                            onPress={onRequestBook}
+                            disabled={availableCopies === 0}
+                        >
+                            <Text style={styles.requestBtnText}>{requestLabel}</Text>
+                        </TouchableOpacity>
+                    ) : null}
                 </View>
             </TouchableOpacity>
         </Animated.View>
@@ -114,18 +127,26 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         padding: Spacing.md,
         marginBottom: Spacing.md,
+        height: "100%",
         shadowColor: Colors.shadow,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.08,
         shadowRadius: 8,
         elevation: 3,
     },
+    touchable: {
+        flex: 1,
+        justifyContent: "space-between",
+    },
     row: {
         flexDirection: "row",
+        alignItems: "center",
     },
     cover: {
-        width: 80,
-        height: 120,
+        width: "25%",
+        maxWidth: 96,
+        minWidth: 72,
+        aspectRatio: 2 / 3,
         borderRadius: 8,
         backgroundColor: Colors.primaryLight,
     },
@@ -134,34 +155,37 @@ const styles = StyleSheet.create({
         justifyContent: "center",
     },
     placeholderText: {
-        fontSize: 32,
-      fontFamily: Fonts.regular,
+        fontSize: FontSizes.display,
+        fontFamily: Fonts.regular,
     },
     info: {
         flex: 1,
         marginLeft: Spacing.md,
         justifyContent: "center",
+        minWidth: 0,
+        minHeight: 104,
     },
     title: {
-        fontSize: 16,
+        fontSize: FontSizes.bodyLarge,
+        lineHeight: FontSizes.title,
         fontFamily: Fonts.bold,
         color: Colors.text,
-        marginBottom: 4,
+        marginBottom: 2,
     },
     author: {
-        fontSize: 14,
+        fontSize: FontSizes.body,
         color: Colors.textSecondary,
-        marginBottom: 8,
-      fontFamily: Fonts.regular,
+        marginBottom: 6,
+        fontFamily: Fonts.regular,
     },
     rent: {
-        fontSize: 16,
+        fontSize: FontSizes.subtitle,
         fontFamily: Fonts.medium,
         color: Colors.primary,
         marginBottom: 4,
     },
     availability: {
-        fontSize: 12,
+        fontSize: FontSizes.caption,
         color: Colors.success,
         fontFamily: Fonts.medium,
     },
@@ -172,9 +196,11 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         marginTop: Spacing.sm,
         gap: Spacing.sm,
+        flexWrap: "wrap",
     },
     detailsBtn: {
         flex: 1,
+        minWidth: 120,
         paddingVertical: 10,
         borderRadius: 8,
         borderWidth: 1,
@@ -184,10 +210,11 @@ const styles = StyleSheet.create({
     detailsBtnText: {
         color: Colors.primary,
         fontFamily: Fonts.medium,
-        fontSize: 13,
+        fontSize: FontSizes.small,
     },
     requestBtn: {
         flex: 1,
+        minWidth: 120,
         paddingVertical: 10,
         borderRadius: 8,
         backgroundColor: Colors.primary,
@@ -196,7 +223,7 @@ const styles = StyleSheet.create({
     requestBtnText: {
         color: Colors.white,
         fontFamily: Fonts.medium,
-        fontSize: 13,
+        fontSize: FontSizes.small,
     },
     disabledBtn: {
         opacity: 0.4,

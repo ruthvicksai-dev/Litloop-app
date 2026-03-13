@@ -1,6 +1,7 @@
 import SearchInput from "@/components/shared/SearchInput";
 import BookCard from "@/components/ui/BookCard";
-import { Fonts } from "@/constants/fonts";
+import BookLoader from "@/components/ui/BookLoader";
+import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { useHomeEntrance } from "@/hooks/useHomeEntrance";
@@ -9,9 +10,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
-  ActivityIndicator,
   Animated,
-  Dimensions,
   FlatList,
   StyleSheet,
   Text,
@@ -19,18 +18,16 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
-
 export default function HomeScreen() {
   const { user } = useAuth();
   const router = useRouter();
-  const { books, search, setSearch, filteredBooks } = useHomeScreen();
+  const { books, search, setSearch, genreSections } = useHomeScreen();
   const { fadeAnim, slideAnim, searchFade } = useHomeEntrance();
 
   if (books === undefined) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color={Colors.primary} />
+        <BookLoader label="Loading books..." />
       </View>
     );
   }
@@ -61,33 +58,47 @@ export default function HomeScreen() {
       </Animated.View>
 
       <FlatList
-        data={filteredBooks}
-        keyExtractor={(item) => item._id}
+        data={genreSections}
+        keyExtractor={(item) => item.genre}
         renderItem={({ item, index }) => (
           <Animated.View
-            style={{
-              opacity: fadeAnim,
-              transform: [
-                {
-                  translateY: slideAnim.interpolate({
-                    inputRange: [0, 30],
-                    outputRange: [0, 30 + index * 8],
-                  }),
-                },
-              ],
-            }}
+            style={[
+              styles.section,
+              {
+                opacity: fadeAnim,
+                transform: [
+                  {
+                    translateY: slideAnim.interpolate({
+                      inputRange: [0, 30],
+                      outputRange: [0, 30 + index * 8],
+                    }),
+                  },
+                ],
+              },
+            ]}
           >
-            <BookCard
-              title={item.title}
-              author={item.author}
-              rentPerDay={item.rentPerDay}
-              availableCopies={item.availableCopies}
-              coverUrl={item.coverUrl}
-              coverUrls={item.coverUrls}
-              onViewDetails={() => router.push(`/book/${item._id}`)}
-              onRequestBook={() =>
-                router.push(`/rental/request?bookId=${item._id}`)
-              }
+            <Text style={styles.sectionTitle}>{item.genre}</Text>
+            <FlatList
+              data={item.books}
+              horizontal
+              keyExtractor={(book) => book._id}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.genreRow}
+              renderItem={({ item: book }) => (
+                <BookCard
+                  title={book.title}
+                  author={book.author}
+                  rentPerDay={book.rentPerDay}
+                  availableCopies={book.availableCopies}
+                  coverUrl={book.coverUrl}
+                  coverUrls={book.coverUrls}
+                  style={styles.genreCard}
+                  onViewDetails={() => router.push(`/book/${book._id}`)}
+                  onRequestBook={() =>
+                    router.push(`/rental/request?bookId=${book._id}`)
+                  }
+                />
+              )}
             />
           </Animated.View>
         )}
@@ -95,7 +106,7 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Ionicons name="book-outline" size={SCREEN_WIDTH * 0.15} color={Colors.textLight} style={{ marginBottom: Spacing.md }} />
+            <Ionicons name="book-outline" size={60} color={Colors.textLight} style={{ marginBottom: Spacing.md }} />
             <Text style={styles.emptyText}>No books available yet</Text>
           </View>
         }
@@ -116,43 +127,66 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   header: {
-    paddingHorizontal: SCREEN_WIDTH * 0.06,
-    paddingTop: SCREEN_HEIGHT * 0.02,
+    paddingHorizontal: 20,
+    paddingTop: Spacing.sm,
     paddingBottom: Spacing.sm,
   },
   greeting: {
-    fontSize: SCREEN_WIDTH * 0.035,
+    fontSize: FontSizes.body,
     color: Colors.textSecondary,
     marginBottom: 4,
     fontFamily: Fonts.regular,
-    },
+  },
   title: {
-    fontSize: SCREEN_WIDTH * 0.065,
-    
+    fontSize: FontSizes.hero,
     color: Colors.text,
     fontFamily: Fonts.bold,
   },
   searchContainer: {
-    paddingHorizontal: SCREEN_WIDTH * 0.06,
+    paddingHorizontal: 20,
     paddingBottom: Spacing.md,
   },
   list: {
-    paddingHorizontal: SCREEN_WIDTH * 0.06,
+    flexGrow: 1,
     paddingBottom: 20,
+  },
+  section: {
+    marginBottom: Spacing.lg,
+  },
+  sectionTitle: {
+    paddingHorizontal: 20,
+    marginBottom: Spacing.sm,
+    fontSize: FontSizes.titleLarge,
+    color: Colors.text,
+    fontFamily: Fonts.bold,
+  },
+  genreRow: {
+    paddingLeft: 20,
+    paddingRight: 10,
+    paddingBottom: 20,
+    alignItems: "stretch",
+  },
+  genreCard: {
+    width: 320,
+    maxWidth: 360,
+    marginRight: Spacing.md,
+    marginBottom: 0,
+    alignSelf: "stretch",
   },
   empty: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingTop: SCREEN_HEIGHT * 0.1,
+    paddingHorizontal: 24,
+    paddingVertical: 56,
   },
   emptyIcon: {
-    fontSize: SCREEN_WIDTH * 0.12,
+    fontSize: FontSizes.display,
     marginBottom: Spacing.md,
   },
   emptyText: {
-    fontSize: 16,
+    fontSize: FontSizes.subtitle,
     color: Colors.textSecondary,
     fontFamily: Fonts.regular,
-    },
+  },
 });

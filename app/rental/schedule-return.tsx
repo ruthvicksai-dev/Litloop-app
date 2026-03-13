@@ -13,7 +13,7 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Fonts } from "@/constants/fonts";
+import { Fonts, FontSizes } from "@/constants/fonts";
 
 export default function ScheduleReturnScreen() {
     const { rentalId } = useLocalSearchParams<{ rentalId: string }>();
@@ -129,23 +129,22 @@ const styles = StyleSheet.create({
         paddingBottom: Spacing.xl,
     },
     backText: {
-        fontSize: 16,
+        fontSize: FontSizes.subtitle,
         color: Colors.primary,
         fontFamily: Fonts.medium,
         marginBottom: Spacing.md,
     },
     title: {
-        fontSize: 24,
-        
+        fontSize: FontSizes.heading,
         color: Colors.text,
         marginBottom: 4,
-      fontFamily: Fonts.bold,
+        fontFamily: Fonts.bold,
     },
     subtitle: {
-        fontSize: 14,
+        fontSize: FontSizes.body,
         color: Colors.textSecondary,
         marginBottom: Spacing.lg,
-      fontFamily: Fonts.regular,
+        fontFamily: Fonts.regular,
     },
     infoCard: {
         backgroundColor: Colors.white,
@@ -156,12 +155,12 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.lg,
     },
     infoLabel: {
-        fontSize: 14,
+        fontSize: FontSizes.body,
         color: Colors.textSecondary,
-      fontFamily: Fonts.regular,
+        fontFamily: Fonts.regular,
     },
     infoValue: {
-        fontSize: 14,
+        fontSize: FontSizes.body,
         fontFamily: Fonts.medium,
         color: Colors.text,
     },
@@ -172,7 +171,7 @@ const styles = StyleSheet.create({
         marginTop: Spacing.md,
     },
     estimateTitle: {
-        fontSize: 16,
+        fontSize: FontSizes.subtitle,
         fontFamily: Fonts.bold,
         color: Colors.text,
         marginBottom: Spacing.sm,
@@ -183,12 +182,12 @@ const styles = StyleSheet.create({
         marginBottom: 4,
     },
     estimateLabel: {
-        fontSize: 14,
+        fontSize: FontSizes.body,
         color: Colors.textSecondary,
-      fontFamily: Fonts.regular,
+        fontFamily: Fonts.regular,
     },
     estimateValue: {
-        fontSize: 14,
+        fontSize: FontSizes.body,
         fontFamily: Fonts.medium,
         color: Colors.text,
     },
@@ -202,7 +201,7 @@ const styles = StyleSheet.create({
         fontFamily: Fonts.bold,
     },
     totalValue: {
-        fontSize: 18,
+        fontSize: FontSizes.title,
         fontFamily: Fonts.bold,
         color: Colors.primary,
     },

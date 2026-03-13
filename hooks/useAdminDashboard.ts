@@ -5,6 +5,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
+import { formatMonthLabel, getCurrentMonthKey, getRevenueMetricsForMonth } from "@/utils/adminRevenueAnalytics";
 
 const STATUS_FILTERS = [
     "all",
@@ -44,6 +45,17 @@ export function useAdminDashboard() {
             completed: rentals.filter((rental) =>
                 ["paid", "returned"].includes(rental.status)
             ).length,
+        };
+    }, [rentals]);
+
+    const revenue = useMemo(() => {
+        const currentMonthKey = getCurrentMonthKey();
+        const currentMonthMetrics = getRevenueMetricsForMonth(rentals, currentMonthKey);
+
+        return {
+            monthlyRevenue: currentMonthMetrics.revenue,
+            monthlyOrders: currentMonthMetrics.totalOrders,
+            currentMonthLabel: formatMonthLabel(currentMonthKey),
         };
     }, [rentals]);
 
@@ -101,6 +113,7 @@ export function useAdminDashboard() {
     return {
         rentals,
         stats,
+        revenue,
         statusFilter,
         setStatusFilter,
         groupedByZone,

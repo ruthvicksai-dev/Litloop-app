@@ -1,10 +1,8 @@
-import { Fonts } from "@/constants/fonts";
+import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Animated, Dimensions, StyleSheet, Text } from "react-native";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+import { Animated, StyleSheet, Text } from "react-native";
 
 type AuthHeaderProps = {
     title: string;
@@ -49,19 +47,21 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     logo: {
-        fontSize: SCREEN_WIDTH * 0.14,
+        fontSize: FontSizes.display,
         marginBottom: Spacing.sm,
     },
     title: {
-        fontSize: SCREEN_WIDTH * 0.08,
-        
+        fontSize: FontSizes.display,
         color: Colors.primary,
         marginBottom: Spacing.xs,
-      fontFamily: Fonts.bold,
+        fontFamily: Fonts.bold,
+        textAlign: "center",
     },
     subtitle: {
-        fontSize: SCREEN_WIDTH * 0.04,
+        fontSize: FontSizes.bodyLarge,
         color: Colors.textSecondary,
         fontFamily: Fonts.regular,
+        textAlign: "center",
+        paddingHorizontal: Spacing.md,
     },
 });

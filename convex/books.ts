@@ -1,6 +1,34 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
+const MAIN_GENRES = [
+    "Action",
+    "Adventure",
+    "Thriller",
+    "Mystery",
+    "Fantasy",
+    "Sci-Fi",
+    "Romance",
+    "Horror",
+    "Biography",
+    "History",
+    "Self Help",
+    "Education",
+    "Business",
+    "Psychology",
+];
+
+function normalizeGenres(genres: string[] | undefined) {
+    return Array.from(
+        new Set(
+            (genres ?? [])
+                .map((genre) => genre.trim())
+                .filter((genre) => MAIN_GENRES.includes(genre))
+                .filter(Boolean)
+        )
+    ).slice(0, 3);
+}
+
 export const list = query({
     args: {},
     handler: async (ctx) => {
@@ -22,7 +50,7 @@ export const list = query({
                     if (coverUrl) coverUrls.push(coverUrl);
                 }
 
-                return { ...book, coverUrl, coverUrls };
+                return { ...book, genres: book.genres ?? [], coverUrl, coverUrls };
             })
         );
         return booksWithUrls;
@@ -49,7 +77,7 @@ export const get = query({
             if (coverUrl) coverUrls.push(coverUrl);
         }
 
-        return { ...book, coverUrl, coverUrls };
+        return { ...book, genres: book.genres ?? [], coverUrl, coverUrls };
     },
 });
 
@@ -58,6 +86,7 @@ export const add = mutation({
         title: v.string(),
         author: v.string(),
         description: v.string(),
+        genres: v.array(v.string()),
         rentPerDay: v.number(),
         coverImage: v.optional(v.id("_storage")),
         coverImages: v.optional(v.array(v.id("_storage"))),
@@ -74,6 +103,7 @@ export const add = mutation({
             title: args.title.trim(),
             author: args.author.trim(),
             description: args.description.trim(),
+            genres: normalizeGenres(args.genres),
             rentPerDay: args.rentPerDay,
             coverImage: args.coverImage,
             coverImages: args.coverImages,
@@ -92,6 +122,7 @@ export const update = mutation({
         title: v.optional(v.string()),
         author: v.optional(v.string()),
         description: v.optional(v.string()),
+        genres: v.optional(v.array(v.string())),
         rentPerDay: v.optional(v.number()),
         coverImage: v.optional(v.id("_storage")),
         coverImages: v.optional(v.array(v.id("_storage"))),
@@ -106,6 +137,7 @@ export const update = mutation({
         if (args.author !== undefined) updates.author = args.author.trim();
         if (args.description !== undefined)
             updates.description = args.description.trim();
+        if (args.genres !== undefined) updates.genres = normalizeGenres(args.genres);
         if (args.rentPerDay !== undefined) updates.rentPerDay = args.rentPerDay;
 
         // Cleanup storage for single cover image if replaced

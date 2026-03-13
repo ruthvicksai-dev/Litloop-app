@@ -1,3 +1,4 @@
+import { FontSizes } from "@/constants/fonts";
 import { Colors } from "@/constants/theme";
 import { useTabsRouteGuard } from "@/hooks/useRouteGuards";
 import { Ionicons } from "@expo/vector-icons";
@@ -21,8 +22,7 @@ export default function TabsLayout() {
           height: 60,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
-          
+          fontSize: FontSizes.caption,
         },
       }}
     >

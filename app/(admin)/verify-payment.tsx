@@ -1,12 +1,12 @@
+import BookLoader from "@/components/ui/BookLoader";
 import Button from "@/components/ui/Button";
-import { Fonts } from "@/constants/fonts";
+import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useVerifyPaymentScreen } from "@/hooks/useVerifyPaymentScreen";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
-    ActivityIndicator,
     FlatList,
     Image,
     StyleSheet,
@@ -78,7 +78,7 @@ export default function VerifyPaymentScreen() {
     if (pendingPayments === undefined) {
         return (
             <View style={styles.center}>
-                <ActivityIndicator size="large" color={Colors.primary} />
+                <BookLoader label="Loading payments..." />
             </View>
         );
     }
@@ -195,22 +195,21 @@ const styles = StyleSheet.create({
         marginLeft: -4,
     },
     backText: {
-        fontSize: 16,
+        fontSize: FontSizes.subtitle,
         color: Colors.primary,
         fontFamily: Fonts.medium,
         marginBottom: Spacing.md,
     },
     title: {
-        fontSize: 24,
-        
+        fontSize: FontSizes.heading,
         color: Colors.text,
         marginBottom: 4,
-      fontFamily: Fonts.bold,
+        fontFamily: Fonts.bold,
     },
     subtitle: {
-        fontSize: 13,
+        fontSize: FontSizes.small,
         color: Colors.textSecondary,
-      fontFamily: Fonts.regular,
+        fontFamily: Fonts.regular,
     },
     list: {
         paddingHorizontal: Spacing.lg,
@@ -223,22 +222,22 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.md,
     },
     detailTitle: {
-        fontSize: 18,
+        fontSize: FontSizes.title,
         fontFamily: Fonts.bold,
         color: Colors.text,
         marginBottom: 4,
     },
     detailSub: {
-        fontSize: 14,
+        fontSize: FontSizes.body,
         color: Colors.textSecondary,
         marginTop: 2,
-      fontFamily: Fonts.regular,
+        fontFamily: Fonts.regular,
     },
     screenshotCard: {
         marginBottom: Spacing.md,
     },
     screenshotLabel: {
-        fontSize: 14,
+        fontSize: FontSizes.body,
         fontFamily: Fonts.medium,
         color: Colors.text,
         marginBottom: Spacing.sm,
@@ -275,26 +274,26 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     paymentTitle: {
-        fontSize: 15,
+        fontSize: FontSizes.bodyLarge,
         fontFamily: Fonts.bold,
         color: Colors.text,
     },
     paymentSub: {
-        fontSize: 12,
+        fontSize: FontSizes.caption,
         color: Colors.textSecondary,
         marginTop: 2,
-      fontFamily: Fonts.regular,
+        fontFamily: Fonts.regular,
     },
     paymentAmount: {
-        fontSize: 18,
+        fontSize: FontSizes.title,
         fontFamily: Fonts.bold,
         color: Colors.primary,
     },
     paymentUtr: {
-        fontSize: 12,
+        fontSize: FontSizes.caption,
         color: Colors.textSecondary,
         marginTop: 6,
-      fontFamily: Fonts.regular,
+        fontFamily: Fonts.regular,
     },
     paymentScreenshot: {
         width: "100%",
@@ -315,7 +314,7 @@ const styles = StyleSheet.create({
     approveBtnText: {
         color: Colors.white,
         fontFamily: Fonts.medium,
-        fontSize: 14,
+        fontSize: FontSizes.body,
     },
     rejectBtn: {
         flex: 1,
@@ -331,19 +330,19 @@ const styles = StyleSheet.create({
     rejectBtnText: {
         color: Colors.error,
         fontFamily: Fonts.medium,
-        fontSize: 14,
+        fontSize: FontSizes.body,
     },
     empty: {
         alignItems: "center",
         paddingTop: 60,
     },
     emptyIcon: {
-        fontSize: 48,
+        fontSize: FontSizes.display,
         marginBottom: Spacing.md,
     },
     emptyText: {
-        fontSize: 16,
+        fontSize: FontSizes.subtitle,
         color: Colors.textSecondary,
-      fontFamily: Fonts.regular,
+        fontFamily: Fonts.regular,
     },
 });

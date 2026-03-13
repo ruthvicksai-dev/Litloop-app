@@ -1,4 +1,4 @@
-import { Fonts } from "@/constants/fonts";
+import { Fonts, FontSizes } from "@/constants/fonts";
 import Button from "@/components/ui/Button";
 import { Colors, Spacing } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
@@ -116,14 +116,13 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.lg,
     },
     coverSectionTitle: {
-        fontSize: 15,
+        fontSize: FontSizes.bodyLarge,
         fontFamily: Fonts.medium,
         color: Colors.text,
         marginBottom: Spacing.sm,
         marginLeft: 4,
     },
     galleryScroll: {
-        flexDirection: "row",
         marginBottom: Spacing.md,
     },
     coverContainer: {
@@ -133,7 +132,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: Colors.border,
         width: 120,
-        height: 180,
+        aspectRatio: 2 / 3,
         marginRight: Spacing.sm,
         backgroundColor: Colors.white,
     },
@@ -149,24 +148,23 @@ const styles = StyleSheet.create({
         padding: Spacing.xl,
         alignItems: "center",
         justifyContent: "center",
-        alignSelf: "center",
+        alignSelf: "stretch",
         borderRadius: 12,
         borderWidth: 2,
         borderColor: Colors.border,
         borderStyle: "dashed",
-        width: 140,
-        height: 200,
+        minHeight: 200,
         marginBottom: Spacing.md,
     },
     coverIcon: {
-        fontSize: 36,
+        fontSize: FontSizes.display,
         marginBottom: 8,
     },
     coverText: {
-        fontSize: 14,
+        fontSize: FontSizes.body,
         color: Colors.textSecondary,
         textAlign: "center",
-      fontFamily: Fonts.regular,
+        fontFamily: Fonts.regular,
     },
     removeBtn: {
         position: "absolute",
@@ -181,7 +179,7 @@ const styles = StyleSheet.create({
     },
     removeBtnText: {
         color: Colors.white,
-        fontSize: 14,
+        fontSize: FontSizes.body,
         fontFamily: Fonts.bold,
         marginTop: -2,
     },
@@ -189,9 +187,11 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         gap: Spacing.sm,
         marginTop: Spacing.xs,
+        flexWrap: "wrap",
     },
     coverActionBtn: {
         flex: 1,
+        minWidth: 140,
         minHeight: 44,
         paddingVertical: 10,
     },

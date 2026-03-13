@@ -8,7 +8,6 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
     Animated,
-    Dimensions,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -18,9 +17,7 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Fonts } from "@/constants/fonts";
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+import { Fonts, FontSizes } from "@/constants/fonts";
 
 export default function RequestRentalScreen() {
     const { bookId } = useLocalSearchParams<{ bookId: string }>();
@@ -144,9 +141,9 @@ const styles = StyleSheet.create({
     },
     scroll: {
         flexGrow: 1,
-        paddingHorizontal: SCREEN_WIDTH * 0.06,
-        paddingTop: SCREEN_HEIGHT * 0.02,
-        paddingBottom: SCREEN_HEIGHT * 0.04,
+        paddingHorizontal: 20,
+        paddingTop: Spacing.sm,
+        paddingBottom: 28,
     },
     backBtn: {
         marginBottom: Spacing.md,
@@ -155,26 +152,25 @@ const styles = StyleSheet.create({
         marginLeft: -4,
     },
     backText: {
-        fontSize: 16,
+        fontSize: FontSizes.subtitle,
         color: Colors.primary,
         fontFamily: Fonts.medium,
         marginBottom: Spacing.md,
     },
     title: {
-        fontSize: SCREEN_WIDTH * 0.06,
-        
+        fontSize: FontSizes.heading,
         color: Colors.text,
         marginBottom: 4,
-      fontFamily: Fonts.bold,
+        fontFamily: Fonts.bold,
     },
     bookInfo: {
-        fontSize: 14,
+        fontSize: FontSizes.body,
         color: Colors.textSecondary,
         marginBottom: Spacing.lg,
-      fontFamily: Fonts.regular,
+        fontFamily: Fonts.regular,
     },
     sectionTitle: {
-        fontSize: 16,
+        fontSize: FontSizes.subtitle,
         fontFamily: Fonts.bold,
         color: Colors.text,
         marginBottom: Spacing.sm,
@@ -187,8 +183,8 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.lg,
     },
     zoneChip: {
-        paddingHorizontal: SCREEN_WIDTH * 0.04,
-        paddingVertical: SCREEN_HEIGHT * 0.012,
+        paddingHorizontal: 16,
+        paddingVertical: 10,
         borderRadius: 10,
         borderWidth: 1,
         borderColor: Colors.border,
@@ -199,7 +195,7 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.primary,
     },
     zoneChipText: {
-        fontSize: 13,
+        fontSize: FontSizes.small,
         fontFamily: Fonts.medium,
         color: Colors.text,
     },

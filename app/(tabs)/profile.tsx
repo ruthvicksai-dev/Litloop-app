@@ -1,3 +1,4 @@
+import ConfirmActionModal from "@/components/ui/ConfirmActionModal";
 import Button from "@/components/ui/Button";
 import { Colors, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
@@ -5,25 +6,24 @@ import { useToast } from "@/context/ToastContext";
 import { useFadeSlideScaleIn } from "@/hooks/useFadeSlideScaleIn";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import {
     Animated,
-    Dimensions,
+    ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Fonts } from "@/constants/fonts";
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+import { Fonts, FontSizes } from "@/constants/fonts";
 
 export default function ProfileScreen() {
     const { user, signOut, isAdmin } = useAuth();
     const { showToast } = useToast();
     const router = useRouter();
     const { fadeAnim, slideAnim, scaleAnim } = useFadeSlideScaleIn();
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
     const handleSignOut = async () => {
         await signOut();
@@ -33,77 +33,93 @@ export default function ProfileScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
-            <Animated.View
-                style={[
-                    styles.header,
-                    {
-                        opacity: fadeAnim,
-                        transform: [{ translateY: slideAnim }],
-                    },
-                ]}
-            >
-                <Text style={styles.title}>Profile</Text>
-            </Animated.View>
-
-            <Animated.View
-                style={[
-                    styles.card,
-                    {
-                        opacity: fadeAnim,
-                        transform: [{ translateY: slideAnim }],
-                    },
-                ]}
-            >
+            <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
                 <Animated.View
                     style={[
-                        styles.avatar,
-                        { transform: [{ scale: scaleAnim }] },
+                        styles.header,
+                        {
+                            opacity: fadeAnim,
+                            transform: [{ translateY: slideAnim }],
+                        },
                     ]}
                 >
-                    <Text style={styles.avatarText}>
-                        {user?.name?.charAt(0).toUpperCase() || "U"}
-                    </Text>
+                    <Text style={styles.title}>Profile</Text>
                 </Animated.View>
-                <Text style={styles.name}>{user?.name}</Text>
-                <Text style={styles.email}>{user?.email}</Text>
-                <Text style={styles.phone}>{user?.phone}</Text>
-                <View
+
+                <Animated.View
                     style={[
-                        styles.roleBadge,
-                        isAdmin && { backgroundColor: Colors.primary + "20" },
+                        styles.card,
+                        {
+                            opacity: fadeAnim,
+                            transform: [{ translateY: slideAnim }],
+                        },
                     ]}
                 >
-                    <Text
+                    <Animated.View
                         style={[
-                            styles.roleText,
-                            isAdmin && { color: Colors.primary },
+                            styles.avatar,
+                            { transform: [{ scale: scaleAnim }] },
                         ]}
                     >
-                        {isAdmin ? "Admin" : "User"}
-                    </Text>
-                </View>
-            </Animated.View>
-
-            {isAdmin ? (
-                <Animated.View style={{ opacity: fadeAnim }}>
-                    <TouchableOpacity
-                        style={styles.adminLink}
-                        onPress={() => router.push("/(admin)/dashboard")}
+                        <Text style={styles.avatarText}>
+                            {user?.name?.charAt(0).toUpperCase() || "U"}
+                        </Text>
+                    </Animated.View>
+                    <Text style={styles.name}>{user?.name}</Text>
+                    <Text style={styles.email}>{user?.email}</Text>
+                    <Text style={styles.phone}>{user?.phone}</Text>
+                    <View
+                        style={[
+                            styles.roleBadge,
+                            isAdmin && { backgroundColor: Colors.primary + "20" },
+                        ]}
                     >
-                        <Ionicons name="settings-outline" size={20} color={Colors.white} style={{ marginRight: 8 }} />
-                        <Text style={styles.adminLinkText}>Go to Admin Dashboard</Text>
-                    </TouchableOpacity>
+                        <Text
+                            style={[
+                                styles.roleText,
+                                isAdmin && { color: Colors.primary },
+                            ]}
+                        >
+                            {isAdmin ? "Admin" : "User"}
+                        </Text>
+                    </View>
                 </Animated.View>
-            ) : null}
 
-            <Animated.View style={[styles.actions, { opacity: fadeAnim }]}>
-                <Button
-                    title="Sign Out"
-                    onPress={handleSignOut}
-                    variant="outline"
-                    style={{ marginTop: Spacing.md }}
-                />
-            </Animated.View>
+                {isAdmin ? (
+                    <Animated.View style={{ opacity: fadeAnim }}>
+                        <TouchableOpacity
+                            style={styles.adminLink}
+                            onPress={() => router.replace("/(admin)/dashboard")}
+                        >
+                            <Ionicons name="settings-outline" size={20} color={Colors.white} style={{ marginRight: 8 }} />
+                            <Text style={styles.adminLinkText}>Go to Admin Dashboard</Text>
+                        </TouchableOpacity>
+                    </Animated.View>
+                ) : null}
+
+                <Animated.View style={[styles.actions, { opacity: fadeAnim }]}>
+                    <Button
+                        title="Sign Out"
+                        onPress={() => setShowLogoutConfirm(true)}
+                        variant="outline"
+                        style={{ marginTop: Spacing.md }}
+                    />
+                </Animated.View>
+            </ScrollView>
+
+            <ConfirmActionModal
+                visible={showLogoutConfirm}
+                title="Sign Out?"
+                message="Are you sure you want to log out of your account?"
+                confirmLabel="Log Out"
+                cancelLabel="Stay Here"
+                tone="danger"
+                onCancel={() => setShowLogoutConfirm(false)}
+                onConfirm={async () => {
+                    setShowLogoutConfirm(false);
+                    await handleSignOut();
+                }}
+            />
         </SafeAreaView>
     );
 }
@@ -113,20 +129,23 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: Colors.background,
     },
+    content: {
+        flexGrow: 1,
+        paddingBottom: Spacing.xl,
+    },
     header: {
-        paddingHorizontal: SCREEN_WIDTH * 0.06,
-        paddingTop: SCREEN_HEIGHT * 0.02,
+        paddingHorizontal: 20,
+        paddingTop: Spacing.sm,
         paddingBottom: Spacing.md,
     },
     title: {
-        fontSize: SCREEN_WIDTH * 0.065,
-        
+        fontSize: FontSizes.hero,
         color: Colors.text,
-      fontFamily: Fonts.bold,
+        fontFamily: Fonts.bold,
     },
     card: {
         backgroundColor: Colors.white,
-        marginHorizontal: SCREEN_WIDTH * 0.06,
+        marginHorizontal: 20,
         borderRadius: 16,
         padding: Spacing.lg,
         alignItems: "center",
@@ -137,36 +156,36 @@ const styles = StyleSheet.create({
         elevation: 3,
     },
     avatar: {
-        width: SCREEN_WIDTH * 0.18,
-        height: SCREEN_WIDTH * 0.18,
-        borderRadius: SCREEN_WIDTH * 0.09,
+        width: 88,
+        aspectRatio: 1,
+        borderRadius: 44,
         backgroundColor: Colors.primary,
         justifyContent: "center",
         alignItems: "center",
         marginBottom: Spacing.md,
     },
     avatarText: {
-        fontSize: SCREEN_WIDTH * 0.07,
+        fontSize: FontSizes.display,
         fontFamily: Fonts.bold,
         color: Colors.white,
     },
     name: {
-        fontSize: SCREEN_WIDTH * 0.05,
+        fontSize: FontSizes.heading,
         fontFamily: Fonts.bold,
         color: Colors.text,
         marginBottom: 4,
     },
     email: {
-        fontSize: 14,
+        fontSize: FontSizes.body,
         color: Colors.textSecondary,
         marginBottom: 2,
-      fontFamily: Fonts.regular,
+        fontFamily: Fonts.regular,
     },
     phone: {
-        fontSize: 14,
+        fontSize: FontSizes.body,
         color: Colors.textSecondary,
         marginBottom: Spacing.sm,
-      fontFamily: Fonts.regular,
+        fontFamily: Fonts.regular,
     },
     roleBadge: {
         paddingHorizontal: 12,
@@ -175,12 +194,12 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.border,
     },
     roleText: {
-        fontSize: 12,
+        fontSize: FontSizes.caption,
         fontFamily: Fonts.medium,
         color: Colors.textSecondary,
     },
     adminLink: {
-        marginHorizontal: SCREEN_WIDTH * 0.06,
+        marginHorizontal: 20,
         marginTop: Spacing.md,
         backgroundColor: Colors.primary,
         borderRadius: 12,
@@ -192,10 +211,10 @@ const styles = StyleSheet.create({
     adminLinkText: {
         color: Colors.white,
         fontFamily: Fonts.medium,
-        fontSize: 15,
+        fontSize: FontSizes.bodyLarge,
     },
     actions: {
-        paddingHorizontal: SCREEN_WIDTH * 0.06,
+        paddingHorizontal: 20,
         marginTop: Spacing.md,
     },
 });

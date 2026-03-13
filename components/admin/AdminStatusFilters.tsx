@@ -1,9 +1,7 @@
+import { FontSizes, Fonts } from "@/constants/fonts";
 import { Colors, RENTAL_STATUS_LABELS, Spacing } from "@/constants/theme";
 import React from "react";
-import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity } from "react-native";
-import { Fonts } from "@/constants/fonts";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+import { ScrollView, StyleSheet, Text, TouchableOpacity } from "react-native";
 
 type AdminStatusFiltersProps = {
     items: readonly string[];
@@ -52,7 +50,7 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.sm,
     },
     filterRow: {
-        paddingHorizontal: SCREEN_WIDTH * 0.06,
+        paddingHorizontal: 20,
         paddingBottom: 6,
         gap: 6,
         alignItems: "center",
@@ -72,7 +70,7 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.primary,
     },
     filterChipText: {
-        fontSize: 12,
+        fontSize: FontSizes.caption,
         fontFamily: Fonts.medium,
         color: Colors.textSecondary,
     },

@@ -1,14 +1,14 @@
+import BookLoader from "@/components/ui/BookLoader";
 import Button from "@/components/ui/Button";
 import DatePickerField from "@/components/ui/DatePickerField";
 import TimePickerField from "@/components/ui/TimePickerField";
-import { Fonts } from "@/constants/fonts";
+import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useScheduleDeliveryScreen } from "@/hooks/useScheduleDeliveryScreen";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
-    ActivityIndicator,
     ScrollView,
     StyleSheet,
     Text,
@@ -38,7 +38,7 @@ export default function ScheduleDeliveryScreen() {
     if (!rental) {
         return (
             <View style={styles.center}>
-                <ActivityIndicator size="large" color={Colors.primary} />
+                <BookLoader label="Loading rental..." />
             </View>
         );
     }
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
         marginLeft: -4,
     },
     backText: {
-        fontSize: 16,
+        fontSize: FontSizes.subtitle,
         color: Colors.primary,
         fontFamily: Fonts.medium,
         marginBottom: Spacing.md,
@@ -150,11 +150,10 @@ const styles = StyleSheet.create({
         marginTop: 4,
     },
     title: {
-        fontSize: 24,
-        
+        fontSize: FontSizes.heading,
         color: Colors.text,
         marginBottom: Spacing.lg,
-      fontFamily: Fonts.bold,
+        fontFamily: Fonts.bold,
     },
     infoCard: {
         backgroundColor: Colors.white,
@@ -163,15 +162,15 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.lg,
     },
     infoTitle: {
-        fontSize: 16,
+        fontSize: FontSizes.subtitle,
         fontFamily: Fonts.bold,
         color: Colors.text,
         marginBottom: 4,
     },
     infoSub: {
-        fontSize: 13,
+        fontSize: FontSizes.small,
         color: Colors.textSecondary,
         marginTop: 2,
-      fontFamily: Fonts.regular,
+        fontFamily: Fonts.regular,
     },
 });

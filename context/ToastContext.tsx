@@ -1,3 +1,4 @@
+import { FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import React, { createContext, ReactNode, useCallback, useContext, useState } from "react";
 import { Animated, Dimensions, StyleSheet, Text } from "react-native";
@@ -26,7 +27,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     const [message, setMessage] = useState("");
     const [type, setType] = useState<ToastType>("info");
     const [opacity] = useState(new Animated.Value(0));
-    const [translateY] = useState(new Animated.Value(-50));
+    const [translateY] = useState(new Animated.Value(50));
 
     const showToast = useCallback(
         (msg: string, toastType: ToastType = "info") => {
@@ -54,7 +55,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                         useNativeDriver: true,
                     }),
                     Animated.timing(translateY, {
-                        toValue: -50,
+                        toValue: 50,
                         duration: 300,
                         useNativeDriver: true,
                     }),
@@ -89,7 +90,7 @@ const { width } = Dimensions.get("window");
 const styles = StyleSheet.create({
     toastContainer: {
         position: "absolute",
-        top: 60,
+        bottom: 36,
         left: Spacing.md,
         right: Spacing.md,
         maxWidth: width - 32,
@@ -106,7 +107,7 @@ const styles = StyleSheet.create({
     },
     toastText: {
         color: Colors.white,
-        fontSize: 14,
+        fontSize: FontSizes.body,
         fontWeight: "600",
         textAlign: "center",
     },

@@ -1,17 +1,14 @@
-import { Fonts } from "@/constants/fonts";
+import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, RENTAL_STATUS_LABELS, STATUS_COLORS } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
-Dimensions,
     Image,
     StyleSheet,
     Text,
     TouchableOpacity,
     View,
 } from "react-native";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 type AdminRentalCardProps = {
     item: any;
@@ -44,7 +41,7 @@ export default function AdminRentalCard({
                         <View style={[styles.cover, styles.coverPlaceholder]}>
                             <Ionicons
                                 name="book-outline"
-                                size={SCREEN_WIDTH * 0.08}
+                                size={28}
                                 color={Colors.primary}
                             />
                         </View>
@@ -136,28 +133,28 @@ export default function AdminRentalCard({
 
 const styles = StyleSheet.create({
     rentalCard: {
-        backgroundColor: Colors.white,
-        marginHorizontal: SCREEN_WIDTH * 0.06,
-        marginBottom: 10,
-        borderRadius: 14,
+        backgroundColor: Colors.white + "F2",
+        marginHorizontal: 20,
+        marginBottom: 12,
+        borderRadius: 22,
         padding: 16,
-        shadowColor: Colors.shadow,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
-        shadowRadius: 6,
-        elevation: 2,
+        borderWidth: 1,
+        borderColor: Colors.border,
     },
     rentalTop: {
         flexDirection: "row",
-        alignItems: "flex-start",
+        alignItems: "center",
+        flexWrap: "wrap",
     },
     coverWrap: {
         marginRight: 12,
+        width: 58,
+        alignSelf: "center",
     },
     cover: {
-        width: 58,
-        height: 82,
-        borderRadius: 10,
+        width: "100%",
+        aspectRatio: 58 / 82,
+        borderRadius: 14,
         backgroundColor: Colors.border,
     },
     coverPlaceholder: {
@@ -170,36 +167,41 @@ const styles = StyleSheet.create({
     rentalInfo: {
         flex: 1,
         marginRight: 10,
+        minWidth: 160,
+        paddingTop: 2,
     },
     rentalTitle: {
-        fontSize: 15,
+        fontSize: FontSizes.bodyLarge,
         fontFamily: Fonts.bold,
         color: Colors.text,
-        marginBottom: 4,
+        marginBottom: 8,
     },
     subInfo: {
         flexDirection: "row",
         alignItems: "center",
         gap: 6,
-        marginBottom: 2,
+        marginBottom: 5,
     },
     rentalUser: {
-        fontSize: 12,
+        fontSize: FontSizes.caption,
         color: Colors.textSecondary,
-      fontFamily: Fonts.regular,
+        fontFamily: Fonts.regular,
     },
     rentalLocation: {
-        fontSize: 12,
+        fontSize: FontSizes.caption,
         color: Colors.textSecondary,
-      fontFamily: Fonts.regular,
+        fontFamily: Fonts.regular,
     },
     statusBadge: {
         flexDirection: "row",
         alignItems: "center",
         gap: 5,
-        paddingHorizontal: 10,
-        paddingVertical: 5,
-        borderRadius: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 7,
+        borderRadius: 999,
+        borderWidth: 1,
+        borderColor: Colors.border,
+        alignSelf: "center",
     },
     statusDot: {
         width: 6,
@@ -207,22 +209,24 @@ const styles = StyleSheet.create({
         borderRadius: 3,
     },
     statusText: {
-        fontSize: 10,
+        fontSize: FontSizes.tiny,
         fontFamily: Fonts.bold,
     },
     actionRow: {
         flexDirection: "row",
-        marginTop: 10,
-        paddingTop: 10,
+        marginTop: 14,
+        paddingTop: 14,
         borderTopWidth: 1,
         borderTopColor: Colors.border + "40",
         gap: 8,
+        flexWrap: "wrap",
     },
     actionBtn: {
         flex: 1,
+        minWidth: 170,
         backgroundColor: Colors.primary,
-        paddingVertical: 10,
-        borderRadius: 10,
+        paddingVertical: 11,
+        borderRadius: 999,
         alignItems: "center",
         flexDirection: "row",
         justifyContent: "center",
@@ -232,7 +236,7 @@ const styles = StyleSheet.create({
     },
     actionBtnText: {
         color: Colors.white,
-        fontSize: 12,
+        fontSize: FontSizes.caption,
         fontFamily: Fonts.bold,
     },
 });

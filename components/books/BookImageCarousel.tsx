@@ -1,13 +1,8 @@
 import CarouselDots from "@/components/books/CarouselDots";
 import { Colors } from "@/constants/theme";
 import React, { useRef } from "react";
-import { Animated, Dimensions, FlatList, Image, Platform, StyleSheet, Text, View } from "react-native";
-import { Fonts } from "@/constants/fonts";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const CAROUSEL_WIDTH = SCREEN_WIDTH;
-const IMAGE_WIDTH = SCREEN_WIDTH * 0.65;
-const IMAGE_HEIGHT = IMAGE_WIDTH * 1.5;
+import { Animated, FlatList, Image, Platform, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { Fonts, FontSizes } from "@/constants/fonts";
 
 type BookImageCarouselProps = {
     images: string[];
@@ -22,6 +17,10 @@ export default function BookImageCarousel({
 }: BookImageCarouselProps) {
     const scrollX = useRef(new Animated.Value(0)).current;
     const flatListRef = useRef<FlatList<string>>(null);
+    const { width } = useWindowDimensions();
+    const carouselWidth = width;
+    const imageWidth = Math.min(width * 0.65, 320);
+    const imageHeight = imageWidth * 1.5;
 
     if (images.length === 0) {
         return (
@@ -56,18 +55,21 @@ export default function BookImageCarousel({
                         useNativeDriver: false,
                         listener: (event: any) => {
                             const x = event.nativeEvent.contentOffset.x;
-                            onIndexChange(Math.round(x / CAROUSEL_WIDTH));
+                            onIndexChange(Math.round(x / carouselWidth));
                         },
                     }
                 )}
                 scrollEventThrottle={16}
                 snapToAlignment="center"
-                snapToInterval={CAROUSEL_WIDTH}
+                snapToInterval={carouselWidth}
                 decelerationRate="fast"
                 renderItem={({ item }) => (
-                    <View style={styles.galleryItem}>
+                    <View style={[styles.galleryItem, { width: carouselWidth }]}>
                         <View style={styles.imageShadow}>
-                            <Image source={{ uri: item }} style={styles.cover} />
+                            <Image
+                                source={{ uri: item }}
+                                style={[styles.cover, { width: imageWidth, height: imageHeight }]}
+                            />
                         </View>
                     </View>
                 )}
@@ -90,8 +92,7 @@ export default function BookImageCarousel({
 
 const styles = StyleSheet.create({
     container: {
-        width: CAROUSEL_WIDTH,
-        height: IMAGE_HEIGHT + 80,
+        width: "100%",
         justifyContent: "center",
         overflow: "hidden",
         position: "relative",
@@ -102,8 +103,6 @@ const styles = StyleSheet.create({
     },
     backgroundImage: {
         ...StyleSheet.absoluteFillObject,
-        width: CAROUSEL_WIDTH,
-        height: IMAGE_HEIGHT + 100,
         opacity: 0.2,
         transform: [{ scale: 1.3 }],
     },
@@ -112,7 +111,6 @@ const styles = StyleSheet.create({
         backgroundColor: "rgba(255, 255, 255, 0.55)",
     },
     galleryItem: {
-        width: CAROUSEL_WIDTH,
         alignItems: "center",
         justifyContent: "center",
         paddingTop: 20,
@@ -128,8 +126,6 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.white,
     },
     cover: {
-        width: IMAGE_WIDTH,
-        height: IMAGE_HEIGHT,
         borderRadius: 20,
         backgroundColor: Colors.primaryLight,
     },
@@ -137,12 +133,14 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: Colors.primaryLight,
-        width: IMAGE_WIDTH,
-        height: IMAGE_HEIGHT,
+        width: "65%",
+        maxWidth: 320,
+        aspectRatio: 2 / 3,
+        alignSelf: "center",
         borderRadius: 20,
     },
     placeholderText: {
-        fontSize: SCREEN_WIDTH * 0.2,
-      fontFamily: Fonts.regular,
+        fontSize: FontSizes.display,
+        fontFamily: Fonts.regular,
     },
 });

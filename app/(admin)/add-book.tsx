@@ -1,4 +1,5 @@
 import CoverGalleryField from "@/components/books/CoverGalleryField";
+import GenreSelector from "@/components/books/GenreSelector";
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
 import { Colors, Spacing } from "@/constants/theme";
@@ -7,7 +8,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity } from "react-native";
-import { Fonts } from "@/constants/fonts";
+import { Fonts, FontSizes } from "@/constants/fonts";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function AddBookScreen() {
@@ -23,12 +24,17 @@ export default function AddBookScreen() {
         setRentPerDay,
         totalCopies,
         setTotalCopies,
+        availableGenres,
+        selectedGenres,
+        isFetchingBookInfo,
+        toggleGenre,
         coverUris,
         isFetchingCover,
         fetchCover,
         pickImages,
         removeCover,
         loading,
+        handleFetchBookInfo,
         handleAddBook,
     } = useAddBookScreen();
 
@@ -56,6 +62,13 @@ export default function AddBookScreen() {
                     value={author}
                     onChangeText={setAuthor}
                 />
+                <Button
+                    title="Fetch Book Info"
+                    onPress={handleFetchBookInfo}
+                    loading={isFetchingBookInfo}
+                    style={styles.fetchInfoBtn}
+                    variant="secondary"
+                />
 
                 <CoverGalleryField
                     coverUris={coverUris}
@@ -72,6 +85,12 @@ export default function AddBookScreen() {
                     onChangeText={setDescription}
                     multiline
                     numberOfLines={4}
+                />
+                <GenreSelector
+                    genres={availableGenres}
+                    selectedGenres={selectedGenres}
+                    onToggleGenre={toggleGenre}
+                    helperText="Choose up to 3 main genres. Fetch Book Info only fills description, author, and genres."
                 />
                 <InputField
                     label="Rent Per Day ₹"
@@ -116,16 +135,18 @@ const styles = StyleSheet.create({
         marginLeft: -4,
     },
     backText: {
-        fontSize: 16,
+        fontSize: FontSizes.subtitle,
         color: Colors.primary,
         fontFamily: Fonts.medium,
         marginBottom: Spacing.md,
     },
+    fetchInfoBtn: {
+        marginBottom: Spacing.md,
+    },
     title: {
-        fontSize: 24,
-        
+        fontSize: FontSizes.heading,
         color: Colors.text,
         marginBottom: Spacing.lg,
-      fontFamily: Fonts.bold,
+        fontFamily: Fonts.bold,
     },
 });

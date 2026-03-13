@@ -1,3 +1,4 @@
+import BookLoader from "@/components/ui/BookLoader";
 import RentalCard from "@/components/ui/RentalCard";
 import { Colors, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
@@ -8,9 +9,7 @@ import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
-    ActivityIndicator,
     Animated,
-    Dimensions,
     FlatList,
     StyleSheet,
     Text,
@@ -18,9 +17,7 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Fonts } from "@/constants/fonts";
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+import { Fonts, FontSizes } from "@/constants/fonts";
 
 export default function MyRentalsScreen() {
     const { userId } = useAuth();
@@ -31,7 +28,7 @@ export default function MyRentalsScreen() {
     if (rentals === undefined) {
         return (
             <View style={styles.center}>
-                <ActivityIndicator size="large" color={Colors.primary} />
+                <BookLoader label="Loading rentals..." />
             </View>
         );
     }
@@ -93,7 +90,7 @@ export default function MyRentalsScreen() {
                 showsVerticalScrollIndicator={false}
                 ListEmptyComponent={
                     <View style={styles.empty}>
-                        <Ionicons name="clipboard-outline" size={SCREEN_WIDTH * 0.12} color={Colors.textLight} style={{ marginBottom: Spacing.md }} />
+                        <Ionicons name="clipboard-outline" size={48} color={Colors.textLight} style={{ marginBottom: Spacing.md }} />
                         <Text style={styles.emptyText}>No active rentals</Text>
                         <TouchableOpacity onPress={() => router.push("/(tabs)")}>
                             <Text style={styles.browseLink}>Browse Books</Text>
@@ -117,44 +114,45 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.background,
     },
     header: {
-        paddingHorizontal: SCREEN_WIDTH * 0.06,
-        paddingTop: SCREEN_HEIGHT * 0.02,
+        paddingHorizontal: 20,
+        paddingTop: Spacing.sm,
         paddingBottom: Spacing.md,
     },
     title: {
-        fontSize: SCREEN_WIDTH * 0.065,
-        
+        fontSize: FontSizes.hero,
         color: Colors.text,
-      fontFamily: Fonts.bold,
+        fontFamily: Fonts.bold,
     },
     subtitle: {
-        fontSize: SCREEN_WIDTH * 0.035,
+        fontSize: FontSizes.body,
         color: Colors.textSecondary,
         marginTop: 4,
-      fontFamily: Fonts.regular,
+        fontFamily: Fonts.regular,
     },
     list: {
-        paddingHorizontal: SCREEN_WIDTH * 0.06,
+        flexGrow: 1,
+        paddingHorizontal: 20,
         paddingBottom: 20,
     },
     empty: {
         flex: 1,
         alignItems: "center",
         justifyContent: "center",
-        paddingTop: SCREEN_HEIGHT * 0.1,
+        paddingHorizontal: 24,
+        paddingVertical: 56,
     },
     emptyIcon: {
-        fontSize: SCREEN_WIDTH * 0.12,
+        fontSize: FontSizes.display,
         marginBottom: Spacing.md,
     },
     emptyText: {
-        fontSize: 16,
+        fontSize: FontSizes.subtitle,
         color: Colors.textSecondary,
         marginBottom: Spacing.md,
-      fontFamily: Fonts.regular,
+        fontFamily: Fonts.regular,
     },
     browseLink: {
-        fontSize: 16,
+        fontSize: FontSizes.subtitle,
         color: Colors.primary,
         fontFamily: Fonts.medium,
     },

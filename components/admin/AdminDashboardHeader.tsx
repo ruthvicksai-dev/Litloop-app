@@ -1,10 +1,8 @@
-import { Fonts } from "@/constants/fonts";
+import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 type AdminDashboardHeaderProps = {
     onAddBook: () => void;
@@ -38,17 +36,17 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "flex-start",
-        paddingHorizontal: SCREEN_WIDTH * 0.06,
-        paddingTop: SCREEN_HEIGHT * 0.015,
+        paddingHorizontal: 20,
+        paddingTop: Spacing.sm,
         paddingBottom: Spacing.sm,
     },
     headerGreeting: {
-        fontSize: 13,
+        fontSize: FontSizes.small,
         color: Colors.textSecondary,
         fontFamily: Fonts.medium,
     },
     title: {
-        fontSize: SCREEN_WIDTH * 0.065,
+        fontSize: FontSizes.hero,
         color: Colors.text,
         fontFamily: Fonts.bold,
     },
@@ -56,11 +54,12 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         gap: 8,
         alignItems: "center",
+        flexShrink: 0,
     },
     iconBtn: {
         backgroundColor: Colors.primary,
         width: 40,
-        height: 40,
+        aspectRatio: 1,
         borderRadius: 10,
         justifyContent: "center",
         alignItems: "center",
@@ -68,11 +67,11 @@ const styles = StyleSheet.create({
     iconBtnText: {
         color: Colors.white,
         fontFamily: Fonts.bold,
-        fontSize: 13,
+        fontSize: FontSizes.small,
     },
     logoutBtn: {
         width: 40,
-        height: 40,
+        aspectRatio: 1,
         borderRadius: 10,
         borderWidth: 1.5,
         borderColor: Colors.border,
@@ -81,7 +80,7 @@ const styles = StyleSheet.create({
     },
     logoutText: {
         color: Colors.textSecondary,
-        fontSize: 13,
+        fontSize: FontSizes.small,
         fontFamily: Fonts.medium,
     },
 });

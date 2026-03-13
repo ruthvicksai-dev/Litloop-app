@@ -1,3 +1,5 @@
+import { FontSizes } from "@/constants/fonts";
+
 export const Colors = {
   primary: "#754043",
   primaryDark: "#754043",
@@ -16,11 +18,11 @@ export const Colors = {
 };
 
 export const Fonts = {
-  regular: { fontSize: 14, color: Colors.text },
-  medium: { fontSize: 16, color: Colors.text },
-  large: { fontSize: 18, color: Colors.text, fontWeight: "600" as const },
-  title: { fontSize: 22, color: Colors.text, fontWeight: "700" as const },
-  caption: { fontSize: 12, color: Colors.textSecondary },
+  regular: { fontSize: FontSizes.body, color: Colors.text },
+  medium: { fontSize: FontSizes.subtitle, color: Colors.text },
+  large: { fontSize: FontSizes.title, color: Colors.text, fontWeight: "600" as const },
+  title: { fontSize: FontSizes.titleLarge, color: Colors.text, fontWeight: "700" as const },
+  caption: { fontSize: FontSizes.caption, color: Colors.textSecondary },
 };
 
 export const Spacing = {

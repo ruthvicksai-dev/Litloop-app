@@ -9,7 +9,9 @@ export default defineSchema({
         passwordHash: v.string(),
         role: v.union(v.literal("user"), v.literal("admin")),
         createdAt: v.number(),
-    }).index("by_email", ["email"]),
+    })
+        .index("by_email", ["email"])
+        .index("by_createdAt", ["createdAt"]),
 
     sessions: defineTable({
         userId: v.id("users"),
@@ -25,6 +27,7 @@ export default defineSchema({
         author: v.string(),
         description: v.string(),
         rentPerDay: v.number(),
+        genres: v.optional(v.array(v.string())),
         coverImage: v.optional(v.id("_storage")),
         coverImages: v.optional(v.array(v.id("_storage"))),
         totalCopies: v.number(),
@@ -76,5 +79,51 @@ export default defineSchema({
     })
         .index("by_userId", ["userId"])
         .index("by_status", ["status"])
-        .index("by_zone", ["zone"]),
+        .index("by_zone", ["zone"])
+        .index("by_createdAt", ["createdAt"]),
+
+    analytics_monthly: defineTable({
+        month: v.string(),
+        revenue: v.number(),
+        rentals: v.number(),
+        newUsers: v.number(),
+        activeUsers: v.number(),
+        createdAt: v.number(),
+    }).index("by_month", ["month"]),
+
+    analytics_daily: defineTable({
+        date: v.string(),
+        revenue: v.number(),
+        rentals: v.number(),
+        createdAt: v.number(),
+    }).index("by_date", ["date"]),
+
+    book_stats: defineTable({
+        bookId: v.id("books"),
+        rentals: v.number(),
+        revenue: v.number(),
+        lastRentedAt: v.number(),
+        createdAt: v.number(),
+    })
+        .index("by_bookId", ["bookId"])
+        .index("by_rentals", ["rentals"])
+        .index("by_revenue", ["revenue"]),
+
+    genre_stats: defineTable({
+        genre: v.string(),
+        rentals: v.number(),
+        revenue: v.number(),
+        createdAt: v.number(),
+    })
+        .index("by_genre", ["genre"])
+        .index("by_rentals", ["rentals"])
+        .index("by_revenue", ["revenue"]),
+
+    user_month_activity: defineTable({
+        userId: v.id("users"),
+        month: v.string(),
+        createdAt: v.number(),
+    })
+        .index("by_user_month", ["userId", "month"])
+        .index("by_month", ["month"]),
 });

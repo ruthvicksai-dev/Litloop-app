@@ -1,5 +1,7 @@
 import SearchInput from "@/components/shared/SearchInput";
-import { Fonts } from "@/constants/fonts";
+import BookCard from "@/components/ui/BookCard";
+import BookLoader from "@/components/ui/BookLoader";
+import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useAdminBooksScreen } from "@/hooks/useAdminBooksScreen";
 import { useFadeSlideIn } from "@/hooks/useFadeSlideIn";
@@ -7,11 +9,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
-    ActivityIndicator,
     Animated,
-    Dimensions,
     FlatList,
-    Image,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -19,17 +18,15 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
-
 export default function AdminBooksScreen() {
     const router = useRouter();
-    const { books, search, setSearch, filteredBooks } = useAdminBooksScreen();
+    const { books, search, setSearch, genreSections } = useAdminBooksScreen();
     const { fadeAnim, slideAnim } = useFadeSlideIn({ slideFrom: 20, duration: 400 });
 
     if (books === undefined) {
         return (
             <View style={styles.center}>
-                <ActivityIndicator size="large" color={Colors.primary} />
+                <BookLoader label="Loading books..." />
             </View>
         );
     }
@@ -60,62 +57,70 @@ export default function AdminBooksScreen() {
                     value={search}
                     onChangeText={setSearch}
                     placeholder="Search by title or author..."
-                    icon="ðŸ”"
+                    icon="search"
                     containerStyle={styles.searchInputContainer}
                     inputStyle={styles.searchInput}
                 />
             </Animated.View>
 
             <FlatList
-                data={filteredBooks}
-                keyExtractor={(item) => item._id}
+                data={genreSections}
+                keyExtractor={(item) => item.genre}
                 contentContainerStyle={styles.list}
                 renderItem={({ item, index }) => (
                     <Animated.View
-                        style={{
-                            opacity: fadeAnim,
-                            transform: [
-                                {
-                                    translateY: fadeAnim.interpolate({
-                                        inputRange: [0, 1],
-                                        outputRange: [20 + index * 5, 0],
-                                    }),
-                                },
-                            ],
-                        }}
+                        style={[
+                            styles.section,
+                            {
+                                opacity: fadeAnim,
+                                transform: [
+                                    {
+                                        translateY: fadeAnim.interpolate({
+                                            inputRange: [0, 1],
+                                            outputRange: [20 + index * 5, 0],
+                                        }),
+                                    },
+                                ],
+                            },
+                        ]}
                     >
-                        <TouchableOpacity
-                            style={styles.card}
-                            onPress={() => router.push(`/(admin)/edit-book?bookId=${item._id}`)}
-                            activeOpacity={0.8}
-                        >
-                            {item.coverUrl ? (
-                                <Image source={{ uri: item.coverUrl }} style={styles.cover} />
-                            ) : (
-                                <View style={[styles.cover, styles.coverPlaceholder]}>
-                                    <Ionicons name="book-outline" size={SCREEN_WIDTH * 0.08} color={Colors.primary} />
-                                </View>
+                        <Text style={styles.sectionTitle}>{item.genre}</Text>
+                        <FlatList
+                            data={item.books}
+                            horizontal
+                            keyExtractor={(book) => book._id}
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={styles.genreRow}
+                            renderItem={({ item: book }) => (
+                                <BookCard
+                                    title={book.title}
+                                    author={book.author}
+                                    rentPerDay={book.rentPerDay}
+                                    availableCopies={book.availableCopies}
+                                    coverUrl={book.coverUrl}
+                                    coverUrls={book.coverUrls}
+                                    style={styles.genreCard}
+                                    viewDetailsLabel="Manage Book"
+                                    showRequestButton={false}
+                                    onViewDetails={() =>
+                                        router.push(`/(admin)/edit-book?bookId=${book._id}`)
+                                    }
+                                    onRequestBook={() =>
+                                        router.push(`/(admin)/edit-book?bookId=${book._id}`)
+                                    }
+                                />
                             )}
-                            <View style={styles.info}>
-                                <Text style={styles.bookTitle} numberOfLines={1}>
-                                    {item.title}
-                                </Text>
-                                <Text style={styles.bookAuthor} numberOfLines={1}>
-                                    {item.author}
-                                </Text>
-                                <View style={styles.statsRow}>
-                                    <Text style={styles.statText}>₹{item.rentPerDay}/day</Text>
-                                    <Text style={styles.statText}>{item.availableCopies} available</Text>
-                                    <Text style={styles.statText}>{item.totalCopies} total</Text>
-                                </View>
-                            </View>
-                            <Ionicons name="chevron-forward" size={20} color={Colors.textLight} />
-                        </TouchableOpacity>
+                        />
                     </Animated.View>
                 )}
                 ListEmptyComponent={
                     <View style={styles.empty}>
-                        <Ionicons name="book-outline" size={SCREEN_WIDTH * 0.15} color={Colors.textLight} style={{ marginBottom: Spacing.md }} />
+                        <Ionicons
+                            name="book-outline"
+                            size={60}
+                            color={Colors.textLight}
+                            style={{ marginBottom: Spacing.md }}
+                        />
                         <Text style={styles.emptyText}>No books found</Text>
                     </View>
                 }
@@ -132,26 +137,22 @@ const styles = StyleSheet.create({
         alignItems: "center",
         backgroundColor: Colors.background,
     },
-    statText: {
-        fontSize: 12,
-        color: Colors.textSecondary,
-        fontFamily: Fonts.medium,
-        marginRight: 8
-    },
     header: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
-        paddingHorizontal: SCREEN_WIDTH * 0.06,
+        paddingHorizontal: 20,
         paddingVertical: Spacing.md,
+        gap: 12,
     },
     backBtn: {
         padding: 4,
         marginLeft: -4,
     },
-    back: { fontSize: 16, color: Colors.primary, fontFamily: Fonts.medium },
+    back: { fontSize: FontSizes.subtitle, color: Colors.primary, fontFamily: Fonts.medium },
     title: {
-        fontSize: SCREEN_WIDTH * 0.055,
+        flex: 1,
+        fontSize: FontSizes.heading,
         color: Colors.text,
         fontFamily: Fonts.bold,
     },
@@ -164,9 +165,9 @@ const styles = StyleSheet.create({
         alignItems: "center",
         gap: 4,
     },
-    addBtnText: { color: Colors.white, fontFamily: Fonts.bold, fontSize: 13 },
+    addBtnText: { color: Colors.white, fontFamily: Fonts.bold, fontSize: FontSizes.small },
     searchBox: {
-        marginHorizontal: SCREEN_WIDTH * 0.06,
+        marginHorizontal: 20,
         marginBottom: Spacing.sm,
     },
     searchInputContainer: {
@@ -175,77 +176,45 @@ const styles = StyleSheet.create({
     },
     searchInput: {
         paddingVertical: 0,
-        fontSize: 14,
+        fontSize: FontSizes.body,
         fontFamily: Fonts.regular,
     },
     list: {
-        paddingHorizontal: SCREEN_WIDTH * 0.06,
+        flexGrow: 1,
         paddingBottom: 20,
-        gap: 10,
     },
-    card: {
-        backgroundColor: Colors.white,
-        borderRadius: 14,
-        padding: Spacing.md,
-        flexDirection: "row",
-        alignItems: "center",
-        shadowColor: Colors.shadow,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
-        shadowRadius: 6,
-        elevation: 2,
-        gap: 12,
+    section: {
+        marginBottom: Spacing.lg,
     },
-    cover: {
-        width: SCREEN_WIDTH * 0.14,
-        height: SCREEN_WIDTH * 0.14 * 1.4,
-        borderRadius: 8,
-    },
-    coverPlaceholder: {
-        backgroundColor: Colors.primaryLight,
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    coverEmoji: { fontSize: SCREEN_WIDTH * 0.06 },
-    info: { flex: 1 },
-    bookTitle: {
-        fontSize: 15,
-        fontFamily: Fonts.bold,
-        color: Colors.text,
-        marginBottom: 2,
-    },
-    bookAuthor: {
-        fontSize: 12,
-        color: Colors.textSecondary,
+    sectionTitle: {
+        paddingHorizontal: 20,
         marginBottom: Spacing.sm,
-        fontFamily: Fonts.regular,
+        fontSize: FontSizes.titleLarge,
+        color: Colors.text,
+        fontFamily: Fonts.bold,
     },
-    statsRow: {
-        flexDirection: "row",
-        gap: 10,
-        flexWrap: "wrap",
+    genreRow: {
+        paddingLeft: 20,
+        paddingRight: 10,
+        paddingBottom: 8,
+        alignItems: "stretch",
     },
-    stat: {
-        flex: 1,
-        flexDirection: "row",
-        alignItems: "baseline",
-        gap: 2,
-    },
-    statValue: { fontSize: 13, fontFamily: Fonts.bold, color: Colors.primary },
-    statLabel: {
-        fontSize: 10, color: Colors.textSecondary, fontFamily: Fonts.regular,
-    },
-    chevron: {
-        fontSize: 22,
-        color: Colors.textLight,
-        fontFamily: Fonts.medium,
+    genreCard: {
+        width: 320,
+        maxWidth: 360,
+        marginRight: Spacing.md,
+        marginBottom: 0,
+        alignSelf: "stretch",
     },
     empty: {
         alignItems: "center",
-        paddingTop: SCREEN_HEIGHT * 0.12,
+        paddingHorizontal: 24,
+        paddingVertical: 72,
     },
-    emptyIcon: { fontSize: SCREEN_WIDTH * 0.12, marginBottom: Spacing.md },
+    emptyIcon: { fontSize: FontSizes.display, marginBottom: Spacing.md },
     emptyText: {
-        fontSize: 16, color: Colors.textSecondary, fontFamily: Fonts.regular,
+        fontSize: FontSizes.subtitle,
+        color: Colors.textSecondary,
+        fontFamily: Fonts.regular,
     },
 });

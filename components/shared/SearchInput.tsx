@@ -1,10 +1,8 @@
 import { Colors, Spacing } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Dimensions, StyleProp, StyleSheet, TextInput, TextStyle, View, ViewStyle } from "react-native";
-import { Fonts } from "@/constants/fonts";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+import { StyleProp, StyleSheet, TextInput, TextStyle, View, ViewStyle } from "react-native";
+import { Fonts, FontSizes } from "@/constants/fonts";
 
 type SearchInputProps = {
     value: string;
@@ -48,13 +46,14 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     icon: {
-        fontSize: 16,
+        fontSize: FontSizes.subtitle,
     },
     input: {
         flex: 1,
-        paddingVertical: SCREEN_WIDTH * 0.04,
-        fontSize: 15,
+        minHeight: 46,
+        paddingVertical: 10,
+        fontSize: FontSizes.bodyLarge,
         color: Colors.text,
-      fontFamily: Fonts.regular,
+        fontFamily: Fonts.regular,
     },
 });

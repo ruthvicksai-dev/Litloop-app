@@ -9,7 +9,6 @@ import { useSignUpScreen } from "@/hooks/useSignUpScreen";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
-    Dimensions,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -18,9 +17,7 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Fonts } from "@/constants/fonts";
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+import { Fonts, FontSizes } from "@/constants/fonts";
 
 export default function SignUpScreen() {
     const router = useRouter();
@@ -137,9 +134,9 @@ const styles = StyleSheet.create({
     },
     container: {
         flexGrow: 1,
-        paddingHorizontal: SCREEN_WIDTH * 0.06,
-        paddingTop: SCREEN_HEIGHT * 0.05,
-        paddingBottom: SCREEN_HEIGHT * 0.04,
+        paddingHorizontal: 20,
+        paddingTop: 32,
+        paddingBottom: 28,
         justifyContent: "center",
     },
     form: {
@@ -154,10 +151,10 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.lg,
     },
     formHint: {
-        fontSize: 14,
+        fontSize: FontSizes.body,
         color: Colors.textSecondary,
         textAlign: "center",
         marginBottom: Spacing.md,
-      fontFamily: Fonts.regular,
+        fontFamily: Fonts.regular,
     },
 });

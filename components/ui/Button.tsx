@@ -1,9 +1,10 @@
-import { Fonts } from "@/constants/fonts";
+import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import React, { useRef } from "react";
 import {
 ActivityIndicator,
     Animated,
+    StyleProp,
     StyleSheet,
     Text,
     TextStyle,
@@ -17,8 +18,8 @@ interface ButtonProps {
     variant?: "primary" | "secondary" | "outline";
     loading?: boolean;
     disabled?: boolean;
-    style?: ViewStyle;
-    textStyle?: TextStyle;
+    style?: StyleProp<ViewStyle>;
+    textStyle?: StyleProp<TextStyle>;
 }
 
 export default function Button({
@@ -116,7 +117,7 @@ const styles = StyleSheet.create({
         opacity: 0.5,
     },
     text: {
-        fontSize: 16,
+        fontSize: FontSizes.subtitle,
         fontFamily: Fonts.medium,
     },
     primaryText: {

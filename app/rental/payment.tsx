@@ -1,11 +1,12 @@
+import BookLoader from "@/components/ui/BookLoader";
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
 import { Colors, Spacing } from "@/constants/theme";
+import { Ionicons } from "@expo/vector-icons";
 import { usePaymentScreen } from "@/hooks/usePaymentScreen";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
-    ActivityIndicator,
     Image,
     ScrollView,
     StyleSheet,
@@ -14,7 +15,7 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Fonts } from "@/constants/fonts";
+import { Fonts, FontSizes } from "@/constants/fonts";
 
 export default function PaymentScreen() {
     const { rentalId } = useLocalSearchParams<{ rentalId: string }>();
@@ -35,7 +36,7 @@ export default function PaymentScreen() {
     if (!rental) {
         return (
             <View style={styles.center}>
-                <ActivityIndicator size="large" color={Colors.primary} />
+                <BookLoader label="Loading payment..." />
             </View>
         );
     }
@@ -67,7 +68,18 @@ export default function PaymentScreen() {
                         ]}
                         onPress={() => setPaymentMethod("upi")}
                     >
-                        <Text style={styles.methodIcon}>UPI</Text>
+                        <View
+                            style={[
+                                styles.methodIconWrap,
+                                paymentMethod === "upi" && styles.methodIconWrapActive,
+                            ]}
+                        >
+                            <Ionicons
+                                name="phone-portrait-outline"
+                                size={22}
+                                color={paymentMethod === "upi" ? Colors.white : Colors.primary}
+                            />
+                        </View>
                         <Text
                             style={[
                                 styles.methodText,
@@ -84,7 +96,18 @@ export default function PaymentScreen() {
                         ]}
                         onPress={() => setPaymentMethod("cash")}
                     >
-                        <Text style={styles.methodIcon}>Cash</Text>
+                        <View
+                            style={[
+                                styles.methodIconWrap,
+                                paymentMethod === "cash" && styles.methodIconWrapActive,
+                            ]}
+                        >
+                            <Ionicons
+                                name="cash-outline"
+                                size={22}
+                                color={paymentMethod === "cash" ? Colors.white : Colors.primary}
+                            />
+                        </View>
                         <Text
                             style={[
                                 styles.methodText,
@@ -178,23 +201,22 @@ const styles = StyleSheet.create({
         paddingBottom: Spacing.xl,
     },
     backText: {
-        fontSize: 16,
+        fontSize: FontSizes.subtitle,
         color: Colors.primary,
         fontFamily: Fonts.medium,
         marginBottom: Spacing.md,
     },
     title: {
-        fontSize: 24,
-        
+        fontSize: FontSizes.heading,
         color: Colors.text,
         marginBottom: 4,
-      fontFamily: Fonts.bold,
+        fontFamily: Fonts.bold,
     },
     subtitle: {
-        fontSize: 14,
+        fontSize: FontSizes.body,
         color: Colors.textSecondary,
         marginBottom: Spacing.lg,
-      fontFamily: Fonts.regular,
+        fontFamily: Fonts.regular,
     },
     amountCard: {
         backgroundColor: Colors.primary,
@@ -204,19 +226,18 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.lg,
     },
     amountLabel: {
-        fontSize: 14,
+        fontSize: FontSizes.body,
         color: Colors.white,
         opacity: 0.9,
-      fontFamily: Fonts.bold,
+        fontFamily: Fonts.bold,
     },
     amountValue: {
-        fontSize: 36,
-        
+        fontSize: FontSizes.display,
         color: Colors.white,
-      fontFamily: Fonts.bold,
+        fontFamily: Fonts.bold,
     },
     sectionTitle: {
-        fontSize: 16,
+        fontSize: FontSizes.subtitle,
         fontFamily: Fonts.bold,
         color: Colors.text,
         marginBottom: Spacing.sm,
@@ -239,14 +260,20 @@ const styles = StyleSheet.create({
         borderColor: Colors.primary,
         backgroundColor: Colors.primaryLight,
     },
-    methodIcon: {
-        fontSize: 20,
-        marginBottom: 4,
-        fontFamily: Fonts.bold,
-        color: Colors.text,
+    methodIconWrap: {
+        width: 44,
+        aspectRatio: 1,
+        borderRadius: 22,
+        marginBottom: 8,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: Colors.primaryLight,
+    },
+    methodIconWrapActive: {
+        backgroundColor: Colors.primary,
     },
     methodText: {
-        fontSize: 14,
+        fontSize: FontSizes.body,
         fontFamily: Fonts.medium,
         color: Colors.text,
     },
@@ -264,7 +291,7 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.lg,
     },
     qrTitle: {
-        fontSize: 16,
+        fontSize: FontSizes.subtitle,
         fontFamily: Fonts.bold,
         color: Colors.text,
         marginBottom: Spacing.md,
@@ -279,24 +306,24 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.md,
     },
     qrIcon: {
-        fontSize: 32,
+        fontSize: FontSizes.display,
         fontFamily: Fonts.bold,
         marginBottom: 8,
         color: Colors.primary,
     },
     qrUpi: {
-        fontSize: 14,
+        fontSize: FontSizes.body,
         fontFamily: Fonts.medium,
         color: Colors.primary,
     },
     qrNote: {
-        fontSize: 13,
+        fontSize: FontSizes.small,
         color: Colors.textSecondary,
         textAlign: "center",
-      fontFamily: Fonts.regular,
+        fontFamily: Fonts.regular,
     },
     uploadLabel: {
-        fontSize: 14,
+        fontSize: FontSizes.body,
         fontFamily: Fonts.medium,
         color: Colors.text,
         marginBottom: Spacing.xs,
@@ -315,15 +342,15 @@ const styles = StyleSheet.create({
         justifyContent: "center",
     },
     uploadIcon: {
-        fontSize: 24,
+        fontSize: FontSizes.heading,
         fontFamily: Fonts.bold,
         marginBottom: 8,
         color: Colors.primary,
     },
     uploadText: {
-        fontSize: 14,
+        fontSize: FontSizes.body,
         color: Colors.textSecondary,
-      fontFamily: Fonts.regular,
+        fontFamily: Fonts.regular,
     },
     screenshotPreview: {
         width: "100%",
@@ -337,22 +364,22 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     cashIcon: {
-        fontSize: 24,
+        fontSize: FontSizes.heading,
         fontFamily: Fonts.bold,
         marginBottom: Spacing.sm,
         color: Colors.primary,
     },
     cashTitle: {
-        fontSize: 18,
+        fontSize: FontSizes.title,
         fontFamily: Fonts.bold,
         color: Colors.text,
         marginBottom: Spacing.sm,
     },
     cashDesc: {
-        fontSize: 14,
+        fontSize: FontSizes.body,
         color: Colors.textSecondary,
         textAlign: "center",
         lineHeight: 20,
-      fontFamily: Fonts.regular,
+        fontFamily: Fonts.regular,
     },
 });

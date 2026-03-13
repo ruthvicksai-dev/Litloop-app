@@ -1,6 +1,7 @@
 import BookImageCarousel from "@/components/books/BookImageCarousel";
+import BookLoader from "@/components/ui/BookLoader";
 import Button from "@/components/ui/Button";
-import { Fonts } from "@/constants/fonts";
+import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useBookDetailsScreen } from "@/hooks/useBookDetailsScreen";
 import { useFadeSlideScaleIn } from "@/hooks/useFadeSlideScaleIn";
@@ -8,9 +9,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
-    ActivityIndicator,
     Animated,
-    Dimensions,
     ScrollView,
     StyleSheet,
     Text,
@@ -18,8 +17,6 @@ import {
     View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function BookDetailsScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
@@ -33,7 +30,7 @@ export default function BookDetailsScreen() {
     if (book === undefined) {
         return (
             <View style={styles.center}>
-                <ActivityIndicator size="large" color={Colors.primary} />
+                <BookLoader label="Loading book..." />
             </View>
         );
     }
@@ -50,7 +47,7 @@ export default function BookDetailsScreen() {
                 </View>
                 <View style={[styles.center, { paddingHorizontal: 40 }]}>
                     <Ionicons name="book-outline" size={60} color={Colors.textLight} style={{ marginBottom: 20 }} />
-                    <Text style={{ fontSize: 18, fontFamily: Fonts.bold, color: Colors.text, marginBottom: 8 }}>
+                    <Text style={{ fontSize: FontSizes.title, fontFamily: Fonts.bold, color: Colors.text, marginBottom: 8 }}>
                         Book not found
                     </Text>
                     <Text style={{ textAlign: "center", color: Colors.textSecondary, marginBottom: 24 }}>
@@ -66,7 +63,7 @@ export default function BookDetailsScreen() {
         <SafeAreaView style={styles.container}>
             <ScrollView
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 60 }}
+                contentContainerStyle={styles.scrollContent}
             >
                 <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
                     <Ionicons name="arrow-back" size={24} color={Colors.primary} />
@@ -147,11 +144,11 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        paddingHorizontal: SCREEN_WIDTH * 0.06,
+        paddingHorizontal: 20,
         paddingVertical: Spacing.md,
     },
     headerTitle: {
-        fontSize: 18,  color: Colors.text, fontFamily: Fonts.bold,
+        fontSize: FontSizes.title, color: Colors.text, fontFamily: Fonts.bold,
     },
     backBtn: {
         padding: 8,
@@ -161,11 +158,11 @@ const styles = StyleSheet.create({
         zIndex: 10,
     },
     carouselSection: {
-        width: SCREEN_WIDTH,
+        width: "100%",
         backgroundColor: Colors.white,
     },
     info: {
-        paddingHorizontal: SCREEN_WIDTH * 0.07,
+        paddingHorizontal: 24,
         paddingTop: Spacing.xl,
         paddingBottom: Spacing.xl,
         borderTopLeftRadius: 30,
@@ -174,14 +171,14 @@ const styles = StyleSheet.create({
         marginTop: -20,
     },
     title: {
-        fontSize: 28,
+        fontSize: FontSizes.heading,
         color: Colors.text,
         lineHeight: 34,
         marginBottom: 6,
         fontFamily: Fonts.bold,
     },
     author: {
-        fontSize: 18,
+        fontSize: FontSizes.title,
         color: Colors.textSecondary,
         fontFamily: Fonts.medium,
         marginBottom: Spacing.lg,
@@ -205,12 +202,12 @@ const styles = StyleSheet.create({
         gap: 4,
     },
     statValue: {
-        fontSize: 18,
+        fontSize: FontSizes.title,
         fontFamily: Fonts.bold,
         color: Colors.text,
     },
     statLabel: {
-        fontSize: 11,
+        fontSize: FontSizes.caption,
         color: Colors.textSecondary,
         textTransform: "uppercase",
         letterSpacing: 0.5,
@@ -223,16 +220,19 @@ const styles = StyleSheet.create({
         opacity: 0.6,
     },
     descTitle: {
-        fontSize: 18,
+        fontSize: FontSizes.title,
         fontFamily: Fonts.bold,
         color: Colors.text,
         marginBottom: Spacing.sm,
     },
     description: {
-        fontSize: 15,
+        fontSize: FontSizes.bodyLarge,
         color: Colors.textSecondary,
         lineHeight: 24,
         letterSpacing: 0.2,
         fontFamily: Fonts.regular,
+    },
+    scrollContent: {
+        paddingBottom: 60,
     },
 });

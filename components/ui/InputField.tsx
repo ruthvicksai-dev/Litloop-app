@@ -1,4 +1,4 @@
-import { Fonts } from "@/constants/fonts";
+import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import React from "react";
 import {
@@ -26,11 +26,18 @@ export default function InputField({
     inputStyle,
     ...props
 }: InputFieldProps) {
+    const isMultiline = Boolean(props.multiline);
+
     return (
         <View style={[styles.container, containerStyle]}>
             <Text style={styles.label}>{label}</Text>
             <TextInput
-                style={[styles.input, error && styles.inputError, inputStyle]}
+                style={[
+                    styles.input,
+                    isMultiline && styles.multilineInput,
+                    error && styles.inputError,
+                    inputStyle,
+                ]}
                 placeholderTextColor={Colors.textLight}
                 underlineColorAndroid="transparent"
                 selectionColor={Colors.primary}
@@ -46,7 +53,7 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.md,
     },
     label: {
-        fontSize: 14,
+        fontSize: FontSizes.body,
         fontFamily: Fonts.medium,
         color: Colors.text,
         marginBottom: Spacing.xs,
@@ -58,17 +65,22 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         paddingHorizontal: Spacing.md,
         paddingVertical: 14,
-        fontSize: 16,
+        fontSize: FontSizes.subtitle,
         color: Colors.text,
-      fontFamily: Fonts.regular,
+        fontFamily: Fonts.regular,
+    },
+    multilineInput: {
+        minHeight: 110,
+        textAlignVertical: "top",
+        paddingTop: 14,
     },
     inputError: {
         borderColor: Colors.error,
     },
     errorText: {
         color: Colors.error,
-        fontSize: 12,
+        fontSize: FontSizes.caption,
         marginTop: Spacing.xs,
-      fontFamily: Fonts.regular,
+        fontFamily: Fonts.regular,
     },
 });

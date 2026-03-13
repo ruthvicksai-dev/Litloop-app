@@ -3,9 +3,11 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Alert } from "react-native";
+import { MAIN_GENRES } from "@/constants/mainGenres";
 import { useBookCoverManager } from "./useBookCoverManager";
+import { fetchBookMetadata } from "@/utils/bookMetadata";
 
 export function useEditBookScreen(bookId: string) {
     const router = useRouter();
@@ -21,6 +23,8 @@ export function useEditBookScreen(bookId: string) {
     const [description, setDescription] = useState("");
     const [rentPerDay, setRentPerDay] = useState("");
     const [totalCopies, setTotalCopies] = useState("");
+    const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+    const [isFetchingBookInfo, setIsFetchingBookInfo] = useState(false);
     const [loading, setLoading] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [initialized, setInitialized] = useState(false);
@@ -41,6 +45,21 @@ export function useEditBookScreen(bookId: string) {
         onSuccess: (message) => showToast(message, "success"),
     });
 
+    const toggleGenre = (genre: string) => {
+        setSelectedGenres((current) =>
+            current.includes(genre)
+                ? current.filter((item) => item !== genre)
+                : current.length < 3
+                    ? [...current, genre]
+                    : current
+        );
+    };
+
+    const availableGenres = useMemo(
+        () => MAIN_GENRES,
+        []
+    );
+
     useEffect(() => {
         if (book === undefined || book === null) return;
 
@@ -50,6 +69,7 @@ export function useEditBookScreen(bookId: string) {
             setDescription(book.description);
             setRentPerDay(book.rentPerDay.toString());
             setTotalCopies(book.totalCopies.toString());
+            setSelectedGenres(book.genres ?? []);
             setCoverUris(
                 book.coverUrls && book.coverUrls.length > 0
                     ? book.coverUrls
@@ -61,6 +81,38 @@ export function useEditBookScreen(bookId: string) {
             setInitialized(true);
         }
     }, [book, initialized, setCoverUris, setNewImagesSelected]);
+
+    const handleFetchBookInfo = async () => {
+        if (!title.trim()) {
+            showToast("Please enter a title to fetch book info.", "error");
+            return;
+        }
+
+        setIsFetchingBookInfo(true);
+        try {
+            const metadata = await fetchBookMetadata(title, author);
+
+            if (!author.trim() && metadata.author) {
+                setAuthor(metadata.author);
+            }
+
+            if (metadata.description) {
+                setDescription(metadata.description);
+            }
+
+            if (metadata.genres.length > 0) {
+                setSelectedGenres(metadata.genres);
+            }
+
+            showToast("Book info refreshed successfully.", "success");
+        } catch (error: unknown) {
+            const message =
+                error instanceof Error ? error.message : "Failed to fetch book info.";
+            showToast(message, "error");
+        } finally {
+            setIsFetchingBookInfo(false);
+        }
+    };
 
     const handleSave = async () => {
         if (!title.trim() || !author.trim() || !rentPerDay || !totalCopies) {
@@ -106,6 +158,7 @@ export function useEditBookScreen(bookId: string) {
                 title: string;
                 author: string;
                 description: string;
+                genres: string[];
                 rentPerDay: number;
                 totalCopies: number;
                 coverImages?: Id<"_storage">[];
@@ -114,6 +167,7 @@ export function useEditBookScreen(bookId: string) {
                 title,
                 author,
                 description,
+                genres: selectedGenres,
                 rentPerDay: rent,
                 totalCopies: copies,
             };
@@ -181,8 +235,13 @@ export function useEditBookScreen(bookId: string) {
         setRentPerDay,
         totalCopies,
         setTotalCopies,
+        selectedGenres,
+        availableGenres,
+        isFetchingBookInfo,
+        toggleGenre,
         loading,
         deleting,
+        handleFetchBookInfo,
         handleSave,
         handleDelete,
         coverUris,

@@ -1,7 +1,9 @@
 import CoverGalleryField from "@/components/books/CoverGalleryField";
+import GenreSelector from "@/components/books/GenreSelector";
+import BookLoader from "@/components/ui/BookLoader";
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
-import { Fonts } from "@/constants/fonts";
+import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useEditBookScreen } from "@/hooks/useEditBookScreen";
 import { useFadeSlideIn } from "@/hooks/useFadeSlideIn";
@@ -9,9 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
-    ActivityIndicator,
     Animated,
-    Dimensions,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -21,8 +21,6 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function EditBookScreen() {
     const { bookId } = useLocalSearchParams<{ bookId: string }>();
@@ -40,6 +38,10 @@ export default function EditBookScreen() {
         setRentPerDay,
         totalCopies,
         setTotalCopies,
+        availableGenres,
+        selectedGenres,
+        isFetchingBookInfo,
+        toggleGenre,
         coverUris,
         isFetchingCover,
         fetchCover,
@@ -47,6 +49,7 @@ export default function EditBookScreen() {
         removeCover,
         loading,
         deleting,
+        handleFetchBookInfo,
         handleSave,
         handleDelete,
     } = useEditBookScreen(bookId);
@@ -54,7 +57,7 @@ export default function EditBookScreen() {
     if (book === undefined) {
         return (
             <View style={styles.center}>
-                <ActivityIndicator size="large" color={Colors.primary} />
+                <BookLoader label="Loading book..." />
             </View>
         );
     }
@@ -71,10 +74,10 @@ export default function EditBookScreen() {
                 </View>
                 <View style={[styles.center, { paddingHorizontal: 40 }]}>
                     <Ionicons name="book-outline" size={60} color={Colors.textLight} style={{ marginBottom: 20 }} />
-                    <Text style={{ fontSize: 18, fontFamily: Fonts.bold, color: Colors.text, marginBottom: 8 }}>
+                    <Text style={{ fontSize: FontSizes.title, fontFamily: Fonts.bold, color: Colors.text, marginBottom: 8 }}>
                         Book not found
                     </Text>
-                    <Text style={{ fontSize: 14, color: Colors.textSecondary, textAlign: "center", marginBottom: 24 }}>
+                    <Text style={{ fontSize: FontSizes.body, color: Colors.textSecondary, textAlign: "center", marginBottom: 24 }}>
                         The book you are looking for doesn't exist or has been removed.
                     </Text>
                     <Button title="Go Back" onPress={() => router.back()} style={{ width: "100%" }} />
@@ -106,6 +109,13 @@ export default function EditBookScreen() {
                     <Animated.View style={{ opacity: fadeAnim }}>
                         <InputField label="Title" value={title} onChangeText={setTitle} />
                         <InputField label="Author" value={author} onChangeText={setAuthor} />
+                        <Button
+                            title="Fetch Book Info"
+                            onPress={handleFetchBookInfo}
+                            loading={isFetchingBookInfo}
+                            style={styles.fetchInfoBtn}
+                            variant="secondary"
+                        />
 
                         <CoverGalleryField
                             coverUris={coverUris}
@@ -121,7 +131,13 @@ export default function EditBookScreen() {
                             onChangeText={setDescription}
                             multiline
                             numberOfLines={4}
-                            containerStyle={{ height: 95, marginBottom: Spacing.xs }}
+                            containerStyle={{ marginBottom: Spacing.md }}
+                        />
+                        <GenreSelector
+                            genres={availableGenres}
+                            selectedGenres={selectedGenres}
+                            onToggleGenre={toggleGenre}
+                            helperText="Choose up to 3 main genres. Fetch Book Info does not change covers."
                         />
                         <InputField
                             label="Rent Per Day ₹"
@@ -169,26 +185,32 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
-        paddingHorizontal: SCREEN_WIDTH * 0.06,
+        paddingHorizontal: 20,
         paddingVertical: Spacing.md,
     },
     backBtn: {
         padding: 4,
         marginLeft: -4,
     },
-    back: { fontSize: 16, color: Colors.primary, fontFamily: Fonts.medium },
+    back: { fontSize: FontSizes.subtitle, color: Colors.primary, fontFamily: Fonts.medium },
     headerTitle: {
-        fontSize: 18,  color: Colors.text, fontFamily: Fonts.bold,
+        fontSize: FontSizes.title, color: Colors.text, fontFamily: Fonts.bold,
     },
-    deleteText: { fontSize: 15, color: Colors.error, fontFamily: Fonts.bold },
+    deleteText: { fontSize: FontSizes.bodyLarge, color: Colors.error, fontFamily: Fonts.bold },
     scroll: {
-        paddingHorizontal: SCREEN_WIDTH * 0.06,
+        flexGrow: 1,
+        paddingHorizontal: 20,
         paddingTop: Spacing.md,
-        paddingBottom: SCREEN_HEIGHT * 0.05,
+        paddingBottom: 32,
+    },
+    fetchInfoBtn: {
+        marginBottom: Spacing.md,
     },
     statsRow: {
         flexDirection: "row",
         justifyContent: "space-between",
+        flexWrap: "wrap",
+        gap: Spacing.sm,
         backgroundColor: Colors.white,
         padding: Spacing.md,
         borderRadius: 12,
@@ -197,7 +219,11 @@ const styles = StyleSheet.create({
         borderColor: Colors.border,
     },
     statLabel: {
-        fontSize: 13, color: Colors.textSecondary, fontFamily: Fonts.regular,
+        flex: 1,
+        minWidth: 140,
+        fontSize: FontSizes.small,
+        color: Colors.textSecondary,
+        fontFamily: Fonts.regular,
     },
     statBold: { fontFamily: Fonts.bold, color: Colors.primary },
     saveBtn: { marginTop: Spacing.sm },

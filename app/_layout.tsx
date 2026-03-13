@@ -1,4 +1,5 @@
 import { Colors } from "@/constants/theme";
+import BookLoader from "@/components/ui/BookLoader";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { ToastProvider } from "@/context/ToastContext";
 import { ConvexProvider, ConvexReactClient } from "convex/react";
@@ -6,7 +7,7 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
-import { ActivityIndicator, StatusBar, StyleSheet, View } from "react-native";
+import { StatusBar, StyleSheet, View } from "react-native";
 
 const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!, {
   unsavedChangesWarning: false,
@@ -21,7 +22,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   if (isLoading) {
     return (
       <View style={styles.splash}>
-        <ActivityIndicator size="large" color={Colors.primary} />
+        <BookLoader label="" />
       </View>
     );
   }

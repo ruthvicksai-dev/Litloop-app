@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { recordPaymentCompleted, recordUserActivity } from "./analytics";
 
 export const submitUpiPayment = mutation({
     args: {
@@ -58,9 +59,21 @@ export const verifyPayment = mutation({
         }
 
         if (args.approved) {
+            const book = await ctx.db.get(rental.bookId);
+            const genres = book?.genres ?? [];
+            const amount = (rental.totalRent ?? 0) + (rental.lateFee ?? 0);
+
             await ctx.db.patch(args.rentalId, {
                 paymentStatus: "paid",
                 status: "paid",
+            });
+
+            await recordPaymentCompleted(ctx, {
+                userId: rental.userId,
+                bookId: rental.bookId,
+                amount,
+                genres,
+                timestamp: Date.now(),
             });
         } else {
             await ctx.db.patch(args.rentalId, {
@@ -68,6 +81,8 @@ export const verifyPayment = mutation({
                 status: "pickup_scheduled", // Roll back to allow resubmission
             });
         }
+
+        await recordUserActivity(ctx, rental.userId, Date.now());
     },
 });
 

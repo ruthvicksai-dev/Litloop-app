@@ -2,7 +2,7 @@ import AuthFooter from "@/components/auth/AuthFooter";
 import AuthHeader from "@/components/auth/AuthHeader";
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
-import { Fonts } from "@/constants/fonts";
+import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { useFadeSlideScaleIn } from "@/hooks/useFadeSlideScaleIn";
@@ -10,7 +10,6 @@ import { useSignInScreen } from "@/hooks/useSignInScreen";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
-    Dimensions,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -19,8 +18,6 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function SignInScreen() {
     const router = useRouter();
@@ -111,9 +108,9 @@ const styles = StyleSheet.create({
     },
     container: {
         flexGrow: 1,
-        paddingHorizontal: SCREEN_WIDTH * 0.06,
-        paddingTop: SCREEN_HEIGHT * 0.08,
-        paddingBottom: SCREEN_HEIGHT * 0.04,
+        paddingHorizontal: 20,
+        paddingTop: 40,
+        paddingBottom: 28,
         justifyContent: "center",
     },
     form: {
@@ -128,7 +125,7 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.xl,
     },
     formHint: {
-        fontSize: 14,
+        fontSize: FontSizes.body,
         color: Colors.textSecondary,
         fontFamily: Fonts.regular,
         textAlign: "center",
