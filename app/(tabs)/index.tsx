@@ -17,6 +17,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { responsiveFont } from "@/utils/responsiveFont";
 
 export default function HomeScreen() {
   const { user } = useAuth();
@@ -138,7 +139,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.regular,
   },
   title: {
-    fontSize: FontSizes.hero,
+    fontSize: responsiveFont(24),
     color: Colors.text,
     fontFamily: Fonts.bold,
   },

@@ -100,11 +100,13 @@ export default function EditBookScreen() {
 
             <KeyboardAvoidingView
                 style={styles.flex}
-                behavior={Platform.OS === "ios" ? "padding" : undefined}
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
             >
                 <ScrollView
                     contentContainerStyle={styles.scroll}
                     keyboardShouldPersistTaps="handled"
+                    keyboardDismissMode="on-drag"
                 >
                     <Animated.View style={{ opacity: fadeAnim }}>
                         <InputField label="Title" value={title} onChangeText={setTitle} />
@@ -201,7 +203,7 @@ const styles = StyleSheet.create({
         flexGrow: 1,
         paddingHorizontal: 20,
         paddingTop: Spacing.md,
-        paddingBottom: 32,
+        paddingBottom: Spacing.xxl,
     },
     fetchInfoBtn: {
         marginBottom: Spacing.md,

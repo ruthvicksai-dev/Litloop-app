@@ -29,6 +29,10 @@ function normalizeGenres(genres: string[] | undefined) {
     ).slice(0, 3);
 }
 
+function normalizeBookValue(value: string): string {
+    return value.trim().replace(/\s+/g, " ").toLowerCase();
+}
+
 export const list = query({
     args: {},
     handler: async (ctx) => {
@@ -93,16 +97,32 @@ export const add = mutation({
         totalCopies: v.number(),
     },
     handler: async (ctx, args) => {
-        if (!args.title.trim()) throw new Error("Title is required.");
-        if (!args.author.trim()) throw new Error("Author is required.");
+        const title = args.title.trim();
+        const author = args.author.trim();
+        const description = args.description.trim();
+
+        if (!title) throw new Error("Title is required.");
+        if (!author) throw new Error("Author is required.");
         if (args.rentPerDay <= 0) throw new Error("Rent per day must be positive.");
         if (args.totalCopies <= 0)
             throw new Error("Total copies must be positive.");
 
+        const titleKey = normalizeBookValue(title);
+        const authorKey = normalizeBookValue(author);
+        const existingBooks = await ctx.db.query("books").collect();
+        const duplicateBook = existingBooks.find(
+            (book) =>
+                normalizeBookValue(book.title) === titleKey &&
+                normalizeBookValue(book.author) === authorKey
+        );
+        if (duplicateBook) {
+            throw new Error("This book already exists.");
+        }
+
         const bookId = await ctx.db.insert("books", {
-            title: args.title.trim(),
-            author: args.author.trim(),
-            description: args.description.trim(),
+            title,
+            author,
+            description,
             genres: normalizeGenres(args.genres),
             rentPerDay: args.rentPerDay,
             coverImage: args.coverImage,

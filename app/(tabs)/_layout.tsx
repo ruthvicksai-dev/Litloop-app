@@ -4,9 +4,11 @@ import { useTabsRouteGuard } from "@/hooks/useRouteGuards";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import React from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function TabsLayout() {
   useTabsRouteGuard();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs
@@ -17,9 +19,9 @@ export default function TabsLayout() {
         tabBarStyle: {
           backgroundColor: Colors.white,
           borderTopColor: Colors.border,
-          paddingBottom: 8,
+          paddingBottom: Math.max(insets.bottom, 8),
           paddingTop: 8,
-          height: 60,
+          height: 52 + Math.max(insets.bottom, 8),
         },
         tabBarLabelStyle: {
           fontSize: FontSizes.caption,

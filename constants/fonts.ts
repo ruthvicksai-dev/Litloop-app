@@ -1,14 +1,14 @@
 import { responsiveFont } from "@/utils/responsiveFont";
 
 export const Fonts = {
-    light: "IosevkaCharonMono-Light",
-    lightItalic: "IosevkaCharonMono-LightItalic",
-    regular: "IosevkaCharonMono-Regular",
-    italic: "IosevkaCharonMono-Italic",
-    medium: "IosevkaCharonMono-Medium",
-    mediumItalic: "IosevkaCharonMono-MediumItalic",
-    bold: "IosevkaCharonMono-Bold",
-    boldItalic: "IosevkaCharonMono-BoldItalic",
+    light: "Lato-Light",
+    lightItalic: "Lato-LightItalic",
+    regular: "Lato-Regular",
+    italic: "Lato-Italic",
+    medium: "Lato-Medium",
+    mediumItalic: "Lato-MediumItalic",
+    bold: "Lato-Bold",
+    boldItalic: "Lato-BoldItalic",
 };
 
 export const FontSizes = {

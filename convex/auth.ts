@@ -40,6 +40,10 @@ async function hashPassword(password: string): Promise<string> {
     return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+function normalizePhone(phone: string): string {
+    return phone.replace(/\D/g, "");
+}
+
 /**
  * Generate an access + refresh token pair and persist the refresh token.
  */
@@ -85,28 +89,45 @@ export const signUp = mutation({
         password: v.string(),
     },
     handler: async (ctx, args) => {
-        // Check if email already exists
-        const existing = await ctx.db
-            .query("users")
-            .withIndex("by_email", (q) => q.eq("email", args.email.toLowerCase()))
-            .first();
-
-        if (existing) {
-            throw new Error("An account with this email already exists.");
-        }
-
         if (!args.name.trim()) throw new Error("Name is required.");
         if (!args.email.trim()) throw new Error("Email is required.");
         if (!args.phone.trim()) throw new Error("Phone number is required.");
         if (args.password.length < 6)
             throw new Error("Password must be at least 6 characters.");
 
+        const normalizedEmail = args.email.toLowerCase().trim();
+        const normalizedPhone = normalizePhone(args.phone.trim());
+
+        if (normalizedPhone.length < 10) {
+            throw new Error("Please enter a valid phone number.");
+        }
+
+        // Check if email already exists
+        const existingEmail = await ctx.db
+            .query("users")
+            .withIndex("by_email", (q) => q.eq("email", normalizedEmail))
+            .first();
+
+        if (existingEmail) {
+            throw new Error("User is already registered. Please sign in.");
+        }
+
+        // Check if phone number already exists
+        const existingPhone = await ctx.db
+            .query("users")
+            .withIndex("by_phone", (q) => q.eq("phone", normalizedPhone))
+            .first();
+
+        if (existingPhone) {
+            throw new Error("User is already registered. Please sign in.");
+        }
+
         const passwordHash = await hashPassword(args.password);
 
         const userId = await ctx.db.insert("users", {
             name: args.name.trim(),
-            email: args.email.toLowerCase().trim(),
-            phone: args.phone.trim(),
+            email: normalizedEmail,
+            phone: normalizedPhone,
             passwordHash,
             role: "user",
             createdAt: Date.now(),

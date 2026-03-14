@@ -1,29 +1,37 @@
 import { Colors } from "@/constants/theme";
-import BookLoader from "@/components/ui/BookLoader";
+import AppSplash from "@/components/ui/AppSplash";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { ToastProvider } from "@/context/ToastContext";
 import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect } from "react";
-import { StatusBar, StyleSheet, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { StatusBar } from "react-native";
 
 const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!, {
   unsavedChangesWarning: false,
 });
 
 SplashScreen.preventAutoHideAsync();
+let hasCompletedStartupSplash = false;
 
 /** Gate that blocks all navigation until auth state is resolved. */
 function AuthGate({ children }: { children: React.ReactNode }) {
   const { isLoading } = useAuth();
+  const [isSplashAnimationDone, setIsSplashAnimationDone] = useState(hasCompletedStartupSplash);
 
-  if (isLoading) {
+  const handleSplashComplete = () => {
+    hasCompletedStartupSplash = true;
+    setIsSplashAnimationDone(true);
+  };
+
+  if (isLoading || !isSplashAnimationDone) {
     return (
-      <View style={styles.splash}>
-        <BookLoader label="" />
-      </View>
+      <AppSplash
+        animate={!isSplashAnimationDone}
+        onAnimationComplete={handleSplashComplete}
+      />
     );
   }
 
@@ -32,14 +40,14 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
-    "IosevkaCharonMono-Light": require("../assets/fonts/IosevkaCharonMono-Light.ttf"),
-    "IosevkaCharonMono-LightItalic": require("../assets/fonts/IosevkaCharonMono-LightItalic.ttf"),
-    "IosevkaCharonMono-Regular": require("../assets/fonts/IosevkaCharonMono-Regular.ttf"),
-    "IosevkaCharonMono-Italic": require("../assets/fonts/IosevkaCharonMono-Italic.ttf"),
-    "IosevkaCharonMono-Medium": require("../assets/fonts/IosevkaCharonMono-Medium.ttf"),
-    "IosevkaCharonMono-MediumItalic": require("../assets/fonts/IosevkaCharonMono-MediumItalic.ttf"),
-    "IosevkaCharonMono-Bold": require("../assets/fonts/IosevkaCharonMono-Bold.ttf"),
-    "IosevkaCharonMono-BoldItalic": require("../assets/fonts/IosevkaCharonMono-BoldItalic.ttf"),
+    "Lato-Light": require("../assets/fonts/Lato/Lato-Light.ttf"),
+    "Lato-LightItalic": require("../assets/fonts/Lato/Lato-LightItalic.ttf"),
+    "Lato-Regular": require("../assets/fonts/Lato/Lato-Regular.ttf"),
+    "Lato-Italic": require("../assets/fonts/Lato/Lato-Italic.ttf"),
+    "Lato-Medium": require("../assets/fonts/Lato/Lato-Regular.ttf"),
+    "Lato-MediumItalic": require("../assets/fonts/Lato/Lato-Italic.ttf"),
+    "Lato-Bold": require("../assets/fonts/Lato/Lato-Bold.ttf"),
+    "Lato-BoldItalic": require("../assets/fonts/Lato/Lato-BoldItalic.ttf"),
   });
 
   useEffect(() => {
@@ -77,12 +85,3 @@ export default function RootLayout() {
     </ConvexProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  splash: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: Colors.background,
-  },
-});

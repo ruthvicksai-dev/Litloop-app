@@ -11,6 +11,7 @@ export default defineSchema({
         createdAt: v.number(),
     })
         .index("by_email", ["email"])
+        .index("by_phone", ["phone"])
         .index("by_createdAt", ["createdAt"]),
 
     sessions: defineTable({

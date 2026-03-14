@@ -17,6 +17,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Fonts, FontSizes } from "@/constants/fonts";
+import { responsiveFont } from "@/utils/responsiveFont";
 
 export default function ProfileScreen() {
     const { user, signOut, isAdmin } = useAuth();
@@ -139,7 +140,7 @@ const styles = StyleSheet.create({
         paddingBottom: Spacing.md,
     },
     title: {
-        fontSize: FontSizes.hero,
+        fontSize: responsiveFont(24),
         color: Colors.text,
         fontFamily: Fonts.bold,
     },
