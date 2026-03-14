@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
     },
     label: {
         fontSize: FontSizes.body,
-        fontFamily: Fonts.medium,
+        fontFamily: Fonts.bold,
         color: Colors.text,
         marginBottom: Spacing.xs,
     },

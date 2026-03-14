@@ -7,7 +7,7 @@ import { useBookDetailsScreen } from "@/hooks/useBookDetailsScreen";
 import { useFadeSlideScaleIn } from "@/hooks/useFadeSlideScaleIn";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import {
     Animated,
     ScrollView,
@@ -26,6 +26,7 @@ export default function BookDetailsScreen() {
         scaleFrom: 0.8,
     });
     const { book, activeIndex, setActiveIndex, images } = useBookDetailsScreen(id);
+    const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
     if (book === undefined) {
         return (
@@ -115,7 +116,21 @@ export default function BookDetailsScreen() {
                     </View>
 
                     <Text style={styles.descTitle}>Description</Text>
-                    <Text style={styles.description}>{book.description}</Text>
+                    <Text
+                        style={styles.description}
+                        numberOfLines={isDescriptionExpanded ? undefined : 4}
+                    >
+                        {book.description}
+                    </Text>
+                    <TouchableOpacity
+                        style={styles.descriptionToggle}
+                        onPress={() => setIsDescriptionExpanded((current) => !current)}
+                        activeOpacity={0.8}
+                    >
+                        <Text style={styles.descriptionToggleText}>
+                            {isDescriptionExpanded ? "View less" : "View more"}
+                        </Text>
+                    </TouchableOpacity>
 
                     <Button
                         title={book.availableCopies > 0 ? "Request Book" : "Unavailable"}
@@ -231,6 +246,15 @@ const styles = StyleSheet.create({
         lineHeight: 24,
         letterSpacing: 0.2,
         fontFamily: Fonts.regular,
+    },
+    descriptionToggle: {
+        alignSelf: "flex-start",
+        marginTop: Spacing.xs,
+    },
+    descriptionToggleText: {
+        fontSize: FontSizes.body,
+        color: Colors.primary,
+        fontFamily: Fonts.medium,
     },
     scrollContent: {
         paddingBottom: 60,

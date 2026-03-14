@@ -1,4 +1,7 @@
+import BookMetadataFields from "@/components/books/BookMetadataFields";
 import CoverGalleryField from "@/components/books/CoverGalleryField";
+import FeaturedSectionsFields from "@/components/books/FeaturedSectionsFields";
+import FormSectionHeader from "@/components/books/FormSectionHeader";
 import GenreSelector from "@/components/books/GenreSelector";
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
@@ -31,8 +34,26 @@ export default function AddBookScreen() {
         setRentPerDay,
         totalCopies,
         setTotalCopies,
+        pageCount,
+        setPageCount,
+        publishedYear,
+        setPublishedYear,
+        publisher,
+        setPublisher,
         availableGenres,
         selectedGenres,
+        isTop10,
+        toggleTop10,
+        top10Position,
+        setTop10Position,
+        isFamous,
+        toggleFamous,
+        isTrending,
+        toggleTrending,
+        isSeries,
+        toggleSeries,
+        series,
+        setSeries,
         isFetchingBookInfo,
         toggleGenre,
         coverUris,
@@ -71,7 +92,7 @@ export default function AddBookScreen() {
                     />
                     <InputField
                         label="Author"
-                        placeholder="Author name (optional for search)"
+                        placeholder="Author name"
                         value={author}
                         onChangeText={setAuthor}
                     />
@@ -103,7 +124,7 @@ export default function AddBookScreen() {
                         genres={availableGenres}
                         selectedGenres={selectedGenres}
                         onToggleGenre={toggleGenre}
-                        helperText="Choose up to 3 main genres. Fetch Book Info only fills description, author, and genres."
+                        helperText="Choose up to 3 main genres."
                     />
                     <InputField
                         label="Rent Per Day ₹"
@@ -118,6 +139,37 @@ export default function AddBookScreen() {
                         value={totalCopies}
                         onChangeText={setTotalCopies}
                         keyboardType="numeric"
+                    />
+
+                    <FormSectionHeader
+                        title="More Details"
+                    />
+                    <BookMetadataFields
+                        pageCount={pageCount}
+                        publishedYear={publishedYear}
+                        publisher={publisher}
+                        onChangePageCount={setPageCount}
+                        onChangePublishedYear={setPublishedYear}
+                        onChangePublisher={setPublisher}
+                    />
+
+                    <FormSectionHeader
+                        title="Featured Sections"
+                        subtitle="Homepage placement controls."
+                    />
+                    <FeaturedSectionsFields
+                        isTop10={isTop10}
+                        top10Position={top10Position}
+                        isFamous={isFamous}
+                        isTrending={isTrending}
+                        isSeries={isSeries}
+                        series={series}
+                        onToggleTop10={toggleTop10}
+                        onToggleFamous={toggleFamous}
+                        onToggleTrending={toggleTrending}
+                        onToggleSeries={toggleSeries}
+                        onChangeSeries={setSeries}
+                        onChangeTop10Position={setTop10Position}
                     />
 
                     <Button
@@ -144,19 +196,13 @@ const styles = StyleSheet.create({
         flexGrow: 1,
         paddingHorizontal: Spacing.lg,
         paddingTop: Spacing.lg,
-        paddingBottom: Spacing.xxl,
+        paddingBottom: Spacing.xl,
     },
     backBtn: {
         marginBottom: Spacing.md,
         alignSelf: "flex-start",
         padding: 4,
         marginLeft: -4,
-    },
-    backText: {
-        fontSize: FontSizes.subtitle,
-        color: Colors.primary,
-        fontFamily: Fonts.medium,
-        marginBottom: Spacing.md,
     },
     fetchInfoBtn: {
         marginBottom: Spacing.md,

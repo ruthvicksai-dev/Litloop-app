@@ -1,13 +1,15 @@
+import { MAIN_GENRES } from "@/constants/mainGenres";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { applyMetadataToBookForm, parseBookNumericFields } from "@/utils/adminBookForm";
+import { fetchBookMetadataExtended } from "@/utils/bookMetadataExtended";
+import { validateEnglishSafeDescription } from "@/utils/descriptionPolicy";
 import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Alert } from "react-native";
-import { MAIN_GENRES } from "@/constants/mainGenres";
 import { useBookCoverManager } from "./useBookCoverManager";
-import { fetchBookMetadata } from "@/utils/bookMetadata";
 
 export function useEditBookScreen(bookId: string) {
     const router = useRouter();
@@ -23,7 +25,16 @@ export function useEditBookScreen(bookId: string) {
     const [description, setDescription] = useState("");
     const [rentPerDay, setRentPerDay] = useState("");
     const [totalCopies, setTotalCopies] = useState("");
+    const [pageCount, setPageCount] = useState("");
+    const [publishedYear, setPublishedYear] = useState("");
+    const [publisher, setPublisher] = useState("");
     const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+    const [isTop10, setIsTop10] = useState(false);
+    const [top10Position, setTop10Position] = useState("");
+    const [isFamous, setIsFamous] = useState(false);
+    const [isTrending, setIsTrending] = useState(false);
+    const [isSeries, setIsSeries] = useState(false);
+    const [series, setSeries] = useState("");
     const [isFetchingBookInfo, setIsFetchingBookInfo] = useState(false);
     const [loading, setLoading] = useState(false);
     const [deleting, setDeleting] = useState(false);
@@ -55,31 +66,53 @@ export function useEditBookScreen(bookId: string) {
         );
     };
 
-    const availableGenres = useMemo(
-        () => MAIN_GENRES,
-        []
-    );
+    const toggleTop10 = () => {
+        setIsTop10((current) => {
+            const next = !current;
+            if (!next) setTop10Position("");
+            return next;
+        });
+    };
+
+    const toggleFamous = () => setIsFamous((current) => !current);
+    const toggleTrending = () => setIsTrending((current) => !current);
+    const toggleSeries = () => {
+        setIsSeries((current) => {
+            const next = !current;
+            if (!next) setSeries("");
+            return next;
+        });
+    };
+
+    const availableGenres = useMemo(() => MAIN_GENRES, []);
 
     useEffect(() => {
-        if (book === undefined || book === null) return;
+        if (book === undefined || book === null || initialized) return;
 
-        if (!initialized) {
-            setTitle(book.title);
-            setAuthor(book.author);
-            setDescription(book.description);
-            setRentPerDay(book.rentPerDay.toString());
-            setTotalCopies(book.totalCopies.toString());
-            setSelectedGenres(book.genres ?? []);
-            setCoverUris(
-                book.coverUrls && book.coverUrls.length > 0
-                    ? book.coverUrls
-                    : book.coverUrl
-                        ? [book.coverUrl]
-                        : []
-            );
-            setNewImagesSelected(false);
-            setInitialized(true);
-        }
+        setTitle(book.title);
+        setAuthor(book.author);
+        setDescription(book.description);
+        setRentPerDay(book.rentPerDay.toString());
+        setTotalCopies(book.totalCopies.toString());
+        setPageCount(book.pageCount ? String(book.pageCount) : "");
+        setPublishedYear(book.publishedYear ? String(book.publishedYear) : "");
+        setPublisher(book.publisher ?? "");
+        setSelectedGenres(book.genres ?? []);
+        setIsTop10(Boolean(book.isTop10));
+        setTop10Position(book.top10Position ? String(book.top10Position) : "");
+        setIsFamous(Boolean(book.isFamous));
+        setIsTrending(Boolean(book.isTrending));
+        setIsSeries(Boolean(book.series));
+        setSeries(book.series ?? "");
+        setCoverUris(
+            book.coverUrls && book.coverUrls.length > 0
+                ? book.coverUrls
+                : book.coverUrl
+                    ? [book.coverUrl]
+                    : []
+        );
+        setNewImagesSelected(false);
+        setInitialized(true);
     }, [book, initialized, setCoverUris, setNewImagesSelected]);
 
     const handleFetchBookInfo = async () => {
@@ -90,21 +123,28 @@ export function useEditBookScreen(bookId: string) {
 
         setIsFetchingBookInfo(true);
         try {
-            const metadata = await fetchBookMetadata(title, author);
+            const metadata = await fetchBookMetadataExtended(title, author);
+            applyMetadataToBookForm(
+                metadata,
+                {
+                    setAuthor,
+                    setDescription,
+                    setSelectedGenres,
+                    setPageCount,
+                    setPublishedYear,
+                    setPublisher,
+                },
+                { currentAuthor: author }
+            );
 
-            if (!author.trim() && metadata.author) {
-                setAuthor(metadata.author);
+            if (metadata.descriptionRejectedReason) {
+                showToast(
+                    `Book info refreshed, but description was skipped: ${metadata.descriptionRejectedReason}`,
+                    "error"
+                );
+            } else {
+                showToast("Book info refreshed successfully.", "success");
             }
-
-            if (metadata.description) {
-                setDescription(metadata.description);
-            }
-
-            if (metadata.genres.length > 0) {
-                setSelectedGenres(metadata.genres);
-            }
-
-            showToast("Book info refreshed successfully.", "success");
         } catch (error: unknown) {
             const message =
                 error instanceof Error ? error.message : "Failed to fetch book info.";
@@ -120,20 +160,23 @@ export function useEditBookScreen(bookId: string) {
             return;
         }
 
-        const rent = parseInt(rentPerDay, 10);
-        const copies = parseInt(totalCopies, 10);
-
-        if (Number.isNaN(rent) || rent <= 0) {
-            showToast("Rent per day must be a valid positive number.", "error");
-            return;
-        }
-        if (Number.isNaN(copies) || copies <= 0) {
-            showToast("Total copies must be a valid positive number.", "error");
+        const descriptionValidation = validateEnglishSafeDescription(description);
+        if (!descriptionValidation.ok) {
+            showToast(descriptionValidation.reason, "error");
             return;
         }
 
         setLoading(true);
         try {
+            const parsed = parseBookNumericFields({
+                rentPerDay,
+                totalCopies,
+                pageCount,
+                publishedYear,
+                top10Position,
+                isTop10,
+            });
+
             let coverImageIds: Id<"_storage">[] | undefined;
 
             if (newImagesSelected && coverUris.length > 0) {
@@ -158,26 +201,41 @@ export function useEditBookScreen(bookId: string) {
                 title: string;
                 author: string;
                 description: string;
+                genre?: string;
                 genres: string[];
                 rentPerDay: number;
                 totalCopies: number;
+                pageCount?: number;
+                publishedYear?: number;
+                publisher?: string;
+                isTop10?: boolean;
+                top10Position?: number;
+                isFamous?: boolean;
+                isTrending?: boolean;
+                series?: string;
                 coverImages?: Id<"_storage">[];
             } = {
                 bookId: bookId as Id<"books">,
                 title,
                 author,
                 description,
+                genre: selectedGenres[0],
                 genres: selectedGenres,
-                rentPerDay: rent,
-                totalCopies: copies,
+                rentPerDay: parsed.rentPerDay,
+                totalCopies: parsed.totalCopies,
+                pageCount: parsed.pageCount,
+                publishedYear: parsed.publishedYear,
+                publisher: publisher.trim() || undefined,
+                isTop10,
+                top10Position: parsed.top10Position,
+                isFamous,
+                isTrending,
+                series: isSeries ? series.trim() || undefined : undefined,
             };
 
             if (coverImageIds) {
                 payload.coverImages = coverImageIds;
-            } else if (
-                newImagesSelected &&
-                coverUris.length === 0
-            ) {
+            } else if (newImagesSelected && coverUris.length === 0) {
                 payload.coverImages = [];
             }
 
@@ -235,8 +293,30 @@ export function useEditBookScreen(bookId: string) {
         setRentPerDay,
         totalCopies,
         setTotalCopies,
+        pageCount,
+        setPageCount,
+        publishedYear,
+        setPublishedYear,
+        publisher,
+        setPublisher,
         selectedGenres,
         availableGenres,
+        isTop10,
+        setIsTop10,
+        toggleTop10,
+        top10Position,
+        setTop10Position,
+        isFamous,
+        setIsFamous,
+        toggleFamous,
+        isTrending,
+        setIsTrending,
+        toggleTrending,
+        isSeries,
+        setIsSeries,
+        toggleSeries,
+        series,
+        setSeries,
         isFetchingBookInfo,
         toggleGenre,
         loading,

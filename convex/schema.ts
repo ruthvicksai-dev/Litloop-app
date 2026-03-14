@@ -28,13 +28,34 @@ export default defineSchema({
         author: v.string(),
         description: v.string(),
         rentPerDay: v.number(),
+        genre: v.optional(v.string()),
         genres: v.optional(v.array(v.string())),
+        rating: v.optional(v.number()),
+        ratingCount: v.optional(v.number()),
+        bookViews: v.optional(v.number()),
+        bookRentals: v.optional(v.number()),
+        pageCount: v.optional(v.number()),
+        publishedYear: v.optional(v.number()),
+        publisher: v.optional(v.string()),
+        isTop10: v.optional(v.boolean()),
+        top10Position: v.optional(v.number()),
+        isFamous: v.optional(v.boolean()),
+        isTrending: v.optional(v.boolean()),
+        series: v.optional(v.string()),
+        searchText: v.optional(v.string()),
         coverImage: v.optional(v.id("_storage")),
         coverImages: v.optional(v.array(v.id("_storage"))),
         totalCopies: v.number(),
         availableCopies: v.number(),
         createdAt: v.number(),
-    }).index("by_title", ["title"]),
+    })
+        .index("by_title", ["title"])
+        .index("by_genre", ["genre"])
+        .index("by_createdAt", ["createdAt"])
+        .searchIndex("search_books", {
+            searchField: "searchText",
+            filterFields: ["genre"],
+        }),
 
     rentals: defineTable({
         userId: v.id("users"),

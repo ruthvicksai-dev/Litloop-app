@@ -6,7 +6,9 @@ import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { MAIN_GENRES } from "@/constants/mainGenres";
 import { useBookCoverManager } from "./useBookCoverManager";
-import { fetchBookMetadata } from "@/utils/bookMetadata";
+import { fetchBookMetadataExtended } from "@/utils/bookMetadataExtended";
+import { applyMetadataToBookForm, parseBookNumericFields } from "@/utils/adminBookForm";
+import { validateEnglishSafeDescription } from "@/utils/descriptionPolicy";
 
 export function useAddBookScreen() {
     const { showToast } = useToast();
@@ -19,7 +21,16 @@ export function useAddBookScreen() {
     const [description, setDescription] = useState("");
     const [rentPerDay, setRentPerDay] = useState("");
     const [totalCopies, setTotalCopies] = useState("");
+    const [pageCount, setPageCount] = useState("");
+    const [publishedYear, setPublishedYear] = useState("");
+    const [publisher, setPublisher] = useState("");
     const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+    const [isTop10, setIsTop10] = useState(false);
+    const [top10Position, setTop10Position] = useState("");
+    const [isFamous, setIsFamous] = useState(false);
+    const [isTrending, setIsTrending] = useState(false);
+    const [isSeries, setIsSeries] = useState(false);
+    const [series, setSeries] = useState("");
     const [isFetchingBookInfo, setIsFetchingBookInfo] = useState(false);
     const [loading, setLoading] = useState(false);
 
@@ -45,6 +56,24 @@ export function useAddBookScreen() {
         []
     );
 
+    const toggleTop10 = () => {
+        setIsTop10((current) => {
+            const next = !current;
+            if (!next) setTop10Position("");
+            return next;
+        });
+    };
+
+    const toggleFamous = () => setIsFamous((current) => !current);
+    const toggleTrending = () => setIsTrending((current) => !current);
+    const toggleSeries = () => {
+        setIsSeries((current) => {
+            const next = !current;
+            if (!next) setSeries("");
+            return next;
+        });
+    };
+
     const handleFetchBookInfo = async () => {
         if (!title.trim()) {
             showToast("Please enter a title to fetch book info.", "error");
@@ -53,21 +82,28 @@ export function useAddBookScreen() {
 
         setIsFetchingBookInfo(true);
         try {
-            const metadata = await fetchBookMetadata(title, author);
+            const metadata = await fetchBookMetadataExtended(title, author);
+            applyMetadataToBookForm(
+                metadata,
+                {
+                    setAuthor,
+                    setDescription,
+                    setSelectedGenres,
+                    setPageCount,
+                    setPublishedYear,
+                    setPublisher,
+                },
+                { currentAuthor: author }
+            );
 
-            if (!author.trim() && metadata.author) {
-                setAuthor(metadata.author);
+            if (metadata.descriptionRejectedReason) {
+                showToast(
+                    `Book info fetched, but description was skipped: ${metadata.descriptionRejectedReason}`,
+                    "error"
+                );
+            } else {
+                showToast("Book info fetched successfully.", "success");
             }
-
-            if (metadata.description) {
-                setDescription(metadata.description);
-            }
-
-            if (metadata.genres.length > 0) {
-                setSelectedGenres(metadata.genres);
-            }
-
-            showToast("Book info fetched successfully.", "success");
         } catch (error: unknown) {
             const message =
                 error instanceof Error ? error.message : "Failed to fetch book info.";
@@ -86,17 +122,24 @@ export function useAddBookScreen() {
             showToast("Author is required.", "error");
             return;
         }
-        if (!rentPerDay || Number(rentPerDay) <= 0) {
-            showToast("Valid rent per day is required.", "error");
-            return;
-        }
-        if (!totalCopies || Number(totalCopies) <= 0) {
-            showToast("Valid total copies is required.", "error");
+
+        const descriptionValidation = validateEnglishSafeDescription(description);
+        if (!descriptionValidation.ok) {
+            showToast(descriptionValidation.reason, "error");
             return;
         }
 
         setLoading(true);
         try {
+            const parsed = parseBookNumericFields({
+                rentPerDay,
+                totalCopies,
+                pageCount,
+                publishedYear,
+                top10Position,
+                isTop10,
+            });
+
             let coverImages: string[] = [];
 
             if (coverManager.coverUris.length > 0) {
@@ -120,9 +163,18 @@ export function useAddBookScreen() {
                 title,
                 author,
                 description,
+                genre: selectedGenres[0],
                 genres: selectedGenres,
-                rentPerDay: Number(rentPerDay),
-                totalCopies: Number(totalCopies),
+                rentPerDay: parsed.rentPerDay,
+                totalCopies: parsed.totalCopies,
+                pageCount: parsed.pageCount,
+                publishedYear: parsed.publishedYear,
+                publisher: publisher.trim() || undefined,
+                isTop10,
+                top10Position: parsed.top10Position,
+                isFamous,
+                isTrending,
+                series: isSeries ? series.trim() || undefined : undefined,
                 coverImages:
                     coverImages.length > 0
                         ? (coverImages as Id<"_storage">[])
@@ -151,8 +203,30 @@ export function useAddBookScreen() {
         setRentPerDay,
         totalCopies,
         setTotalCopies,
+        pageCount,
+        setPageCount,
+        publishedYear,
+        setPublishedYear,
+        publisher,
+        setPublisher,
         selectedGenres,
         availableGenres,
+        isTop10,
+        setIsTop10,
+        toggleTop10,
+        top10Position,
+        setTop10Position,
+        isFamous,
+        setIsFamous,
+        toggleFamous,
+        isTrending,
+        setIsTrending,
+        toggleTrending,
+        isSeries,
+        setIsSeries,
+        toggleSeries,
+        series,
+        setSeries,
         isFetchingBookInfo,
         toggleGenre,
         loading,

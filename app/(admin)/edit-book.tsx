@@ -1,4 +1,7 @@
+import BookMetadataFields from "@/components/books/BookMetadataFields";
 import CoverGalleryField from "@/components/books/CoverGalleryField";
+import FeaturedSectionsFields from "@/components/books/FeaturedSectionsFields";
+import FormSectionHeader from "@/components/books/FormSectionHeader";
 import GenreSelector from "@/components/books/GenreSelector";
 import BookLoader from "@/components/ui/BookLoader";
 import Button from "@/components/ui/Button";
@@ -38,8 +41,26 @@ export default function EditBookScreen() {
         setRentPerDay,
         totalCopies,
         setTotalCopies,
+        pageCount,
+        setPageCount,
+        publishedYear,
+        setPublishedYear,
+        publisher,
+        setPublisher,
         availableGenres,
         selectedGenres,
+        isTop10,
+        toggleTop10,
+        top10Position,
+        setTop10Position,
+        isFamous,
+        toggleFamous,
+        isTrending,
+        toggleTrending,
+        isSeries,
+        toggleSeries,
+        series,
+        setSeries,
         isFetchingBookInfo,
         toggleGenre,
         coverUris,
@@ -73,12 +94,15 @@ export default function EditBookScreen() {
                     <View style={{ width: 40 }} />
                 </View>
                 <View style={[styles.center, { paddingHorizontal: 40 }]}>
-                    <Ionicons name="book-outline" size={60} color={Colors.textLight} style={{ marginBottom: 20 }} />
-                    <Text style={{ fontSize: FontSizes.title, fontFamily: Fonts.bold, color: Colors.text, marginBottom: 8 }}>
-                        Book not found
-                    </Text>
-                    <Text style={{ fontSize: FontSizes.body, color: Colors.textSecondary, textAlign: "center", marginBottom: 24 }}>
-                        The book you are looking for doesn't exist or has been removed.
+                    <Ionicons
+                        name="book-outline"
+                        size={60}
+                        color={Colors.textLight}
+                        style={{ marginBottom: 20 }}
+                    />
+                    <Text style={styles.notFoundTitle}>Book not found</Text>
+                    <Text style={styles.notFoundText}>
+                        The book you are looking for does not exist or has been removed.
                     </Text>
                     <Button title="Go Back" onPress={() => router.back()} style={{ width: "100%" }} />
                 </View>
@@ -109,6 +133,10 @@ export default function EditBookScreen() {
                     keyboardDismissMode="on-drag"
                 >
                     <Animated.View style={{ opacity: fadeAnim }}>
+                        <FormSectionHeader
+                            title="Book Basics"
+                            subtitle="Core details and pricing."
+                        />
                         <InputField label="Title" value={title} onChangeText={setTitle} />
                         <InputField label="Author" value={author} onChangeText={setAuthor} />
                         <Button
@@ -139,10 +167,10 @@ export default function EditBookScreen() {
                             genres={availableGenres}
                             selectedGenres={selectedGenres}
                             onToggleGenre={toggleGenre}
-                            helperText="Choose up to 3 main genres. Fetch Book Info does not change covers."
+                            helperText="Choose up to 3 main genres."
                         />
                         <InputField
-                            label="Rent Per Day ₹"
+                            label="Rent Per Day (INR)"
                             value={rentPerDay}
                             onChangeText={setRentPerDay}
                             keyboardType="number-pad"
@@ -152,6 +180,38 @@ export default function EditBookScreen() {
                             value={totalCopies}
                             onChangeText={setTotalCopies}
                             keyboardType="number-pad"
+                        />
+
+                        <FormSectionHeader
+                            title="Book Metadata"
+                            subtitle="Auto-filled from APIs and editable."
+                        />
+                        <BookMetadataFields
+                            pageCount={pageCount}
+                            publishedYear={publishedYear}
+                            publisher={publisher}
+                            onChangePageCount={setPageCount}
+                            onChangePublishedYear={setPublishedYear}
+                            onChangePublisher={setPublisher}
+                        />
+
+                        <FormSectionHeader
+                            title="Featured Sections"
+                            subtitle="Homepage placement controls."
+                        />
+                        <FeaturedSectionsFields
+                            isTop10={isTop10}
+                            top10Position={top10Position}
+                            isFamous={isFamous}
+                            isTrending={isTrending}
+                            isSeries={isSeries}
+                            series={series}
+                            onToggleTop10={toggleTop10}
+                            onToggleFamous={toggleFamous}
+                            onToggleTrending={toggleTrending}
+                            onToggleSeries={toggleSeries}
+                            onChangeSeries={setSeries}
+                            onChangeTop10Position={setTop10Position}
                         />
 
                         <View style={styles.statsRow}>
@@ -194,16 +254,28 @@ const styles = StyleSheet.create({
         padding: 4,
         marginLeft: -4,
     },
-    back: { fontSize: FontSizes.subtitle, color: Colors.primary, fontFamily: Fonts.medium },
     headerTitle: {
-        fontSize: FontSizes.title, color: Colors.text, fontFamily: Fonts.bold,
+        fontSize: FontSizes.title,
+        color: Colors.text,
+        fontFamily: Fonts.bold,
     },
-    deleteText: { fontSize: FontSizes.bodyLarge, color: Colors.error, fontFamily: Fonts.bold },
+    notFoundTitle: {
+        fontSize: FontSizes.title,
+        fontFamily: Fonts.bold,
+        color: Colors.text,
+        marginBottom: 8,
+    },
+    notFoundText: {
+        fontSize: FontSizes.body,
+        color: Colors.textSecondary,
+        textAlign: "center",
+        marginBottom: 24,
+    },
     scroll: {
         flexGrow: 1,
         paddingHorizontal: 20,
         paddingTop: Spacing.md,
-        paddingBottom: Spacing.xxl,
+        paddingBottom: Spacing.xl,
     },
     fetchInfoBtn: {
         marginBottom: Spacing.md,

@@ -1,0 +1,157 @@
+import BookCard from "@/components/search/BookCard";
+import BookLoader from "@/components/ui/BookLoader";
+import { Fonts, FontSizes } from "@/constants/fonts";
+import { Colors, Spacing } from "@/constants/theme";
+import { Ionicons } from "@expo/vector-icons";
+import React, { memo } from "react";
+import { FlatList, StyleSheet, Text, View } from "react-native";
+
+export type SearchBook = {
+    _id: string;
+    title: string;
+    author: string;
+    rating: number;
+    coverUrl: string | null;
+};
+
+type SearchResultListProps = {
+    books: SearchBook[];
+    status: string;
+    onEndReached: () => void;
+    onBookPress: (bookId: string) => void;
+    loadingFirstPage: boolean;
+};
+
+function SearchResultSkeleton() {
+    return (
+        <View style={styles.skeletonWrap}>
+            {Array.from({ length: 4 }).map((_, index) => (
+                <View key={index} style={styles.skeletonCard}>
+                    <View style={styles.skeletonCover} />
+                    <View style={styles.skeletonContent}>
+                        <View style={[styles.skeletonLine, { width: "86%" }]} />
+                        <View style={[styles.skeletonLine, { width: "68%" }]} />
+                        <View style={[styles.skeletonLine, { width: "30%", marginTop: 10 }]} />
+                    </View>
+                </View>
+            ))}
+        </View>
+    );
+}
+
+function SearchResultList({
+    books,
+    status,
+    onEndReached,
+    onBookPress,
+    loadingFirstPage,
+}: SearchResultListProps) {
+    if (loadingFirstPage) {
+        return <SearchResultSkeleton />;
+    }
+
+    return (
+        <FlatList
+            data={books}
+            keyExtractor={(item) => item._id}
+            renderItem={({ item }) => (
+                <BookCard
+                    title={item.title}
+                    author={item.author}
+                    rating={item.rating}
+                    coverUrl={item.coverUrl}
+                    onPress={() => onBookPress(item._id)}
+                />
+            )}
+            onEndReachedThreshold={0.4}
+            onEndReached={() => {
+                if (status === "CanLoadMore") {
+                    onEndReached();
+                }
+            }}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.list}
+            ListEmptyComponent={
+                <View style={styles.empty}>
+                    <Ionicons name="search-outline" size={48} color={Colors.textLight} />
+                    <Text style={styles.emptyTitle}>No matches found</Text>
+                    <Text style={styles.emptySubtitle}>
+                        Try another title, author, or genre.
+                    </Text>
+                </View>
+            }
+            ListFooterComponent={
+                status === "LoadingMore" ? (
+                    <View style={styles.footerLoader}>
+                        <BookLoader label="Loading more..." />
+                    </View>
+                ) : (
+                    <View style={styles.footerSpacer} />
+                )
+            }
+        />
+    );
+}
+
+export default memo(SearchResultList);
+
+const styles = StyleSheet.create({
+    list: {
+        paddingHorizontal: 20,
+        paddingTop: Spacing.sm,
+        paddingBottom: Spacing.lg,
+        flexGrow: 1,
+    },
+    empty: {
+        marginTop: 72,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    emptyTitle: {
+        marginTop: Spacing.sm,
+        color: Colors.text,
+        fontFamily: Fonts.bold,
+        fontSize: FontSizes.subtitle,
+    },
+    emptySubtitle: {
+        marginTop: 4,
+        color: Colors.textSecondary,
+        fontFamily: Fonts.regular,
+        fontSize: FontSizes.body,
+    },
+    footerLoader: {
+        paddingVertical: Spacing.md,
+    },
+    footerSpacer: {
+        height: Spacing.xl,
+    },
+    skeletonWrap: {
+        paddingHorizontal: 20,
+        paddingTop: Spacing.sm,
+    },
+    skeletonCard: {
+        flexDirection: "row",
+        borderRadius: 14,
+        borderWidth: 1,
+        borderColor: Colors.border,
+        backgroundColor: Colors.white,
+        padding: Spacing.md,
+        marginBottom: Spacing.sm,
+    },
+    skeletonCover: {
+        width: 56,
+        height: 80,
+        borderRadius: 10,
+        backgroundColor: Colors.border,
+    },
+    skeletonContent: {
+        flex: 1,
+        marginLeft: Spacing.md,
+    },
+    skeletonLine: {
+        height: 12,
+        borderRadius: 6,
+        backgroundColor: Colors.border,
+        marginBottom: 8,
+    },
+});

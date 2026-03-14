@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import { paginationOptsValidator } from "convex/server";
 import { mutation, query } from "./_generated/server";
 
 const MAIN_GENRES = [
@@ -33,30 +34,134 @@ function normalizeBookValue(value: string): string {
     return value.trim().replace(/\s+/g, " ").toLowerCase();
 }
 
+function normalizeSingleGenre(genre: string | undefined): string | undefined {
+    if (!genre) return undefined;
+    const normalized = genre.trim();
+    return MAIN_GENRES.includes(normalized) ? normalized : undefined;
+}
+
+function buildSearchText(input: {
+    title: string;
+    author: string;
+    genre?: string;
+    genres?: string[];
+}) {
+    const tokens = [
+        input.title,
+        input.author,
+        input.genre ?? "",
+        ...(input.genres ?? []),
+    ]
+        .map(normalizeBookValue)
+        .filter(Boolean);
+
+    return Array.from(new Set(tokens)).join(" ");
+}
+
+function normalizeRating(rating: number | undefined) {
+    if (rating === undefined) return 0;
+    if (!Number.isFinite(rating)) return 0;
+    return Math.max(0, Math.min(5, rating));
+}
+
+function normalizeOptionalPositiveInt(value: number | undefined, fieldLabel: string) {
+    if (value === undefined) return undefined;
+    if (!Number.isFinite(value) || value <= 0 || !Number.isInteger(value)) {
+        throw new Error(`${fieldLabel} must be a positive whole number.`);
+    }
+    return value;
+}
+
+function normalizeNonNegativeInt(value: number | undefined, fallback = 0) {
+    if (value === undefined) return fallback;
+    if (!Number.isFinite(value) || value < 0 || !Number.isInteger(value)) {
+        throw new Error("Value must be a non-negative whole number.");
+    }
+    return value;
+}
+
+function normalizePublishedYear(value: number | undefined) {
+    if (value === undefined) return undefined;
+    if (!Number.isFinite(value) || !Number.isInteger(value)) {
+        throw new Error("Published year must be a valid year.");
+    }
+    const currentYear = new Date().getFullYear();
+    if (value < 1400 || value > currentYear + 1) {
+        throw new Error("Published year must be a valid year.");
+    }
+    return value;
+}
+
+function normalizeTop10Position(
+    isTop10: boolean | undefined,
+    top10Position: number | undefined
+) {
+    if (!isTop10) return undefined;
+    if (top10Position === undefined) {
+        throw new Error("Top 10 position is required when Top 10 is selected.");
+    }
+    if (!Number.isInteger(top10Position) || top10Position < 1 || top10Position > 10) {
+        throw new Error("Top 10 position must be between 1 and 10.");
+    }
+    return top10Position;
+}
+
+function normalizeSeries(series: string | undefined) {
+    if (series === undefined) return undefined;
+    const normalized = series.trim();
+    return normalized || undefined;
+}
+
+async function resolveCoverUrls(
+    ctx: any,
+    book: {
+        coverImage?: any;
+        coverImages?: any[];
+    }
+): Promise<{ coverUrl: string | null; coverUrls: string[] }> {
+    let coverUrl: string | null = null;
+    const coverUrls: string[] = [];
+
+    if (book.coverImages && book.coverImages.length > 0) {
+        for (const curr of book.coverImages) {
+            const url = await ctx.storage.getUrl(curr as any);
+            if (url) coverUrls.push(url);
+        }
+        if (coverUrls.length > 0) coverUrl = coverUrls[0];
+    } else if (book.coverImage) {
+        coverUrl = await ctx.storage.getUrl(book.coverImage as any);
+        if (coverUrl) coverUrls.push(coverUrl);
+    }
+
+    return { coverUrl, coverUrls };
+}
+
+async function mapBookForClient(
+    ctx: any,
+    book: any
+): Promise<any> {
+    const { coverUrl, coverUrls } = await resolveCoverUrls(ctx, book);
+    return {
+        ...book,
+        genre: book.genre ?? (book.genres?.[0] ?? undefined),
+        genres: book.genres ?? [],
+        rating: typeof book.rating === "number" ? book.rating : 0,
+        ratingCount: typeof book.ratingCount === "number" ? book.ratingCount : 0,
+        bookViews: typeof book.bookViews === "number" ? book.bookViews : 0,
+        bookRentals: typeof book.bookRentals === "number" ? book.bookRentals : 0,
+        isTop10: Boolean(book.isTop10),
+        isFamous: Boolean(book.isFamous),
+        isTrending: Boolean(book.isTrending),
+        coverUrl,
+        coverUrls,
+    };
+}
+
 export const list = query({
     args: {},
     handler: async (ctx) => {
-        const books = await ctx.db.query("books").collect();
-        // Attach cover image URLs (both old coverImage and new coverImages array)
-        const booksWithUrls = await Promise.all(
-            books.map(async (book) => {
-                let coverUrl: string | null = null;
-                const coverUrls: string[] = [];
-
-                if (book.coverImages && book.coverImages.length > 0) {
-                    for (const curr of book.coverImages) {
-                        const url = await ctx.storage.getUrl(curr);
-                        if (url) coverUrls.push(url);
-                    }
-                    if (coverUrls.length > 0) coverUrl = coverUrls[0];
-                } else if (book.coverImage) {
-                    coverUrl = await ctx.storage.getUrl(book.coverImage);
-                    if (coverUrl) coverUrls.push(coverUrl);
-                }
-
-                return { ...book, genres: book.genres ?? [], coverUrl, coverUrls };
-            })
-        );
+        const books = await ctx.db.query("books").withIndex("by_createdAt").order("desc").collect();
+        const booksWithUrls = await Promise.all(books.map((book) => mapBookForClient(ctx, book)));
         return booksWithUrls;
     },
 });
@@ -67,21 +172,67 @@ export const get = query({
         const book = await ctx.db.get(args.bookId);
         if (!book) return null;
 
-        let coverUrl: string | null = null;
-        const coverUrls: string[] = [];
+        return mapBookForClient(ctx, book);
+    },
+});
 
-        if (book.coverImages && book.coverImages.length > 0) {
-            for (const curr of book.coverImages) {
-                const url = await ctx.storage.getUrl(curr);
-                if (url) coverUrls.push(url);
-            }
-            if (coverUrls.length > 0) coverUrl = coverUrls[0];
-        } else if (book.coverImage) {
-            coverUrl = await ctx.storage.getUrl(book.coverImage);
-            if (coverUrl) coverUrls.push(coverUrl);
+export const searchBooks = query({
+    args: {
+        searchText: v.optional(v.string()),
+        genre: v.optional(v.string()),
+        paginationOpts: paginationOptsValidator,
+    },
+    handler: async (ctx, args) => {
+        const normalizedSearch = normalizeBookValue(args.searchText ?? "");
+        const selectedGenre = normalizeSingleGenre(args.genre);
+
+        if (normalizedSearch) {
+            const results = await ctx.db
+                .query("books")
+                .withSearchIndex("search_books", (q) => {
+                    const searched = q.search("searchText", normalizedSearch);
+                    return selectedGenre ? searched.eq("genre", selectedGenre) : searched;
+                })
+                .paginate(args.paginationOpts);
+
+            return {
+                ...results,
+                page: await Promise.all(results.page.map((book) => mapBookForClient(ctx, book))),
+            };
         }
 
-        return { ...book, genres: book.genres ?? [], coverUrl, coverUrls };
+        const queryBuilder = selectedGenre
+            ? ctx.db.query("books").withIndex("by_genre", (q) => q.eq("genre", selectedGenre))
+            : ctx.db.query("books").withIndex("by_createdAt");
+
+        const results = await queryBuilder.order("desc").paginate(args.paginationOpts);
+
+        return {
+            ...results,
+            page: await Promise.all(results.page.map((book) => mapBookForClient(ctx, book))),
+        };
+    },
+});
+
+export const getBooksByGenre = query({
+    args: {
+        genre: v.string(),
+        paginationOpts: paginationOptsValidator,
+    },
+    handler: async (ctx, args) => {
+        const selectedGenre = normalizeSingleGenre(args.genre);
+        if (!selectedGenre) throw new Error("Invalid genre.");
+
+        const results = await ctx.db
+            .query("books")
+            .withIndex("by_genre", (q) => q.eq("genre", selectedGenre))
+            .order("desc")
+            .paginate(args.paginationOpts);
+
+        return {
+            ...results,
+            page: await Promise.all(results.page.map((book) => mapBookForClient(ctx, book))),
+        };
     },
 });
 
@@ -90,7 +241,20 @@ export const add = mutation({
         title: v.string(),
         author: v.string(),
         description: v.string(),
+        genre: v.optional(v.string()),
         genres: v.array(v.string()),
+        rating: v.optional(v.number()),
+        ratingCount: v.optional(v.number()),
+        bookViews: v.optional(v.number()),
+        bookRentals: v.optional(v.number()),
+        pageCount: v.optional(v.number()),
+        publishedYear: v.optional(v.number()),
+        publisher: v.optional(v.string()),
+        isTop10: v.optional(v.boolean()),
+        top10Position: v.optional(v.number()),
+        isFamous: v.optional(v.boolean()),
+        isTrending: v.optional(v.boolean()),
+        series: v.optional(v.string()),
         rentPerDay: v.number(),
         coverImage: v.optional(v.id("_storage")),
         coverImages: v.optional(v.array(v.id("_storage"))),
@@ -119,11 +283,37 @@ export const add = mutation({
             throw new Error("This book already exists.");
         }
 
+        const normalizedGenres = normalizeGenres(args.genres);
+        const primaryGenre = normalizeSingleGenre(args.genre) ?? normalizedGenres[0];
+        const pageCount = normalizeOptionalPositiveInt(args.pageCount, "Page count");
+        const publishedYear = normalizePublishedYear(args.publishedYear);
+        const isTop10 = Boolean(args.isTop10);
+        const top10Position = normalizeTop10Position(isTop10, args.top10Position);
+
         const bookId = await ctx.db.insert("books", {
             title,
             author,
             description,
-            genres: normalizeGenres(args.genres),
+            genre: primaryGenre,
+            genres: normalizedGenres,
+            rating: normalizeRating(args.rating),
+            ratingCount: normalizeNonNegativeInt(args.ratingCount, 0),
+            bookViews: normalizeNonNegativeInt(args.bookViews, 0),
+            bookRentals: normalizeNonNegativeInt(args.bookRentals, 0),
+            pageCount,
+            publishedYear,
+            publisher: args.publisher?.trim() || undefined,
+            isTop10,
+            top10Position,
+            isFamous: Boolean(args.isFamous),
+            isTrending: Boolean(args.isTrending),
+            series: normalizeSeries(args.series),
+            searchText: buildSearchText({
+                title,
+                author,
+                genre: primaryGenre,
+                genres: normalizedGenres,
+            }),
             rentPerDay: args.rentPerDay,
             coverImage: args.coverImage,
             coverImages: args.coverImages,
@@ -142,7 +332,20 @@ export const update = mutation({
         title: v.optional(v.string()),
         author: v.optional(v.string()),
         description: v.optional(v.string()),
+        genre: v.optional(v.string()),
         genres: v.optional(v.array(v.string())),
+        rating: v.optional(v.number()),
+        ratingCount: v.optional(v.number()),
+        bookViews: v.optional(v.number()),
+        bookRentals: v.optional(v.number()),
+        pageCount: v.optional(v.number()),
+        publishedYear: v.optional(v.number()),
+        publisher: v.optional(v.string()),
+        isTop10: v.optional(v.boolean()),
+        top10Position: v.optional(v.number()),
+        isFamous: v.optional(v.boolean()),
+        isTrending: v.optional(v.boolean()),
+        series: v.optional(v.string()),
         rentPerDay: v.optional(v.number()),
         coverImage: v.optional(v.id("_storage")),
         coverImages: v.optional(v.array(v.id("_storage"))),
@@ -157,7 +360,42 @@ export const update = mutation({
         if (args.author !== undefined) updates.author = args.author.trim();
         if (args.description !== undefined)
             updates.description = args.description.trim();
-        if (args.genres !== undefined) updates.genres = normalizeGenres(args.genres);
+        const nextGenres = args.genres !== undefined
+            ? normalizeGenres(args.genres)
+            : (book.genres ?? []);
+        if (args.genres !== undefined) updates.genres = nextGenres;
+        const nextGenre = normalizeSingleGenre(args.genre) ?? (args.genres !== undefined ? nextGenres[0] : book.genre ?? book.genres?.[0]);
+        if (args.genre !== undefined || args.genres !== undefined) updates.genre = nextGenre;
+        if (args.rating !== undefined) updates.rating = normalizeRating(args.rating);
+        if (args.ratingCount !== undefined) {
+            updates.ratingCount = normalizeNonNegativeInt(args.ratingCount, 0);
+        }
+        if (args.bookViews !== undefined) {
+            updates.bookViews = normalizeNonNegativeInt(args.bookViews, 0);
+        }
+        if (args.bookRentals !== undefined) {
+            updates.bookRentals = normalizeNonNegativeInt(args.bookRentals, 0);
+        }
+        if (args.pageCount !== undefined) {
+            updates.pageCount = normalizeOptionalPositiveInt(args.pageCount, "Page count");
+        }
+        if (args.publishedYear !== undefined) {
+            updates.publishedYear = normalizePublishedYear(args.publishedYear);
+        }
+        if (args.publisher !== undefined) {
+            updates.publisher = args.publisher.trim() || undefined;
+        }
+        if (args.isTop10 !== undefined || args.top10Position !== undefined) {
+            const nextIsTop10 = args.isTop10 ?? Boolean(book.isTop10);
+            updates.isTop10 = nextIsTop10;
+            updates.top10Position = normalizeTop10Position(
+                nextIsTop10,
+                args.top10Position ?? book.top10Position
+            );
+        }
+        if (args.isFamous !== undefined) updates.isFamous = args.isFamous;
+        if (args.isTrending !== undefined) updates.isTrending = args.isTrending;
+        if (args.series !== undefined) updates.series = normalizeSeries(args.series);
         if (args.rentPerDay !== undefined) updates.rentPerDay = args.rentPerDay;
 
         // Cleanup storage for single cover image if replaced
@@ -185,6 +423,20 @@ export const update = mutation({
             const diff = args.totalCopies - book.totalCopies;
             updates.totalCopies = args.totalCopies;
             updates.availableCopies = Math.max(0, book.availableCopies + diff);
+        }
+
+        if (
+            args.title !== undefined ||
+            args.author !== undefined ||
+            args.genre !== undefined ||
+            args.genres !== undefined
+        ) {
+            updates.searchText = buildSearchText({
+                title: (updates.title as string | undefined) ?? book.title,
+                author: (updates.author as string | undefined) ?? book.author,
+                genre: (updates.genre as string | undefined) ?? book.genre,
+                genres: (updates.genres as string[] | undefined) ?? (book.genres ?? []),
+            });
         }
 
         await ctx.db.patch(args.bookId, updates);
@@ -231,6 +483,55 @@ export const remove = mutation({
         }
 
         await ctx.db.delete(args.bookId);
+    },
+});
+
+export const backfillSearchFields = mutation({
+    args: {},
+    handler: async (ctx) => {
+        const books = await ctx.db.query("books").collect();
+        let updated = 0;
+
+        for (const book of books) {
+            const normalizedGenres = normalizeGenres(book.genres ?? []);
+            const genre = normalizeSingleGenre(book.genre) ?? normalizedGenres[0];
+            const rating = normalizeRating(book.rating);
+            const ratingCount = normalizeNonNegativeInt(book.ratingCount, 0);
+            const bookViews = normalizeNonNegativeInt(book.bookViews, 0);
+            const bookRentals = normalizeNonNegativeInt(book.bookRentals, 0);
+            const searchText = buildSearchText({
+                title: book.title,
+                author: book.author,
+                genre,
+                genres: normalizedGenres,
+            });
+
+            const needsPatch =
+                book.genre !== genre ||
+                JSON.stringify(book.genres ?? []) !== JSON.stringify(normalizedGenres) ||
+                (book.rating ?? 0) !== rating ||
+                (book.ratingCount ?? 0) !== ratingCount ||
+                (book.bookViews ?? 0) !== bookViews ||
+                (book.bookRentals ?? 0) !== bookRentals ||
+                book.searchText !== searchText;
+
+            if (!needsPatch) {
+                continue;
+            }
+
+            await ctx.db.patch(book._id, {
+                genre,
+                genres: normalizedGenres,
+                rating,
+                ratingCount,
+                bookViews,
+                bookRentals,
+                searchText,
+            });
+            updated += 1;
+        }
+
+        return { scanned: books.length, updated };
     },
 });
 
