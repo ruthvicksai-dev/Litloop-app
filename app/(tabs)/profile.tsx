@@ -1,10 +1,15 @@
-import ConfirmActionModal from "@/components/ui/ConfirmActionModal";
 import Button from "@/components/ui/Button";
+import ConfirmActionModal from "@/components/ui/ConfirmActionModal";
+import DiscoverSectionRow from "@/components/ui/DiscoverSectionRow";
+import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
+import { api } from "@/convex/_generated/api";
 import { useFadeSlideScaleIn } from "@/hooks/useFadeSlideScaleIn";
+import { responsiveFont } from "@/utils/responsiveFont";
 import { Ionicons } from "@expo/vector-icons";
+import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -16,11 +21,9 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Fonts, FontSizes } from "@/constants/fonts";
-import { responsiveFont } from "@/utils/responsiveFont";
 
 export default function ProfileScreen() {
-    const { user, signOut, isAdmin } = useAuth();
+    const { user, signOut, isAdmin, accessToken } = useAuth();
     const { showToast } = useToast();
     const router = useRouter();
     const { fadeAnim, slideAnim, scaleAnim } = useFadeSlideScaleIn();
@@ -31,6 +34,12 @@ export default function ProfileScreen() {
         showToast("Signed out successfully.", "info");
         router.replace("/(auth)/sign-in");
     };
+
+    const favoriteBooks =
+        useQuery(
+            api.favorites.getUserFavoriteBooks,
+            accessToken ? { accessToken } : "skip"
+        ) ?? [];
 
     return (
         <SafeAreaView style={styles.container}>
@@ -97,6 +106,25 @@ export default function ProfileScreen() {
                         </TouchableOpacity>
                     </Animated.View>
                 ) : null}
+
+                <Animated.View style={[styles.favoritesSection, { opacity: fadeAnim }]}>
+                    <View style={styles.favoritesHeader}>
+                        <Text style={styles.favoritesTitleText}>My Favorites</Text>
+                        <Text style={styles.favoritesSubtitle}>Books you have saved</Text>
+                    </View>
+                    {favoriteBooks.length > 0 ? (
+                        <DiscoverSectionRow
+                            title=""
+                            books={favoriteBooks}
+                        />
+                    ) : (
+                        <View style={styles.emptyFavoritesCard}>
+                            <Ionicons name="heart-outline" size={36} color={Colors.textLight} />
+                            <Text style={styles.emptyFavoritesText}>No favorites yet</Text>
+                            <Text style={styles.emptyFavoritesSubtext}>Liked books will appear here</Text>
+                        </View>
+                    )}
+                </Animated.View>
 
                 <Animated.View style={[styles.actions, { opacity: fadeAnim }]}>
                     <Button
@@ -217,5 +245,52 @@ const styles = StyleSheet.create({
     actions: {
         paddingHorizontal: 20,
         marginTop: Spacing.md,
+    },
+    favoritesSection: {
+        marginTop: Spacing.xl,
+        marginBottom: Spacing.md,
+    },
+    favoritesHeader: {
+        paddingHorizontal: 20,
+        marginBottom: Spacing.sm,
+    },
+    favoritesTitleText: {
+        fontSize: 22,
+        color: Colors.primaryDark,
+        fontFamily: Fonts.bold,
+        letterSpacing: -0.4,
+    },
+    favoritesSubtitle: {
+        fontSize: FontSizes.caption,
+        color: Colors.textSecondary,
+        fontFamily: Fonts.medium,
+        marginTop: 2,
+    },
+    emptyFavoritesCard: {
+        marginHorizontal: 20,
+        backgroundColor: Colors.white,
+        borderRadius: 16,
+        padding: Spacing.lg,
+        alignItems: "center",
+        justifyContent: "center",
+        shadowColor: Colors.shadow,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        elevation: 2,
+        borderWidth: 1,
+        borderColor: "rgba(117,64,67,0.08)",
+    },
+    emptyFavoritesText: {
+        fontSize: FontSizes.subtitle,
+        fontFamily: Fonts.bold,
+        color: Colors.text,
+        marginTop: Spacing.sm,
+    },
+    emptyFavoritesSubtext: {
+        fontSize: FontSizes.small,
+        fontFamily: Fonts.regular,
+        color: Colors.textSecondary,
+        marginTop: 4,
     },
 });

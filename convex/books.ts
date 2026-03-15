@@ -1,5 +1,5 @@
-import { v } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
+import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
 const MAIN_GENRES = [
@@ -136,7 +136,7 @@ async function resolveCoverUrls(
     return { coverUrl, coverUrls };
 }
 
-async function mapBookForClient(
+export async function mapBookForClient(
     ctx: any,
     book: any
 ): Promise<any> {
@@ -486,6 +486,90 @@ export const remove = mutation({
     },
 });
 
+export const getTopPicks = query({
+    args: {},
+    handler: async (ctx) => {
+        const books = await ctx.db
+            .query("books")
+            .withIndex("by_createdAt")
+            .order("desc")
+            .collect();
+        // Sort by rating descending and take top 10
+        const sorted = books
+            .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
+            .slice(0, 10);
+        return Promise.all(sorted.map((book) => mapBookForClient(ctx, book)));
+    },
+});
+
+export const getTop10Books = query({
+    args: {},
+    handler: async (ctx) => {
+        const books = await ctx.db
+            .query("books")
+            .filter((q) => q.eq(q.field("isTop10"), true))
+            .collect();
+        const sorted = books
+            .filter((b) => typeof b.top10Position === "number")
+            .sort((a, b) => (a.top10Position ?? 99) - (b.top10Position ?? 99))
+            .slice(0, 10);
+        return Promise.all(sorted.map((book) => mapBookForClient(ctx, book)));
+    },
+});
+
+export const getTrendingBooks = query({
+    args: {},
+    handler: async (ctx) => {
+        const books = await ctx.db
+            .query("books")
+            .withIndex("by_createdAt")
+            .order("desc")
+            .filter((q) => q.eq(q.field("isTrending"), true))
+            .take(10);
+        return Promise.all(books.map((book) => mapBookForClient(ctx, book)));
+    },
+});
+
+export const getFamousBooks = query({
+    args: {},
+    handler: async (ctx) => {
+        const books = await ctx.db
+            .query("books")
+            .withIndex("by_createdAt")
+            .order("desc")
+            .filter((q) => q.eq(q.field("isFamous"), true))
+            .take(10);
+        return Promise.all(books.map((book) => mapBookForClient(ctx, book)));
+    },
+});
+
+export const getSeriesBooks = query({
+    args: {},
+    handler: async (ctx) => {
+        const books = await ctx.db
+            .query("books")
+            .withIndex("by_createdAt")
+            .order("desc")
+            .collect();
+        const seriesBooks = books
+            .filter((b) => b.series && b.series.trim() !== "")
+            .slice(0, 10);
+        return Promise.all(seriesBooks.map((book) => mapBookForClient(ctx, book)));
+    },
+});
+
+export const getNewlyAddedBooks = query({
+    args: {},
+    handler: async (ctx) => {
+        const books = await ctx.db
+            .query("books")
+            .withIndex("by_createdAt")
+            .order("desc")
+            .take(10);
+        return Promise.all(books.map((book) => mapBookForClient(ctx, book)));
+    },
+});
+
 export const backfillSearchFields = mutation({
     args: {},
     handler: async (ctx) => {
@@ -534,4 +618,3 @@ export const backfillSearchFields = mutation({
         return { scanned: books.length, updated };
     },
 });
-

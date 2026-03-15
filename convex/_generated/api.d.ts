@@ -11,6 +11,7 @@
 import type * as analytics from "../analytics.js";
 import type * as auth from "../auth.js";
 import type * as books from "../books.js";
+import type * as favorites from "../favorites.js";
 import type * as lib_jwt from "../lib/jwt.js";
 import type * as payments from "../payments.js";
 import type * as rentals from "../rentals.js";
@@ -26,6 +27,7 @@ declare const fullApi: ApiFromModules<{
   analytics: typeof analytics;
   auth: typeof auth;
   books: typeof books;
+  favorites: typeof favorites;
   "lib/jwt": typeof lib_jwt;
   payments: typeof payments;
   rentals: typeof rentals;

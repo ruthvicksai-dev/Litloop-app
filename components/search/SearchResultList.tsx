@@ -12,6 +12,10 @@ export type SearchBook = {
     author: string;
     rating: number;
     coverUrl: string | null;
+    rentPerDay: number;
+    availableCopies: number;
+    bookViews: number;
+    bookRentals: number;
 };
 
 type SearchResultListProps = {
@@ -56,10 +60,15 @@ function SearchResultList({
             keyExtractor={(item) => item._id}
             renderItem={({ item }) => (
                 <BookCard
+                    bookId={item._id}
                     title={item.title}
                     author={item.author}
                     rating={item.rating}
                     coverUrl={item.coverUrl}
+                    rentPerDay={item.rentPerDay}
+                    availableCopies={item.availableCopies}
+                    bookViews={item.bookViews}
+                    bookRentals={item.bookRentals}
                     onPress={() => onBookPress(item._id)}
                 />
             )}

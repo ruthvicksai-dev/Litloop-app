@@ -36,6 +36,11 @@ export function useSearchScreen() {
                 author: book.author,
                 rating: typeof book.rating === "number" ? book.rating : 0,
                 coverUrl: book.coverUrl ?? null,
+                description: book.description,
+                rentPerDay: book.rentPerDay,
+                availableCopies: book.availableCopies,
+                bookViews: typeof book.bookViews === "number" ? book.bookViews : 0,
+                bookRentals: typeof book.bookRentals === "number" ? book.bookRentals : 0,
             })),
         [results]
     );

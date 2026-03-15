@@ -12,6 +12,7 @@ import { useFadeSlideIn } from "@/hooks/useFadeSlideIn";
 import { responsiveFont } from "@/utils/responsiveFont";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";
+import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
 import {
     Animated,
@@ -77,6 +78,13 @@ export default function RentalHistoryScreen() {
                             }}
                         >
                             <View style={styles.compactCard}>
+                                <LinearGradient
+                                    pointerEvents="none"
+                                    colors={["#FFFFFF", `${Colors.primary}0D`, Colors.primaryLight]}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 1 }}
+                                    style={StyleSheet.absoluteFillObject}
+                                />
                                 {item.coverUrl ? (
                                     <Image source={{ uri: item.coverUrl }} style={styles.coverImage} />
                                 ) : (
@@ -272,7 +280,8 @@ const styles = StyleSheet.create({
         gap: Spacing.sm,
         minHeight: 122,
         borderWidth: 1,
-        borderColor: Colors.border,
+        borderColor: "rgba(117,64,67,0.10)",
+        overflow: "hidden",
         shadowColor: Colors.shadow,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.08,

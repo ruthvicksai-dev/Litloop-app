@@ -1,0 +1,104 @@
+import { v } from "convex/values";
+import { Id } from "./_generated/dataModel";
+import { mutation, query } from "./_generated/server";
+import { mapBookForClient } from "./books";
+import { verifyToken } from "./lib/jwt";
+
+function getJwtSecret(): string {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+        throw new Error("JWT_SECRET environment variable is not set.");
+    }
+    return secret;
+}
+
+async function getUserIdFromAccessToken(accessToken: string): Promise<Id<"users">> {
+    const secret = getJwtSecret();
+    const payload = await verifyToken(accessToken, secret);
+    if (payload.type !== "access") {
+        throw new Error("Invalid token type.");
+    }
+    return payload.sub as Id<"users">;
+}
+
+export const toggleFavorite = mutation({
+    args: { accessToken: v.string(), bookId: v.id("books") },
+    handler: async (ctx, args) => {
+        let userId: Id<"users">;
+        try {
+            userId = await getUserIdFromAccessToken(args.accessToken);
+        } catch {
+            throw new Error("Unauthenticated");
+        }
+
+        // Check if favorite exists
+        const existing = await ctx.db
+            .query("favorites")
+            .withIndex("by_user_book", (q) =>
+                q.eq("userId", userId).eq("bookId", args.bookId)
+            )
+            .first();
+
+        if (existing) {
+            // Un-favorite
+            await ctx.db.delete(existing._id);
+            return false;
+        } else {
+            // Favorite
+            await ctx.db.insert("favorites", {
+                userId,
+                bookId: args.bookId,
+                createdAt: Date.now(),
+            });
+            return true;
+        }
+    },
+});
+
+export const getUserFavoriteIds = query({
+    args: { accessToken: v.string() },
+    handler: async (ctx, args) => {
+        let userId: Id<"users">;
+        try {
+            userId = await getUserIdFromAccessToken(args.accessToken);
+        } catch {
+            return [];
+        }
+
+        const favorites = await ctx.db
+            .query("favorites")
+            .withIndex("by_userId", (q) => q.eq("userId", userId))
+            .collect();
+
+        return favorites.map(f => f.bookId);
+    },
+});
+
+export const getUserFavoriteBooks = query({
+    args: { accessToken: v.string() },
+    handler: async (ctx, args) => {
+        let userId: Id<"users">;
+        try {
+            userId = await getUserIdFromAccessToken(args.accessToken);
+        } catch {
+            return [];
+        }
+
+        const favorites = await ctx.db
+            .query("favorites")
+            .withIndex("by_userId", (q) => q.eq("userId", userId))
+            .order("desc") // newest favorites first
+            .collect();
+
+        // Fetch each book and map it
+        const books = [];
+        for (const fav of favorites) {
+            const bookDoc = await ctx.db.get(fav.bookId);
+            if (bookDoc) {
+                const mapped = await mapBookForClient(ctx, bookDoc);
+                books.push(mapped);
+            }
+        }
+        return books;
+    },
+});

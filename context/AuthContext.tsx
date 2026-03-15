@@ -25,6 +25,7 @@ interface User {
 interface AuthContextType {
     user: User | null;
     userId: Id<"users"> | null;
+    accessToken: string | null;
     isLoading: boolean;
     isAdmin: boolean;
     signIn: (email: string, password: string) => Promise<void>;
@@ -40,6 +41,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
     user: null,
     userId: null,
+    accessToken: null,
     isLoading: true,
     isAdmin: false,
     signIn: async () => { },
@@ -263,6 +265,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             value={{
                 user,
                 userId: user?._id ?? null,
+                accessToken,
                 isLoading,
                 isAdmin: user?.role === "admin",
                 signIn,

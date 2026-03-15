@@ -141,6 +141,15 @@ export default defineSchema({
         .index("by_rentals", ["rentals"])
         .index("by_revenue", ["revenue"]),
 
+    favorites: defineTable({
+        userId: v.id("users"),
+        bookId: v.id("books"),
+        createdAt: v.number(),
+    })
+        .index("by_userId", ["userId"])
+        .index("by_bookId", ["bookId"])
+        .index("by_user_book", ["userId", "bookId"]),
+
     user_month_activity: defineTable({
         userId: v.id("users"),
         month: v.string(),
