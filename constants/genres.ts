@@ -10,6 +10,7 @@ export const GENRES = [
     "Biography",
     "Self Help",
     "History",
+    "Rom com",
     "Education",
 ] as const;
 

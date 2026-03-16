@@ -14,6 +14,7 @@ const MAIN_GENRES = [
     "Biography",
     "History",
     "Self Help",
+    "Rom com",
     "Education",
     "Business",
     "Psychology",
@@ -173,6 +174,50 @@ export const get = query({
         if (!book) return null;
 
         return mapBookForClient(ctx, book);
+    },
+});
+
+export const getRelatedBooks = query({
+    args: { bookId: v.id("books") },
+    handler: async (ctx, args) => {
+        const currentBook = await ctx.db.get(args.bookId);
+        if (!currentBook) return [];
+
+        const allBooks = await ctx.db
+            .query("books")
+            .withIndex("by_createdAt")
+            .order("desc")
+            .collect();
+
+        const currentAuthorKey = normalizeBookValue(currentBook.author);
+        const currentGenres = new Set([
+            ...(currentBook.genre ? [currentBook.genre] : []),
+            ...(currentBook.genres ?? []),
+        ]);
+
+        const sameAuthor = allBooks.filter(
+            (book) =>
+                book._id !== currentBook._id &&
+                normalizeBookValue(book.author) === currentAuthorKey
+        );
+
+        const sameGenre = allBooks.filter((book) => {
+            if (book._id === currentBook._id) return false;
+            if (sameAuthor.some((candidate) => candidate._id === book._id)) return false;
+
+            const bookGenres = [
+                ...(book.genre ? [book.genre] : []),
+                ...(book.genres ?? []),
+            ];
+
+            return bookGenres.some((genre) => currentGenres.has(genre));
+        });
+
+        return Promise.all(
+            [...sameAuthor, ...sameGenre]
+                .slice(0, 8)
+                .map((book) => mapBookForClient(ctx, book))
+        );
     },
 });
 

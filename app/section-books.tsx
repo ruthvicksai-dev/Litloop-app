@@ -1,6 +1,5 @@
-import BookCard from "@/components/ui/BookCard";
+import BookCard from "@/components/search/BookCard";
 import BookLoader from "@/components/ui/BookLoader";
-import Top10BookCard from "@/components/ui/Top10BookCard";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { api } from "@/convex/_generated/api";
@@ -122,38 +121,22 @@ export default function SectionBooksScreen() {
                     keyExtractor={(item) => item._id}
                     contentContainerStyle={styles.list}
                     showsVerticalScrollIndicator={false}
-                    renderItem={({ item, index }) =>
-                        section === "top10" ? (
-                            <Top10BookCard
-                                _id={item._id}
-                                title={item.title}
-                                author={item.author}
-                                rentPerDay={item.rentPerDay}
-                                availableCopies={item.availableCopies}
-                                coverUrl={item.coverUrl}
-                                coverUrls={item.coverUrls}
-                                genre={item.genre ?? item.genres?.[0]}
-                                bookViews={item.bookViews}
-                                rank={item.top10Position ?? index + 1}
-                            />
-                        ) : (
-                            <BookCard
-                                title={item.title}
-                                author={item.author}
-                                rentPerDay={item.rentPerDay}
-                                availableCopies={item.availableCopies}
-                                coverUrl={item.coverUrl}
-                                coverUrls={item.coverUrls}
-                                style={styles.card}
-                                onViewDetails={() =>
-                                    router.push(`/book/${item._id}` as any)
-                                }
-                                onRequestBook={() =>
-                                    router.push(`/rental/request?bookId=${item._id}` as any)
-                                }
-                            />
-                        )
-                    }
+                    renderItem={({ item }) => (
+                        <BookCard
+                            bookId={item._id}
+                            title={item.title}
+                            author={item.author}
+                            rating={item.rating ?? 0}
+                            coverUrl={item.coverUrl}
+                            rentPerDay={item.rentPerDay}
+                            availableCopies={item.availableCopies}
+                            bookViews={item.bookViews ?? 0}
+                            bookRentals={item.bookRentals ?? 0}
+                            onPress={() =>
+                                router.push(`/book/${item._id}` as any)
+                            }
+                        />
+                    )}
                 />
             )}
         </SafeAreaView>
@@ -211,12 +194,5 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingBottom: 32,
         paddingTop: Spacing.sm,
-    },
-    card: {
-        marginBottom: Spacing.md,
-    },
-    top10Item: {
-        paddingTop: 14,
-        marginBottom: Spacing.md,
     },
 });

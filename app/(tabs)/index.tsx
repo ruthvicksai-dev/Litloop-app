@@ -72,7 +72,7 @@ export default function HomeScreen() {
           seeAllKey="topPicks"
         />
         <DiscoverSectionRow
-          title="Top 10 in India"
+          title="Top 10 Rentals"
           subtitle="The most popular books right now"
           books={top10Books ?? []}
           seeAllKey="top10"

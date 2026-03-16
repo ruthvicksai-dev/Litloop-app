@@ -10,6 +10,7 @@ export const MAIN_GENRES = [
     "Biography",
     "History",
     "Self Help",
+    "Rom com",
     "Education",
     "Business",
     "Psychology",
