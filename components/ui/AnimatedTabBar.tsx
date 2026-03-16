@@ -9,10 +9,10 @@ import {
     View,
 } from "react-native";
 import Animated, {
-    interpolate,
     useAnimatedStyle,
     useSharedValue,
-    withSpring
+    Easing,
+    withTiming,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
@@ -76,9 +76,9 @@ export default function AnimatedTabBar({
         if (renderIndex !== -1) {
             // Offset by half a tab width to center precisely on the tab icon
             const centerOfTab = renderIndex * TAB_WIDTH + TAB_WIDTH / 2;
-            tabPositionX.value = withSpring(centerOfTab, {
-                stiffness: 250,
-                damping: 25,
+            tabPositionX.value = withTiming(centerOfTab, {
+                duration: 380,
+                easing: Easing.out(Easing.cubic),
             });
         }
     }, [state.index, renderRoutes, TAB_WIDTH]);
@@ -139,15 +139,6 @@ export default function AnimatedTabBar({
 
 // Separate component for internal animation logic
 function TabItem({ route, options, isFocused, navigation }: any) {
-    const animatedValue = useSharedValue(isFocused ? 1 : 0);
-
-    useEffect(() => {
-        animatedValue.value = withSpring(isFocused ? 1 : 0, {
-            stiffness: 250,
-            damping: 20,
-        });
-    }, [isFocused]);
-
     const onPress = () => {
         const event = navigation.emit({
             type: "tabPress",
@@ -169,11 +160,12 @@ function TabItem({ route, options, isFocused, navigation }: any) {
     // Icon offset = (Center of circle Y) - (Center of tab Y) = 5 - 32.5 = -27.5.
     const shiftOffset = CIRCLE_TOP_OFFSET + (CIRCLE_SIZE / 2) - (TAB_BAR_HEIGHT / 2);
 
-    const iconStyle = useAnimatedStyle(() => {
-        const translateY = interpolate(animatedValue.value, [0, 1], [0, shiftOffset]);
-        const scale = interpolate(animatedValue.value, [0, 1], [1, 1.1]);
-        return { transform: [{ translateY }, { scale }] };
-    });
+    const iconStyle = {
+        transform: [
+            { translateY: isFocused ? shiftOffset : 0 },
+            { scale: isFocused ? 1.1 : 1 },
+        ],
+    };
 
     const name = route.name;
     let iconName: keyof typeof Ionicons.glyphMap = "help-circle-outline" as any;
@@ -194,13 +186,13 @@ function TabItem({ route, options, isFocused, navigation }: any) {
             style={styles.tabButton}
             activeOpacity={1}
         >
-            <Animated.View style={[styles.iconContainer, iconStyle]}>
+            <View style={[styles.iconContainer, iconStyle]}>
                 <Ionicons
                     name={iconName}
                     size={24}
                     color={isFocused ? Colors.white : Colors.textSecondary}
                 />
-            </Animated.View>
+            </View>
         </TouchableOpacity>
     );
 }

@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Fonts, FontSizes } from "@/constants/fonts";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function ScheduleReturnScreen() {
     const { rentalId } = useLocalSearchParams<{ rentalId: string }>();
@@ -24,6 +25,8 @@ export default function ScheduleReturnScreen() {
         setPickupDate,
         pickupTime,
         setPickupTime,
+        userRating,
+        setUserRating,
         loading,
         estimatedDays,
         estimatedRent,
@@ -88,6 +91,29 @@ export default function ScheduleReturnScreen() {
                     value={pickupTime}
                     onChange={setPickupTime}
                 />
+
+                <View style={styles.ratingCard}>
+                    <Text style={styles.ratingTitle}>Rate this book</Text>
+                    <Text style={styles.ratingSubtitle}>
+                        Your rating will be shown to other readers in book cards.
+                    </Text>
+                    <View style={styles.starsRow}>
+                        {[1, 2, 3, 4, 5].map((star) => (
+                            <TouchableOpacity
+                                key={star}
+                                onPress={() => setUserRating(star)}
+                                activeOpacity={0.8}
+                                style={styles.starButton}
+                            >
+                                <Ionicons
+                                    name={userRating >= star ? "star" : "star-outline"}
+                                    size={30}
+                                    color={userRating >= star ? Colors.warning : Colors.textLight}
+                                />
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </View>
 
                 {estimatedDays > 0 ? (
                     <View style={styles.estimateCard}>
@@ -169,6 +195,31 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         padding: Spacing.md,
         marginTop: Spacing.md,
+    },
+    ratingCard: {
+        backgroundColor: Colors.white,
+        borderRadius: 12,
+        padding: Spacing.md,
+        marginTop: Spacing.md,
+    },
+    ratingTitle: {
+        fontSize: FontSizes.subtitle,
+        fontFamily: Fonts.bold,
+        color: Colors.text,
+    },
+    ratingSubtitle: {
+        fontSize: FontSizes.body,
+        color: Colors.textSecondary,
+        fontFamily: Fonts.regular,
+        marginTop: 4,
+    },
+    starsRow: {
+        flexDirection: "row",
+        marginTop: Spacing.sm,
+        gap: 8,
+    },
+    starButton: {
+        paddingVertical: 4,
     },
     estimateTitle: {
         fontSize: FontSizes.subtitle,

@@ -140,6 +140,7 @@ export const schedulePickup = mutation({
         rentalId: v.id("rentals"),
         pickupDate: v.string(),
         pickupTime: v.string(),
+        userRating: v.number(),
     },
     handler: async (ctx, args) => {
         const rental = await ctx.db.get(args.rentalId);
@@ -149,6 +150,9 @@ export const schedulePickup = mutation({
 
         if (!args.pickupDate) throw new Error("Pickup date is required.");
         if (!args.pickupTime) throw new Error("Pickup time is required.");
+        if (!Number.isInteger(args.userRating) || args.userRating < 1 || args.userRating > 5) {
+            throw new Error("Please provide a rating between 1 and 5 stars.");
+        }
 
         if (!rental.deliveryDate)
             throw new Error("Delivery date missing for rent calculation.");
@@ -160,10 +164,25 @@ export const schedulePickup = mutation({
         const days = daysBetween(rental.deliveryDate, args.pickupDate);
         const totalRent = rental.rentPerDay * days;
 
+        const book = await ctx.db.get(rental.bookId);
+        if (!book) throw new Error("Book not found.");
+
+        const currentRating = typeof book.rating === "number" ? book.rating : 0;
+        const currentCount = typeof book.ratingCount === "number" ? book.ratingCount : 0;
+        const nextCount = currentCount + 1;
+        const nextRating = ((currentRating * currentCount) + args.userRating) / nextCount;
+
+        await ctx.db.patch(rental.bookId, {
+            rating: nextRating,
+            ratingCount: nextCount,
+        });
+
         await ctx.db.patch(args.rentalId, {
             pickupDate: args.pickupDate,
             pickupTime: args.pickupTime,
             totalRent,
+            userRating: args.userRating,
+            ratedAt: Date.now(),
             status: "pickup_scheduled",
         });
     },
@@ -242,17 +261,51 @@ export const getUserRentals = query({
 });
 
 export const getRentalHistory = query({
-    args: { userId: v.id("users") },
+    args: {
+        userId: v.id("users"),
+        status: v.optional(
+            v.union(v.literal("all"), v.literal("paid"), v.literal("returned"))
+        ),
+        timeframe: v.optional(
+            v.union(
+                v.literal("all"),
+                v.literal("last_30_days"),
+                v.literal("this_month"),
+                v.literal("this_year")
+            )
+        ),
+    },
     handler: async (ctx, args) => {
         const rentals = await ctx.db
             .query("rentals")
             .withIndex("by_userId", (q) => q.eq("userId", args.userId))
             .collect();
 
-        const completedStatuses = ["paid", "returned"];
-        const completed = rentals.filter((r) =>
-            completedStatuses.includes(r.status)
-        );
+        const now = new Date();
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+        const yearStart = new Date(now.getFullYear(), 0, 1).getTime();
+        const last30DaysStart = now.getTime() - 30 * 24 * 60 * 60 * 1000;
+
+        const completed = rentals
+            .filter((r) => ["paid", "returned"].includes(r.status))
+            .filter((r) => {
+                if (!args.status || args.status === "all") return true;
+                return r.status === args.status;
+            })
+            .filter((r) => {
+                switch (args.timeframe) {
+                    case "last_30_days":
+                        return r.createdAt >= last30DaysStart;
+                    case "this_month":
+                        return r.createdAt >= monthStart;
+                    case "this_year":
+                        return r.createdAt >= yearStart;
+                    case "all":
+                    default:
+                        return true;
+                }
+            })
+            .sort((a, b) => b.createdAt - a.createdAt);
 
         const rentalsWithBooks = await Promise.all(
             completed.map(async (rental) => {

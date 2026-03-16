@@ -71,6 +71,8 @@ export default defineSchema({
         deliveryTime: v.optional(v.string()),
         pickupDate: v.optional(v.string()),
         pickupTime: v.optional(v.string()),
+        userRating: v.optional(v.number()),
+        ratedAt: v.optional(v.number()),
         rentPerDay: v.number(),
         totalRent: v.optional(v.number()),
         status: v.union(

@@ -17,6 +17,7 @@ export function useScheduleReturnScreen(rentalId: string) {
 
     const [pickupDate, setPickupDate] = useState("");
     const [pickupTime, setPickupTime] = useState("");
+    const [userRating, setUserRating] = useState(0);
     const [loading, setLoading] = useState(false);
 
     const estimatedDays = useMemo(() => {
@@ -56,6 +57,11 @@ export function useScheduleReturnScreen(rentalId: string) {
             return;
         }
 
+        if (userRating < 1 || userRating > 5) {
+            showToast("Please rate this book before scheduling pickup.", "error");
+            return;
+        }
+
         if (
             rental?.deliveryDate &&
             new Date(pickupDate) <= new Date(rental.deliveryDate)
@@ -70,6 +76,7 @@ export function useScheduleReturnScreen(rentalId: string) {
                 rentalId: rentalId as Id<"rentals">,
                 pickupDate,
                 pickupTime,
+                userRating,
             });
             showToast("Pickup scheduled! Proceed to payment.", "success");
             router.replace(`/rental/payment?rentalId=${rentalId}`);
@@ -90,6 +97,8 @@ export function useScheduleReturnScreen(rentalId: string) {
         setPickupDate,
         pickupTime,
         setPickupTime,
+        userRating,
+        setUserRating,
         loading,
         estimatedDays,
         estimatedRent,

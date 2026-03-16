@@ -25,11 +25,67 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+type DetailRowProps = {
+    label: string;
+    value: string;
+    highlight?: boolean;
+};
+
+function getDetailIcon(label: string) {
+    switch (label) {
+        case "Book":
+            return "book-outline";
+        case "Author":
+            return "person-outline";
+        case "Zone":
+            return "location-outline";
+        case "Delivery":
+        case "Pickup":
+            return "calendar-outline";
+        case "Delivery Time":
+        case "Pickup Time":
+            return "time-outline";
+        default:
+            return "wallet-outline";
+    }
+}
+
+function DetailTile({ label, value, highlight = false }: DetailRowProps) {
+    return (
+        <View style={styles.detailTile}>
+            <View style={styles.detailTop}>
+                <View style={[styles.detailIconWrap, highlight && styles.detailIconWrapHighlight]}>
+                    <Ionicons
+                        name={getDetailIcon(label)}
+                        size={12}
+                        color={highlight ? Colors.primary : Colors.white}
+                    />
+                </View>
+                <Text style={[styles.detailLabel, highlight && styles.detailLabelHighlight]}>
+                    {label}
+                </Text>
+            </View>
+            <Text numberOfLines={2} style={[styles.detailValue, highlight && styles.detailValueHighlight]}>
+                {value}
+            </Text>
+        </View>
+    );
+}
+
 export default function RentalHistoryScreen() {
     const { userId } = useAuth();
-    const history = useQuery(api.rentals.getRentalHistory, userId ? { userId } : "skip");
+    const [statusFilter, setStatusFilter] = useState<"all" | "paid" | "returned">("all");
+    const [timeframeFilter, setTimeframeFilter] = useState<
+        "all" | "last_30_days" | "this_month" | "this_year"
+    >("all");
+    const [showFilters, setShowFilters] = useState(false);
+    const history = useQuery(
+        api.rentals.getRentalHistory,
+        userId
+            ? { userId, status: statusFilter, timeframe: timeframeFilter }
+            : "skip"
+    );
     const { fadeAnim, slideAnim } = useFadeSlideIn();
-
     const [expandedRentalId, setExpandedRentalId] = useState<string | null>(null);
 
     if (history === undefined) {
@@ -51,8 +107,91 @@ export default function RentalHistoryScreen() {
                     },
                 ]}
             >
-                <Text style={styles.title}>Rental History</Text>
-                <Text style={styles.subtitle}>Past completed rentals</Text>
+                <View style={styles.headerTopRow}>
+                    <View style={styles.headerTextWrap}>
+                        <Text style={styles.title}>Rental History</Text>
+                        <Text style={styles.subtitle}>Past completed rentals</Text>
+                    </View>
+                    <TouchableOpacity
+                        style={styles.filterButton}
+                        onPress={() => setShowFilters((current) => !current)}
+                        activeOpacity={0.85}
+                    >
+                        <Ionicons name="filter-outline" size={18} color={Colors.primary} />
+                    </TouchableOpacity>
+                </View>
+                {showFilters ? (
+                    <View style={styles.filterPanel}>
+                        <Text style={styles.filterSectionTitle}>Status</Text>
+                        <View style={styles.filterRow}>
+                            {[
+                                { label: "All Orders", value: "all" },
+                                { label: "Paid", value: "paid" },
+                                { label: "Returned", value: "returned" },
+                            ].map((option) => {
+                                const isActive = statusFilter === option.value;
+
+                                return (
+                                    <TouchableOpacity
+                                        key={option.value}
+                                        style={[styles.filterChip, isActive && styles.filterChipActive]}
+                                        onPress={() =>
+                                            setStatusFilter(option.value as "all" | "paid" | "returned")
+                                        }
+                                        activeOpacity={0.85}
+                                    >
+                                        <Text
+                                            style={[
+                                                styles.filterChipText,
+                                                isActive && styles.filterChipTextActive,
+                                            ]}
+                                        >
+                                            {option.label}
+                                        </Text>
+                                    </TouchableOpacity>
+                                );
+                            })}
+                        </View>
+
+                        <Text style={styles.filterSectionTitle}>Time</Text>
+                        <View style={styles.filterRow}>
+                            {[
+                                { label: "All Time", value: "all" },
+                                { label: "Last 30 Days", value: "last_30_days" },
+                                { label: "This Month", value: "this_month" },
+                                { label: "This Year", value: "this_year" },
+                            ].map((option) => {
+                                const isActive = timeframeFilter === option.value;
+
+                                return (
+                                    <TouchableOpacity
+                                        key={option.value}
+                                        style={[styles.filterChip, isActive && styles.filterChipActive]}
+                                        onPress={() =>
+                                            setTimeframeFilter(
+                                                option.value as
+                                                    | "all"
+                                                    | "last_30_days"
+                                                    | "this_month"
+                                                    | "this_year"
+                                            )
+                                        }
+                                        activeOpacity={0.85}
+                                    >
+                                        <Text
+                                            style={[
+                                                styles.filterChipText,
+                                                isActive && styles.filterChipTextActive,
+                                            ]}
+                                        >
+                                            {option.label}
+                                        </Text>
+                                    </TouchableOpacity>
+                                );
+                            })}
+                        </View>
+                    </View>
+                ) : null}
             </Animated.View>
 
             <FlatList
@@ -85,91 +224,94 @@ export default function RentalHistoryScreen() {
                                     end={{ x: 1, y: 1 }}
                                     style={StyleSheet.absoluteFillObject}
                                 />
-                                {item.coverUrl ? (
-                                    <Image source={{ uri: item.coverUrl }} style={styles.coverImage} />
-                                ) : (
-                                    <View style={[styles.coverImage, styles.coverFallback]}>
-                                        <Ionicons name="book-outline" size={22} color={Colors.textLight} />
-                                    </View>
-                                )}
 
-                                <View style={styles.cardBody}>
-                                    <View style={styles.cardTopRow}>
-                                        <Text numberOfLines={1} style={styles.cardTitle}>
-                                            {item.book?.title || "Unknown Book"}
+                                <View style={styles.cardMainRow}>
+                                    {item.coverUrl ? (
+                                        <Image source={{ uri: item.coverUrl }} style={styles.coverImage} />
+                                    ) : (
+                                        <View style={[styles.coverImage, styles.coverFallback]}>
+                                            <Ionicons name="book-outline" size={22} color={Colors.textLight} />
+                                        </View>
+                                    )}
+
+                                    <View style={styles.cardBody}>
+                                        <View style={styles.cardTopRow}>
+                                            <Text numberOfLines={1} style={styles.cardTitle}>
+                                                {item.book?.title || "Unknown Book"}
+                                            </Text>
+                                            <View style={[styles.statusBadge, { backgroundColor: statusColor + "18" }]}>
+                                                <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
+                                                <Text style={[styles.statusText, { color: statusColor }]}>
+                                                    {statusLabel}
+                                                </Text>
+                                            </View>
+                                        </View>
+
+                                        <Text numberOfLines={1} style={styles.cardAuthor}>
+                                            {item.book?.author || "Unknown Author"}
                                         </Text>
-                                        <View style={[styles.statusBadge, { backgroundColor: statusColor + "18" }]}>
-                                            <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
-                                            <Text style={[styles.statusText, { color: statusColor }]}>
-                                                {statusLabel}
-                                            </Text>
-                                        </View>
-                                    </View>
 
-                                    <Text numberOfLines={1} style={styles.cardAuthor}>
-                                        {item.book?.author || "Unknown Author"}
-                                    </Text>
-
-                                    <View style={styles.metaRow}>
-                                        <View style={styles.metaPill}>
-                                            <Ionicons name="calendar-outline" size={12} color={Colors.textSecondary} />
-                                            <Text style={styles.metaPillText}>
-                                                {item.pickupDate
-                                                    ? item.pickupDate
-                                                    : item.deliveryDate || "Date unavailable"}
-                                            </Text>
-                                        </View>
-                                        <View style={styles.metaPill}>
-                                            <Ionicons name="location-outline" size={12} color={Colors.textSecondary} />
-                                            <Text style={styles.metaPillText}>{item.zone}</Text>
-                                        </View>
-                                    </View>
-
-                                    <View style={styles.cardFooter}>
-                                        <Text style={styles.cardRent}>Rs {item.totalRent ?? 0}</Text>
-                                        <TouchableOpacity
-                                            style={styles.detailsButton}
-                                            onPress={() =>
-                                                setExpandedRentalId((current) =>
-                                                    current === item._id ? null : item._id
-                                                )
-                                            }
-                                            activeOpacity={0.85}
-                                        >
-                                            <Text style={styles.detailsButtonText}>
-                                                {isExpanded ? "Hide Details" : "View Details"}
-                                            </Text>
-                                            <Ionicons
-                                                name={isExpanded ? "chevron-up" : "chevron-down"}
-                                                size={14}
-                                                color={Colors.white}
-                                            />
-                                        </TouchableOpacity>
-                                    </View>
-
-                                    {isExpanded ? (
-                                        <View style={styles.detailsSection}>
-                                            <View style={styles.detailsHeaderRow}>
-                                                <Text style={styles.detailsTitle}>Rental Breakdown</Text>
-                                                <View style={styles.detailsTag}>
-                                                    <Text style={styles.detailsTagText}>{statusLabel}</Text>
-                                                </View>
+                                        <View style={styles.metaRow}>
+                                            <View style={styles.metaPill}>
+                                                <Ionicons name="calendar-outline" size={12} color={Colors.textSecondary} />
+                                                <Text style={styles.metaPillText}>
+                                                    {item.pickupDate
+                                                        ? item.pickupDate
+                                                        : item.deliveryDate || "Date unavailable"}
+                                                </Text>
                                             </View>
-                                            <View style={styles.detailsGrid}>
-                                                <DetailTile label="Book" value={item.book?.title || "Unknown Book"} />
-                                                <DetailTile label="Author" value={item.book?.author || "Unknown Author"} />
-                                                <DetailTile label="Zone" value={item.zone} />
-                                                <DetailTile label="Delivery" value={item.deliveryDate || "-"} />
-                                                <DetailTile label="Delivery Time" value={item.deliveryTime || "-"} />
-                                                <DetailTile label="Pickup" value={item.pickupDate || "-"} />
-                                                <DetailTile label="Pickup Time" value={item.pickupTime || "-"} />
-                                                <DetailTile label="Rate Per Day" value={`Rs ${item.rentPerDay}`} />
-                                                <DetailTile label="Total Rent" value={`Rs ${item.totalRent ?? 0}`} highlight />
-                                                <DetailTile label="Late Fee" value={`Rs ${item.lateFee ?? 0}`} />
+                                            <View style={styles.metaPill}>
+                                                <Ionicons name="location-outline" size={12} color={Colors.textSecondary} />
+                                                <Text style={styles.metaPillText}>{item.zone}</Text>
                                             </View>
                                         </View>
-                                    ) : null}
+
+                                        <View style={styles.cardFooter}>
+                                            <Text style={styles.cardRent}>₹ {item.totalRent ?? 0}</Text>
+                                            <TouchableOpacity
+                                                style={styles.detailsButton}
+                                                onPress={() =>
+                                                    setExpandedRentalId((current) =>
+                                                        current === item._id ? null : item._id
+                                                    )
+                                                }
+                                                activeOpacity={0.85}
+                                            >
+                                                <Text style={styles.detailsButtonText}>
+                                                    {isExpanded ? "Hide Details" : "View Details"}
+                                                </Text>
+                                                <Ionicons
+                                                    name={isExpanded ? "chevron-up" : "chevron-down"}
+                                                    size={14}
+                                                    color={Colors.white}
+                                                />
+                                            </TouchableOpacity>
+                                        </View>
+                                    </View>
                                 </View>
+
+                                {isExpanded ? (
+                                    <View style={styles.detailsSection}>
+                                        <View style={styles.detailsHeaderRow}>
+                                            <Text style={styles.detailsTitle}>Rental Breakdown</Text>
+                                            <View style={styles.detailsTag}>
+                                                <Text style={styles.detailsTagText}>{statusLabel}</Text>
+                                            </View>
+                                        </View>
+                                        <View style={styles.detailsGrid}>
+                                            <DetailTile label="Book" value={item.book?.title || "Unknown Book"} />
+                                            <DetailTile label="Author" value={item.book?.author || "Unknown Author"} />
+                                            <DetailTile label="Zone" value={item.zone} />
+                                            <DetailTile label="Delivery" value={item.deliveryDate || "-"} />
+                                            <DetailTile label="Delivery Time" value={item.deliveryTime || "-"} />
+                                            <DetailTile label="Pickup" value={item.pickupDate || "-"} />
+                                            <DetailTile label="Pickup Time" value={item.pickupTime || "-"} />
+                                            <DetailTile label="Rate Per Day" value={`₹ ${item.rentPerDay}`} />
+                                            <DetailTile label="Total Rent" value={`₹ ${item.totalRent ?? 0}`} highlight />
+                                            <DetailTile label="Late Fee" value={`₹ ${item.lateFee ?? 0}`} />
+                                        </View>
+                                    </View>
+                                ) : null}
                             </View>
                         </Animated.View>
                     );
@@ -192,53 +334,6 @@ export default function RentalHistoryScreen() {
     );
 }
 
-type DetailRowProps = {
-    label: string;
-    value: string;
-    highlight?: boolean;
-};
-
-function getDetailIcon(label: string) {
-    switch (label) {
-        case "Book":
-            return "book-outline";
-        case "Author":
-            return "person-outline";
-        case "Status":
-            return "flag-outline";
-        case "Zone":
-            return "location-outline";
-        case "Delivery":
-        case "Pickup":
-            return "calendar-outline";
-        case "Delivery Time":
-        case "Pickup Time":
-            return "time-outline";
-        default:
-            return "wallet-outline";
-    }
-}
-
-function DetailTile({ label, value, highlight = false }: DetailRowProps) {
-    return (
-        <View style={[styles.detailTile, highlight && styles.detailTileHighlight]}>
-            <View style={styles.detailTop}>
-                <View style={[styles.detailIconWrap, highlight && styles.detailIconWrapHighlight]}>
-                    <Ionicons
-                        name={getDetailIcon(label)}
-                        size={12}
-                        color={highlight ? Colors.white : Colors.primary}
-                    />
-                </View>
-                <Text style={styles.detailLabel}>{label}</Text>
-            </View>
-            <Text numberOfLines={2} style={[styles.detailValue, highlight && styles.detailValueHighlight]}>
-                {value}
-            </Text>
-        </View>
-    );
-}
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -255,6 +350,15 @@ const styles = StyleSheet.create({
         paddingTop: Spacing.sm,
         paddingBottom: Spacing.md,
     },
+    headerTopRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+    },
+    headerTextWrap: {
+        flex: 1,
+        marginRight: Spacing.sm,
+    },
     title: {
         fontSize: responsiveFont(24),
         color: Colors.text,
@@ -266,6 +370,56 @@ const styles = StyleSheet.create({
         marginTop: 4,
         fontFamily: Fonts.regular,
     },
+    filterButton: {
+        width: 38,
+        height: 38,
+        borderRadius: 19,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: Colors.white,
+        borderWidth: 1,
+        borderColor: Colors.border,
+    },
+    filterPanel: {
+        marginTop: Spacing.sm,
+        backgroundColor: Colors.white,
+        borderRadius: 16,
+        padding: Spacing.sm,
+        borderWidth: 1,
+        borderColor: Colors.border,
+    },
+    filterSectionTitle: {
+        fontSize: FontSizes.caption,
+        color: Colors.textSecondary,
+        fontFamily: Fonts.bold,
+        marginBottom: 8,
+    },
+    filterRow: {
+        flexDirection: "row",
+        gap: 8,
+        flexWrap: "wrap",
+        marginBottom: Spacing.sm,
+    },
+    filterChip: {
+        paddingHorizontal: 12,
+        paddingVertical: 7,
+        borderRadius: 999,
+        backgroundColor: Colors.white,
+        borderWidth: 1,
+        borderColor: Colors.border,
+    },
+    filterChipActive: {
+        backgroundColor: Colors.primary,
+        borderColor: Colors.primary,
+    },
+    filterChipText: {
+        fontSize: FontSizes.caption,
+        color: Colors.textSecondary,
+        fontFamily: Fonts.medium,
+    },
+    filterChipTextActive: {
+        color: Colors.white,
+    },
     list: {
         flexGrow: 1,
         paddingHorizontal: 20,
@@ -276,8 +430,6 @@ const styles = StyleSheet.create({
         borderRadius: 18,
         padding: Spacing.md,
         marginBottom: Spacing.md,
-        flexDirection: "row",
-        gap: Spacing.sm,
         minHeight: 122,
         borderWidth: 1,
         borderColor: "rgba(117,64,67,0.10)",
@@ -287,6 +439,10 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.08,
         shadowRadius: 10,
         elevation: 3,
+    },
+    cardMainRow: {
+        flexDirection: "row",
+        gap: Spacing.sm,
     },
     coverImage: {
         width: 68,
@@ -427,24 +583,14 @@ const styles = StyleSheet.create({
         fontFamily: Fonts.bold,
     },
     detailsGrid: {
+        marginTop: Spacing.xs,
         flexDirection: "row",
         flexWrap: "wrap",
-        gap: Spacing.xs,
-        marginTop: Spacing.xs,
+        justifyContent: "space-between",
+        rowGap: 12,
     },
     detailTile: {
-        width: "48.8%",
-        backgroundColor: Colors.white,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: Colors.border,
-        padding: 10,
-        minHeight: 72,
-        justifyContent: "space-between",
-    },
-    detailTileHighlight: {
-        backgroundColor: Colors.primary,
-        borderColor: Colors.primary,
+        width: "48%",
     },
     detailTop: {
         flexDirection: "row",
@@ -453,29 +599,33 @@ const styles = StyleSheet.create({
         marginBottom: 6,
     },
     detailIconWrap: {
-        width: 18,
-        height: 18,
-        borderRadius: 9,
-        backgroundColor: Colors.primaryLight,
+        width: 20,
+        height: 20,
+        borderRadius: 10,
+        backgroundColor: Colors.primary,
         alignItems: "center",
         justifyContent: "center",
     },
     detailIconWrapHighlight: {
-        backgroundColor: Colors.white + "30",
+        backgroundColor: Colors.primaryLight,
     },
     detailLabel: {
-        fontSize: FontSizes.tiny,
+        fontSize: FontSizes.small,
         color: Colors.textSecondary,
         fontFamily: Fonts.medium,
+    },
+    detailLabelHighlight: {
+        color: Colors.primary,
     },
     detailValue: {
         fontSize: FontSizes.small,
         color: Colors.text,
         fontFamily: Fonts.medium,
         lineHeight: 17,
+        paddingLeft: 26,
     },
     detailValueHighlight: {
-        color: Colors.white,
+        color: Colors.primary,
         fontFamily: Fonts.bold,
     },
 });
