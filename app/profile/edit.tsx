@@ -223,10 +223,6 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.xs,
     },
     backButton: {
-        width: Layout.touchSize,
-        height: Layout.touchSize,
-        borderRadius: Layout.borderRadius,
-        backgroundColor: Colors.white,
         alignItems: "center",
         justifyContent: "center",
     },
@@ -234,7 +230,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     title: {
-        fontSize: FontSizes.heading,
+        fontSize: FontSizes.titleLarge,
         color: Colors.text,
         fontFamily: Fonts.bold,
     },
