@@ -20,6 +20,45 @@ const MAIN_GENRES = [
     "Psychology",
 ];
 
+const GENRE_KEYWORDS: Record<string, string[]> = {
+    Romance: ["love", "relationship", "romance", "affair", "couple", "heart", "emotion"],
+    Thriller: ["murder", "crime", "killer", "investigation", "suspense", "police"],
+    Fantasy: ["magic", "dragon", "kingdom", "wizard", "myth", "power"],
+    "Sci-Fi": ["space", "future", "robot", "alien", "technology"],
+    Horror: ["ghost", "haunted", "fear", "dark"],
+    Mystery: ["mystery", "detective", "case"],
+    Biography: ["life", "story", "journey"],
+    Business: ["startup", "money", "finance"],
+    Psychology: ["mind", "behavior"],
+    "Self Help": ["habit", "growth", "improve"],
+};
+
+function detectGenre(title: string, description: string): string | undefined {
+    const text = (title + " " + description).toLowerCase();
+    const words = text.split(/\W+/).map(w => w.replace(/(ing|ed|s)$/,"")); // 🔥 normalize
+
+    let bestMatch: string | undefined;
+    let maxScore = 0;
+
+    for (const [genre, keywords] of Object.entries(GENRE_KEYWORDS)) {
+        let score = 0;
+
+        for (const keyword of keywords) {
+            const key = keyword.toLowerCase();
+            if (words.includes(key)) score += 2;
+            if (text.includes(key)) score += 1;
+        }
+         if (genre === "Romance") {
+                score *= 0.8;
+            }
+        if (score > maxScore || (score === maxScore && genre !== "Romance")) {
+            maxScore = score;
+            bestMatch = genre;
+        }
+    }
+   return maxScore >= 2 ? bestMatch : undefined;
+}
+
 function normalizeGenres(genres: string[] | undefined) {
     return Array.from(
         new Set(
@@ -144,7 +183,7 @@ export async function mapBookForClient(
     const { coverUrl, coverUrls } = await resolveCoverUrls(ctx, book);
     return {
         ...book,
-        genre: book.genre ?? (book.genres?.[0] ?? undefined),
+       genre: book.genre ?? book.genres?.[0] ?? "General",
         genres: book.genres ?? [],
         rating: typeof book.rating === "number" ? book.rating : 0,
         ratingCount: typeof book.ratingCount === "number" ? book.ratingCount : 0,
@@ -330,7 +369,12 @@ export const add = mutation({
         }
 
         const normalizedGenres = normalizeGenres(args.genres);
-        const primaryGenre = normalizeSingleGenre(args.genre) ?? normalizedGenres[0];
+        const detectedGenre = detectGenre(title, description);
+        const primaryGenre =
+            normalizeSingleGenre(args.genre) ??
+            detectedGenre ??
+            normalizedGenres[0] ??
+            "Education";
         const pageCount = normalizeOptionalPositiveInt(args.pageCount, "Page count");
         const publishedYear = normalizePublishedYear(args.publishedYear);
         const isTop10 = Boolean(args.isTop10);
@@ -408,12 +452,38 @@ export const update = mutation({
         if (args.author !== undefined) updates.author = args.author.trim();
         if (args.description !== undefined)
             updates.description = args.description.trim();
-        const nextGenres = args.genres !== undefined
-            ? normalizeGenres(args.genres)
-            : (book.genres ?? []);
-        if (args.genres !== undefined) updates.genres = nextGenres;
-        const nextGenre = normalizeSingleGenre(args.genre) ?? (args.genres !== undefined ? nextGenres[0] : book.genre ?? book.genres?.[0]);
-        if (args.genre !== undefined || args.genres !== undefined) updates.genre = nextGenre;
+       const nextGenres = args.genres !== undefined
+    ? normalizeGenres(args.genres)
+    : (book.genres ?? []);
+       if (args.genres !== undefined) updates.genres = nextGenres;
+       const detectedGenre = detectGenre(
+    (args.title ?? book.title),
+    (args.description ?? book.description)
+       );
+      let nextGenre = normalizeSingleGenre(args.genre);
+if (!nextGenre) {
+    nextGenre = detectedGenre;
+}
+if (!nextGenre) {
+    if (args.genres !== undefined) {
+        nextGenre = nextGenres[0];
+    } else {
+        nextGenre = book.genre ?? book.genres?.[0];
+    }
+}
+
+if (!nextGenre) {
+    nextGenre = "Education"; // final fallback
+}
+
+if (
+    args.genre !== undefined ||
+    args.genres !== undefined ||
+    args.title !== undefined ||
+    args.description !== undefined
+) {
+    updates.genre = nextGenre;
+}
         if (args.rating !== undefined) updates.rating = normalizeRating(args.rating);
         if (args.ratingCount !== undefined) {
             updates.ratingCount = normalizeNonNegativeInt(args.ratingCount, 0);
