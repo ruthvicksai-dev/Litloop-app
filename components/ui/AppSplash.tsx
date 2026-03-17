@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { Animated, Easing, Image, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { Colors, Layout, Spacing, moderateScale, scale } from "@/constants/theme";
 
 type AppSplashProps = {
   onAnimationComplete?: () => void;
@@ -81,7 +82,10 @@ export default function AppSplash({ onAnimationComplete, animate = true }: AppSp
             },
           ]}
         >
-          <Text style={styles.title}>Litloop</Text>
+          <Text style={styles.title}>
+            <Text style={{ color: "orange" }}>Lit </Text>
+            <Text style={{ color: "white" }}>Loop</Text>
+          </Text>
           <Text style={styles.subtitle}>Read. Rent. Return.</Text>
         </Animated.View>
       </View>
@@ -99,32 +103,32 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 24,
+    paddingHorizontal: Layout.screenPaddingWide,
   },
   iconWrap: {
-    borderRadius: 30,
+    borderRadius: scale(30),
   },
   icon: {
-    width: 130,
-    height: 130,
-    borderRadius: 26,
+    width: scale(130),
+    height: scale(130),
+    borderRadius: scale(26),
   },
   textWrap: {
     alignItems: "center",
   },
   title: {
-    marginTop: 24,
-    fontSize: 26,
-    color: "#fff",
+    marginTop: Spacing.sm,
+    fontSize: moderateScale(30),
+    color: Colors.white,
     fontFamily: "Lato-Bold",
-    letterSpacing: 2,
+    letterSpacing: scale(2),
     textAlign: "center",
   },
   subtitle: {
-    marginTop: 4,
-    fontSize: 14,
+    marginTop: Spacing.xs,
+    fontSize: moderateScale(14),
     color: "#d1d5db",
-    letterSpacing: 1,
+    letterSpacing: scale(1),
     textAlign: "center",
   },
 });

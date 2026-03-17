@@ -1,4 +1,4 @@
-import { responsiveFont } from "@/utils/responsiveFont";
+import { moderateScale } from "@/constants/theme";
 
 export const Fonts = {
     light: "Lato-Light",
@@ -12,15 +12,15 @@ export const Fonts = {
 };
 
 export const FontSizes = {
-    tiny: responsiveFont(10),
-    caption: responsiveFont(12),
-    small: responsiveFont(13),
-    body: responsiveFont(14),
-    bodyLarge: responsiveFont(15),
-    subtitle: responsiveFont(16),
-    title: responsiveFont(18),
-    titleLarge: responsiveFont(20),
-    heading: responsiveFont(24),
-    hero: responsiveFont(30),
-    display: responsiveFont(32),
+    tiny: moderateScale(10),
+    caption: moderateScale(12),
+    small: moderateScale(13),
+    body: moderateScale(14),
+    bodyLarge: moderateScale(15),
+    subtitle: moderateScale(16),
+    title: moderateScale(18),
+    titleLarge: moderateScale(20),
+    heading: moderateScale(24),
+    hero: moderateScale(30),
+    display: moderateScale(32),
 };

@@ -1,5 +1,5 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Spacing } from "@/constants/theme";
+import { Colors, Layout, Spacing, scale } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleProp, StyleSheet, TextInput, TextStyle, TouchableOpacity, View, ViewStyle } from "react-native";
@@ -39,7 +39,7 @@ export default function SearchInput({
             {value.length > 0 && !onPress && (
                 <TouchableOpacity
                     onPress={() => onChangeText("")}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    hitSlop={{ top: scale(10), bottom: scale(10), left: scale(10), right: scale(10) }}
                 >
                     <Ionicons name="close-circle" size={18} color={Colors.textLight} />
                 </TouchableOpacity>
@@ -63,19 +63,20 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         backgroundColor: Colors.white,
-        borderRadius: 12,
+        borderRadius: Layout.borderRadius,
         borderWidth: 1,
         borderColor: Colors.border,
         paddingHorizontal: Spacing.md,
-        gap: 8,
+        gap: Spacing.sm,
+        minHeight: Layout.buttonHeight,
     },
     icon: {
         fontSize: FontSizes.subtitle,
     },
     input: {
         flex: 1,
-        minHeight: 46,
-        paddingVertical: 10,
+        minHeight: Layout.buttonHeight - scale(2),
+        paddingVertical: scale(10),
         fontSize: FontSizes.bodyLarge,
         color: Colors.text,
         fontFamily: Fonts.regular,

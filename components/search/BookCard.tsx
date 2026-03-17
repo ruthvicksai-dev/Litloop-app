@@ -1,5 +1,5 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Spacing } from "@/constants/theme";
+import { Colors, Layout, Spacing, scale } from "@/constants/theme";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useReadLater } from "@/hooks/useReadLater";
 import { Ionicons } from "@expo/vector-icons";
@@ -219,8 +219,8 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.sm,
     },
     card: {
-        padding: 12,
-        borderRadius: 16,
+        padding: Spacing.md,
+        borderRadius: Layout.cardRadius,
         backgroundColor: Colors.white,
         overflow: "hidden",
         borderWidth: 1,
@@ -231,9 +231,9 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     cover: {
-        width: 74,
-        height: 108,
-        borderRadius: 12,
+        width: scale(74),
+        height: scale(108),
+        borderRadius: Layout.borderRadius,
         backgroundColor: Colors.primaryLight,
     },
     coverPlaceholder: {
@@ -242,9 +242,10 @@ const styles = StyleSheet.create({
     },
     info: {
         flex: 1,
-        marginLeft: 12,
+        marginLeft: Spacing.md,
         justifyContent: "center",
-        gap: 6,
+        gap: scale(6),
+        minWidth: 0,
     },
     headerRow: {
         flexDirection: "row",
@@ -256,16 +257,16 @@ const styles = StyleSheet.create({
         color: Colors.text,
         fontFamily: Fonts.bold,
         fontSize: FontSizes.subtitle,
-        lineHeight: 20,
-        marginRight: 8,
+        lineHeight: scale(20),
+        marginRight: Spacing.sm,
     },
     actionsRow: {
         flexDirection: "row",
         alignItems: "center",
-        gap: 6,
+        gap: scale(6),
     },
     actionBtn: {
-        padding: 6,
+        padding: scale(6),
         borderRadius: 999,
         backgroundColor: "rgba(255,255,255,0.70)",
         borderWidth: 1,
@@ -279,7 +280,7 @@ const styles = StyleSheet.create({
     priceRow: {
         flexDirection: "row",
         alignItems: "center",
-        gap: 8,
+        gap: Spacing.sm,
         flexWrap: "wrap",
     },
     priceText: {
@@ -295,16 +296,16 @@ const styles = StyleSheet.create({
     availabilityBadge: {
         flexDirection: "row",
         alignItems: "center",
-        paddingHorizontal: 7,
-        paddingVertical: 3,
-        borderRadius: 12,
+        paddingHorizontal: scale(7),
+        paddingVertical: scale(3),
+        borderRadius: scale(12),
         borderWidth: 1,
-        gap: 4,
+        gap: Spacing.xs,
     },
     availabilityDot: {
-        width: 6,
-        height: 6,
-        borderRadius: 3,
+        width: scale(6),
+        height: scale(6),
+        borderRadius: scale(3),
     },
     availabilityText: {
         fontFamily: Fonts.medium,
@@ -314,7 +315,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         flexWrap: "wrap",
-        marginTop: 2,
+        marginTop: Spacing.xs / 2,
     },
     statItem: {
         flexDirection: "row",
@@ -325,22 +326,22 @@ const styles = StyleSheet.create({
         color: Colors.textSecondary,
         fontFamily: Fonts.medium,
         fontSize: FontSizes.caption,
-        marginRight: 6,
+        marginRight: scale(6),
     },
     dotSeparator: {
-        width: 3,
-        height: 3,
-        borderRadius: 1.5,
+        width: scale(3),
+        height: scale(3),
+        borderRadius: scale(1.5),
         backgroundColor: Colors.border,
-        marginRight: 8,
+        marginRight: Spacing.sm,
     },
     top10Badge: {
         position: "absolute",
-        top: 6,
-        left: 6,
-        paddingHorizontal: 7,
-        paddingVertical: 3,
-        borderRadius: 6,
+        top: scale(6),
+        left: scale(6),
+        paddingHorizontal: scale(7),
+        paddingVertical: scale(3),
+        borderRadius: scale(6),
         borderWidth: 1.2,
         borderColor: "rgba(255,255,255,0.4)",
         shadowColor: "#000",
@@ -351,7 +352,7 @@ const styles = StyleSheet.create({
     },
     top10Text: {
         color: Colors.white,
-        fontSize: 10,
+        fontSize: FontSizes.tiny,
         fontFamily: Fonts.bold,
         letterSpacing: -0.4,
     },

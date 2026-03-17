@@ -1,7 +1,7 @@
 import BookCard from "@/components/search/BookCard";
 import BookLoader from "@/components/ui/BookLoader";
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Spacing } from "@/constants/theme";
+import { Colors, Layout, Spacing, scale } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React, { memo } from "react";
 import { FlatList, StyleSheet, Text, View } from "react-native";
@@ -118,15 +118,16 @@ export default memo(SearchResultList);
 
 const styles = StyleSheet.create({
     list: {
-        paddingHorizontal: 20,
+        paddingHorizontal: Layout.screenPaddingWide,
         paddingTop: Spacing.sm,
-        paddingBottom: 90,
+        paddingBottom: scale(90),
         flexGrow: 1,
     },
     empty: {
-        marginTop: 72,
+        marginTop: scale(72),
         alignItems: "center",
         justifyContent: "center",
+        paddingHorizontal: Layout.screenPadding,
     },
     emptyTitle: {
         marginTop: Spacing.sm,
@@ -135,10 +136,11 @@ const styles = StyleSheet.create({
         fontSize: FontSizes.subtitle,
     },
     emptySubtitle: {
-        marginTop: 4,
+        marginTop: Spacing.xs,
         color: Colors.textSecondary,
         fontFamily: Fonts.regular,
         fontSize: FontSizes.body,
+        textAlign: "center",
     },
     footerLoader: {
         paddingVertical: Spacing.md,
@@ -147,12 +149,12 @@ const styles = StyleSheet.create({
         height: Spacing.xl,
     },
     skeletonWrap: {
-        paddingHorizontal: 20,
+        paddingHorizontal: Layout.screenPaddingWide,
         paddingTop: Spacing.sm,
     },
     skeletonCard: {
         flexDirection: "row",
-        borderRadius: 14,
+        borderRadius: scale(14),
         borderWidth: 1,
         borderColor: Colors.border,
         backgroundColor: Colors.white,
@@ -160,9 +162,9 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.sm,
     },
     skeletonCover: {
-        width: 56,
-        height: 80,
-        borderRadius: 10,
+        width: scale(56),
+        height: scale(80),
+        borderRadius: scale(10),
         backgroundColor: Colors.border,
     },
     skeletonContent: {
@@ -170,9 +172,9 @@ const styles = StyleSheet.create({
         marginLeft: Spacing.md,
     },
     skeletonLine: {
-        height: 12,
-        borderRadius: 6,
+        height: scale(12),
+        borderRadius: scale(6),
         backgroundColor: Colors.border,
-        marginBottom: 8,
+        marginBottom: Spacing.sm,
     },
 });

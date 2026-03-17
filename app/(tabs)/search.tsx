@@ -2,7 +2,7 @@ import GenreChip from "@/components/search/GenreChip";
 import SearchResultList from "@/components/search/SearchResultList";
 import SearchInput from "@/components/shared/SearchInput";
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Spacing } from "@/constants/theme";
+import { Colors, Layout, Spacing } from "@/constants/theme";
 import { useSearchScreen } from "@/hooks/useSearchScreen";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.background,
     },
     header: {
-        paddingHorizontal: 20,
+        paddingHorizontal: Layout.screenPaddingWide,
         paddingTop: Spacing.sm,
         paddingBottom: Spacing.md,
     },
@@ -130,13 +130,13 @@ const styles = StyleSheet.create({
         fontSize: FontSizes.heading,
     },
     subtitle: {
-        marginTop: 4,
+        marginTop: Spacing.xs,
         color: Colors.textSecondary,
         fontFamily: Fonts.regular,
         fontSize: FontSizes.body,
     },
     searchRow: {
-        paddingHorizontal: 20,
+        paddingHorizontal: Layout.screenPaddingWide,
         gap: Spacing.sm,
     },
     searchInputWrap: {
@@ -146,14 +146,14 @@ const styles = StyleSheet.create({
         marginTop: Spacing.sm,
     },
     chipsContent: {
-        paddingHorizontal: 20,
+        paddingHorizontal: Layout.screenPaddingWide,
         paddingBottom: Spacing.xs,
     },
     modalOverlay: {
         flex: 1,
         backgroundColor: "#00000066",
         justifyContent: "center",
-        paddingHorizontal: 20,
+        paddingHorizontal: Layout.screenPaddingWide,
     },
     modalCard: {
         borderRadius: 18,

@@ -1,11 +1,10 @@
 import BookLoader from "@/components/ui/BookLoader";
 import RentalCard from "@/components/ui/RentalCard";
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Spacing } from "@/constants/theme";
+import { Colors, Layout, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";
 import { useFadeSlideIn } from "@/hooks/useFadeSlideIn";
-import { responsiveFont } from "@/utils/responsiveFont";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";
@@ -117,32 +116,32 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.background,
     },
     header: {
-        paddingHorizontal: 20,
+        paddingHorizontal: Layout.screenPaddingWide,
         paddingTop: Spacing.sm,
         paddingBottom: Spacing.md,
     },
     title: {
-        fontSize: responsiveFont(24),
+        fontSize: FontSizes.heading,
         color: Colors.text,
         fontFamily: Fonts.bold,
     },
     subtitle: {
         fontSize: FontSizes.body,
         color: Colors.textSecondary,
-        marginTop: 4,
+        marginTop: Spacing.xs,
         fontFamily: Fonts.regular,
     },
     list: {
         flexGrow: 1,
-        paddingHorizontal: 20,
-        paddingBottom: 90,
+        paddingHorizontal: Layout.screenPaddingWide,
+        paddingBottom: Layout.touchSize * 2,
     },
     empty: {
         flex: 1,
         alignItems: "center",
         justifyContent: "center",
-        paddingHorizontal: 24,
-        paddingVertical: 56,
+        paddingHorizontal: Layout.screenPadding + Spacing.sm,
+        paddingVertical: Spacing.xl + Spacing.xl,
     },
     emptyIcon: {
         fontSize: FontSizes.display,

@@ -1,5 +1,5 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Spacing } from "@/constants/theme";
+import { Colors, Layout, Spacing, scale } from "@/constants/theme";
 import React from "react";
 import {
 StyleSheet,
@@ -62,17 +62,18 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.white,
         borderWidth: 1,
         borderColor: Colors.border,
-        borderRadius: 12,
+        borderRadius: Layout.borderRadius,
         paddingHorizontal: Spacing.md,
-        paddingVertical: 14,
+        paddingVertical: scale(14),
         fontSize: FontSizes.subtitle,
         color: Colors.text,
         fontFamily: Fonts.regular,
+        minHeight: Layout.buttonHeight,
     },
     multilineInput: {
-        minHeight: 110,
+        minHeight: scale(110),
         textAlignVertical: "top",
-        paddingTop: 14,
+        paddingTop: scale(14),
     },
     inputError: {
         borderColor: Colors.error,

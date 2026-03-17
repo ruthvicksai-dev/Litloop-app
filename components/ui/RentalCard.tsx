@@ -1,9 +1,11 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
 import {
     Colors,
+    Layout,
     RENTAL_STATUS_LABELS,
     Spacing,
     STATUS_COLORS,
+    scale,
 } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -80,7 +82,7 @@ export default function RentalCard({
                     <Image source={{ uri: coverUrl }} style={styles.coverImage} />
                 ) : (
                     <View style={[styles.coverImage, styles.coverFallback]}>
-                        <Ionicons name="book-outline" size={22} color={Colors.textLight} />
+                        <Ionicons name="book-outline" size={scale(22)} color={Colors.textLight} />
                     </View>
                 )}
 
@@ -106,37 +108,37 @@ export default function RentalCard({
                             <Ionicons name="location-outline" size={12} color={Colors.textSecondary} />
                             <Text style={styles.metaPillText}>{zone}</Text>
                         </View>
-                        {deliveryDate && (
+                        {deliveryDate ? (
                             <View style={styles.metaPill}>
                                 <Ionicons name="calendar-outline" size={12} color={Colors.textSecondary} />
                                 <Text style={styles.metaPillText}>{deliveryDate}</Text>
                             </View>
-                        )}
-                        {pickupDate && (
+                        ) : null}
+                        {pickupDate ? (
                             <View style={styles.metaPill}>
                                 <Ionicons name="calendar-outline" size={12} color={Colors.textSecondary} />
                                 <Text style={styles.metaPillText}>{pickupDate}</Text>
                             </View>
-                        )}
+                        ) : null}
                     </View>
 
-                    {deliveryTime && status === "delivery_scheduled" && (
+                    {deliveryTime && status === "delivery_scheduled" ? (
                         <View style={styles.timeRow}>
                             <Ionicons name="time-outline" size={12} color={Colors.primary} />
                             <Text style={styles.timeText}>Estimated: {deliveryTime}</Text>
                         </View>
-                    )}
+                    ) : null}
 
-                    {status === "delivery_scheduled" && (
+                    {status === "delivery_scheduled" ? (
                         <View style={styles.disclaimerBox}>
                             <Ionicons name="information-circle-outline" size={12} color={Colors.textSecondary} />
                             <Text style={styles.disclaimerText}>
                                 Delivery time may vary based on availability.
                             </Text>
                         </View>
-                    )}
+                    ) : null}
 
-                    {status === "delivered" && deliveryDate && (
+                    {status === "delivered" && deliveryDate ? (
                         <View style={styles.timerContainer}>
                             <View style={styles.timerHeader}>
                                 <Ionicons name="stopwatch-outline" size={14} color={Colors.primaryDark} />
@@ -144,16 +146,16 @@ export default function RentalCard({
                             </View>
                             <View style={styles.timerValues}>
                                 <Text style={styles.timerDays}>{currentDays}d</Text>
-                                <Text style={styles.timerRent}>₹{currentRent}</Text>
+                                <Text style={styles.timerRent}>Rs {currentRent}</Text>
                             </View>
                         </View>
-                    )}
+                    ) : null}
 
                     <View style={styles.cardFooter}>
-                        <Text style={styles.cardRate}>₹{rentPerDay}/day</Text>
-                        {totalRent !== undefined && totalRent > 0 && (
-                            <Text style={styles.totalRent}>Total: ₹{totalRent}</Text>
-                        )}
+                        <Text style={styles.cardRate}>Rs {rentPerDay}/day</Text>
+                        {totalRent !== undefined && totalRent > 0 ? (
+                            <Text style={styles.totalRent}>Total: Rs {totalRent}</Text>
+                        ) : null}
                     </View>
                 </View>
             </View>
@@ -164,10 +166,10 @@ export default function RentalCard({
 const styles = StyleSheet.create({
     card: {
         backgroundColor: Colors.white,
-        borderRadius: 22,
+        borderRadius: Layout.cardRadiusLarge,
         padding: Spacing.md,
         marginBottom: Spacing.md,
-        minHeight: 122,
+        minHeight: scale(122),
         borderWidth: 1,
         borderColor: "rgba(117,64,67,0.10)",
         overflow: "hidden",
@@ -182,9 +184,9 @@ const styles = StyleSheet.create({
         gap: Spacing.sm,
     },
     coverImage: {
-        width: 72,
-        height: 104,
-        borderRadius: 14,
+        width: scale(72),
+        height: scale(104),
+        borderRadius: scale(14),
         backgroundColor: Colors.border,
     },
     coverFallback: {
@@ -194,7 +196,8 @@ const styles = StyleSheet.create({
     cardBody: {
         flex: 1,
         justifyContent: "space-between",
-        gap: 4,
+        gap: Spacing.xs,
+        minWidth: 0,
     },
     cardTopRow: {
         flexDirection: "row",
@@ -206,26 +209,28 @@ const styles = StyleSheet.create({
         fontSize: FontSizes.subtitle,
         color: Colors.text,
         fontFamily: Fonts.bold,
-        marginTop: 1,
+        marginTop: Spacing.xs / 4,
     },
     statusBadge: {
         flexDirection: "row",
         alignItems: "center",
-        gap: 5,
-        paddingHorizontal: 8,
-        paddingVertical: 3,
+        gap: scale(5),
+        paddingHorizontal: Spacing.sm,
+        paddingVertical: scale(3),
         borderRadius: 999,
         borderWidth: 1,
         borderColor: Colors.border,
+        maxWidth: "46%",
     },
     statusDot: {
-        width: 6,
-        height: 6,
-        borderRadius: 3,
+        width: scale(6),
+        height: scale(6),
+        borderRadius: scale(3),
     },
     statusText: {
         fontSize: FontSizes.tiny,
         fontFamily: Fonts.bold,
+        flexShrink: 1,
     },
     cardAuthor: {
         fontSize: FontSizes.small,
@@ -236,27 +241,29 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         gap: Spacing.xs,
         flexWrap: "wrap",
-        marginTop: 2,
+        marginTop: Spacing.xs / 2,
     },
     metaPill: {
         flexDirection: "row",
         alignItems: "center",
-        gap: 4,
-        paddingHorizontal: 8,
-        paddingVertical: 4,
+        gap: Spacing.xs,
+        paddingHorizontal: Spacing.sm,
+        paddingVertical: Spacing.xs,
         borderRadius: 999,
         backgroundColor: Colors.background,
+        maxWidth: "100%",
     },
     metaPillText: {
         fontSize: FontSizes.tiny,
         color: Colors.textSecondary,
         fontFamily: Fonts.medium,
+        flexShrink: 1,
     },
     timeRow: {
         flexDirection: "row",
         alignItems: "center",
-        gap: 4,
-        marginTop: 2,
+        gap: Spacing.xs,
+        marginTop: Spacing.xs / 2,
     },
     timeText: {
         fontSize: FontSizes.tiny,
@@ -267,22 +274,22 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         backgroundColor: "rgba(117,64,67,0.05)",
-        padding: 6,
-        borderRadius: 8,
-        marginTop: 4,
-        gap: 4,
+        padding: scale(6),
+        borderRadius: scale(8),
+        marginTop: Spacing.xs,
+        gap: Spacing.xs,
     },
     disclaimerText: {
-        fontSize: 10,
+        fontSize: FontSizes.tiny,
         color: Colors.textSecondary,
         fontFamily: Fonts.medium,
         flex: 1,
     },
     timerContainer: {
         backgroundColor: Colors.primaryLight,
-        borderRadius: 10,
-        padding: 8,
-        marginTop: 6,
+        borderRadius: scale(10),
+        padding: Spacing.sm,
+        marginTop: scale(6),
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
@@ -290,17 +297,17 @@ const styles = StyleSheet.create({
     timerHeader: {
         flexDirection: "row",
         alignItems: "center",
-        gap: 4,
+        gap: Spacing.xs,
     },
     timerLabel: {
-        fontSize: 10,
+        fontSize: FontSizes.tiny,
         fontFamily: Fonts.bold,
         color: Colors.primaryDark,
     },
     timerValues: {
         flexDirection: "row",
         alignItems: "center",
-        gap: 8,
+        gap: Spacing.sm,
     },
     timerDays: {
         fontSize: FontSizes.caption,
@@ -316,7 +323,8 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        marginTop: 4,
+        marginTop: Spacing.xs,
+        gap: Spacing.sm,
     },
     cardRate: {
         fontSize: FontSizes.caption,
@@ -329,4 +337,3 @@ const styles = StyleSheet.create({
         fontFamily: Fonts.bold,
     },
 });
-

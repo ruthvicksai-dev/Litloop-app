@@ -1,4 +1,12 @@
-import { FontSizes } from "@/constants/fonts";
+import { Dimensions } from "react-native";
+
+const { width } = Dimensions.get("window");
+const guidelineBaseWidth = 375;
+
+export const scale = (size: number) => (width / guidelineBaseWidth) * size;
+
+export const moderateScale = (size: number, factor = 0.5) =>
+  size + (scale(size) - size) * factor;
 
 export const Colors = {
   primary: "#754043",
@@ -18,25 +26,52 @@ export const Colors = {
 };
 
 export const Fonts = {
-  regular: { fontSize: FontSizes.body, color: Colors.text },
-  medium: { fontSize: FontSizes.subtitle, color: Colors.text },
-  large: { fontSize: FontSizes.title, color: Colors.text, fontWeight: "600" as const },
-  title: { fontSize: FontSizes.titleLarge, color: Colors.text, fontWeight: "700" as const },
-  caption: { fontSize: FontSizes.caption, color: Colors.textSecondary },
+  regular: {
+    fontSize: moderateScale(14),
+    color: Colors.text,
+  },
+  medium: {
+    fontSize: moderateScale(16),
+    color: Colors.text,
+  },
+  large: {
+    fontSize: moderateScale(18),
+    color: Colors.text,
+    fontWeight: "600" as const,
+  },
+  title: {
+    fontSize: moderateScale(22),
+    color: Colors.text,
+    fontWeight: "700" as const,
+  },
+  caption: {
+    fontSize: moderateScale(12),
+    color: Colors.textSecondary,
+  },
 };
 
 export const Spacing = {
-  xs: 4,
-  sm: 8,
-  md: 16,
-  lg: 24,
-  xl: 32,
+  xs: scale(4),
+  sm: scale(8),
+  md: scale(16),
+  lg: scale(24),
+  xl: scale(32),
 };
 
-export const ZONES = [
-  "Home",
-  "College",
-];
+export const Layout = {
+  screenPadding: scale(16),
+  screenPaddingWide: scale(20),
+  sectionGap: scale(24),
+  borderRadius: scale(12),
+  cardRadius: scale(16),
+  cardRadiusLarge: scale(20),
+  iconSize: scale(24),
+  buttonHeight: scale(48),
+  touchSize: scale(44),
+  maxContentWidth: scale(640),
+};
+
+export const ZONES = ["Home", "College"];
 
 export const RENTAL_STATUS_LABELS: Record<string, string> = {
   requested: "Requested",

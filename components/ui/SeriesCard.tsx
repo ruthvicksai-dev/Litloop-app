@@ -1,5 +1,5 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors } from "@/constants/theme";
+import { Colors, Layout, Spacing, scale } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
@@ -20,7 +20,6 @@ interface SeriesCardProps {
 }
 
 export default function SeriesCard({
-    _id,
     name,
     coverUrl,
     onPress,
@@ -56,12 +55,11 @@ export default function SeriesCard({
                             </View>
                         </View>
 
-                        {/* Side Arrow Indicator */}
                         <View style={styles.arrowContainer}>
-                            <Ionicons name="chevron-forward" size={16} color={Colors.white} />
+                            <Ionicons name="chevron-forward" size={scale(16)} color={Colors.white} />
                         </View>
                     </View>
-                    </View>
+                </View>
             </TouchableOpacity>
         </Animated.View>
     );
@@ -69,10 +67,10 @@ export default function SeriesCard({
 
 const styles = StyleSheet.create({
     shadowContainer: {
-        width: 140,
-        height: 210,
-        marginRight: 16,
-        borderRadius: 16,
+        width: scale(140),
+        height: scale(210),
+        marginRight: Spacing.md,
+        borderRadius: Layout.cardRadius,
         backgroundColor: Colors.white,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 4 },
@@ -82,12 +80,12 @@ const styles = StyleSheet.create({
     },
     container: {
         flex: 1,
-        borderRadius: 16,
+        borderRadius: Layout.cardRadius,
         overflow: "hidden",
     },
     imageContainer: {
         flex: 1,
-        position: 'relative',
+        position: "relative",
     },
     image: {
         width: "100%",
@@ -113,33 +111,33 @@ const styles = StyleSheet.create({
     },
     content: {
         position: "absolute",
-        bottom: 12,
-        left: 12,
-        right: 12,
+        bottom: scale(12),
+        left: scale(12),
+        right: scale(12),
     },
     arrowContainer: {
-        position: 'absolute',
-        top: 10,
-        right: 10,
-        backgroundColor: 'rgba(0,0,0,0.3)',
-        padding: 4,
-        borderRadius: 8,
+        position: "absolute",
+        top: scale(10),
+        right: scale(10),
+        backgroundColor: "rgba(0,0,0,0.3)",
+        padding: Spacing.xs,
+        borderRadius: scale(8),
     },
     name: {
         fontSize: FontSizes.body,
         color: Colors.white,
         fontFamily: Fonts.bold,
-        marginBottom: 4,
+        marginBottom: Spacing.xs,
     },
     badge: {
         backgroundColor: Colors.primary,
-        paddingHorizontal: 6,
-        paddingVertical: 2,
-        borderRadius: 4,
+        paddingHorizontal: scale(6),
+        paddingVertical: scale(2),
+        borderRadius: scale(4),
         alignSelf: "flex-start",
     },
     badgeText: {
-        fontSize: 8,
+        fontSize: FontSizes.tiny,
         color: Colors.white,
         fontFamily: Fonts.bold,
         letterSpacing: 0.5,

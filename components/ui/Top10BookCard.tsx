@@ -1,5 +1,5 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors } from "@/constants/theme";
+import { Colors, Spacing, scale } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -26,6 +26,9 @@ interface Top10BookCardProps {
     rank: number;
 }
 
+const COVER_W = scale(120);
+const COVER_H = COVER_W * 1.5;
+
 export default function Top10BookCard({
     _id,
     title,
@@ -35,30 +38,30 @@ export default function Top10BookCard({
     rank,
 }: Top10BookCardProps) {
     const router = useRouter();
-    const scale = useRef(new Animated.Value(1)).current;
+    const cardScale = useRef(new Animated.Value(1)).current;
 
     const imageUri =
         coverUrls && coverUrls.length > 0 ? coverUrls[0] : coverUrl ?? undefined;
 
-    const getRankStyles = (rank: number) => {
-        if (rank === 1) return { colors: ["#FFD700", "#FFA500"] as const, label: "#1" };
-        if (rank === 2) return { colors: ["#E5E4E2", "#B4B4B4"] as const, label: "#2" };
-        if (rank === 3) return { colors: ["#CD7F32", "#A0522D"] as const, label: "#3" };
-        return { colors: [Colors.primary, "#8B4513"] as const, label: `#${rank}` };
+    const getRankStyles = (currentRank: number) => {
+        if (currentRank === 1) return { colors: ["#FFD700", "#FFA500"] as const, label: "#1" };
+        if (currentRank === 2) return { colors: ["#E5E4E2", "#B4B4B4"] as const, label: "#2" };
+        if (currentRank === 3) return { colors: ["#CD7F32", "#A0522D"] as const, label: "#3" };
+        return { colors: [Colors.primary, "#8B4513"] as const, label: `#${currentRank}` };
     };
 
     const rankStyle = getRankStyles(rank);
 
     return (
-        <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
+        <Animated.View style={[styles.card, { transform: [{ scale: cardScale }] }]}>
             <TouchableOpacity
                 activeOpacity={0.88}
                 onPress={() => router.push((`/book/${_id}`) as any)}
                 onPressIn={() =>
-                    Animated.spring(scale, { toValue: 0.95, useNativeDriver: true }).start()
+                    Animated.spring(cardScale, { toValue: 0.95, useNativeDriver: true }).start()
                 }
                 onPressOut={() =>
-                    Animated.spring(scale, { toValue: 1, friction: 4, useNativeDriver: true }).start()
+                    Animated.spring(cardScale, { toValue: 1, friction: 4, useNativeDriver: true }).start()
                 }
             >
                 <View style={styles.coverWrap}>
@@ -66,11 +69,10 @@ export default function Top10BookCard({
                         <Image source={{ uri: imageUri }} style={styles.cover} />
                     ) : (
                         <View style={[styles.cover, styles.placeholder]}>
-                            <Ionicons name="book" size={26} color={Colors.primary} />
+                            <Ionicons name="book" size={scale(26)} color={Colors.primary} />
                         </View>
                     )}
 
-                    {/* Rank Badge Overlay */}
                     <LinearGradient
                         colors={rankStyle.colors}
                         start={{ x: 0, y: 0 }}
@@ -81,7 +83,6 @@ export default function Top10BookCard({
                     </LinearGradient>
                 </View>
 
-                {/* Title & author below */}
                 <Text style={styles.title} numberOfLines={2}>{title}</Text>
                 <Text style={styles.author} numberOfLines={1}>{author}</Text>
             </TouchableOpacity>
@@ -89,17 +90,14 @@ export default function Top10BookCard({
     );
 }
 
-const COVER_W = 120;
-const COVER_H = COVER_W * 1.5;
-
 const styles = StyleSheet.create({
     card: {
         width: COVER_W,
-        marginRight: 16,
+        marginRight: Spacing.md,
         backgroundColor: "transparent",
     },
     coverWrap: {
-        borderRadius: 14,
+        borderRadius: scale(14),
         overflow: "visible",
         backgroundColor: Colors.white,
         shadowColor: "#000",
@@ -112,16 +110,16 @@ const styles = StyleSheet.create({
     cover: {
         width: COVER_W,
         height: COVER_H,
-        borderRadius: 14,
+        borderRadius: scale(14),
         backgroundColor: Colors.primaryLight,
     },
     badge: {
         position: "absolute",
-        top: 10,
-        left: 10,
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: 10,
+        top: scale(10),
+        left: scale(10),
+        paddingHorizontal: scale(10),
+        paddingVertical: Spacing.xs,
+        borderRadius: scale(10),
         borderWidth: 1.5,
         borderColor: "rgba(255,255,255,0.4)",
         shadowColor: "#000",
@@ -131,7 +129,7 @@ const styles = StyleSheet.create({
     },
     badgeText: {
         color: Colors.white,
-        fontSize: 13,
+        fontSize: FontSizes.small,
         fontFamily: Fonts.bold,
         letterSpacing: -0.5,
     },
@@ -143,14 +141,14 @@ const styles = StyleSheet.create({
         fontSize: FontSizes.caption,
         fontFamily: Fonts.bold,
         color: Colors.text,
-        marginTop: 10,
-        lineHeight: 18,
+        marginTop: scale(10),
+        lineHeight: scale(18),
     },
     author: {
         fontSize: FontSizes.tiny,
         fontFamily: Fonts.regular,
         color: Colors.textSecondary,
-        marginTop: 2,
-        marginBottom: 8,
+        marginTop: Spacing.xs / 2,
+        marginBottom: Spacing.sm,
     },
 });

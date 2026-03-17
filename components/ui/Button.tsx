@@ -1,5 +1,5 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Spacing } from "@/constants/theme";
+import { Colors, Layout, Spacing, scale } from "@/constants/theme";
 import React, { useRef } from "react";
 import {
     ActivityIndicator,
@@ -90,12 +90,12 @@ export default function Button({
 
 const styles = StyleSheet.create({
     button: {
-        paddingVertical: 14,
+        paddingVertical: scale(14),
         paddingHorizontal: Spacing.lg,
-        borderRadius: 12,
+        borderRadius: Layout.borderRadius,
         alignItems: "center",
         justifyContent: "center",
-        minHeight: 48,
+        minHeight: Layout.buttonHeight,
     },
     primary: {
         backgroundColor: Colors.primary,

@@ -3,7 +3,7 @@ import AuthHeader from "@/components/auth/AuthHeader";
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Spacing } from "@/constants/theme";
+import { Colors, Layout, Spacing, scale } from "@/constants/theme";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { useFadeSlideScaleIn } from "@/hooks/useFadeSlideScaleIn";
 import { useSignInScreen } from "@/hooks/useSignInScreen";
@@ -52,7 +52,7 @@ export default function SignInScreen() {
                     bounces={false}
                 >
                     <AuthHeader
-                        title="Litloop"
+                        title="Lit Loop"
                         subtitle="Sign in to your account"
                         fadeAnim={fadeAnim}
                         slideAnim={slideAnim}
@@ -108,14 +108,16 @@ const styles = StyleSheet.create({
     },
     container: {
         flexGrow: 1,
-        paddingHorizontal: 20,
-        paddingTop: 40,
-        paddingBottom: 28,
+        paddingHorizontal: Layout.screenPaddingWide,
+        paddingTop: scale(40),
+        paddingBottom: scale(28),
         justifyContent: "center",
+        width: "100%",
+        alignSelf: "center",
     },
     form: {
         backgroundColor: Colors.white,
-        borderRadius: 20,
+        borderRadius: Layout.cardRadiusLarge,
         padding: Spacing.lg,
         shadowColor: Colors.shadow,
         shadowOffset: { width: 0, height: 8 },
@@ -123,6 +125,9 @@ const styles = StyleSheet.create({
         shadowRadius: 18,
         elevation: 4,
         marginBottom: Spacing.xl,
+        width: "100%",
+        maxWidth: Layout.maxContentWidth,
+        alignSelf: "center",
     },
     formHint: {
         fontSize: FontSizes.body,

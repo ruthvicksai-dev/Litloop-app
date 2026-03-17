@@ -1,5 +1,5 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Spacing } from "@/constants/theme";
+import { Colors, Layout, Spacing, moderateScale } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { memo } from "react";
@@ -48,7 +48,6 @@ function DiscoverSectionRow({
 
     return (
         <View style={styles.container}>
-            {/* Section header */}
             <View style={styles.header}>
                 <View style={styles.headerLeft}>
                     <Text style={styles.titleText}>{title}</Text>
@@ -71,7 +70,6 @@ function DiscoverSectionRow({
                 ) : null}
             </View>
 
-            {/* Horizontal scroll list */}
             <FlatList
                 data={books}
                 horizontal
@@ -126,7 +124,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
-        paddingHorizontal: 20,
+        paddingHorizontal: Layout.screenPaddingWide,
         marginBottom: Spacing.sm,
     },
     headerLeft: {
@@ -134,7 +132,7 @@ const styles = StyleSheet.create({
         marginRight: Spacing.sm,
     },
     titleText: {
-        fontSize: 22,
+        fontSize: moderateScale(22),
         color: Colors.primaryDark,
         fontFamily: Fonts.bold,
         letterSpacing: -0.4,
@@ -143,7 +141,7 @@ const styles = StyleSheet.create({
         fontSize: FontSizes.caption,
         color: Colors.textSecondary,
         fontFamily: Fonts.medium,
-        marginTop: 2,
+        marginTop: Spacing.xs / 2,
     },
     seeAll: {
         flexDirection: "row",
@@ -156,9 +154,9 @@ const styles = StyleSheet.create({
         fontFamily: Fonts.medium,
     },
     list: {
-        paddingLeft: 20,
-        paddingRight: 10,
-        paddingBottom: 8,
+        paddingLeft: Layout.screenPaddingWide,
+        paddingRight: Spacing.md - Spacing.xs,
+        paddingBottom: Spacing.sm,
         alignItems: "flex-start",
     },
 });

@@ -2,11 +2,10 @@ import BookLoader from "@/components/ui/BookLoader";
 import DiscoverSectionRow from "@/components/ui/DiscoverSectionRow";
 import SeriesSectionRow from "@/components/ui/SeriesSectionRow";
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Spacing } from "@/constants/theme";
+import { Colors, Layout, Spacing, scale } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { useDiscoverSections } from "@/hooks/useDiscoverSections";
 import { useHomeEntrance } from "@/hooks/useHomeEntrance";
-import { responsiveFont } from "@/utils/responsiveFont";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
@@ -129,7 +128,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   header: {
-    paddingHorizontal: 20,
+    paddingHorizontal: Layout.screenPaddingWide,
     paddingTop: Spacing.sm,
     paddingBottom: Spacing.sm,
   },
@@ -139,19 +138,19 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   notifBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+    width: Layout.touchSize,
+    height: Layout.touchSize,
+    borderRadius: Layout.borderRadius,
     alignItems: "center",
     justifyContent: "center",
   },
   notifBadge: {
     position: "absolute",
-    top: 12,
-    right: 12,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    top: scale(12),
+    right: scale(12),
+    width: scale(10),
+    height: scale(10),
+    borderRadius: scale(5),
     backgroundColor: Colors.error,
     borderWidth: 2,
     borderColor: Colors.white,
@@ -159,16 +158,16 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: FontSizes.body,
     color: Colors.textSecondary,
-    marginBottom: 4,
+    marginBottom: Spacing.xs,
     fontFamily: Fonts.regular,
   },
   pageTitle: {
-    fontSize: responsiveFont(24),
+    fontSize: FontSizes.heading,
     color: Colors.text,
     fontFamily: Fonts.bold,
   },
   scroll: {
     paddingTop: Spacing.xs,
-    paddingBottom: 90,
+    paddingBottom: scale(90),
   },
 });

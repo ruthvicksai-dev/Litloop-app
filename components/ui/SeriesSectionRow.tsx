@@ -1,5 +1,5 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Spacing } from "@/constants/theme";
+import { Colors, Layout, Spacing, moderateScale, scale } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useRef, useState } from "react";
 import {
@@ -34,7 +34,7 @@ export default function SeriesSectionRow({
     const [activeSeriesId, setActiveSeriesId] = useState<string | null>(null);
     const flatListRef = useRef<FlatList>(null);
 
-    const activeSeries = series.find(s => s._id === activeSeriesId);
+    const activeSeries = series.find((item) => item._id === activeSeriesId);
 
     if (!series || series.length === 0) return null;
 
@@ -62,20 +62,17 @@ export default function SeriesSectionRow({
                         <Text style={styles.subtitle}>Showing {activeSeries.books.length} books</Text>
                     ) : null}
                 </View>
-                {activeSeries && (
+                {activeSeries ? (
                     <TouchableOpacity style={styles.backBtn} onPress={handleBack}>
                         <Ionicons name="arrow-back" size={16} color={Colors.primary} />
                         <Text style={styles.backBtnText}>Back</Text>
                     </TouchableOpacity>
-                )}
+                ) : null}
             </View>
 
             <View style={styles.contentContainer}>
                 {!activeSeriesId ? (
-                    <Animated.View
-                        entering={FadeIn.duration(400)}
-                        exiting={FadeOut.duration(300)}
-                    >
+                    <Animated.View entering={FadeIn.duration(400)} exiting={FadeOut.duration(300)}>
                         <FlatList
                             data={series}
                             horizontal
@@ -93,10 +90,7 @@ export default function SeriesSectionRow({
                         />
                     </Animated.View>
                 ) : (
-                    <Animated.View
-                        entering={FadeIn.duration(400)}
-                        exiting={FadeOut.duration(300)}
-                    >
+                    <Animated.View entering={FadeIn.duration(400)} exiting={FadeOut.duration(300)}>
                         <FlatList
                             ref={flatListRef}
                             data={activeSeries?.books || []}
@@ -130,13 +124,13 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.lg,
     },
     contentContainer: {
-        minHeight: 220,
+        minHeight: scale(220),
     },
     header: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
-        paddingHorizontal: 20,
+        paddingHorizontal: Layout.screenPaddingWide,
         marginBottom: Spacing.sm,
     },
     headerLeft: {
@@ -144,7 +138,7 @@ const styles = StyleSheet.create({
         marginRight: Spacing.sm,
     },
     titleText: {
-        fontSize: 22,
+        fontSize: moderateScale(22),
         color: Colors.primaryDark,
         fontFamily: Fonts.bold,
         letterSpacing: -0.4,
@@ -153,15 +147,15 @@ const styles = StyleSheet.create({
         fontSize: FontSizes.caption,
         color: Colors.textSecondary,
         fontFamily: Fonts.medium,
-        marginTop: 2,
+        marginTop: Spacing.xs / 2,
     },
     backBtn: {
         flexDirection: "row",
         alignItems: "center",
         backgroundColor: Colors.primary + "15",
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: 12,
+        paddingHorizontal: scale(10),
+        paddingVertical: Spacing.xs,
+        borderRadius: Layout.borderRadius,
         gap: 4,
     },
     backBtnText: {
@@ -170,9 +164,9 @@ const styles = StyleSheet.create({
         fontFamily: Fonts.bold,
     },
     list: {
-        paddingLeft: 20,
-        paddingRight: 10,
-        paddingBottom: 8,
+        paddingLeft: Layout.screenPaddingWide,
+        paddingRight: Spacing.md - Spacing.xs,
+        paddingBottom: Spacing.sm,
         alignItems: "flex-start",
     },
 });

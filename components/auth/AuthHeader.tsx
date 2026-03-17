@@ -1,8 +1,7 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Spacing } from "@/constants/theme";
-import { Ionicons } from "@expo/vector-icons";
+import { Colors, Layout, Spacing, scale } from "@/constants/theme";
 import React from "react";
-import { Animated, StyleSheet, Text } from "react-native";
+import { Animated, Image, StyleSheet, Text } from "react-native";
 
 type AuthHeaderProps = {
     title: string;
@@ -30,9 +29,8 @@ export default function AuthHeader({
             ]}
         >
             <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-                <Ionicons
-                    name="book-outline"
-                    color={Colors.primary}
+                <Image
+                    source={require("../../assets/images/icon.png")}
                     style={styles.logo}
                 />
             </Animated.View>
@@ -47,8 +45,11 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     logo: {
-        fontSize: FontSizes.display,
+        width: scale(180),
+        height: scale(95),
+        maxWidth: Layout.maxContentWidth * 0.42,
         marginBottom: Spacing.sm,
+        resizeMode: "contain",
     },
     title: {
         fontSize: FontSizes.display,
@@ -62,6 +63,7 @@ const styles = StyleSheet.create({
         color: Colors.textSecondary,
         fontFamily: Fonts.regular,
         textAlign: "center",
-        paddingHorizontal: Spacing.md,
+        paddingHorizontal: Layout.screenPadding,
+        maxWidth: Layout.maxContentWidth * 0.8,
     },
 });

@@ -1,5 +1,5 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Spacing } from "@/constants/theme";
+import { Colors, Layout, Spacing, scale } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.background,
     },
     header: {
-        paddingHorizontal: 20,
+        paddingHorizontal: Layout.screenPaddingWide,
         paddingTop: Spacing.sm,
         paddingBottom: Spacing.md,
     },
@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
         fontFamily: Fonts.bold,
     },
     subtitle: {
-        marginTop: 4,
+        marginTop: Spacing.xs,
         fontSize: FontSizes.body,
         color: Colors.textSecondary,
         fontFamily: Fonts.regular,
@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: "center",
         justifyContent: "center",
-        paddingHorizontal: 28,
+        paddingHorizontal: scale(28),
     },
     emptyTitle: {
         marginTop: Spacing.sm,
@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
         fontFamily: Fonts.bold,
     },
     emptySubtitle: {
-        marginTop: 4,
+        marginTop: Spacing.xs,
         textAlign: "center",
         fontSize: FontSizes.body,
         color: Colors.textSecondary,

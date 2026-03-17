@@ -1,5 +1,5 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors } from "@/constants/theme";
+import { Colors, scale, Spacing } from "@/constants/theme";
 import { useFavorites } from "@/hooks/useFavorites";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -27,6 +27,9 @@ export interface DiscoverBookCardProps {
     top10Position?: number;
 }
 
+const CARD_WIDTH = scale(120);
+const COVER_H = CARD_WIDTH * 1.5;
+
 export default function DiscoverBookCard({
     _id,
     title,
@@ -39,7 +42,7 @@ export default function DiscoverBookCard({
     const { isFavorite, toggleFavorite } = useFavorites();
     const isLiked = isFavorite(_id);
 
-    const scale = useRef(new Animated.Value(1)).current;
+    const cardScale = useRef(new Animated.Value(1)).current;
     const heartScale = useRef(new Animated.Value(1)).current;
 
     const imageUri =
@@ -62,35 +65,33 @@ export default function DiscoverBookCard({
     };
 
     return (
-        <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
+        <Animated.View style={[styles.card, { transform: [{ scale: cardScale }] }]}>
             <TouchableOpacity
                 activeOpacity={0.9}
                 onPress={() => router.push(`/book/${_id}` as any)}
                 onPressIn={() =>
-                    Animated.spring(scale, { toValue: 0.96, useNativeDriver: true }).start()
+                    Animated.spring(cardScale, { toValue: 0.96, useNativeDriver: true }).start()
                 }
                 onPressOut={() =>
-                    Animated.spring(scale, { toValue: 1, friction: 4, useNativeDriver: true }).start()
+                    Animated.spring(cardScale, { toValue: 1, friction: 4, useNativeDriver: true }).start()
                 }
             >
-                {/* Cover section */}
                 <View style={styles.coverWrap}>
                     <LinearGradient
                         colors={["#FFFFFF", `${Colors.primary}10`, Colors.primaryLight]}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
-                        style={[StyleSheet.absoluteFillObject, { borderRadius: 14 }]}
+                        style={[StyleSheet.absoluteFillObject, styles.coverGradient]}
                     />
                     {imageUri ? (
                         <Image source={{ uri: imageUri }} style={styles.cover} />
                     ) : (
                         <View style={[styles.cover, styles.placeholder]}>
-                            <Ionicons name="book" size={30} color={Colors.primary} />
+                            <Ionicons name="book" size={scale(30)} color={Colors.primary} />
                         </View>
                     )}
 
-                    {/* Top 10 Tag Overlay */}
-                    {top10Position && (
+                    {top10Position ? (
                         <LinearGradient
                             colors={
                                 top10Position === 1 ? ["#FFD700", "#FFA500"] :
@@ -104,9 +105,8 @@ export default function DiscoverBookCard({
                         >
                             <Text style={styles.top10Text}>#{top10Position}</Text>
                         </LinearGradient>
-                    )}
+                    ) : null}
 
-                    {/* Bookmark/Save Button Overlay */}
                     <TouchableOpacity
                         style={styles.bookmarkBtn}
                         onPress={handleToggleFavorite}
@@ -114,19 +114,17 @@ export default function DiscoverBookCard({
                     >
                         <Animated.View style={{ transform: [{ scale: heartScale }] }}>
                             <Ionicons
-                                name={isLiked ? "bookmark" : "bookmark-outline"}
-                                size={18}
-                                color={isLiked ? "#FF9500" : Colors.white}
+                                name={isLiked ? "heart" : "heart-outline"}
+                                size={scale(18)}
+                                color={isLiked ? Colors.error : Colors.white}
                             />
                         </Animated.View>
                     </TouchableOpacity>
                 </View>
 
-                {/* Book title */}
                 <Text style={styles.title} numberOfLines={2}>
                     {title}
                 </Text>
-                {/* Author */}
                 <Text style={styles.author} numberOfLines={1}>
                     {author}
                 </Text>
@@ -135,18 +133,15 @@ export default function DiscoverBookCard({
     );
 }
 
-const CARD_WIDTH = 120;
-const COVER_H = CARD_WIDTH * 1.5;
-
 const styles = StyleSheet.create({
     card: {
         width: CARD_WIDTH,
-        marginRight: 16,
-        backgroundColor: "transparent", // Remove white background from card
+        marginRight: Spacing.md,
+        backgroundColor: "transparent",
     },
     coverWrap: {
-        borderRadius: 14,
-        overflow: "visible", // Changed to visible for shadow to show
+        borderRadius: scale(14),
+        overflow: "visible",
         backgroundColor: Colors.white,
         position: "relative",
         shadowColor: "#000",
@@ -155,10 +150,13 @@ const styles = StyleSheet.create({
         shadowRadius: 10,
         elevation: 6,
     },
+    coverGradient: {
+        borderRadius: scale(14),
+    },
     cover: {
         width: CARD_WIDTH,
         height: COVER_H,
-        borderRadius: 14, // Added borderRadius here since container is visible
+        borderRadius: scale(14),
         backgroundColor: Colors.primaryLight,
     },
     placeholder: {
@@ -167,12 +165,12 @@ const styles = StyleSheet.create({
     },
     bookmarkBtn: {
         position: "absolute",
-        top: 8,
-        right: 8,
+        top: Spacing.sm,
+        right: Spacing.sm,
         backgroundColor: "rgba(0,0,0,0.4)",
-        width: 32,
-        height: 32,
-        borderRadius: 8,
+        width: scale(32),
+        height: scale(32),
+        borderRadius: scale(10),
         alignItems: "center",
         justifyContent: "center",
         borderWidth: StyleSheet.hairlineWidth,
@@ -180,11 +178,11 @@ const styles = StyleSheet.create({
     },
     top10Badge: {
         position: "absolute",
-        top: 8,
-        left: 8,
-        paddingHorizontal: 8,
-        paddingVertical: 3,
-        borderRadius: 6,
+        top: Spacing.sm,
+        left: Spacing.sm,
+        paddingHorizontal: Spacing.sm,
+        paddingVertical: scale(3),
+        borderRadius: scale(6),
         borderWidth: 1,
         borderColor: "rgba(255,255,255,0.4)",
         shadowColor: "#000",
@@ -195,7 +193,7 @@ const styles = StyleSheet.create({
     },
     top10Text: {
         color: Colors.white,
-        fontSize: 11,
+        fontSize: FontSizes.small,
         fontFamily: Fonts.bold,
         letterSpacing: -0.4,
     },
@@ -203,14 +201,14 @@ const styles = StyleSheet.create({
         fontSize: FontSizes.caption,
         fontFamily: Fonts.bold,
         color: Colors.text,
-        marginTop: 10,
-        lineHeight: 18,
+        marginTop: scale(10),
+        lineHeight: scale(18),
     },
     author: {
-        fontSize: 11,
+        fontSize: FontSizes.small,
         fontFamily: Fonts.regular,
         color: Colors.textSecondary,
-        marginTop: 2,
-        marginBottom: 8,
+        marginTop: Spacing.xs / 2,
+        marginBottom: Spacing.sm,
     },
 });
