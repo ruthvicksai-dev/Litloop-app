@@ -65,6 +65,10 @@ export default defineSchema({
         .index("by_genre", ["genre"])
         .index("by_createdAt", ["createdAt"])
         .index("by_seriesId", ["seriesId"])
+        .index("by_isTop10", ["isTop10"])
+        .index("by_isFamous", ["isFamous"])
+        .index("by_isTrending", ["isTrending"])
+        .index("by_top10Position", ["top10Position"])
         .searchIndex("search_books", {
             searchField: "searchText",
             filterFields: ["genre"],
@@ -144,6 +148,7 @@ export default defineSchema({
         .index("by_userId", ["userId"])
         .index("by_status", ["status"])
         .index("by_zone", ["zone"])
+        .index("by_userId_status", ["userId", "status"])
         .index("by_createdAt", ["createdAt"]),
 
     analytics_monthly: defineTable({

@@ -69,6 +69,10 @@ export const Layout = {
   buttonHeight: scale(48),
   touchSize: scale(44),
   maxContentWidth: scale(640),
+  tabBarHeight: scale(75),
+  headerHeight: scale(60),
+  badgeSize: scale(10),
+  badgeInset: scale(12),
 };
 
 export const ZONES = ["Home", "College"];

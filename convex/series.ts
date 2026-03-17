@@ -1,3 +1,4 @@
+import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
@@ -10,10 +11,11 @@ export async function mapSeriesForClient(ctx: any, series: any) {
 }
 
 export const list = query({
-    args: {},
-    handler: async (ctx) => {
-        const series = await ctx.db.query("book_series").order("desc").collect();
-        return Promise.all(series.map((s) => mapSeriesForClient(ctx, s)));
+    args: { paginationOpts: paginationOptsValidator },
+    handler: async (ctx, args) => {
+        const results = await ctx.db.query("book_series").order("desc").paginate(args.paginationOpts);
+        const mapped = await Promise.all(results.page.map((s) => mapSeriesForClient(ctx, s)));
+        return { ...results, page: mapped };
     },
 });
 

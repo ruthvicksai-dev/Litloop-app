@@ -35,7 +35,7 @@ const GENRE_KEYWORDS: Record<string, string[]> = {
 
 function detectGenre(title: string, description: string): string | undefined {
     const text = (title + " " + description).toLowerCase();
-    const words = text.split(/\W+/).map(w => w.replace(/(ing|ed|s)$/,"")); // 🔥 normalize
+    const words = text.split(/\W+/).map(w => w.replace(/(ing|ed|s)$/, "")); // 🔥 normalize
 
     let bestMatch: string | undefined;
     let maxScore = 0;
@@ -48,15 +48,15 @@ function detectGenre(title: string, description: string): string | undefined {
             if (words.includes(key)) score += 2;
             if (text.includes(key)) score += 1;
         }
-         if (genre === "Romance") {
-                score *= 0.8;
-            }
+        if (genre === "Romance") {
+            score *= 0.8;
+        }
         if (score > maxScore || (score === maxScore && genre !== "Romance")) {
             maxScore = score;
             bestMatch = genre;
         }
     }
-   return maxScore >= 2 ? bestMatch : undefined;
+    return maxScore >= 2 ? bestMatch : undefined;
 }
 
 function normalizeGenres(genres: string[] | undefined) {
@@ -193,7 +193,7 @@ export async function mapBookForClient(
     const { coverUrl, coverUrls } = await resolveCoverUrls(ctx, book);
     return {
         ...book,
-       genre: book.genre ?? book.genres?.[0] ?? "General",
+        genre: book.genre ?? book.genres?.[0] ?? "General",
         genres: book.genres ?? [],
         rating: typeof book.rating === "number" ? book.rating : 0,
         ratingCount: typeof book.ratingCount === "number" ? book.ratingCount : 0,
@@ -211,11 +211,18 @@ export async function mapBookForClient(
 }
 
 export const list = query({
-    args: {},
-    handler: async (ctx) => {
-        const books = await ctx.db.query("books").withIndex("by_createdAt").order("desc").collect();
-        const booksWithUrls = await Promise.all(books.map((book) => mapBookForClient(ctx, book)));
-        return booksWithUrls;
+    args: { paginationOpts: paginationOptsValidator },
+    handler: async (ctx, args) => {
+        const results = await ctx.db
+            .query("books")
+            .withIndex("by_createdAt")
+            .order("desc")
+            .paginate(args.paginationOpts);
+
+        return {
+            ...results,
+            page: await Promise.all(results.page.map((book) => mapBookForClient(ctx, book))),
+        };
     },
 });
 
@@ -497,38 +504,38 @@ export const update = mutation({
         if (args.author !== undefined) updates.author = args.author.trim();
         if (args.description !== undefined)
             updates.description = args.description.trim();
-       const nextGenres = args.genres !== undefined
-    ? normalizeGenres(args.genres)
-    : (book.genres ?? []);
-       if (args.genres !== undefined) updates.genres = nextGenres;
-       const detectedGenre = detectGenre(
-    (args.title ?? book.title),
-    (args.description ?? book.description)
-       );
-      let nextGenre = normalizeSingleGenre(args.genre);
-if (!nextGenre) {
-    nextGenre = detectedGenre;
-}
-if (!nextGenre) {
-    if (args.genres !== undefined) {
-        nextGenre = nextGenres[0];
-    } else {
-        nextGenre = book.genre ?? book.genres?.[0];
-    }
-}
+        const nextGenres = args.genres !== undefined
+            ? normalizeGenres(args.genres)
+            : (book.genres ?? []);
+        if (args.genres !== undefined) updates.genres = nextGenres;
+        const detectedGenre = detectGenre(
+            (args.title ?? book.title),
+            (args.description ?? book.description)
+        );
+        let nextGenre = normalizeSingleGenre(args.genre);
+        if (!nextGenre) {
+            nextGenre = detectedGenre;
+        }
+        if (!nextGenre) {
+            if (args.genres !== undefined) {
+                nextGenre = nextGenres[0];
+            } else {
+                nextGenre = book.genre ?? book.genres?.[0];
+            }
+        }
 
-if (!nextGenre) {
-    nextGenre = "Education"; // final fallback
-}
+        if (!nextGenre) {
+            nextGenre = "Education"; // final fallback
+        }
 
-if (
-    args.genre !== undefined ||
-    args.genres !== undefined ||
-    args.title !== undefined ||
-    args.description !== undefined
-) {
-    updates.genre = nextGenre;
-}
+        if (
+            args.genre !== undefined ||
+            args.genres !== undefined ||
+            args.title !== undefined ||
+            args.description !== undefined
+        ) {
+            updates.genre = nextGenre;
+        }
         if (args.rating !== undefined) updates.rating = normalizeRating(args.rating);
         if (args.ratingCount !== undefined) {
             updates.ratingCount = normalizeNonNegativeInt(args.ratingCount, 0);
@@ -683,12 +690,13 @@ export const getTop10Books = query({
     handler: async (ctx) => {
         const books = await ctx.db
             .query("books")
-            .filter((q) => q.eq(q.field("isTop10"), true))
-            .collect();
+            .withIndex("by_isTop10", (q) => q.eq("isTop10", true))
+            .take(10);
+
         const sorted = books
             .filter((b) => typeof b.top10Position === "number")
-            .sort((a, b) => (a.top10Position ?? 99) - (b.top10Position ?? 99))
-            .slice(0, 10);
+            .sort((a, b) => (a.top10Position ?? 99) - (b.top10Position ?? 99));
+
         return Promise.all(sorted.map((book) => mapBookForClient(ctx, book)));
     },
 });
@@ -710,9 +718,8 @@ export const getFamousBooks = query({
     handler: async (ctx) => {
         const books = await ctx.db
             .query("books")
-            .withIndex("by_createdAt")
+            .withIndex("by_isFamous", (q) => q.eq("isFamous", true))
             .order("desc")
-            .filter((q) => q.eq(q.field("isFamous"), true))
             .take(10);
         return Promise.all(books.map((book) => mapBookForClient(ctx, book)));
     },
@@ -721,7 +728,7 @@ export const getFamousBooks = query({
 export const getSeriesBooks = query({
     args: {},
     handler: async (ctx) => {
-        const series = await ctx.db.query("book_series").order("desc").collect();
+        const series = await ctx.db.query("book_series").order("desc").take(15);
 
         const seriesWithBooks = await Promise.all(series.map(async (s) => {
             const books = await ctx.db

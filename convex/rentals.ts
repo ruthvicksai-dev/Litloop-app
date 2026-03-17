@@ -1,3 +1,4 @@
+import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { recordRentalCreated, recordUserActivity } from "./analytics";
@@ -57,22 +58,26 @@ export const requestRental = mutation({
             throw new Error("This book is currently unavailable.");
 
         // Check for duplicate active rental
-        const existingRentals = await ctx.db
+        const duplicate = await ctx.db
             .query("rentals")
             .withIndex("by_userId", (q) => q.eq("userId", args.userId))
-            .collect();
+            .filter((q) =>
+                q.and(
+                    q.eq(q.field("bookId"), args.bookId),
+                    q.neq(q.field("status"), "returned"),
+                    q.neq(q.field("status"), "paid")
+                )
+            )
+            .first();
 
-        const duplicate = existingRentals.find(
-            (r) =>
-                r.bookId === args.bookId &&
-                !["returned", "paid"].includes(r.status)
-        );
         if (duplicate)
             throw new Error("You already have an active rental for this book.");
 
         if (!args.zone.trim()) throw new Error("Zone is required.");
-        if (!args.deliveryLocation.phone.trim())
-            throw new Error("Phone number is required.");
+        const phoneRegex = /^\d{10}$/;
+        if (!phoneRegex.test(args.deliveryLocation.phone.trim())) {
+            throw new Error("Please provide a valid 10-digit phone number.");
+        }
 
         if (args.zone === "College") {
             if (!args.deliveryLocation.roomNo?.trim()) throw new Error("Room number is required for College delivery.");
@@ -258,11 +263,6 @@ export const markReturned = mutation({
 export const getUserRentals = query({
     args: { userId: v.id("users") },
     handler: async (ctx, args) => {
-        const rentals = await ctx.db
-            .query("rentals")
-            .withIndex("by_userId", (q) => q.eq("userId", args.userId))
-            .collect();
-
         const activeStatuses = [
             "requested",
             "delivery_scheduled",
@@ -271,13 +271,24 @@ export const getUserRentals = query({
             "payment_pending",
         ];
 
-        const activeRentals = rentals.filter((r) =>
-            activeStatuses.includes(r.status)
-        );
+        // Fetch active rentals using database filtering
+        const rentals = await ctx.db
+            .query("rentals")
+            .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+            .filter((q) =>
+                q.or(
+                    q.eq(q.field("status"), "requested"),
+                    q.eq(q.field("status"), "delivery_scheduled"),
+                    q.eq(q.field("status"), "delivered"),
+                    q.eq(q.field("status"), "pickup_scheduled"),
+                    q.eq(q.field("status"), "payment_pending")
+                )
+            )
+            .collect();
 
         // Attach book info
         const rentalsWithBooks = await Promise.all(
-            activeRentals.map(async (rental) => {
+            rentals.map(async (rental) => {
                 const book = await getBookWithCoverUrls(ctx, rental.bookId);
                 return {
                     ...rental,
@@ -308,22 +319,34 @@ export const getRentalHistory = query({
         ),
     },
     handler: async (ctx, args) => {
-        const rentals = await ctx.db
-            .query("rentals")
-            .withIndex("by_userId", (q) => q.eq("userId", args.userId))
-            .collect();
+        const now = Date.now();
+        const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime();
+        const yearStart = new Date(new Date().getFullYear(), 0, 1).getTime();
+        const last30DaysStart = now - 30 * 24 * 60 * 60 * 1000;
 
-        const now = new Date();
-        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-        const yearStart = new Date(now.getFullYear(), 0, 1).getTime();
-        const last30DaysStart = now.getTime() - 30 * 24 * 60 * 60 * 1000;
+        let queryBuilder = ctx.db
+            .query("rentals")
+            .withIndex("by_userId", (q) => q.eq("userId", args.userId));
+
+        // Use database filtering for status if specific
+        if (args.status === "paid") {
+            queryBuilder = ctx.db
+                .query("rentals")
+                .withIndex("by_userId_status", (q) => q.eq("userId", args.userId).eq("status", "paid"));
+        } else if (args.status === "returned") {
+            queryBuilder = ctx.db
+                .query("rentals")
+                .withIndex("by_userId_status", (q) => q.eq("userId", args.userId).eq("status", "returned"));
+        } else {
+            // "all" - filter completed statuses in DB
+            queryBuilder = queryBuilder.filter((q) =>
+                q.or(q.eq(q.field("status"), "paid"), q.eq(q.field("status"), "returned"))
+            );
+        }
+
+        const rentals = await queryBuilder.order("desc").collect();
 
         const completed = rentals
-            .filter((r) => ["paid", "returned"].includes(r.status))
-            .filter((r) => {
-                if (!args.status || args.status === "all") return true;
-                return r.status === args.status;
-            })
             .filter((r) => {
                 switch (args.timeframe) {
                     case "last_30_days":
@@ -336,8 +359,7 @@ export const getRentalHistory = query({
                     default:
                         return true;
                 }
-            })
-            .sort((a, b) => b.createdAt - a.createdAt);
+            });
 
         const rentalsWithBooks = await Promise.all(
             completed.map(async (rental) => {
@@ -356,12 +378,16 @@ export const getRentalHistory = query({
 });
 
 export const getAllRentals = query({
-    args: {},
-    handler: async (ctx) => {
-        const rentals = await ctx.db.query("rentals").collect();
+    args: { paginationOpts: paginationOptsValidator },
+    handler: async (ctx, args) => {
+        const results = await ctx.db
+            .query("rentals")
+            .withIndex("by_createdAt")
+            .order("desc")
+            .paginate(args.paginationOpts);
 
         const rentalsWithDetails = await Promise.all(
-            rentals.map(async (rental) => {
+            results.page.map(async (rental) => {
                 const book = await getBookWithCoverUrls(ctx, rental.bookId);
                 const user = await ctx.db.get(rental.userId);
                 return {
@@ -376,7 +402,7 @@ export const getAllRentals = query({
             })
         );
 
-        return rentalsWithDetails;
+        return { ...results, page: rentalsWithDetails };
     },
 });
 

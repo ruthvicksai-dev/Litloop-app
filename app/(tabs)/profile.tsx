@@ -90,9 +90,21 @@ export default function ProfileScreen() {
             accessToken ? { accessToken } : "skip"
         );
 
+    const favoriteCount =
+        useQuery(
+            api.favorites.getUserFavoriteCount,
+            accessToken ? { accessToken } : "skip"
+        );
+
     const readLaterBooks =
         useQuery(
             api.readLater.getUserReadLaterBooks,
+            accessToken ? { accessToken } : "skip"
+        );
+
+    const readLaterCount =
+        useQuery(
+            api.readLater.getUserReadLaterCount,
             accessToken ? { accessToken } : "skip"
         );
 
@@ -181,12 +193,12 @@ export default function ProfileScreen() {
                             {/* Quick Stats */}
                             <View style={styles.statsRow}>
                                 <View style={styles.statBox}>
-                                    <Text style={styles.statNumber}>{favoriteBooks.length}</Text>
+                                    <Text style={styles.statNumber}>{favoriteCount ?? 0}</Text>
                                     <Text style={styles.statLabel}>Favorites</Text>
                                 </View>
                                 <View style={styles.statDivider} />
                                 <View style={styles.statBox}>
-                                    <Text style={styles.statNumber}>{readLaterBooks.length}</Text>
+                                    <Text style={styles.statNumber}>{readLaterCount ?? 0}</Text>
                                     <Text style={styles.statLabel}>Read Later</Text>
                                 </View>
                                 <View style={styles.statDivider} />

@@ -102,3 +102,22 @@ export const getUserReadLaterBooks = query({
         return books;
     },
 });
+
+export const getUserReadLaterCount = query({
+    args: { accessToken: v.string() },
+    handler: async (ctx, args) => {
+        let userId: Id<"users">;
+        try {
+            userId = await getUserIdFromAccessToken(args.accessToken);
+        } catch {
+            return 0;
+        }
+
+        const readLaterItems = await ctx.db
+            .query("read_later")
+            .withIndex("by_userId", (q) => q.eq("userId", userId))
+            .collect();
+
+        return readLaterItems.length;
+    },
+});

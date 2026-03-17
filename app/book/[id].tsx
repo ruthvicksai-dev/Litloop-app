@@ -3,7 +3,7 @@ import BookLoader from "@/components/ui/BookLoader";
 import Button from "@/components/ui/Button";
 import DiscoverBookCard from "@/components/ui/DiscoverBookCard";
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Spacing } from "@/constants/theme";
+import { Colors, Layout, Spacing } from "@/constants/theme";
 import { useBookDetailsScreen } from "@/hooks/useBookDetailsScreen";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        paddingHorizontal: 20,
+        paddingHorizontal: Layout.screenPaddingWide,
         paddingVertical: Spacing.md,
     },
     headerTitle: {
@@ -278,10 +278,10 @@ const styles = StyleSheet.create({
         width: 40,
     },
     backBtn: {
-        padding: 8,
+        padding: Spacing.sm,
         position: "absolute",
-        top: 10,
-        left: 10,
+        top: Spacing.sm,
+        left: Spacing.sm,
         zIndex: 10,
     },
     backBtnMissing: {
@@ -292,13 +292,13 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.white,
     },
     info: {
-        paddingHorizontal: 24,
+        paddingHorizontal: Spacing.lg,
         paddingTop: Spacing.xl,
         paddingBottom: Spacing.xl,
-        borderTopLeftRadius: 30,
-        borderTopRightRadius: 30,
+        borderTopLeftRadius: Layout.cardRadiusLarge + 10,
+        borderTopRightRadius: Layout.cardRadiusLarge + 10,
         backgroundColor: Colors.background,
-        marginTop: -20,
+        marginTop: -Spacing.lg,
     },
     titleRow: {
         flexDirection: "row",
@@ -322,9 +322,9 @@ const styles = StyleSheet.create({
         fontFamily: Fonts.medium,
     },
     iconButton: {
-        width: 42,
-        height: 42,
-        borderRadius: 21,
+        width: Layout.touchSize,
+        height: Layout.touchSize,
+        borderRadius: Layout.touchSize / 2,
         backgroundColor: Colors.white,
         alignItems: "center",
         justifyContent: "center",
@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
     statsContainer: {
         flexDirection: "row",
         backgroundColor: Colors.white,
-        borderRadius: 20,
+        borderRadius: Layout.cardRadiusLarge,
         paddingVertical: Spacing.md,
         alignItems: "center",
         borderWidth: 1,
@@ -419,9 +419,9 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     addButton: {
-        width: 52,
-        height: 52,
-        borderRadius: 16,
+        width: Layout.touchSize + 8, // 52
+        height: Layout.touchSize + 8,
+        borderRadius: Layout.borderRadius + 4,
         borderWidth: 1.5,
         borderColor: Colors.primary,
         backgroundColor: Colors.white,
@@ -450,7 +450,7 @@ const styles = StyleSheet.create({
         paddingRight: 10,
     },
     scrollContent: {
-        paddingBottom: 60,
+        paddingBottom: Layout.tabBarHeight,
     },
     missingState: {
         paddingHorizontal: 40,
@@ -475,13 +475,13 @@ const styles = StyleSheet.create({
     },
     detailsTop10Badge: {
         position: "absolute",
-        top: 20,
-        right: 20,
+        top: Layout.screenPaddingWide,
+        right: Layout.screenPaddingWide,
         flexDirection: "row",
         alignItems: "center",
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 20,
+        paddingHorizontal: Spacing.sm + 4,
+        paddingVertical: Spacing.xs + 2,
+        borderRadius: Layout.borderRadius + 8,
         borderWidth: 1,
         borderColor: "rgba(255,255,255,0.4)",
         shadowColor: "#000",

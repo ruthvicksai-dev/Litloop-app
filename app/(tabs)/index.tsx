@@ -2,7 +2,7 @@ import BookLoader from "@/components/ui/BookLoader";
 import DiscoverSectionRow from "@/components/ui/DiscoverSectionRow";
 import SeriesSectionRow from "@/components/ui/SeriesSectionRow";
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Layout, Spacing, scale } from "@/constants/theme";
+import { Colors, Layout, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { useDiscoverSections } from "@/hooks/useDiscoverSections";
 import { useHomeEntrance } from "@/hooks/useHomeEntrance";
@@ -146,11 +146,11 @@ const styles = StyleSheet.create({
   },
   notifBadge: {
     position: "absolute",
-    top: scale(12),
-    right: scale(12),
-    width: scale(10),
-    height: scale(10),
-    borderRadius: scale(5),
+    top: Layout.badgeInset,
+    right: Layout.badgeInset,
+    width: Layout.badgeSize,
+    height: Layout.badgeSize,
+    borderRadius: Layout.badgeSize / 2,
     backgroundColor: Colors.error,
     borderWidth: 2,
     borderColor: Colors.white,
@@ -168,6 +168,6 @@ const styles = StyleSheet.create({
   },
   scroll: {
     paddingTop: Spacing.md,
-    paddingBottom: scale(90),
+    paddingBottom: Layout.tabBarHeight + Spacing.lg,
   },
 });

@@ -1,6 +1,6 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { MAIN_GENRES } from "@/constants/mainGenres";
-import { Colors, Spacing } from "@/constants/theme";
+import { Colors, Layout, Spacing } from "@/constants/theme";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
@@ -75,9 +75,9 @@ const styles = StyleSheet.create({
         gap: Spacing.sm,
     },
     chip: {
-        paddingHorizontal: 14,
-        paddingVertical: 10,
-        borderRadius: 999,
+        paddingHorizontal: Spacing.md - 2,
+        paddingVertical: Spacing.sm + 2,
+        borderRadius: Layout.borderRadius * 2,
         backgroundColor: Colors.white,
         borderWidth: 1,
         borderColor: Colors.border,

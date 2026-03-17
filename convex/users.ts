@@ -1,3 +1,4 @@
+import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
@@ -28,9 +29,9 @@ export const getUser = query({
 });
 
 export const listUsers = query({
-    args: {},
-    handler: async (ctx) => {
-        return await ctx.db.query("users").collect();
+    args: { paginationOpts: paginationOptsValidator },
+    handler: async (ctx, args) => {
+        return await ctx.db.query("users").order("desc").paginate(args.paginationOpts);
     },
 });
 
@@ -49,8 +50,10 @@ export const updateUser = mutation({
         }
 
         // Validate
-        if (!args.name.trim() || !args.phone.trim()) {
-            throw new Error("Name and phone cannot be empty.");
+        if (!args.name.trim()) throw new Error("Name cannot be empty.");
+        const phoneRegex = /^\d{10}$/;
+        if (!phoneRegex.test(args.phone.trim())) {
+            throw new Error("Please provide a valid 10-digit phone number.");
         }
 
         await ctx.db.patch(userId, {

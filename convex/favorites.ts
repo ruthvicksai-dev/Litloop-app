@@ -102,3 +102,22 @@ export const getUserFavoriteBooks = query({
         return books;
     },
 });
+
+export const getUserFavoriteCount = query({
+    args: { accessToken: v.string() },
+    handler: async (ctx, args) => {
+        let userId: Id<"users">;
+        try {
+            userId = await getUserIdFromAccessToken(args.accessToken);
+        } catch {
+            return 0;
+        }
+
+        const favorites = await ctx.db
+            .query("favorites")
+            .withIndex("by_userId", (q) => q.eq("userId", userId))
+            .collect();
+
+        return favorites.length;
+    },
+});
