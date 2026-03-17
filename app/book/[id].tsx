@@ -1,7 +1,7 @@
 import BookImageCarousel from "@/components/books/BookImageCarousel";
-import DiscoverBookCard from "@/components/ui/DiscoverBookCard";
 import BookLoader from "@/components/ui/BookLoader";
 import Button from "@/components/ui/Button";
+import DiscoverBookCard from "@/components/ui/DiscoverBookCard";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useBookDetailsScreen } from "@/hooks/useBookDetailsScreen";
@@ -31,12 +31,12 @@ export default function BookDetailsScreen() {
         setIsDescriptionExpanded,
         descriptionLineLimit,
         shouldShowDescriptionToggle,
-        isQuickAdded,
         detailItems,
         relatedSubtitle,
         isFavorite,
+        isReadLater,
         handleFavoritePress,
-        handleQuickAddPress,
+        handleReadLaterPress,
         fadeAnim,
         slideAnim,
         scaleAnim,
@@ -188,15 +188,15 @@ export default function BookDetailsScreen() {
                         <TouchableOpacity
                             style={[
                                 styles.addButton,
-                                isQuickAdded && styles.addButtonActive,
+                                isReadLater && styles.addButtonActive,
                             ]}
-                            onPress={handleQuickAddPress}
+                            onPress={handleReadLaterPress}
                             activeOpacity={0.85}
                         >
                             <Ionicons
-                                name={isQuickAdded ? "checkmark" : "add"}
-                                size={24}
-                                color={isQuickAdded ? Colors.white : Colors.primary}
+                                name={isReadLater ? "bookmark" : "bookmark-outline"}
+                                size={22}
+                                color={isReadLater ? Colors.white : Colors.primary}
                             />
                         </TouchableOpacity>
                     </View>
@@ -312,11 +312,6 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         borderWidth: 1,
         borderColor: "rgba(117,64,67,0.12)",
-        shadowColor: Colors.shadow,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.06,
-        shadowRadius: 10,
-        elevation: 3,
     },
     statsContainer: {
         flexDirection: "row",
@@ -324,11 +319,8 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         paddingVertical: Spacing.md,
         alignItems: "center",
-        shadowColor: Colors.shadow,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 10,
-        elevation: 4,
+        borderWidth: 1,
+        borderColor: "rgba(0,0,0,0.05)",
         marginBottom: Spacing.xl,
     },
     statItem: {

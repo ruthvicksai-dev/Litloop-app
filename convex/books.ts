@@ -300,6 +300,7 @@ export const add = mutation({
         isFamous: v.optional(v.boolean()),
         isTrending: v.optional(v.boolean()),
         series: v.optional(v.string()),
+        seriesId: v.optional(v.id("book_series")),
         rentPerDay: v.number(),
         coverImage: v.optional(v.id("_storage")),
         coverImages: v.optional(v.array(v.id("_storage"))),
@@ -353,6 +354,7 @@ export const add = mutation({
             isFamous: Boolean(args.isFamous),
             isTrending: Boolean(args.isTrending),
             series: normalizeSeries(args.series),
+            seriesId: args.seriesId,
             searchText: buildSearchText({
                 title,
                 author,
@@ -391,6 +393,7 @@ export const update = mutation({
         isFamous: v.optional(v.boolean()),
         isTrending: v.optional(v.boolean()),
         series: v.optional(v.string()),
+        seriesId: v.optional(v.id("book_series")),
         rentPerDay: v.optional(v.number()),
         coverImage: v.optional(v.id("_storage")),
         coverImages: v.optional(v.array(v.id("_storage"))),
@@ -441,6 +444,7 @@ export const update = mutation({
         if (args.isFamous !== undefined) updates.isFamous = args.isFamous;
         if (args.isTrending !== undefined) updates.isTrending = args.isTrending;
         if (args.series !== undefined) updates.series = normalizeSeries(args.series);
+        if (args.seriesId !== undefined) updates.seriesId = args.seriesId;
         if (args.rentPerDay !== undefined) updates.rentPerDay = args.rentPerDay;
 
         // Cleanup storage for single cover image if replaced
@@ -591,15 +595,25 @@ export const getFamousBooks = query({
 export const getSeriesBooks = query({
     args: {},
     handler: async (ctx) => {
-        const books = await ctx.db
-            .query("books")
-            .withIndex("by_createdAt")
-            .order("desc")
-            .collect();
-        const seriesBooks = books
-            .filter((b) => b.series && b.series.trim() !== "")
-            .slice(0, 10);
-        return Promise.all(seriesBooks.map((book) => mapBookForClient(ctx, book)));
+        const series = await ctx.db.query("book_series").order("desc").collect();
+
+        const seriesWithBooks = await Promise.all(series.map(async (s) => {
+            const books = await ctx.db
+                .query("books")
+                .withIndex("by_seriesId", (q) => q.eq("seriesId", s._id))
+                .take(10);
+
+            const coverUrl = await ctx.storage.getUrl(s.coverImage);
+            const mappedBooks = await Promise.all(books.map(b => mapBookForClient(ctx, b)));
+
+            return {
+                ...s,
+                coverUrl,
+                books: mappedBooks,
+            };
+        }));
+
+        return seriesWithBooks.filter(s => s.books.length > 0);
     },
 });
 

@@ -1,9 +1,11 @@
 import BookLoader from "@/components/ui/BookLoader";
 import RentalCard from "@/components/ui/RentalCard";
+import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";
 import { useFadeSlideIn } from "@/hooks/useFadeSlideIn";
+import { responsiveFont } from "@/utils/responsiveFont";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";
@@ -17,8 +19,6 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Fonts, FontSizes } from "@/constants/fonts";
-import { responsiveFont } from "@/utils/responsiveFont";
 
 export default function MyRentalsScreen() {
     const { userId } = useAuth();
@@ -77,8 +77,10 @@ export default function MyRentalsScreen() {
                         <RentalCard
                             bookTitle={item.book?.title || "Unknown Book"}
                             bookAuthor={item.book?.author || "Unknown Author"}
+                            coverUrl={item.coverUrl || item.book?.coverUrl}
                             status={item.status}
                             deliveryDate={item.deliveryDate}
+                            deliveryTime={item.deliveryTime}
                             pickupDate={item.pickupDate}
                             rentPerDay={item.rentPerDay}
                             totalRent={item.totalRent}
@@ -133,7 +135,7 @@ const styles = StyleSheet.create({
     list: {
         flexGrow: 1,
         paddingHorizontal: 20,
-        paddingBottom: 20,
+        paddingBottom: 90,
     },
     empty: {
         flex: 1,

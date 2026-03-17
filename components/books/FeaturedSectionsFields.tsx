@@ -3,7 +3,7 @@ import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 type FeaturedSectionsFieldsProps = {
     isTop10: boolean;
@@ -12,11 +12,14 @@ type FeaturedSectionsFieldsProps = {
     isTrending: boolean;
     isSeries: boolean;
     series: string;
+    seriesList: any[] | undefined;
+    seriesId?: string;
     onToggleTop10: () => void;
     onToggleFamous: () => void;
     onToggleTrending: () => void;
     onToggleSeries: () => void;
     onChangeSeries: (value: string) => void;
+    onSelectSeriesId: (id: any) => void;
     onChangeTop10Position: (value: string) => void;
 };
 
@@ -52,6 +55,9 @@ export default function FeaturedSectionsFields({
     onToggleSeries,
     onChangeSeries,
     onChangeTop10Position,
+    seriesList,
+    seriesId,
+    onSelectSeriesId,
 }: FeaturedSectionsFieldsProps) {
     return (
         <View style={styles.container}>
@@ -91,13 +97,50 @@ export default function FeaturedSectionsFields({
             <CheckRow label="Book Series" checked={isSeries} onPress={onToggleSeries} />
 
             {isSeries ? (
-                <InputField
-                    label="Series Name"
-                    placeholder="e.g. Harry Potter"
-                    value={series}
-                    onChangeText={onChangeSeries}
-                    containerStyle={styles.seriesField}
-                />
+                <View style={styles.seriesSection}>
+                    <InputField
+                        label="Series Name (Legacy)"
+                        placeholder="e.g. Harry Potter"
+                        value={series}
+                        onChangeText={onChangeSeries}
+                        containerStyle={styles.seriesField}
+                    />
+
+                    <Text style={styles.sectionLabel}>Select Series (New)</Text>
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.seriesList}
+                    >
+                        <TouchableOpacity
+                            style={[
+                                styles.seriesChip,
+                                !seriesId && styles.seriesChipActive,
+                            ]}
+                            onPress={() => onSelectSeriesId(undefined)}
+                        >
+                            <Text style={[styles.seriesChipText, !seriesId && styles.seriesChipTextActive]}>None</Text>
+                        </TouchableOpacity>
+
+                        {seriesList?.map((item) => {
+                            const selected = seriesId === item._id;
+                            return (
+                                <TouchableOpacity
+                                    key={item._id}
+                                    style={[
+                                        styles.seriesChip,
+                                        selected && styles.seriesChipActive,
+                                    ]}
+                                    onPress={() => onSelectSeriesId(item._id)}
+                                >
+                                    <Text style={[styles.seriesChipText, selected && styles.seriesChipTextActive]}>
+                                        {item.name}
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </ScrollView>
+                </View>
             ) : null}
         </View>
     );
@@ -170,5 +213,39 @@ const styles = StyleSheet.create({
     },
     seriesField: {
         marginTop: Spacing.xs,
+        marginBottom: Spacing.md,
+    },
+    seriesSection: {
+        marginTop: Spacing.xs,
+    },
+    sectionLabel: {
+        fontSize: FontSizes.body,
+        color: Colors.textSecondary,
+        fontFamily: Fonts.medium,
+        marginBottom: Spacing.xs,
+    },
+    seriesList: {
+        gap: Spacing.sm,
+        paddingBottom: Spacing.md,
+    },
+    seriesChip: {
+        paddingHorizontal: Spacing.md,
+        paddingVertical: Spacing.xs,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: Colors.border,
+        backgroundColor: Colors.white,
+    },
+    seriesChipActive: {
+        backgroundColor: Colors.primary,
+        borderColor: Colors.primary,
+    },
+    seriesChipText: {
+        fontSize: FontSizes.small,
+        color: Colors.text,
+        fontFamily: Fonts.medium,
+    },
+    seriesChipTextActive: {
+        color: Colors.white,
     },
 });

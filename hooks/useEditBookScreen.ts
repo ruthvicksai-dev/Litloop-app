@@ -35,10 +35,13 @@ export function useEditBookScreen(bookId: string) {
     const [isTrending, setIsTrending] = useState(false);
     const [isSeries, setIsSeries] = useState(false);
     const [series, setSeries] = useState("");
+    const [seriesId, setSeriesId] = useState<Id<"book_series"> | undefined>(undefined);
     const [isFetchingBookInfo, setIsFetchingBookInfo] = useState(false);
     const [loading, setLoading] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [initialized, setInitialized] = useState(false);
+
+    const seriesList = useQuery(api.series.list);
 
     const {
         coverUris,
@@ -79,7 +82,10 @@ export function useEditBookScreen(bookId: string) {
     const toggleSeries = () => {
         setIsSeries((current) => {
             const next = !current;
-            if (!next) setSeries("");
+            if (!next) {
+                setSeries("");
+                setSeriesId(undefined);
+            }
             return next;
         });
     };
@@ -102,8 +108,9 @@ export function useEditBookScreen(bookId: string) {
         setTop10Position(book.top10Position ? String(book.top10Position) : "");
         setIsFamous(Boolean(book.isFamous));
         setIsTrending(Boolean(book.isTrending));
-        setIsSeries(Boolean(book.series));
+        setIsSeries(Boolean(book.series || book.seriesId));
         setSeries(book.series ?? "");
+        setSeriesId(book.seriesId);
         setCoverUris(
             book.coverUrls && book.coverUrls.length > 0
                 ? book.coverUrls
@@ -196,25 +203,7 @@ export function useEditBookScreen(bookId: string) {
                 );
             }
 
-            const payload: {
-                bookId: Id<"books">;
-                title: string;
-                author: string;
-                description: string;
-                genre?: string;
-                genres: string[];
-                rentPerDay: number;
-                totalCopies: number;
-                pageCount?: number;
-                publishedYear?: number;
-                publisher?: string;
-                isTop10?: boolean;
-                top10Position?: number;
-                isFamous?: boolean;
-                isTrending?: boolean;
-                series?: string;
-                coverImages?: Id<"_storage">[];
-            } = {
+            const payload: any = {
                 bookId: bookId as Id<"books">,
                 title,
                 author,
@@ -231,6 +220,7 @@ export function useEditBookScreen(bookId: string) {
                 isFamous,
                 isTrending,
                 series: isSeries ? series.trim() || undefined : undefined,
+                seriesId: isSeries ? seriesId : undefined,
             };
 
             if (coverImageIds) {
@@ -317,6 +307,9 @@ export function useEditBookScreen(bookId: string) {
         toggleSeries,
         series,
         setSeries,
+        seriesId,
+        setSeriesId,
+        seriesList,
         isFetchingBookInfo,
         toggleGenre,
         loading,

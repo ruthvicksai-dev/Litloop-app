@@ -1,14 +1,14 @@
+import { MAIN_GENRES } from "@/constants/mainGenres";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { useMutation } from "convex/react";
+import { applyMetadataToBookForm, parseBookNumericFields } from "@/utils/adminBookForm";
+import { fetchBookMetadataExtended } from "@/utils/bookMetadataExtended";
+import { validateEnglishSafeDescription } from "@/utils/descriptionPolicy";
+import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
-import { MAIN_GENRES } from "@/constants/mainGenres";
 import { useBookCoverManager } from "./useBookCoverManager";
-import { fetchBookMetadataExtended } from "@/utils/bookMetadataExtended";
-import { applyMetadataToBookForm, parseBookNumericFields } from "@/utils/adminBookForm";
-import { validateEnglishSafeDescription } from "@/utils/descriptionPolicy";
 
 export function useAddBookScreen() {
     const { showToast } = useToast();
@@ -31,8 +31,11 @@ export function useAddBookScreen() {
     const [isTrending, setIsTrending] = useState(false);
     const [isSeries, setIsSeries] = useState(false);
     const [series, setSeries] = useState("");
+    const [seriesId, setSeriesId] = useState<Id<"book_series"> | undefined>(undefined);
     const [isFetchingBookInfo, setIsFetchingBookInfo] = useState(false);
     const [loading, setLoading] = useState(false);
+
+    const seriesList = useQuery(api.series.list);
 
     const coverManager = useBookCoverManager({
         title,
@@ -69,7 +72,10 @@ export function useAddBookScreen() {
     const toggleSeries = () => {
         setIsSeries((current) => {
             const next = !current;
-            if (!next) setSeries("");
+            if (!next) {
+                setSeries("");
+                setSeriesId(undefined);
+            }
             return next;
         });
     };
@@ -140,7 +146,7 @@ export function useAddBookScreen() {
                 isTop10,
             });
 
-            let coverImages: string[] = [];
+            let uploadedCoverImages: Id<"_storage">[] = [];
 
             if (coverManager.coverUris.length > 0) {
                 const uploadPromises = coverManager.coverUris.map(async (uri) => {
@@ -153,10 +159,10 @@ export function useAddBookScreen() {
                         body: blob,
                     });
                     const { storageId } = await uploadResult.json();
-                    return storageId;
+                    return storageId as Id<"_storage">;
                 });
 
-                coverImages = await Promise.all(uploadPromises);
+                uploadedCoverImages = await Promise.all(uploadPromises);
             }
 
             await addBook({
@@ -175,10 +181,8 @@ export function useAddBookScreen() {
                 isFamous,
                 isTrending,
                 series: isSeries ? series.trim() || undefined : undefined,
-                coverImages:
-                    coverImages.length > 0
-                        ? (coverImages as Id<"_storage">[])
-                        : undefined,
+                seriesId: isSeries ? seriesId : undefined,
+                coverImages: uploadedCoverImages.length > 0 ? uploadedCoverImages : undefined,
             });
 
             showToast("Book added successfully!", "success");
@@ -227,6 +231,9 @@ export function useAddBookScreen() {
         toggleSeries,
         series,
         setSeries,
+        seriesId,
+        setSeriesId,
+        seriesList,
         isFetchingBookInfo,
         toggleGenre,
         loading,

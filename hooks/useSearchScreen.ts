@@ -13,6 +13,7 @@ export function useSearchScreen() {
 
     const debouncedSearchText = useDebouncedValue(searchText, 400);
     const normalizedSearch = debouncedSearchText.trim();
+    const hasActiveSearch = Boolean(normalizedSearch || selectedGenre);
 
     const queryArgs = useMemo(
         () => ({
@@ -24,7 +25,7 @@ export function useSearchScreen() {
 
     const { results, status, loadMore } = usePaginatedQuery(
         api.books.searchBooks,
-        queryArgs,
+        hasActiveSearch ? queryArgs : "skip",
         { initialNumItems: 12 }
     );
 
@@ -64,9 +65,10 @@ export function useSearchScreen() {
         clearFilters,
         popularGenres: POPULAR_GENRES,
         allGenres: MAIN_GENRES,
+        hasActiveSearch,
         searchResults,
         status,
         loadMore,
-        loadingFirstPage: status === "LoadingFirstPage",
+        loadingFirstPage: hasActiveSearch && status === "LoadingFirstPage",
     };
 }

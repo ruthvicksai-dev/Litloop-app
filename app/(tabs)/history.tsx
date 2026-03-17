@@ -423,7 +423,7 @@ const styles = StyleSheet.create({
     list: {
         flexGrow: 1,
         paddingHorizontal: 20,
-        paddingBottom: Spacing.sm,
+        paddingBottom: 90,
     },
     compactCard: {
         backgroundColor: Colors.white,

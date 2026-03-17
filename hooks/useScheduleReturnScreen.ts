@@ -20,6 +20,20 @@ export function useScheduleReturnScreen(rentalId: string) {
     const [userRating, setUserRating] = useState(0);
     const [loading, setLoading] = useState(false);
 
+    // Pickup Address States
+    const [useSameAddress, setUseSameAddress] = useState(true);
+    const [phone, setPhone] = useState("");
+    const [landmark, setLandmark] = useState("");
+    const [area, setArea] = useState("");
+    const [city, setCity] = useState("");
+    const [roomNo, setRoomNo] = useState("");
+    const [yearOfStudy, setYearOfStudy] = useState("");
+    const [department, setDepartment] = useState("");
+    const [rollNo, setRollNo] = useState("");
+    const [latitude, setLatitude] = useState<number | undefined>(undefined);
+    const [longitude, setLongitude] = useState<number | undefined>(undefined);
+    const [formattedAddress, setFormattedAddress] = useState("");
+
     const estimatedDays = useMemo(() => {
         if (!rental?.deliveryDate || !pickupDate) {
             return 0;
@@ -30,7 +44,7 @@ export function useScheduleReturnScreen(rentalId: string) {
             Math.ceil(
                 (new Date(pickupDate).getTime() -
                     new Date(rental.deliveryDate).getTime()) /
-                    (1000 * 60 * 60 * 24)
+                (1000 * 60 * 60 * 24)
             )
         );
     }, [pickupDate, rental?.deliveryDate]);
@@ -70,6 +84,29 @@ export function useScheduleReturnScreen(rentalId: string) {
             return;
         }
 
+        let pickupLocation;
+        if (useSameAddress && rental) {
+            pickupLocation = rental.deliveryLocation;
+        } else {
+            if (!phone.trim()) {
+                showToast("Pickup phone is required.", "error");
+                return;
+            }
+            pickupLocation = {
+                phone: phone.trim(),
+                landmark: landmark.trim(),
+                area: area.trim(),
+                city: city.trim(),
+                roomNo: roomNo.trim(),
+                yearOfStudy: yearOfStudy.trim(),
+                department: department.trim(),
+                rollNo: rollNo.trim(),
+                latitude,
+                longitude,
+                formattedAddress: formattedAddress.trim(),
+            };
+        }
+
         setLoading(true);
         try {
             await schedulePickup({
@@ -77,6 +114,7 @@ export function useScheduleReturnScreen(rentalId: string) {
                 pickupDate,
                 pickupTime,
                 userRating,
+                pickupLocation,
             });
             showToast("Pickup scheduled! Proceed to payment.", "success");
             router.replace(`/rental/payment?rentalId=${rentalId}`);
@@ -103,5 +141,30 @@ export function useScheduleReturnScreen(rentalId: string) {
         estimatedDays,
         estimatedRent,
         handleSchedule,
+        // New Address Props
+        useSameAddress,
+        setUseSameAddress,
+        phone,
+        setPhone,
+        landmark,
+        setLandmark,
+        area,
+        setArea,
+        city,
+        setCity,
+        roomNo,
+        setRoomNo,
+        yearOfStudy,
+        setYearOfStudy,
+        department,
+        setDepartment,
+        rollNo,
+        setRollNo,
+        latitude,
+        setLatitude,
+        longitude,
+        setLongitude,
+        formattedAddress,
+        setFormattedAddress,
     };
 }

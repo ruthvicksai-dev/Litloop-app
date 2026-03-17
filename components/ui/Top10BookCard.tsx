@@ -97,20 +97,12 @@ const styles = StyleSheet.create({
         lineHeight: 70,
         marginRight: -22, // overlap into the cover
         zIndex: 10, // Bring to front
-        elevation: 10, // Android z-index
-        // Outline/glow to separate from dark covers
-        textShadowColor: "rgba(255,255,255,0.8)",
-        textShadowOffset: { width: 1, height: 1 },
-        textShadowRadius: 3,
     },
     coverWrap: {
         borderRadius: 10,
         overflow: "hidden",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.18,
-        shadowRadius: 6,
-        elevation: 5,
+        borderWidth: 1,
+        borderColor: "rgba(0,0,0,0.08)",
         zIndex: 1, // Behind the number
     },
     cover: {

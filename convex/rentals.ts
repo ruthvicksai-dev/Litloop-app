@@ -31,17 +31,23 @@ async function getBookWithCoverUrls(ctx: any, bookId: any) {
 
     return { ...book, coverUrl, coverUrls };
 }
-
 export const requestRental = mutation({
     args: {
         userId: v.id("users"),
         bookId: v.id("books"),
         zone: v.string(),
         deliveryLocation: v.object({
-            area: v.string(),
-            city: v.string(),
-            landmark: v.string(),
             phone: v.string(),
+            landmark: v.optional(v.string()),
+            area: v.optional(v.string()),
+            city: v.optional(v.string()),
+            roomNo: v.optional(v.string()),
+            yearOfStudy: v.optional(v.string()),
+            department: v.optional(v.string()),
+            rollNo: v.optional(v.string()),
+            latitude: v.optional(v.number()),
+            longitude: v.optional(v.number()),
+            formattedAddress: v.optional(v.string()),
         }),
     },
     handler: async (ctx, args) => {
@@ -65,12 +71,17 @@ export const requestRental = mutation({
             throw new Error("You already have an active rental for this book.");
 
         if (!args.zone.trim()) throw new Error("Zone is required.");
-        if (!args.deliveryLocation.area.trim())
-            throw new Error("Area/Hostel/Apartment is required.");
-        if (!args.deliveryLocation.city.trim())
-            throw new Error("City is required.");
         if (!args.deliveryLocation.phone.trim())
             throw new Error("Phone number is required.");
+
+        if (args.zone === "College") {
+            if (!args.deliveryLocation.roomNo?.trim()) throw new Error("Room number is required for College delivery.");
+            if (!args.deliveryLocation.rollNo?.trim()) throw new Error("Roll number is required for College delivery.");
+        } else if (args.zone === "Home") {
+            if (!args.deliveryLocation.formattedAddress?.trim() && !args.deliveryLocation.area?.trim()) {
+                throw new Error("Delivery address or location is required for Home delivery.");
+            }
+        }
 
         // Decrease available copies
         await ctx.db.patch(args.bookId, {
@@ -82,10 +93,17 @@ export const requestRental = mutation({
             bookId: args.bookId,
             zone: args.zone.trim(),
             deliveryLocation: {
-                area: args.deliveryLocation.area.trim(),
-                city: args.deliveryLocation.city.trim(),
-                landmark: args.deliveryLocation.landmark.trim(),
                 phone: args.deliveryLocation.phone.trim(),
+                landmark: args.deliveryLocation.landmark?.trim(),
+                area: args.deliveryLocation.area?.trim(),
+                city: args.deliveryLocation.city?.trim(),
+                roomNo: args.deliveryLocation.roomNo?.trim(),
+                yearOfStudy: args.deliveryLocation.yearOfStudy?.trim(),
+                department: args.deliveryLocation.department?.trim(),
+                rollNo: args.deliveryLocation.rollNo?.trim(),
+                latitude: args.deliveryLocation.latitude,
+                longitude: args.deliveryLocation.longitude,
+                formattedAddress: args.deliveryLocation.formattedAddress?.trim(),
             },
             rentPerDay: book.rentPerDay,
             status: "requested",
@@ -141,6 +159,19 @@ export const schedulePickup = mutation({
         pickupDate: v.string(),
         pickupTime: v.string(),
         userRating: v.number(),
+        pickupLocation: v.optional(v.object({
+            phone: v.string(),
+            landmark: v.optional(v.string()),
+            area: v.optional(v.string()),
+            city: v.optional(v.string()),
+            roomNo: v.optional(v.string()),
+            yearOfStudy: v.optional(v.string()),
+            department: v.optional(v.string()),
+            rollNo: v.optional(v.string()),
+            latitude: v.optional(v.number()),
+            longitude: v.optional(v.number()),
+            formattedAddress: v.optional(v.string()),
+        })),
     },
     handler: async (ctx, args) => {
         const rental = await ctx.db.get(args.rentalId);
@@ -180,6 +211,7 @@ export const schedulePickup = mutation({
         await ctx.db.patch(args.rentalId, {
             pickupDate: args.pickupDate,
             pickupTime: args.pickupTime,
+            pickupLocation: args.pickupLocation,
             totalRent,
             userRating: args.userRating,
             ratedAt: Date.now(),

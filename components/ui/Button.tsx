@@ -2,7 +2,7 @@ import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import React, { useRef } from "react";
 import {
-ActivityIndicator,
+    ActivityIndicator,
     Animated,
     StyleProp,
     StyleSheet,
@@ -99,11 +99,8 @@ const styles = StyleSheet.create({
     },
     primary: {
         backgroundColor: Colors.primary,
-        shadowColor: Colors.primary,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 4,
+        borderWidth: 1,
+        borderColor: Colors.primaryDark + "40",
     },
     secondary: {
         backgroundColor: Colors.primaryLight,

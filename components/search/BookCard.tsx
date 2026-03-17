@@ -1,6 +1,7 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useFavorites } from "@/hooks/useFavorites";
+import { useReadLater } from "@/hooks/useReadLater";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -64,6 +65,10 @@ function BookCard({
     const { isFavorite, toggleFavorite } = useFavorites();
     const isWishlisted = isFavorite(bookId);
 
+    // Global Read Later logic
+    const { isReadLater, toggleReadLater } = useReadLater();
+    const isMarkedReadLater = isReadLater(bookId);
+
     const animatedStyle = useAnimatedStyle(() => {
         return {
             transform: [{ scale: scale.value }]
@@ -80,6 +85,10 @@ function BookCard({
 
     const handleToggleFavorite = () => {
         toggleFavorite(bookId);
+    };
+
+    const handleToggleReadLater = () => {
+        toggleReadLater(bookId);
     };
 
     return (
@@ -118,18 +127,30 @@ function BookCard({
                             <Text numberOfLines={1} style={styles.title}>
                                 {title}
                             </Text>
-                            {/* Wishlist toggle overlapping right corner */}
-                            <Pressable
-                                onPress={handleToggleFavorite}
-                                style={styles.wishlistBtn}
-                                hitSlop={10}
-                            >
-                                <Ionicons
-                                    name={isWishlisted ? "heart" : "heart-outline"}
-                                    size={22}
-                                    color={isWishlisted ? "red" : Colors.textLight}
-                                />
-                            </Pressable>
+                            <View style={styles.actionsRow}>
+                                <Pressable
+                                    onPress={handleToggleReadLater}
+                                    style={styles.actionBtn}
+                                    hitSlop={10}
+                                >
+                                    <Ionicons
+                                        name={isMarkedReadLater ? "bookmark" : "bookmark-outline"}
+                                        size={20}
+                                        color={isMarkedReadLater ? Colors.primary : Colors.textLight}
+                                    />
+                                </Pressable>
+                                <Pressable
+                                    onPress={handleToggleFavorite}
+                                    style={styles.actionBtn}
+                                    hitSlop={10}
+                                >
+                                    <Ionicons
+                                        name={isWishlisted ? "heart" : "heart-outline"}
+                                        size={22}
+                                        color={isWishlisted ? "red" : Colors.textLight}
+                                    />
+                                </Pressable>
+                            </View>
                         </View>
 
                         <Text numberOfLines={1} style={styles.author}>
@@ -177,12 +198,6 @@ export default memo(BookCard);
 const styles = StyleSheet.create({
     cardWrapper: {
         marginBottom: Spacing.sm,
-        // Premium subtle floating shadow
-        shadowColor: "#000",
-        shadowOpacity: 0.08,
-        shadowOffset: { width: 0, height: 4 },
-        shadowRadius: 12,
-        elevation: 4,
     },
     card: {
         padding: 12,
@@ -225,7 +240,12 @@ const styles = StyleSheet.create({
         lineHeight: 20,
         marginRight: 8,
     },
-    wishlistBtn: {
+    actionsRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+    },
+    actionBtn: {
         padding: 6,
         borderRadius: 999,
         backgroundColor: "rgba(255,255,255,0.70)",

@@ -1,6 +1,7 @@
 import SearchInput from "@/components/shared/SearchInput";
 import BookLoader from "@/components/ui/BookLoader";
 import DiscoverSectionRow from "@/components/ui/DiscoverSectionRow";
+import SeriesSectionRow from "@/components/ui/SeriesSectionRow";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
@@ -59,6 +60,12 @@ export default function HomeScreen() {
       </Animated.View>
 
       <Animated.View style={[styles.searchContainer, { opacity: searchFade }]}>
+        <SearchInput
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Search for titles, authors or genres..."
+          onPress={() => router.push("/(tabs)/search" as any)}
+        />
       </Animated.View>
 
       <ScrollView
@@ -96,11 +103,10 @@ export default function HomeScreen() {
           books={famousBooks ?? []}
           seeAllKey="famous"
         />
-        <DiscoverSectionRow
+        <SeriesSectionRow
           title="Book Series"
-          subtitle="Continue where you left off"
-          books={seriesBooks ?? []}
-          seeAllKey="series"
+          subtitle="Explore our curated book collections"
+          series={seriesBooks ?? []}
         />
       </ScrollView>
     </SafeAreaView>
@@ -140,6 +146,6 @@ const styles = StyleSheet.create({
   },
   scroll: {
     paddingTop: Spacing.xs,
-    paddingBottom: 32,
+    paddingBottom: 90,
   },
 });

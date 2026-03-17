@@ -82,6 +82,13 @@ export default function AdminDashboard() {
                                 <Ionicons name="book" size={20} color={Colors.primary} />
                                 <Text style={styles.quickActionText}>View Books</Text>
                             </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.quickAction}
+                                onPress={() => router.push("/(admin)/series" as any)}
+                            >
+                                <Ionicons name="layers" size={20} color={Colors.primary} />
+                                <Text style={styles.quickActionText}>Manage Series</Text>
+                            </TouchableOpacity>
                         </View>
 
                         <AdminStatusFilters

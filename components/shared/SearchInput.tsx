@@ -1,8 +1,8 @@
+import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { StyleProp, StyleSheet, TextInput, TextStyle, View, ViewStyle } from "react-native";
-import { Fonts, FontSizes } from "@/constants/fonts";
+import { StyleProp, StyleSheet, TextInput, TextStyle, TouchableOpacity, View, ViewStyle } from "react-native";
 
 type SearchInputProps = {
     value: string;
@@ -11,6 +11,7 @@ type SearchInputProps = {
     containerStyle?: StyleProp<ViewStyle>;
     inputStyle?: StyleProp<TextStyle>;
     icon?: string;
+    onPress?: () => void;
 };
 
 export default function SearchInput({
@@ -19,8 +20,9 @@ export default function SearchInput({
     placeholder,
     containerStyle,
     inputStyle,
+    onPress,
 }: SearchInputProps) {
-    return (
+    const content = (
         <View style={[styles.container, containerStyle]}>
             <Ionicons name="search" size={18} color={Colors.textLight} />
             <TextInput
@@ -29,9 +31,21 @@ export default function SearchInput({
                 placeholderTextColor={Colors.textLight}
                 value={value}
                 onChangeText={onChangeText}
+                editable={!onPress}
+                pointerEvents={onPress ? "none" : "auto"}
             />
         </View>
     );
+
+    if (onPress) {
+        return (
+            <TouchableOpacity activeOpacity={0.8} onPress={onPress}>
+                {content}
+            </TouchableOpacity>
+        );
+    }
+
+    return content;
 }
 
 const styles = StyleSheet.create({

@@ -14,7 +14,9 @@ import type * as books from "../books.js";
 import type * as favorites from "../favorites.js";
 import type * as lib_jwt from "../lib/jwt.js";
 import type * as payments from "../payments.js";
+import type * as readLater from "../readLater.js";
 import type * as rentals from "../rentals.js";
+import type * as series from "../series.js";
 import type * as users from "../users.js";
 
 import type {
@@ -30,7 +32,9 @@ declare const fullApi: ApiFromModules<{
   favorites: typeof favorites;
   "lib/jwt": typeof lib_jwt;
   payments: typeof payments;
+  readLater: typeof readLater;
   rentals: typeof rentals;
+  series: typeof series;
   users: typeof users;
 }>;
 

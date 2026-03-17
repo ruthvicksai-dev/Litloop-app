@@ -23,6 +23,13 @@ export default defineSchema({
         .index("by_tokenHash", ["tokenHash"])
         .index("by_userId", ["userId"]),
 
+    book_series: defineTable({
+        name: v.string(),
+        coverImage: v.id("_storage"),
+        description: v.optional(v.string()),
+        createdAt: v.number(),
+    }).index("by_name", ["name"]),
+
     books: defineTable({
         title: v.string(),
         author: v.string(),
@@ -41,7 +48,8 @@ export default defineSchema({
         top10Position: v.optional(v.number()),
         isFamous: v.optional(v.boolean()),
         isTrending: v.optional(v.boolean()),
-        series: v.optional(v.string()),
+        series: v.optional(v.string()), // Legacy string field
+        seriesId: v.optional(v.id("book_series")), // New linked field
         searchText: v.optional(v.string()),
         coverImage: v.optional(v.id("_storage")),
         coverImages: v.optional(v.array(v.id("_storage"))),
@@ -52,6 +60,7 @@ export default defineSchema({
         .index("by_title", ["title"])
         .index("by_genre", ["genre"])
         .index("by_createdAt", ["createdAt"])
+        .index("by_seriesId", ["seriesId"])
         .searchIndex("search_books", {
             searchField: "searchText",
             filterFields: ["genre"],
@@ -62,10 +71,24 @@ export default defineSchema({
         bookId: v.id("books"),
         zone: v.string(),
         deliveryLocation: v.object({
-            area: v.string(),
-            city: v.string(),
-            landmark: v.string(),
+            // Common
             phone: v.string(),
+            landmark: v.optional(v.string()),
+
+            // Custom Address (Legacy / Home manual)
+            area: v.optional(v.string()),
+            city: v.optional(v.string()),
+
+            // College Specifics
+            roomNo: v.optional(v.string()),
+            yearOfStudy: v.optional(v.string()),
+            department: v.optional(v.string()),
+            rollNo: v.optional(v.string()),
+
+            // Home Specifics (Google Maps style)
+            latitude: v.optional(v.number()),
+            longitude: v.optional(v.number()),
+            formattedAddress: v.optional(v.string()),
         }),
         deliveryDate: v.optional(v.string()),
         deliveryTime: v.optional(v.string()),
@@ -99,6 +122,19 @@ export default defineSchema({
         utrNumber: v.optional(v.string()),
         paymentScreenshot: v.optional(v.id("_storage")),
         lateFee: v.optional(v.number()),
+        pickupLocation: v.optional(v.object({
+            phone: v.string(),
+            landmark: v.optional(v.string()),
+            area: v.optional(v.string()),
+            city: v.optional(v.string()),
+            roomNo: v.optional(v.string()),
+            yearOfStudy: v.optional(v.string()),
+            department: v.optional(v.string()),
+            rollNo: v.optional(v.string()),
+            latitude: v.optional(v.number()),
+            longitude: v.optional(v.number()),
+            formattedAddress: v.optional(v.string()),
+        })),
         createdAt: v.number(),
     })
         .index("by_userId", ["userId"])
@@ -144,6 +180,15 @@ export default defineSchema({
         .index("by_revenue", ["revenue"]),
 
     favorites: defineTable({
+        userId: v.id("users"),
+        bookId: v.id("books"),
+        createdAt: v.number(),
+    })
+        .index("by_userId", ["userId"])
+        .index("by_bookId", ["bookId"])
+        .index("by_user_book", ["userId", "bookId"]),
+
+    read_later: defineTable({
         userId: v.id("users"),
         bookId: v.id("books"),
         createdAt: v.number(),

@@ -14,6 +14,7 @@ type ConfirmActionModalProps = {
     onConfirm: () => void;
     onCancel: () => void;
     tone?: "default" | "danger";
+    loading?: boolean;
 };
 
 export default function ConfirmActionModal({
@@ -25,6 +26,7 @@ export default function ConfirmActionModal({
     onConfirm,
     onCancel,
     tone = "default",
+    loading = false,
 }: ConfirmActionModalProps) {
     const isDanger = tone === "danger";
 
@@ -62,6 +64,7 @@ export default function ConfirmActionModal({
                         <Button
                             title={confirmLabel}
                             onPress={onConfirm}
+                            loading={loading}
                             style={[
                                 styles.button,
                                 isDanger && styles.confirmDanger,

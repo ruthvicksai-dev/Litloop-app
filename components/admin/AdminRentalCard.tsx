@@ -1,13 +1,14 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, RENTAL_STATUS_LABELS, STATUS_COLORS } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React from "react";
 import {
     Image,
     StyleSheet,
     Text,
     TouchableOpacity,
-    View,
+    View
 } from "react-native";
 
 type AdminRentalCardProps = {
@@ -25,12 +26,20 @@ export default function AdminRentalCard({
     onMarkDelivered,
     onMarkReturned,
 }: AdminRentalCardProps) {
+    const router = useRouter();
     const statusColor = STATUS_COLORS[item.status] || Colors.textSecondary;
     const coverUri = item.coverUrl || item.coverUrls?.[0] || null;
 
     return (
         <View style={styles.rentalCard}>
-            <View style={styles.rentalTop}>
+            <TouchableOpacity
+                style={styles.rentalTop}
+                onPress={() => router.push({
+                    pathname: "/(admin)/rental/[id]",
+                    params: { id: item._id }
+                } as any)}
+                activeOpacity={0.7}
+            >
                 <View style={styles.coverWrap}>
                     {coverUri ? (
                         <Image
@@ -75,12 +84,38 @@ export default function AdminRentalCard({
                         <Ionicons
                             name="location-outline"
                             size={14}
-                            color={Colors.textSecondary}
+                            color={Colors.primary}
                         />
-                        <Text style={styles.rentalLocation}>
-                            {item.deliveryLocation?.area}, {item.deliveryLocation?.city}
+                        <Text style={[styles.rentalLocation, { color: Colors.primary, fontFamily: Fonts.bold }]}>
+                            {item.zone}
                         </Text>
                     </View>
+
+                    {item.zone === "College" ? (
+                        <View style={styles.detailsGrid}>
+                            <View style={styles.detailItem}>
+                                <Text style={styles.detailLabel}>Room:</Text>
+                                <Text style={styles.detailValue}>{item.deliveryLocation?.roomNo}</Text>
+                            </View>
+                            <View style={styles.detailItem}>
+                                <Text style={styles.detailLabel}>Roll:</Text>
+                                <Text style={styles.detailValue}>{item.deliveryLocation?.rollNo}</Text>
+                            </View>
+                            {item.deliveryLocation?.department && (
+                                <View style={styles.detailItem}>
+                                    <Text style={styles.detailLabel}>Dept:</Text>
+                                    <Text style={styles.detailValue}>{item.deliveryLocation?.department}</Text>
+                                </View>
+                            )}
+                        </View>
+                    ) : (
+                        <View style={styles.addressContainer}>
+                            <Text style={styles.rentalLocation} numberOfLines={2}>
+                                {item.deliveryLocation?.formattedAddress ||
+                                    `${item.deliveryLocation?.area}, ${item.deliveryLocation?.city}`}
+                            </Text>
+                        </View>
+                    )}
                 </View>
                 <View style={[styles.statusBadge, { backgroundColor: statusColor + "18" }]}>
                     <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
@@ -88,7 +123,7 @@ export default function AdminRentalCard({
                         {RENTAL_STATUS_LABELS[item.status]}
                     </Text>
                 </View>
-            </View>
+            </TouchableOpacity>
 
             {(item.status === "requested" ||
                 item.status === "delivery_scheduled" ||
@@ -140,11 +175,11 @@ const styles = StyleSheet.create({
         padding: 16,
         borderWidth: 1,
         borderColor: Colors.border,
+        position: 'relative',
     },
     rentalTop: {
         flexDirection: "row",
-        alignItems: "center",
-        flexWrap: "wrap",
+        alignItems: "flex-start",
     },
     coverWrap: {
         marginRight: 12,
@@ -166,8 +201,7 @@ const styles = StyleSheet.create({
     },
     rentalInfo: {
         flex: 1,
-        marginRight: 10,
-        minWidth: 160,
+        marginRight: 80,
         paddingTop: 2,
     },
     rentalTitle: {
@@ -191,17 +225,48 @@ const styles = StyleSheet.create({
         fontSize: FontSizes.caption,
         color: Colors.textSecondary,
         fontFamily: Fonts.regular,
+        flex: 1,
+    },
+    detailsGrid: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        gap: 8,
+        marginTop: 4,
+    },
+    detailItem: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: Colors.border + "40",
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 6,
+    },
+    detailLabel: {
+        fontSize: 10,
+        fontFamily: Fonts.bold,
+        color: Colors.textSecondary,
+        marginRight: 4,
+    },
+    detailValue: {
+        fontSize: 10,
+        fontFamily: Fonts.medium,
+        color: Colors.text,
+    },
+    addressContainer: {
+        marginTop: 2,
     },
     statusBadge: {
         flexDirection: "row",
         alignItems: "center",
         gap: 5,
-        paddingHorizontal: 12,
-        paddingVertical: 7,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
         borderRadius: 999,
         borderWidth: 1,
         borderColor: Colors.border,
-        alignSelf: "center",
+        position: 'absolute',
+        top: 16,
+        right: 16,
     },
     statusDot: {
         width: 6,

@@ -1,8 +1,13 @@
+import BookLoader from "@/components/ui/BookLoader";
 import Button from "@/components/ui/Button";
 import DatePickerField from "@/components/ui/DatePickerField";
+import InputField from "@/components/ui/InputField";
 import TimePickerField from "@/components/ui/TimePickerField";
+import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useScheduleReturnScreen } from "@/hooks/useScheduleReturnScreen";
+import { Ionicons } from "@expo/vector-icons";
+import * as Location from "expo-location";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
@@ -13,8 +18,6 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Fonts, FontSizes } from "@/constants/fonts";
-import { Ionicons } from "@expo/vector-icons";
 
 export default function ScheduleReturnScreen() {
     const { rentalId } = useLocalSearchParams<{ rentalId: string }>();
@@ -31,6 +34,29 @@ export default function ScheduleReturnScreen() {
         estimatedDays,
         estimatedRent,
         handleSchedule,
+        // Address Props
+        useSameAddress,
+        setUseSameAddress,
+        phone,
+        setPhone,
+        landmark,
+        setLandmark,
+        area,
+        setArea,
+        city,
+        setCity,
+        roomNo,
+        setRoomNo,
+        yearOfStudy,
+        setYearOfStudy,
+        department,
+        setDepartment,
+        rollNo,
+        setRollNo,
+        setLatitude,
+        setLongitude,
+        formattedAddress,
+        setFormattedAddress,
     } = useScheduleReturnScreen(rentalId);
 
     const today = new Date();
@@ -40,22 +66,29 @@ export default function ScheduleReturnScreen() {
 
     const minimumPickupDate = rental?.deliveryDate
         ? new Date(
-              Math.max(
-                  new Date(`${rental.deliveryDate}T00:00:00`).getTime() +
-                      24 * 60 * 60 * 1000,
-                  new Date(
-                      today.getFullYear(),
-                      today.getMonth(),
-                      today.getDate()
-                  ).getTime()
-              )
-          )
+            Math.max(
+                new Date(`${rental.deliveryDate}T00:00:00`).getTime() +
+                24 * 60 * 60 * 1000,
+                new Date(
+                    today.getFullYear(),
+                    today.getMonth(),
+                    today.getDate()
+                ).getTime()
+            )
+        )
         : today;
 
     const pickupMaximumDate =
         minimumPickupDate.getTime() <= maxPickupDate.getTime()
             ? maxPickupDate
             : minimumPickupDate;
+    if (rental === undefined) {
+        return (
+            <View style={styles.center}>
+                <BookLoader label="Loading rental..." />
+            </View>
+        );
+    }
 
     return (
         <SafeAreaView style={styles.container}>
@@ -91,6 +124,103 @@ export default function ScheduleReturnScreen() {
                     value={pickupTime}
                     onChange={setPickupTime}
                 />
+
+                {/* Pickup Address Section */}
+                <View style={styles.sectionDivider}>
+                    <Text style={styles.sectionTitle}>Pickup Address</Text>
+                    <TouchableOpacity
+                        style={styles.checkboxRow}
+                        onPress={() => setUseSameAddress(!useSameAddress)}
+                    >
+                        <View style={[styles.checkbox, useSameAddress && styles.checkboxActive]}>
+                            {useSameAddress && <Ionicons name="checkmark" size={12} color={Colors.white} />}
+                        </View>
+                        <Text style={styles.checkboxLabel}>Same as delivery address</Text>
+                    </TouchableOpacity>
+                </View>
+
+                {!useSameAddress && (
+                    <View style={styles.customAddressSection}>
+                        {rental.zone === "College" ? (
+                            <>
+                                <InputField
+                                    label="Room No"
+                                    placeholder="e.g. 205"
+                                    value={roomNo}
+                                    onChangeText={setRoomNo}
+                                />
+                                <View style={styles.row}>
+                                    <View style={{ flex: 1, marginRight: Spacing.sm }}>
+                                        <InputField
+                                            label="Year of Study"
+                                            placeholder="e.g. 3rd"
+                                            value={yearOfStudy}
+                                            onChangeText={setYearOfStudy}
+                                        />
+                                    </View>
+                                    <View style={{ flex: 1 }}>
+                                        <InputField
+                                            label="Department"
+                                            placeholder="e.g. CSE"
+                                            value={department}
+                                            onChangeText={setDepartment}
+                                        />
+                                    </View>
+                                </View>
+                                <InputField
+                                    label="Roll No"
+                                    placeholder="e.g. 21K61A0501"
+                                    value={rollNo}
+                                    onChangeText={setRollNo}
+                                />
+                            </>
+                        ) : (
+                            <>
+                                <TouchableOpacity
+                                    style={styles.locationBtn}
+                                    onPress={async () => {
+                                        let { status } = await Location.requestForegroundPermissionsAsync();
+                                        if (status !== "granted") return;
+                                        let location = await Location.getCurrentPositionAsync({});
+                                        setLatitude(location.coords.latitude);
+                                        setLongitude(location.coords.longitude);
+                                        let address = await Location.reverseGeocodeAsync({
+                                            latitude: location.coords.latitude,
+                                            longitude: location.coords.longitude,
+                                        });
+                                        if (address && address.length > 0) {
+                                            const addr = address[0];
+                                            setFormattedAddress([addr.name, addr.street, addr.district, addr.city].filter(Boolean).join(", "));
+                                        }
+                                    }}
+                                >
+                                    <View style={styles.locationBtnContent}>
+                                        <Ionicons name="location" size={18} color={Colors.primary} />
+                                        <Text style={styles.locationBtnText}>Use Current Location</Text>
+                                    </View>
+                                </TouchableOpacity>
+                                {formattedAddress ? (
+                                    <View style={styles.addressDisplay}>
+                                        <Text style={styles.addressText}>{formattedAddress}</Text>
+                                    </View>
+                                ) : null}
+                                <InputField
+                                    label="Landmark / Area"
+                                    placeholder="e.g. Near Temple"
+                                    value={landmark}
+                                    onChangeText={setLandmark}
+                                />
+                            </>
+                        )}
+                        <InputField
+                            label="Pickup Contact"
+                            placeholder="Phone number"
+                            value={phone}
+                            onChangeText={setPhone}
+                            keyboardType="phone-pad"
+                        />
+                    </View>
+                )}
 
                 <View style={styles.ratingCard}>
                     <Text style={styles.ratingTitle}>Rate this book</Text>
@@ -255,5 +385,87 @@ const styles = StyleSheet.create({
         fontSize: FontSizes.title,
         fontFamily: Fonts.bold,
         color: Colors.primary,
+    },
+    center: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: Colors.background,
+    },
+    sectionDivider: {
+        marginTop: Spacing.lg,
+        paddingTop: Spacing.md,
+        borderTopWidth: 1,
+        borderTopColor: Colors.border,
+    },
+    sectionTitle: {
+        fontSize: FontSizes.subtitle,
+        fontFamily: Fonts.bold,
+        color: Colors.text,
+        marginBottom: Spacing.sm,
+    },
+    checkboxRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: Spacing.sm,
+    },
+    checkbox: {
+        width: 20,
+        height: 20,
+        borderRadius: 4,
+        borderWidth: 2,
+        borderColor: Colors.primary,
+        marginRight: 10,
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    checkboxActive: {
+        backgroundColor: Colors.primary,
+    },
+    checkboxLabel: {
+        fontSize: FontSizes.body,
+        fontFamily: Fonts.medium,
+        color: Colors.text,
+    },
+    customAddressSection: {
+        marginTop: Spacing.sm,
+        backgroundColor: Colors.white,
+        padding: Spacing.md,
+        borderRadius: 12,
+        gap: 2,
+    },
+    row: {
+        flexDirection: "row",
+    },
+    locationBtn: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: Spacing.md,
+        borderWidth: 1,
+        borderColor: Colors.primary,
+        borderRadius: 8,
+        marginBottom: Spacing.md,
+    },
+    locationBtnContent: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+    },
+    locationBtnText: {
+        color: Colors.primary,
+        fontFamily: Fonts.bold,
+        fontSize: FontSizes.body,
+    },
+    addressDisplay: {
+        backgroundColor: Colors.background,
+        padding: Spacing.sm,
+        borderRadius: 8,
+        marginBottom: Spacing.md,
+    },
+    addressText: {
+        fontSize: FontSizes.small,
+        fontFamily: Fonts.regular,
+        color: Colors.text,
     },
 });

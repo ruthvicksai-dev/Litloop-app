@@ -29,6 +29,7 @@ export default function SearchScreen() {
         setShowAllGenres,
         popularGenres,
         allGenres,
+        hasActiveSearch,
         searchResults,
         status,
         loadMore,
@@ -79,6 +80,7 @@ export default function SearchScreen() {
                 books={searchResults}
                 status={status}
                 loadingFirstPage={loadingFirstPage}
+                hasActiveSearch={hasActiveSearch}
                 onEndReached={() => loadMore(8)}
                 onBookPress={(bookId) => router.push(`/book/${bookId}`)}
             />

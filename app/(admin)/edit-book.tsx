@@ -61,6 +61,9 @@ export default function EditBookScreen() {
         toggleSeries,
         series,
         setSeries,
+        seriesId,
+        setSeriesId,
+        seriesList,
         isFetchingBookInfo,
         toggleGenre,
         coverUris,
@@ -206,11 +209,14 @@ export default function EditBookScreen() {
                             isTrending={isTrending}
                             isSeries={isSeries}
                             series={series}
+                            seriesId={seriesId}
+                            seriesList={seriesList}
                             onToggleTop10={toggleTop10}
                             onToggleFamous={toggleFamous}
                             onToggleTrending={toggleTrending}
                             onToggleSeries={toggleSeries}
                             onChangeSeries={setSeries}
+                            onSelectSeriesId={setSeriesId}
                             onChangeTop10Position={setTop10Position}
                         />
 

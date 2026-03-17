@@ -3,7 +3,7 @@ import { Colors, Spacing } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useRef } from "react";
 import {
-Animated,
+    Animated,
     Image,
     StyleProp,
     StyleSheet,
@@ -128,11 +128,8 @@ const styles = StyleSheet.create({
         padding: Spacing.md,
         marginBottom: Spacing.md,
         height: "100%",
-        shadowColor: Colors.shadow,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-        elevation: 3,
+        borderWidth: 1,
+        borderColor: Colors.border + "40",
     },
     touchable: {
         flex: 1,

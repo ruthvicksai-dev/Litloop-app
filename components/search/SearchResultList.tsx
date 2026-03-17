@@ -24,6 +24,7 @@ type SearchResultListProps = {
     onEndReached: () => void;
     onBookPress: (bookId: string) => void;
     loadingFirstPage: boolean;
+    hasActiveSearch: boolean;
 };
 
 function SearchResultSkeleton() {
@@ -49,6 +50,7 @@ function SearchResultList({
     onEndReached,
     onBookPress,
     loadingFirstPage,
+    hasActiveSearch,
 }: SearchResultListProps) {
     if (loadingFirstPage) {
         return <SearchResultSkeleton />;
@@ -82,10 +84,18 @@ function SearchResultList({
             contentContainerStyle={styles.list}
             ListEmptyComponent={
                 <View style={styles.empty}>
-                    <Ionicons name="search-outline" size={48} color={Colors.textLight} />
-                    <Text style={styles.emptyTitle}>No matches found</Text>
+                    <Ionicons
+                        name={hasActiveSearch ? "search-outline" : "sparkles-outline"}
+                        size={48}
+                        color={Colors.textLight}
+                    />
+                    <Text style={styles.emptyTitle}>
+                        {hasActiveSearch ? "No matches found" : "Start with a search or genre"}
+                    </Text>
                     <Text style={styles.emptySubtitle}>
-                        Try another title, author, or genre.
+                        {hasActiveSearch
+                            ? "Try another title, author, or genre."
+                            : "Use the search bar or pick a genre to discover books."}
                     </Text>
                 </View>
             }
@@ -108,7 +118,7 @@ const styles = StyleSheet.create({
     list: {
         paddingHorizontal: 20,
         paddingTop: Spacing.sm,
-        paddingBottom: Spacing.lg,
+        paddingBottom: 90,
         flexGrow: 1,
     },
     empty: {
