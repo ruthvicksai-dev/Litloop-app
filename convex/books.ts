@@ -104,6 +104,16 @@ function normalizeRating(rating: number | undefined) {
     return Math.max(0, Math.min(5, rating));
 }
 
+function calculateRankingScore(book: {
+    rating?: number;
+    bookRentals?: number;
+    bookViews?: number;
+}) {
+    return (book.rating ?? 0) * 0.5 +
+        (book.bookRentals ?? 0) * 0.3 +
+        (book.bookViews ?? 0) * 0.2;
+}
+
 function normalizeOptionalPositiveInt(value: number | undefined, fieldLabel: string) {
     if (value === undefined) return undefined;
     if (!Number.isFinite(value) || value <= 0 || !Number.isInteger(value)) {
@@ -189,6 +199,9 @@ export async function mapBookForClient(
         ratingCount: typeof book.ratingCount === "number" ? book.ratingCount : 0,
         bookViews: typeof book.bookViews === "number" ? book.bookViews : 0,
         bookRentals: typeof book.bookRentals === "number" ? book.bookRentals : 0,
+        rankingScore: typeof book.rankingScore === "number"
+            ? book.rankingScore
+            : calculateRankingScore(book),
         isTop10: Boolean(book.isTop10),
         isFamous: Boolean(book.isFamous),
         isTrending: Boolean(book.isTrending),
@@ -216,17 +229,40 @@ export const get = query({
     },
 });
 
+export const incrementBookViews = mutation({
+    args: { bookId: v.id("books") },
+    handler: async (ctx, args) => {
+        const book = await ctx.db.get(args.bookId);
+        if (!book) {
+            throw new Error("Book not found.");
+        }
+
+        const nextBookViews = normalizeNonNegativeInt(book.bookViews, 0) + 1;
+
+        await ctx.db.patch(args.bookId, {
+            bookViews: nextBookViews,
+            rankingScore: calculateRankingScore({
+                rating: normalizeRating(book.rating),
+                bookRentals: normalizeNonNegativeInt(book.bookRentals, 0),
+                bookViews: nextBookViews,
+            }),
+        });
+
+        return true;
+    },
+});
+
 export const getRelatedBooks = query({
     args: { bookId: v.id("books") },
     handler: async (ctx, args) => {
         const currentBook = await ctx.db.get(args.bookId);
         if (!currentBook) return [];
 
-        const allBooks = await ctx.db
+        const candidateBooks = await ctx.db
             .query("books")
-            .withIndex("by_createdAt")
+            .withIndex("by_rankingScore")
             .order("desc")
-            .collect();
+            .take(50);
 
         const currentAuthorKey = normalizeBookValue(currentBook.author);
         const currentGenres = new Set([
@@ -234,15 +270,17 @@ export const getRelatedBooks = query({
             ...(currentBook.genres ?? []),
         ]);
 
-        const sameAuthor = allBooks.filter(
+        const sameAuthor = candidateBooks.filter(
             (book) =>
                 book._id !== currentBook._id &&
                 normalizeBookValue(book.author) === currentAuthorKey
         );
 
-        const sameGenre = allBooks.filter((book) => {
+        const sameAuthorIds = new Set(sameAuthor.map((book) => book._id));
+
+        const sameGenre = candidateBooks.filter((book) => {
             if (book._id === currentBook._id) return false;
-            if (sameAuthor.some((candidate) => candidate._id === book._id)) return false;
+            if (sameAuthorIds.has(book._id)) return false;
 
             const bookGenres = [
                 ...(book.genre ? [book.genre] : []),
@@ -356,14 +394,12 @@ export const add = mutation({
         if (args.totalCopies <= 0)
             throw new Error("Total copies must be positive.");
 
-        const titleKey = normalizeBookValue(title);
-        const authorKey = normalizeBookValue(author);
-        const existingBooks = await ctx.db.query("books").collect();
-        const duplicateBook = existingBooks.find(
-            (book) =>
-                normalizeBookValue(book.title) === titleKey &&
-                normalizeBookValue(book.author) === authorKey
-        );
+        const duplicateBook = await ctx.db
+            .query("books")
+            .withIndex("by_title_author", (q) =>
+                q.eq("title", title).eq("author", author)
+            )
+            .first();
         if (duplicateBook) {
             throw new Error("This book already exists.");
         }
@@ -379,6 +415,14 @@ export const add = mutation({
         const publishedYear = normalizePublishedYear(args.publishedYear);
         const isTop10 = Boolean(args.isTop10);
         const top10Position = normalizeTop10Position(isTop10, args.top10Position);
+        const rating = normalizeRating(args.rating);
+        const bookViews = normalizeNonNegativeInt(args.bookViews, 0);
+        const bookRentals = normalizeNonNegativeInt(args.bookRentals, 0);
+        const rankingScore = calculateRankingScore({
+            rating,
+            bookRentals,
+            bookViews,
+        });
 
         const bookId = await ctx.db.insert("books", {
             title,
@@ -386,10 +430,11 @@ export const add = mutation({
             description,
             genre: primaryGenre,
             genres: normalizedGenres,
-            rating: normalizeRating(args.rating),
+            rating,
             ratingCount: normalizeNonNegativeInt(args.ratingCount, 0),
-            bookViews: normalizeNonNegativeInt(args.bookViews, 0),
-            bookRentals: normalizeNonNegativeInt(args.bookRentals, 0),
+            bookViews,
+            bookRentals,
+            rankingScore,
             pageCount,
             publishedYear,
             publisher: args.publisher?.trim() || undefined,
@@ -558,6 +603,22 @@ if (
             });
         }
 
+        if (
+            args.rating !== undefined ||
+            args.bookViews !== undefined ||
+            args.bookRentals !== undefined
+        ) {
+            updates.rankingScore = calculateRankingScore({
+                rating: (updates.rating as number | undefined) ?? normalizeRating(book.rating),
+                bookRentals:
+                    (updates.bookRentals as number | undefined) ??
+                    normalizeNonNegativeInt(book.bookRentals, 0),
+                bookViews:
+                    (updates.bookViews as number | undefined) ??
+                    normalizeNonNegativeInt(book.bookViews, 0),
+            });
+        }
+
         await ctx.db.patch(args.bookId, updates);
     },
 });
@@ -610,14 +671,10 @@ export const getTopPicks = query({
     handler: async (ctx) => {
         const books = await ctx.db
             .query("books")
-            .withIndex("by_createdAt")
+            .withIndex("by_rating")
             .order("desc")
-            .collect();
-        // Sort by rating descending and take top 10
-        const sorted = books
-            .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
-            .slice(0, 10);
-        return Promise.all(sorted.map((book) => mapBookForClient(ctx, book)));
+            .take(10);
+        return Promise.all(books.map((book) => mapBookForClient(ctx, book)));
     },
 });
 
@@ -641,9 +698,8 @@ export const getTrendingBooks = query({
     handler: async (ctx) => {
         const books = await ctx.db
             .query("books")
-            .withIndex("by_createdAt")
+            .withIndex("by_rankingScore")
             .order("desc")
-            .filter((q) => q.eq(q.field("isTrending"), true))
             .take(10);
         return Promise.all(books.map((book) => mapBookForClient(ctx, book)));
     },
@@ -712,6 +768,11 @@ export const backfillSearchFields = mutation({
             const ratingCount = normalizeNonNegativeInt(book.ratingCount, 0);
             const bookViews = normalizeNonNegativeInt(book.bookViews, 0);
             const bookRentals = normalizeNonNegativeInt(book.bookRentals, 0);
+            const rankingScore = calculateRankingScore({
+                rating,
+                bookRentals,
+                bookViews,
+            });
             const searchText = buildSearchText({
                 title: book.title,
                 author: book.author,
@@ -726,6 +787,7 @@ export const backfillSearchFields = mutation({
                 (book.ratingCount ?? 0) !== ratingCount ||
                 (book.bookViews ?? 0) !== bookViews ||
                 (book.bookRentals ?? 0) !== bookRentals ||
+                book.rankingScore !== rankingScore ||
                 book.searchText !== searchText;
 
             if (!needsPatch) {
@@ -739,6 +801,7 @@ export const backfillSearchFields = mutation({
                 ratingCount,
                 bookViews,
                 bookRentals,
+                rankingScore,
                 searchText,
             });
             updated += 1;

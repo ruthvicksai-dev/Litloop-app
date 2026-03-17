@@ -5,8 +5,8 @@ import { Id } from "@/convex/_generated/dataModel";
 import { useFadeSlideScaleIn } from "@/hooks/useFadeSlideScaleIn";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useReadLater } from "@/hooks/useReadLater";
-import { useQuery } from "convex/react";
-import { useEffect, useMemo, useState } from "react";
+import { useMutation, useQuery } from "convex/react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 export function useBookDetailsScreen(bookId: string) {
     const descriptionLineLimit = 3;
@@ -19,6 +19,7 @@ export function useBookDetailsScreen(bookId: string) {
         slideFrom: 40,
         scaleFrom: 0.8,
     });
+    const incrementBookViews = useMutation(api.books.incrementBookViews);
     const book = useQuery(api.books.get, {
         bookId: bookId as Id<"books">,
     });
@@ -28,10 +29,26 @@ export function useBookDetailsScreen(bookId: string) {
     );
     const [activeIndex, setActiveIndex] = useState(0);
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+    const trackedBookIdsRef = useRef<Set<string>>(new Set());
 
     useEffect(() => {
         setIsDescriptionExpanded(false);
     }, [bookId, book?.description]);
+
+    useEffect(() => {
+        if (!bookId || book === undefined || book === null) {
+            return;
+        }
+
+        if (trackedBookIdsRef.current.has(bookId)) {
+            return;
+        }
+
+        trackedBookIdsRef.current.add(bookId);
+        void incrementBookViews({ bookId: bookId as Id<"books"> }).catch(() => {
+            trackedBookIdsRef.current.delete(bookId);
+        });
+    }, [book, bookId, incrementBookViews]);
 
     const detailItems = useMemo(() => {
         if (!book) return [];

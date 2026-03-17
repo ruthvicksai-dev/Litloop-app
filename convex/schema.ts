@@ -41,6 +41,7 @@ export default defineSchema({
         ratingCount: v.optional(v.number()),
         bookViews: v.optional(v.number()),
         bookRentals: v.optional(v.number()),
+        rankingScore: v.optional(v.number()),
         pageCount: v.optional(v.number()),
         publishedYear: v.optional(v.number()),
         publisher: v.optional(v.string()),
@@ -58,6 +59,9 @@ export default defineSchema({
         createdAt: v.number(),
     })
         .index("by_title", ["title"])
+        .index("by_title_author", ["title", "author"])
+        .index("by_rating", ["rating"])
+        .index("by_rankingScore", ["rankingScore"])
         .index("by_genre", ["genre"])
         .index("by_createdAt", ["createdAt"])
         .index("by_seriesId", ["seriesId"])
