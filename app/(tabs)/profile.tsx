@@ -1,8 +1,6 @@
 import BookLoader from "@/components/ui/BookLoader";
-import Button from "@/components/ui/Button";
 import ConfirmActionModal from "@/components/ui/ConfirmActionModal";
 import DiscoverSectionRow from "@/components/ui/DiscoverSectionRow";
-import InputField from "@/components/ui/InputField";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
@@ -11,16 +9,13 @@ import { api } from "@/convex/_generated/api";
 import { useFadeSlideScaleIn } from "@/hooks/useFadeSlideScaleIn";
 import { responsiveFont } from "@/utils/responsiveFont";
 import { Ionicons } from "@expo/vector-icons";
-import { useMutation, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import {
     Animated,
     Dimensions,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
     Pressable,
     ScrollView,
     StyleSheet,
@@ -30,7 +25,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const { width, height } = Dimensions.get("window");
+const { height } = Dimensions.get("window");
 
 export default function ProfileScreen() {
     const { user, signOut, isAdmin, accessToken } = useAuth();
@@ -41,51 +36,15 @@ export default function ProfileScreen() {
 
     // Tab State: "favorites" | "readLater"
     const [activeTab, setActiveTab] = useState<"favorites" | "readLater">("favorites");
-    const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-    const [editName, setEditName] = useState("");
-    const [editPhone, setEditPhone] = useState("");
-    const [isUpdating, setIsUpdating] = useState(false);
 
     // Animations for tabs
     const slideAnimDist = useRef(new Animated.Value(0)).current;
     const listOpacity = useRef(new Animated.Value(1)).current;
 
-    const updateUserMutation = useMutation(api.users.updateUser);
-
-    useEffect(() => {
-        if (user) {
-            setEditName(user.name || "");
-            setEditPhone(user.phone || "");
-        }
-    }, [user]);
-
     const handleSignOut = async () => {
         await signOut();
         showToast("Signed out successfully.", "info");
         router.replace("/(auth)/sign-in");
-    };
-
-    const handleUpdateProfile = async () => {
-        if (!accessToken) return;
-        if (!editName.trim() || !editPhone.trim()) {
-            showToast("Name and phone cannot be empty.", "error");
-            return;
-        }
-
-        setIsUpdating(true);
-        try {
-            await updateUserMutation({
-                accessToken,
-                name: editName,
-                phone: editPhone,
-            });
-            showToast("Profile updated successfully.", "success");
-            setIsEditModalVisible(false);
-        } catch (error) {
-            showToast("Failed to update profile.", "error");
-        } finally {
-            setIsUpdating(false);
-        }
     };
 
     const handleTabChange = (tab: "favorites" | "readLater") => {
@@ -233,7 +192,7 @@ export default function ProfileScreen() {
                                 <View style={styles.statDivider} />
                                 <TouchableOpacity
                                     style={styles.editProfileBtn}
-                                    onPress={() => setIsEditModalVisible(true)}
+                                    onPress={() => router.push("/profile/edit")}
                                 >
                                     <Ionicons name="pencil" size={18} color={Colors.primary} />
                                     <Text style={styles.editProfileText}>Edit</Text>
@@ -329,58 +288,6 @@ export default function ProfileScreen() {
                     </ScrollView>
                 )}
             </SafeAreaView>
-
-            {/* Edit Profile Modal */}
-            <Modal
-                visible={isEditModalVisible}
-                animationType="slide"
-                transparent={true}
-                onRequestClose={() => setIsEditModalVisible(false)}
-            >
-                <KeyboardAvoidingView
-                    style={styles.modalBg}
-                    behavior={Platform.OS === "ios" ? "padding" : "height"}
-                >
-                    <View style={styles.modalContainer}>
-                        <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>Edit Profile</Text>
-                            <TouchableOpacity onPress={() => setIsEditModalVisible(false)}>
-                                <Ionicons name="close" size={24} color={Colors.text} />
-                            </TouchableOpacity>
-                        </View>
-
-                        <InputField
-                            label="Full Name"
-                            placeholder="Enter your name"
-                            value={editName}
-                            onChangeText={setEditName}
-                        />
-
-                        <InputField
-                            label="Phone Number"
-                            placeholder="Enter your phone number"
-                            value={editPhone}
-                            onChangeText={setEditPhone}
-                            keyboardType="phone-pad"
-                        />
-
-                        <View style={styles.modalActions}>
-                            <Button
-                                title="Cancel"
-                                variant="outline"
-                                onPress={() => setIsEditModalVisible(false)}
-                                style={{ flex: 1, marginRight: Spacing.sm }}
-                            />
-                            <Button
-                                title="Save"
-                                onPress={handleUpdateProfile}
-                                loading={isUpdating}
-                                style={{ flex: 1 }}
-                            />
-                        </View>
-                    </View>
-                </KeyboardAvoidingView>
-            </Modal>
 
             <ConfirmActionModal
                 visible={showLogoutConfirm}
@@ -628,33 +535,6 @@ const styles = StyleSheet.create({
         fontFamily: Fonts.regular,
         color: Colors.textLight,
         textAlign: "center",
-    },
-    modalBg: {
-        flex: 1,
-        backgroundColor: "rgba(0,0,0,0.5)",
-        justifyContent: "flex-end",
-    },
-    modalContainer: {
-        backgroundColor: Colors.white,
-        borderTopLeftRadius: 32,
-        borderTopRightRadius: 32,
-        padding: 24,
-        paddingBottom: Platform.OS === "ios" ? 40 : 24,
-    },
-    modalHeader: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: Spacing.xl,
-    },
-    modalTitle: {
-        fontSize: FontSizes.title,
-        fontFamily: Fonts.bold,
-        color: Colors.text,
-    },
-    modalActions: {
-        flexDirection: "row",
-        marginTop: Spacing.md,
     },
     center: {
         flex: 1,

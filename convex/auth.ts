@@ -40,6 +40,15 @@ async function hashPassword(password: string): Promise<string> {
     return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+async function getUserIdFromAccessToken(accessToken: string): Promise<Id<"users">> {
+    const secret = getJwtSecret();
+    const payload = await verifyToken(accessToken, secret);
+    if (payload.type !== "access") {
+        throw new Error("Invalid token type.");
+    }
+    return payload.sub as Id<"users">;
+}
+
 function normalizePhone(phone: string): string {
     return phone.replace(/\D/g, "");
 }
@@ -267,5 +276,50 @@ export const signOut = mutation({
         } catch {
             // Ignore errors during sign-out — always succeed client-side
         }
+    },
+});
+
+export const changePassword = mutation({
+    args: {
+        accessToken: v.string(),
+        currentPassword: v.string(),
+        newPassword: v.string(),
+    },
+    handler: async (ctx, args) => {
+        let userId: Id<"users">;
+        try {
+            userId = await getUserIdFromAccessToken(args.accessToken);
+        } catch {
+            throw new Error("Unauthenticated");
+        }
+
+        if (!args.currentPassword) {
+            throw new Error("Current password is required.");
+        }
+
+        if (args.newPassword.length < 6) {
+            throw new Error("New password must be at least 6 characters.");
+        }
+
+        const user = await ctx.db.get(userId);
+        if (!user) {
+            throw new Error("User not found.");
+        }
+
+        const currentPasswordHash = await hashPassword(args.currentPassword);
+        if (user.passwordHash !== currentPasswordHash) {
+            throw new Error("Current password is incorrect.");
+        }
+
+        const newPasswordHash = await hashPassword(args.newPassword);
+        if (newPasswordHash === user.passwordHash) {
+            throw new Error("New password must be different from the current password.");
+        }
+
+        await ctx.db.patch(userId, {
+            passwordHash: newPasswordHash,
+        });
+
+        return true;
     },
 });

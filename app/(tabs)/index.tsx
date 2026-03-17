@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.bold,
   },
   scroll: {
-    paddingTop: Spacing.xs,
+    paddingTop: Spacing.md,
     paddingBottom: scale(90),
   },
 });

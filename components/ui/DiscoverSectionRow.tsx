@@ -118,7 +118,7 @@ export default memo(DiscoverSectionRow);
 
 const styles = StyleSheet.create({
     container: {
-        marginBottom: Spacing.lg,
+        marginBottom: Spacing.xs,
     },
     header: {
         flexDirection: "row",

@@ -26,7 +26,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     setIsSplashAnimationDone(true);
   };
 
-  if (isLoading || !isSplashAnimationDone) {
+  if (!isSplashAnimationDone) {
     return (
       <AppSplash
         animate={!isSplashAnimationDone}
@@ -77,6 +77,7 @@ export default function RootLayout() {
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="(admin)" />
               <Stack.Screen name="book/[id]" />
+              <Stack.Screen name="profile/edit" />
               <Stack.Screen name="rental" />
             </Stack>
           </AuthGate>

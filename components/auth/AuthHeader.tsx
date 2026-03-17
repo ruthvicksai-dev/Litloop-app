@@ -18,6 +18,7 @@ export default function AuthHeader({
     slideAnim,
     scaleAnim,
 }: AuthHeaderProps) {
+    const words = (title || "").split(" ");
     return (
         <Animated.View
             style={[
@@ -34,7 +35,12 @@ export default function AuthHeader({
                     style={styles.logo}
                 />
             </Animated.View>
-            <Text style={styles.title}>{title}</Text>
+            <Text style={styles.title}>
+                <Text style={{ color: "orange" }}>{words[0] || ""}</Text>
+                <Text style={{ color: Colors.primaryDark }}>
+                    {words[1] ? " " + words[1] : ""}
+                </Text>
+            </Text>
             <Text style={styles.subtitle}>{subtitle}</Text>
         </Animated.View>
     );

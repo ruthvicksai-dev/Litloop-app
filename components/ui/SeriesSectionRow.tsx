@@ -121,7 +121,7 @@ export default function SeriesSectionRow({
 
 const styles = StyleSheet.create({
     container: {
-        marginBottom: Spacing.lg,
+        marginBottom: Spacing.md,
     },
     contentContainer: {
         minHeight: scale(220),

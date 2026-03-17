@@ -163,7 +163,7 @@ export default function RequestRentalScreen() {
                             <View style={styles.infoBox}>
                                 <Ionicons name="information-circle" size={18} color={Colors.primary} />
                                 <Text style={styles.infoText}>
-                                    Note: Deliveries are only applicable to KITS college vinjanampady.
+                                    Note: Deliveries are only applicable to KITS college vinjanampadu.
                                 </Text>
                             </View>
                         )}
