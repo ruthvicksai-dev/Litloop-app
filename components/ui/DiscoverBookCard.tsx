@@ -33,6 +33,7 @@ export default function DiscoverBookCard({
     author,
     coverUrl,
     coverUrls,
+    top10Position,
 }: DiscoverBookCardProps) {
     const router = useRouter();
     const { isFavorite, toggleFavorite } = useFavorites();
@@ -86,6 +87,23 @@ export default function DiscoverBookCard({
                         <View style={[styles.cover, styles.placeholder]}>
                             <Ionicons name="book" size={30} color={Colors.primary} />
                         </View>
+                    )}
+
+                    {/* Top 10 Tag Overlay */}
+                    {top10Position && (
+                        <LinearGradient
+                            colors={
+                                top10Position === 1 ? ["#FFD700", "#FFA500"] :
+                                    top10Position === 2 ? ["#E5E4E2", "#B4B4B4"] :
+                                        top10Position === 3 ? ["#CD7F32", "#A0522D"] :
+                                            [Colors.primary, "#8B4513"]
+                            }
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={styles.top10Badge}
+                        >
+                            <Text style={styles.top10Text}>#{top10Position}</Text>
+                        </LinearGradient>
                     )}
 
                     {/* Bookmark/Save Button Overlay */}
@@ -159,6 +177,27 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         borderWidth: StyleSheet.hairlineWidth,
         borderColor: "rgba(255,255,255,0.2)",
+    },
+    top10Badge: {
+        position: "absolute",
+        top: 8,
+        left: 8,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderRadius: 6,
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.4)",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 3,
+        elevation: 3,
+    },
+    top10Text: {
+        color: Colors.white,
+        fontSize: 11,
+        fontFamily: Fonts.bold,
+        letterSpacing: -0.4,
     },
     title: {
         fontSize: FontSizes.caption,

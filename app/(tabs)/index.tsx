@@ -1,4 +1,3 @@
-import SearchInput from "@/components/shared/SearchInput";
 import BookLoader from "@/components/ui/BookLoader";
 import DiscoverSectionRow from "@/components/ui/DiscoverSectionRow";
 import SeriesSectionRow from "@/components/ui/SeriesSectionRow";
@@ -8,13 +7,15 @@ import { useAuth } from "@/context/AuthContext";
 import { useDiscoverSections } from "@/hooks/useDiscoverSections";
 import { useHomeEntrance } from "@/hooks/useHomeEntrance";
 import { responsiveFont } from "@/utils/responsiveFont";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React from "react";
 import {
   Animated,
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -22,9 +23,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function HomeScreen() {
   const { user } = useAuth();
   const router = useRouter();
-  const { fadeAnim, slideAnim, searchFade } = useHomeEntrance();
+  const { fadeAnim, slideAnim } = useHomeEntrance();
   const { topPicks, top10Books, trendingBooks, famousBooks, seriesBooks, newlyAddedBooks } = useDiscoverSections();
-  const [search, setSearch] = useState("");
 
   const isLoading =
     topPicks === undefined &&
@@ -53,20 +53,24 @@ export default function HomeScreen() {
           },
         ]}
       >
-        <Text style={styles.greeting}>
-          Hello, {user?.name?.split(" ")[0] || "Reader"}
-        </Text>
-        <Text style={styles.pageTitle}>Discover Books</Text>
+        <View style={styles.headerTop}>
+          <View>
+            <Text style={styles.greeting}>
+              Hello, {user?.name?.split(" ")[0] || "Reader"}
+            </Text>
+            <Text style={styles.pageTitle}>Discover Books</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.notifBtn}
+            activeOpacity={0.7}
+            onPress={() => router.push("/notifications" as any)}
+          >
+            <Ionicons name="notifications-outline" size={24} color={Colors.primary} />
+            <View style={styles.notifBadge} />
+          </TouchableOpacity>
+        </View>
       </Animated.View>
 
-      <Animated.View style={[styles.searchContainer, { opacity: searchFade }]}>
-        <SearchInput
-          value={search}
-          onChangeText={setSearch}
-          placeholder="Search for titles, authors or genres..."
-          onPress={() => router.push("/(tabs)/search" as any)}
-        />
-      </Animated.View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -129,6 +133,29 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.sm,
     paddingBottom: Spacing.sm,
   },
+  headerTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  notifBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  notifBadge: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: Colors.error,
+    borderWidth: 2,
+    borderColor: Colors.white,
+  },
   greeting: {
     fontSize: FontSizes.body,
     color: Colors.textSecondary,
@@ -139,10 +166,6 @@ const styles = StyleSheet.create({
     fontSize: responsiveFont(24),
     color: Colors.text,
     fontFamily: Fonts.bold,
-  },
-  searchContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: Spacing.md,
   },
   scroll: {
     paddingTop: Spacing.xs,

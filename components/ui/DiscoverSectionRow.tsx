@@ -107,6 +107,7 @@ function DiscoverSectionRow({
                             coverUrls={item.coverUrls}
                             genre={genre}
                             bookViews={item.bookViews}
+                            top10Position={item.top10Position}
                         />
                     );
                 }}

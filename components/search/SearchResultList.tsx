@@ -16,6 +16,7 @@ export type SearchBook = {
     availableCopies: number;
     bookViews: number;
     bookRentals: number;
+    top10Position?: number;
 };
 
 type SearchResultListProps = {
@@ -71,6 +72,7 @@ function SearchResultList({
                     availableCopies={item.availableCopies}
                     bookViews={item.bookViews}
                     bookRentals={item.bookRentals}
+                    top10Position={item.top10Position}
                     onPress={() => onBookPress(item._id)}
                 />
             )}

@@ -42,6 +42,7 @@ export function useSearchScreen() {
                 availableCopies: book.availableCopies,
                 bookViews: typeof book.bookViews === "number" ? book.bookViews : 0,
                 bookRentals: typeof book.bookRentals === "number" ? book.bookRentals : 0,
+                top10Position: book.top10Position,
             })),
         [results]
     );

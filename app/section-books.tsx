@@ -132,6 +132,7 @@ export default function SectionBooksScreen() {
                             availableCopies={item.availableCopies}
                             bookViews={item.bookViews ?? 0}
                             bookRentals={item.bookRentals ?? 0}
+                            top10Position={item.top10Position}
                             onPress={() =>
                                 router.push(`/book/${item._id}` as any)
                             }

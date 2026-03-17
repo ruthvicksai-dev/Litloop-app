@@ -1,6 +1,7 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import React, { useRef } from "react";
 import {
     Animated,
@@ -26,6 +27,7 @@ interface BookCardProps {
     viewDetailsLabel?: string;
     requestLabel?: string;
     showRequestButton?: boolean;
+    top10Position?: number;
 }
 
 export default function BookCard({
@@ -41,6 +43,7 @@ export default function BookCard({
     viewDetailsLabel = "View Details",
     requestLabel = "Request Book",
     showRequestButton = true,
+    top10Position,
 }: BookCardProps) {
     const scale = useRef(new Animated.Value(1)).current;
 
@@ -78,6 +81,22 @@ export default function BookCard({
                         <View style={[styles.cover, styles.placeholder]}>
                             <Ionicons name="book-outline" size={32} color={Colors.primary} />
                         </View>
+                    )}
+
+                    {top10Position && (
+                        <LinearGradient
+                            colors={
+                                top10Position === 1 ? ["#FFD700", "#FFA500"] :
+                                    top10Position === 2 ? ["#E5E4E2", "#B4B4B4"] :
+                                        top10Position === 3 ? ["#CD7F32", "#A0522D"] :
+                                            [Colors.primary, "#8B4513"]
+                            }
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={styles.top10Badge}
+                        >
+                            <Text style={styles.top10Text}>#{top10Position}</Text>
+                        </LinearGradient>
                     )}
                     <View style={styles.info}>
                         <Text style={styles.title} numberOfLines={2}>
@@ -146,6 +165,28 @@ const styles = StyleSheet.create({
         aspectRatio: 2 / 3,
         borderRadius: 8,
         backgroundColor: Colors.primaryLight,
+        position: "relative",
+    },
+    top10Badge: {
+        position: "absolute",
+        top: 6,
+        left: 6,
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 4,
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.3)",
+        elevation: 2,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+    },
+    top10Text: {
+        color: Colors.white,
+        fontSize: 10,
+        fontFamily: Fonts.bold,
+        letterSpacing: -0.2,
     },
     placeholder: {
         alignItems: "center",

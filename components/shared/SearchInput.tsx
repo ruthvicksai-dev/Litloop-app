@@ -33,7 +33,17 @@ export default function SearchInput({
                 onChangeText={onChangeText}
                 editable={!onPress}
                 pointerEvents={onPress ? "none" : "auto"}
+                autoCapitalize="none"
+                autoCorrect={false}
             />
+            {value.length > 0 && !onPress && (
+                <TouchableOpacity
+                    onPress={() => onChangeText("")}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                    <Ionicons name="close-circle" size={18} color={Colors.textLight} />
+                </TouchableOpacity>
+            )}
         </View>
     );
 

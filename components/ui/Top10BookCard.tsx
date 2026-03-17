@@ -1,6 +1,7 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useRef } from "react";
 import {
@@ -39,6 +40,15 @@ export default function Top10BookCard({
     const imageUri =
         coverUrls && coverUrls.length > 0 ? coverUrls[0] : coverUrl ?? undefined;
 
+    const getRankStyles = (rank: number) => {
+        if (rank === 1) return { colors: ["#FFD700", "#FFA500"] as const, label: "#1" };
+        if (rank === 2) return { colors: ["#E5E4E2", "#B4B4B4"] as const, label: "#2" };
+        if (rank === 3) return { colors: ["#CD7F32", "#A0522D"] as const, label: "#3" };
+        return { colors: [Colors.primary, "#8B4513"] as const, label: `#${rank}` };
+    };
+
+    const rankStyle = getRankStyles(rank);
+
     return (
         <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
             <TouchableOpacity
@@ -51,21 +61,24 @@ export default function Top10BookCard({
                     Animated.spring(scale, { toValue: 1, friction: 4, useNativeDriver: true }).start()
                 }
             >
-                {/* Rank number stands beside cover */}
-                <View style={styles.row}>
-                    {/* Big rank number to the left, now in FRONT of the cover */}
-                    <Text style={styles.rankNum}>{rank}</Text>
+                <View style={styles.coverWrap}>
+                    {imageUri ? (
+                        <Image source={{ uri: imageUri }} style={styles.cover} />
+                    ) : (
+                        <View style={[styles.cover, styles.placeholder]}>
+                            <Ionicons name="book" size={26} color={Colors.primary} />
+                        </View>
+                    )}
 
-                    {/* Cover */}
-                    <View style={styles.coverWrap}>
-                        {imageUri ? (
-                            <Image source={{ uri: imageUri }} style={styles.cover} />
-                        ) : (
-                            <View style={[styles.cover, styles.placeholder]}>
-                                <Ionicons name="book" size={26} color={Colors.primary} />
-                            </View>
-                        )}
-                    </View>
+                    {/* Rank Badge Overlay */}
+                    <LinearGradient
+                        colors={rankStyle.colors}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.badge}
+                    >
+                        <Text style={styles.badgeText}>{rankStyle.label}</Text>
+                    </LinearGradient>
                 </View>
 
                 {/* Title & author below */}
@@ -76,39 +89,51 @@ export default function Top10BookCard({
     );
 }
 
-const COVER_W = 100;
-const COVER_H = COVER_W * 1.52;
+const COVER_W = 120;
+const COVER_H = COVER_W * 1.5;
 
 const styles = StyleSheet.create({
     card: {
-        width: 140, // Slightly wider to accommodate bigger number
-        marginRight: 12,
-    },
-    row: {
-        flexDirection: "row",
-        alignItems: "flex-end",
-        position: "relative",
-    },
-    // Large rank — overlapping the cover in front
-    rankNum: {
-        fontSize: 66,
-        fontFamily: Fonts.bold,
-        color: Colors.primaryDark,
-        lineHeight: 70,
-        marginRight: -22, // overlap into the cover
-        zIndex: 10, // Bring to front
+        width: COVER_W,
+        marginRight: 16,
+        backgroundColor: "transparent",
     },
     coverWrap: {
-        borderRadius: 10,
-        overflow: "hidden",
-        borderWidth: 1,
-        borderColor: "rgba(0,0,0,0.08)",
-        zIndex: 1, // Behind the number
+        borderRadius: 14,
+        overflow: "visible",
+        backgroundColor: Colors.white,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.15,
+        shadowRadius: 10,
+        elevation: 6,
+        position: "relative",
     },
     cover: {
         width: COVER_W,
         height: COVER_H,
+        borderRadius: 14,
         backgroundColor: Colors.primaryLight,
+    },
+    badge: {
+        position: "absolute",
+        top: 10,
+        left: 10,
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 10,
+        borderWidth: 1.5,
+        borderColor: "rgba(255,255,255,0.4)",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 3,
+    },
+    badgeText: {
+        color: Colors.white,
+        fontSize: 13,
+        fontFamily: Fonts.bold,
+        letterSpacing: -0.5,
     },
     placeholder: {
         alignItems: "center",
@@ -118,13 +143,14 @@ const styles = StyleSheet.create({
         fontSize: FontSizes.caption,
         fontFamily: Fonts.bold,
         color: Colors.text,
-        marginTop: 7,
-        lineHeight: 17,
+        marginTop: 10,
+        lineHeight: 18,
     },
     author: {
         fontSize: FontSizes.tiny,
         fontFamily: Fonts.regular,
         color: Colors.textSecondary,
         marginTop: 2,
+        marginBottom: 8,
     },
 });

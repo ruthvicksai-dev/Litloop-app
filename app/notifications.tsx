@@ -9,8 +9,10 @@ export default function NotificationsScreen() {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
-                <Text style={styles.title}>Notifications</Text>
-                <Text style={styles.subtitle}>Updates for your rentals and account</Text>
+                <View>
+                    <Text style={styles.title}>Notifications</Text>
+                    <Text style={styles.subtitle}>Updates for your rentals and account</Text>
+                </View>
             </View>
             <View style={styles.empty}>
                 <Ionicons name="notifications-outline" size={46} color={Colors.textLight} />

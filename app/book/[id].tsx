@@ -98,6 +98,22 @@ export default function BookDetailsScreen() {
                         activeIndex={activeIndex}
                         onIndexChange={setActiveIndex}
                     />
+                    {book.top10Position && (
+                        <LinearGradient
+                            colors={
+                                book.top10Position === 1 ? ["#FFD700", "#FFA500"] :
+                                    book.top10Position === 2 ? ["#E5E4E2", "#B4B4B4"] :
+                                        book.top10Position === 3 ? ["#CD7F32", "#A0522D"] :
+                                            [Colors.primary, "#8B4513"]
+                            }
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={styles.detailsTop10Badge}
+                        >
+                            <Ionicons name="trophy" size={14} color={Colors.white} style={{ marginRight: 4 }} />
+                            <Text style={styles.top10Text}>Top 10 Rental • #{book.top10Position}</Text>
+                        </LinearGradient>
+                    )}
                 </Animated.View>
 
                 <Animated.View
@@ -222,6 +238,7 @@ export default function BookDetailsScreen() {
                                         coverUrls={item.coverUrls}
                                         genre={item.genre ?? item.genres?.[0]}
                                         bookViews={item.bookViews}
+                                        top10Position={item.top10Position}
                                     />
                                 ))}
                             </ScrollView>
@@ -454,5 +471,28 @@ const styles = StyleSheet.create({
     },
     fullWidthButton: {
         width: "100%",
+    },
+    detailsTop10Badge: {
+        position: "absolute",
+        top: 20,
+        right: 20,
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.4)",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        elevation: 8,
+    },
+    top10Text: {
+        color: Colors.white,
+        fontSize: 12,
+        fontFamily: Fonts.bold,
+        letterSpacing: -0.2,
     },
 });
