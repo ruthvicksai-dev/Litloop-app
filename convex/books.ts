@@ -1,5 +1,6 @@
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
+import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
 
 const MAIN_GENRES = [
@@ -592,8 +593,18 @@ export const update = mutation({
 
         if (args.totalCopies !== undefined) {
             const diff = args.totalCopies - book.totalCopies;
+            const nextAvailable = Math.max(0, book.availableCopies + diff);
+
             updates.totalCopies = args.totalCopies;
-            updates.availableCopies = Math.max(0, book.availableCopies + diff);
+            updates.availableCopies = nextAvailable;
+
+            // If it was out of stock and now is available, notify
+            if (book.availableCopies === 0 && nextAvailable > 0) {
+                await ctx.scheduler.runAfter(0, internal.notifications.notifySubscribersOfAvailability, {
+                    bookId: args.bookId,
+                    bookTitle: book.title,
+                });
+            }
         }
 
         if (

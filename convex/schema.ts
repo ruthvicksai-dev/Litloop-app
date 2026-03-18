@@ -11,11 +11,20 @@ export default defineSchema({
         avatarUrl: v.optional(v.string()),
         lastLoginProvider: v.optional(v.union(v.literal("local"), v.literal("google"))),
         role: v.union(v.literal("user"), v.literal("admin")),
+        pushToken: v.optional(v.string()),
         createdAt: v.number(),
     })
         .index("by_email", ["email"])
         .index("by_phone", ["phone"])
         .index("by_createdAt", ["createdAt"]),
+
+    book_notifications: defineTable({
+        userId: v.id("users"),
+        bookId: v.id("books"),
+        createdAt: v.number(),
+    })
+        .index("by_bookId", ["bookId"])
+        .index("by_userId_bookId", ["userId", "bookId"]),
 
     sessions: defineTable({
         userId: v.id("users"),

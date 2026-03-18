@@ -4,11 +4,16 @@ import Button from "@/components/ui/Button";
 import DiscoverBookCard from "@/components/ui/DiscoverBookCard";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing } from "@/constants/theme";
+import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 import { useBookDetailsScreen } from "@/hooks";
 import { Ionicons } from "@expo/vector-icons";
+import { useMutation } from "convex/react";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import {
     Animated,
     ScrollView,
@@ -22,6 +27,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function BookDetailsScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const router = useRouter();
+    const { userId } = useAuth();
+    const { showToast } = useToast();
+    const subscribeToBook = useMutation(api.notifications.subscribeToBook);
+    const [isSubscribing, setIsSubscribing] = useState(false);
+
     const {
         book,
         relatedBooks,
@@ -42,6 +52,23 @@ export default function BookDetailsScreen() {
         slideAnim,
         scaleAnim,
     } = useBookDetailsScreen(id);
+
+    const handleNotifyMe = async () => {
+        if (!userId) {
+            showToast("Please sign in to get notified.", "error");
+            return;
+        }
+        if (!book) return;
+        setIsSubscribing(true);
+        try {
+            await subscribeToBook({ userId, bookId: book._id as Id<"books"> });
+            showToast("You'll be notified when this book is available! 🔔", "success");
+        } catch (error) {
+            showToast("Failed to subscribe. Please try again.", "error");
+        } finally {
+            setIsSubscribing(false);
+        }
+    };
 
     if (book === undefined) {
         return (
@@ -152,9 +179,17 @@ export default function BookDetailsScreen() {
                         </View>
                         <View style={styles.statDivider} />
                         <View style={styles.statItem}>
-                            <Ionicons name="checkmark-circle-outline" size={20} color={Colors.success} />
-                            <Text style={styles.statValue}>{book.availableCopies}</Text>
-                            <Text style={styles.statLabel}>available</Text>
+                            <Ionicons
+                                name="checkmark-circle-outline"
+                                size={20}
+                                color={book.availableCopies > 0 ? Colors.success : Colors.error}
+                            />
+                            <Text style={[styles.statValue, book.availableCopies === 0 && { color: Colors.error }]}>
+                                {book.availableCopies}
+                            </Text>
+                            <Text style={styles.statLabel}>
+                                {book.availableCopies > 0 ? "available" : "out of stock"}
+                            </Text>
                         </View>
                         <View style={styles.statDivider} />
                         <View style={styles.statItem}>
@@ -196,12 +231,25 @@ export default function BookDetailsScreen() {
                     </View>
 
                     <View style={styles.ctaRow}>
-                        <Button
-                            title={book.availableCopies > 0 ? "Rent Now" : "Unavailable"}
-                            onPress={() => router.push(`/rental/request?bookId=${book._id}`)}
-                            disabled={book.availableCopies <= 0}
-                            style={styles.primaryCta}
-                        />
+                        {book.availableCopies > 0 ? (
+                            <Button
+                                title="Rent Now"
+                                onPress={() => router.push(`/rental/request?bookId=${book._id}`)}
+                                style={styles.primaryCta}
+                            />
+                        ) : (
+                            <TouchableOpacity
+                                style={[styles.notifyMeBtn, isSubscribing && styles.notifyMeBtnDisabled]}
+                                onPress={handleNotifyMe}
+                                disabled={isSubscribing}
+                                activeOpacity={0.8}
+                            >
+                                <Ionicons name="notifications-outline" size={18} color={Colors.white} style={{ marginRight: 6 }} />
+                                <Text style={styles.notifyMeBtnText}>
+                                    {isSubscribing ? "Subscribing..." : "Notify Me When Available"}
+                                </Text>
+                            </TouchableOpacity>
+                        )}
                         <TouchableOpacity
                             style={[
                                 styles.addButton,
@@ -418,8 +466,25 @@ const styles = StyleSheet.create({
     primaryCta: {
         flex: 1,
     },
+    notifyMeBtn: {
+        flex: 1,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        paddingVertical: 13,
+        borderRadius: 10,
+        backgroundColor: "#E65100",
+    },
+    notifyMeBtnDisabled: {
+        opacity: 0.6,
+    },
+    notifyMeBtnText: {
+        color: Colors.white,
+        fontFamily: Fonts.medium,
+        fontSize: FontSizes.small,
+    },
     addButton: {
-        width: Layout.touchSize + 8, // 52
+        width: Layout.touchSize + 8,
         height: Layout.touchSize + 8,
         borderRadius: Layout.borderRadius + 4,
         borderWidth: 1.5,

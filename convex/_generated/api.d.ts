@@ -15,6 +15,7 @@ import type * as favorites from "../favorites.js";
 import type * as lib_authHelpers from "../lib/authHelpers.js";
 import type * as lib_google from "../lib/google.js";
 import type * as lib_jwt from "../lib/jwt.js";
+import type * as notifications from "../notifications.js";
 import type * as payments from "../payments.js";
 import type * as readLater from "../readLater.js";
 import type * as rentals from "../rentals.js";
@@ -35,6 +36,7 @@ declare const fullApi: ApiFromModules<{
   "lib/authHelpers": typeof lib_authHelpers;
   "lib/google": typeof lib_google;
   "lib/jwt": typeof lib_jwt;
+  notifications: typeof notifications;
   payments: typeof payments;
   readLater: typeof readLater;
   rentals: typeof rentals;

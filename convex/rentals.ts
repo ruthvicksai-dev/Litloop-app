@@ -1,5 +1,6 @@
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
+import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
 import { recordRentalCreated, recordUserActivity } from "./analytics";
 
@@ -117,6 +118,13 @@ export const requestRental = mutation({
 
         await recordRentalCreated(ctx, args.userId, Date.now());
 
+        const user = await ctx.db.get(args.userId);
+        await ctx.scheduler.runAfter(0, internal.notifications.notifyAdminsOfNewRental, {
+            rentalId,
+            bookTitle: book.title,
+            userName: user?.name ?? "A user",
+        });
+
         return rentalId;
     },
 });
@@ -141,6 +149,13 @@ export const scheduleDelivery = mutation({
             deliveryTime: args.deliveryTime,
             status: "delivery_scheduled",
         });
+
+        await ctx.scheduler.runAfter(0, internal.notifications.notifyUser, {
+            userId: rental.userId,
+            title: "Delivery Scheduled 🚚",
+            body: `Your delivery for "${(await ctx.db.get(rental.bookId))?.title}" is scheduled for ${args.deliveryDate}.`,
+            dataJson: JSON.stringify({ rentalId: args.rentalId, type: "rental" }),
+        });
     },
 });
 
@@ -154,6 +169,13 @@ export const markDelivered = mutation({
 
         await ctx.db.patch(args.rentalId, {
             status: "delivered",
+        });
+
+        await ctx.scheduler.runAfter(0, internal.notifications.notifyUser, {
+            userId: rental.userId,
+            title: "Book Delivered! 📖",
+            body: `"${(await ctx.db.get(rental.bookId))?.title}" has been delivered. Enjoy your read!`,
+            dataJson: JSON.stringify({ rentalId: args.rentalId, type: "rental" }),
         });
     },
 });
@@ -236,9 +258,18 @@ export const markReturned = mutation({
         // Increase available copies
         const book = await ctx.db.get(rental.bookId);
         if (book) {
+            const nextAvailable = book.availableCopies + 1;
             await ctx.db.patch(rental.bookId, {
-                availableCopies: book.availableCopies + 1,
+                availableCopies: nextAvailable,
             });
+
+            // If it was out of stock and now is available, notify
+            if (book.availableCopies === 0 && nextAvailable > 0) {
+                await ctx.scheduler.runAfter(0, internal.notifications.notifySubscribersOfAvailability, {
+                    bookId: rental.bookId,
+                    bookTitle: book.title,
+                });
+            }
         }
 
         // Calculate potential late fee
@@ -254,6 +285,13 @@ export const markReturned = mutation({
         await ctx.db.patch(args.rentalId, {
             status: "returned",
             lateFee: lateFee > 0 ? lateFee : undefined,
+        });
+
+        await ctx.scheduler.runAfter(0, internal.notifications.notifyUser, {
+            userId: rental.userId,
+            title: "Return Success ✅",
+            body: `Your return for "${(await ctx.db.get(rental.bookId))?.title}" has been processed.`,
+            dataJson: JSON.stringify({ rentalId: args.rentalId, type: "rental" }),
         });
 
         await recordUserActivity(ctx, rental.userId, Date.now());

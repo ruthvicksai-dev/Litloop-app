@@ -1,33 +1,31 @@
-import { Colors } from "@/constants/theme";
 import AppSplash from "@/components/ui/AppSplash";
+import { Colors } from "@/constants/theme";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { ToastProvider } from "@/context/ToastContext";
+import { useNotifications } from "@/hooks/useNotifications";
 import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState } from "react";
-import { StatusBar, Text, TextInput } from "react-native";
+import { StatusBar } from "react-native";
 
 const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!, {
   unsavedChangesWarning: false,
 });
-
-Text.defaultProps = Text.defaultProps ?? {};
-Text.defaultProps.allowFontScaling = false;
-
-TextInput.defaultProps = TextInput.defaultProps ?? {};
-TextInput.defaultProps.allowFontScaling = false;
 
 SplashScreen.preventAutoHideAsync();
 let hasCompletedStartupSplash = false;
 
 /** Blocks navigation until startup splash and auth state are both resolved. */
 function AppGate({ fontsLoaded }: { fontsLoaded: boolean }) {
-  const { isLoading } = useAuth();
+  const { isLoading, userId } = useAuth();
   const [isSplashAnimationDone, setIsSplashAnimationDone] = useState(hasCompletedStartupSplash);
   const [hasResolvedInitialAuth, setHasResolvedInitialAuth] = useState(false);
   const showSplash = !fontsLoaded || !isSplashAnimationDone || !hasResolvedInitialAuth;
+
+  // Initialize push notifications for the logged-in user
+  useNotifications(userId);
 
   const handleSplashComplete = () => {
     hasCompletedStartupSplash = true;
