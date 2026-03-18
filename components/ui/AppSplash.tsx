@@ -1,48 +1,68 @@
 import React, { useEffect, useRef } from "react";
 import { Animated, Easing, Image, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Colors, Layout, Spacing, moderateScale, scale } from "@/constants/theme";
 
 type AppSplashProps = {
   onAnimationComplete?: () => void;
-  animate?: boolean;
 };
 
-export default function AppSplash({ onAnimationComplete, animate = true }: AppSplashProps) {
+export default function AppSplash({ onAnimationComplete }: AppSplashProps) {
   const hasAnimated = useRef(false);
-  const scale = useRef(new Animated.Value(animate ? 0.6 : 1)).current;
-  const rotate = useRef(new Animated.Value(animate ? 0 : 1)).current;
-  const textOpacity = useRef(new Animated.Value(animate ? 0 : 1)).current;
-  const textTranslate = useRef(new Animated.Value(animate ? 20 : 0)).current;
+  const iconOpacity = useRef(new Animated.Value(0)).current;
+  const iconScale = useRef(new Animated.Value(0.8)).current;
+  const iconRotate = useRef(new Animated.Value(0)).current;
+  const textOpacity = useRef(new Animated.Value(0)).current;
+  const textTranslateY = useRef(new Animated.Value(18)).current;
 
   useEffect(() => {
-    if (!animate || hasAnimated.current) return;
+    if (hasAnimated.current) return;
     hasAnimated.current = true;
 
     Animated.sequence([
+      Animated.delay(120),
       Animated.parallel([
-        Animated.timing(scale, {
+        Animated.timing(iconOpacity, {
           toValue: 1,
-          duration: 900,
+          duration: 220,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(iconScale, {
+          toValue: 1.1,
+          duration: 420,
           easing: Easing.out(Easing.exp),
           useNativeDriver: true,
         }),
-        Animated.timing(rotate, {
+        Animated.timing(iconRotate, {
           toValue: 1,
-          duration: 900,
+          duration: 420,
           easing: Easing.out(Easing.exp),
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.parallel([
+        Animated.spring(iconScale, {
+          toValue: 1,
+          friction: 7,
+          tension: 80,
+          useNativeDriver: true,
+        }),
+        Animated.timing(iconRotate, {
+          toValue: 0,
+          duration: 220,
+          easing: Easing.out(Easing.cubic),
           useNativeDriver: true,
         }),
       ]),
       Animated.parallel([
         Animated.timing(textOpacity, {
           toValue: 1,
-          duration: 700,
+          duration: 520,
           useNativeDriver: true,
         }),
-        Animated.timing(textTranslate, {
+        Animated.timing(textTranslateY, {
           toValue: 0,
-          duration: 700,
+          duration: 520,
           easing: Easing.out(Easing.ease),
           useNativeDriver: true,
         }),
@@ -52,11 +72,11 @@ export default function AppSplash({ onAnimationComplete, animate = true }: AppSp
         onAnimationComplete?.();
       }
     });
-  }, [animate, onAnimationComplete, rotate, scale, textOpacity, textTranslate]);
+  }, [iconOpacity, iconRotate, iconScale, onAnimationComplete, textOpacity, textTranslateY]);
 
-  const spin = rotate.interpolate({
+  const rotate = iconRotate.interpolate({
     inputRange: [0, 1],
-    outputRange: ["-20deg", "0deg"],
+    outputRange: ["0deg", "-8deg"],
   });
 
   return (
@@ -66,11 +86,16 @@ export default function AppSplash({ onAnimationComplete, animate = true }: AppSp
           style={[
             styles.iconWrap,
             {
-              transform: [{ scale }, { rotate: animate ? spin : "0deg" }],
+              opacity: iconOpacity,
+              transform: [{ scale: iconScale }, { rotate }],
             },
           ]}
         >
-          <Image source={require("../../assets/images/icon.png")} style={styles.icon} resizeMode="contain" />
+          <Image
+            source={require("../../assets/images/android-icon-foreground.png")}
+            style={styles.icon}
+            resizeMode="contain"
+          />
         </Animated.View>
 
         <Animated.View
@@ -78,7 +103,7 @@ export default function AppSplash({ onAnimationComplete, animate = true }: AppSp
             styles.textWrap,
             {
               opacity: textOpacity,
-              transform: [{ translateY: textTranslate }],
+              transform: [{ translateY: textTranslateY }],
             },
           ]}
         >
@@ -103,32 +128,31 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: Layout.screenPaddingWide,
   },
   iconWrap: {
-    borderRadius: scale(30),
+    alignItems: "center",
+    justifyContent: "center",
   },
   icon: {
-    width: scale(130),
-    height: scale(130),
-    borderRadius: scale(26),
+    width: 180,
+    height: 180,
   },
   textWrap: {
+    marginTop: 16,
     alignItems: "center",
   },
   title: {
-    marginTop: Spacing.sm,
-    fontSize: moderateScale(30),
-    color: Colors.white,
-    fontFamily: "Lato-Bold",
-    letterSpacing: scale(2),
+    fontSize: 30,
+    color: "#FFFFFF",
+    fontWeight: "700",
+    letterSpacing: 2,
     textAlign: "center",
   },
   subtitle: {
-    marginTop: Spacing.xs,
-    fontSize: moderateScale(14),
+    marginTop: 4,
+    fontSize: 14,
     color: "#d1d5db",
-    letterSpacing: scale(1),
+    letterSpacing: 1,
     textAlign: "center",
   },
 });

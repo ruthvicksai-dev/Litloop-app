@@ -17,5 +17,5 @@ export default function Index() {
         }
     }, [user, isLoading]);
 
-    return <AppSplash animate={false} />;
+    return <AppSplash />;
 }

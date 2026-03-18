@@ -17,42 +17,51 @@ SplashScreen.preventAutoHideAsync();
 let hasCompletedStartupSplash = false;
 
 /** Blocks navigation until startup splash and auth state are both resolved. */
-function AppGate() {
+function AppGate({ fontsLoaded }: { fontsLoaded: boolean }) {
   const { isLoading } = useAuth();
   const [isSplashAnimationDone, setIsSplashAnimationDone] = useState(hasCompletedStartupSplash);
+  const [hasResolvedInitialAuth, setHasResolvedInitialAuth] = useState(false);
+  const showSplash = !fontsLoaded || !isSplashAnimationDone || !hasResolvedInitialAuth;
 
   const handleSplashComplete = () => {
     hasCompletedStartupSplash = true;
     setIsSplashAnimationDone(true);
   };
 
-  if (!isSplashAnimationDone || isLoading) {
-    return (
-      <AppSplash
-        animate={!isSplashAnimationDone}
-        onAnimationComplete={handleSplashComplete}
-      />
-    );
-  }
+  useEffect(() => {
+    if (!isLoading) {
+      setHasResolvedInitialAuth(true);
+    }
+  }, [isLoading]);
 
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        animation: "slide_from_right",
-        contentStyle: { backgroundColor: Colors.background },
-      }}
-    >
-      <Stack.Screen name="index" />
-      <Stack.Screen name="(auth)" />
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="(admin)" />
-      <Stack.Screen name="book/[id]" />
-      <Stack.Screen name="notifications" />
-      <Stack.Screen name="section-books" />
-      <Stack.Screen name="profile/edit" />
-      <Stack.Screen name="rental" />
-    </Stack>
+    <>
+      <StatusBar
+        barStyle={showSplash ? "light-content" : "dark-content"}
+        backgroundColor={showSplash ? "#0F2027" : Colors.background}
+      />
+      {showSplash ? (
+        <AppSplash onAnimationComplete={handleSplashComplete} />
+      ) : (
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            animation: "slide_from_right",
+            contentStyle: { backgroundColor: Colors.background },
+          }}
+        >
+          <Stack.Screen name="index" />
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="(admin)" />
+          <Stack.Screen name="book/[id]" />
+          <Stack.Screen name="notifications" />
+          <Stack.Screen name="section-books" />
+          <Stack.Screen name="profile/edit" />
+          <Stack.Screen name="rental" />
+        </Stack>
+      )}
+    </>
   );
 }
 
@@ -69,21 +78,14 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if (fontsLoaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded]);
-
-  if (!fontsLoaded) {
-    return null;
-  }
+    SplashScreen.hideAsync();
+  }, []);
 
   return (
     <ConvexProvider client={convex}>
       <AuthProvider>
         <ToastProvider>
-          <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
-          <AppGate />
+          <AppGate fontsLoaded={fontsLoaded} />
         </ToastProvider>
       </AuthProvider>
     </ConvexProvider>
