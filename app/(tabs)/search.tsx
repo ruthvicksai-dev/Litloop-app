@@ -3,7 +3,7 @@ import SearchResultList from "@/components/search/SearchResultList";
 import SearchInput from "@/components/shared/SearchInput";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing } from "@/constants/theme";
-import { useSearchScreen } from "@/hooks/useSearchScreen";
+import { useSearchScreen } from "@/hooks";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useMemo } from "react";

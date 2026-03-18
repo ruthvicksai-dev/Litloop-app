@@ -19,7 +19,12 @@ const STATUS_FILTERS = [
 ] as const;
 
 export function useAdminDashboard() {
-    const rentals = useQuery(api.rentals.getAllRentals);
+    const rentals = useQuery(api.rentals.getAllRentals, {
+        paginationOpts: {
+            cursor: null,
+            numItems: 50, // admin can load more
+        },
+    });
     const markDelivered = useMutation(api.rentals.markDelivered);
     const markReturned = useMutation(api.rentals.markReturned);
     const { showToast } = useToast();
@@ -27,47 +32,46 @@ export function useAdminDashboard() {
     const { signOut } = useAuth();
     const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>("all");
 
-    const stats = useMemo(() => {
-        if (!rentals) {
-            return { total: 0, active: 0, pending: 0, completed: 0 };
-        }
+const stats = useMemo(() => {
+    const rentalList = rentals?.page ?? [];
 
-        return {
-            total: rentals.length,
-            active: rentals.filter((rental) =>
-                ["requested", "delivery_scheduled", "delivered"].includes(
-                    rental.status
-                )
-            ).length,
-            pending: rentals.filter((rental) =>
-                ["pickup_scheduled", "payment_pending"].includes(rental.status)
-            ).length,
-            completed: rentals.filter((rental) =>
-                ["paid", "returned"].includes(rental.status)
-            ).length,
-        };
-    }, [rentals]);
+    return {
+        total: rentalList.length,
+        active: rentalList.filter((rental) =>
+            ["requested", "delivery_scheduled", "delivered"].includes(rental.status)
+        ).length,
+        pending: rentalList.filter((rental) =>
+            ["pickup_scheduled", "payment_pending"].includes(rental.status)
+        ).length,
+        completed: rentalList.filter((rental) =>
+            ["paid", "returned"].includes(rental.status)
+        ).length,
+    };
+}, [rentals]);
 
     const revenue = useMemo(() => {
-        const currentMonthKey = getCurrentMonthKey();
-        const currentMonthMetrics = getRevenueMetricsForMonth(rentals, currentMonthKey);
+    const rentalList = rentals?.page ?? [];
 
-        return {
-            monthlyRevenue: currentMonthMetrics.revenue,
-            monthlyOrders: currentMonthMetrics.totalOrders,
-            currentMonthLabel: formatMonthLabel(currentMonthKey),
-        };
-    }, [rentals]);
+    const currentMonthKey = getCurrentMonthKey();
+    const currentMonthMetrics = getRevenueMetricsForMonth(
+        rentalList,
+        currentMonthKey
+    );
+
+    return {
+        monthlyRevenue: currentMonthMetrics.revenue,
+        monthlyOrders: currentMonthMetrics.totalOrders,
+        currentMonthLabel: formatMonthLabel(currentMonthKey),
+    };
+}, [rentals]);
 
     const filteredRentals = useMemo(() => {
-        if (!rentals) {
-            return [];
-        }
+    const rentalList = rentals?.page ?? [];
 
-        return statusFilter === "all"
-            ? rentals
-            : rentals.filter((rental) => rental.status === statusFilter);
-    }, [rentals, statusFilter]);
+    return statusFilter === "all"
+        ? rentalList
+        : rentalList.filter((rental) => rental.status === statusFilter);
+}, [rentals, statusFilter]);
 
     const groupedByZone = useMemo(() => {
         const groups: Record<string, typeof filteredRentals> = {};

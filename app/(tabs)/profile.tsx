@@ -6,7 +6,7 @@ import { Colors, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
-import { useFadeSlideScaleIn } from "@/hooks/useFadeSlideScaleIn";
+import { useFadeSlideScaleIn } from "@/hooks";
 import { responsiveFont } from "@/utils/responsiveFont";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";

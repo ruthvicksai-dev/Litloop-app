@@ -2,7 +2,7 @@ import BookLoader from "@/components/ui/BookLoader";
 import Button from "@/components/ui/Button";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
-import { useVerifyPaymentScreen } from "@/hooks/useVerifyPaymentScreen";
+import { useVerifyPaymentScreen } from "@/hooks";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";

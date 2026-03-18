@@ -1,6 +1,6 @@
 import { Colors } from "@/constants/theme";
 import AppSplash from "@/components/ui/AppSplash";
-import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { AuthProvider } from "@/context/AuthContext";
 import { ToastProvider } from "@/context/ToastContext";
 import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { useFonts } from "expo-font";
@@ -18,7 +18,6 @@ let hasCompletedStartupSplash = false;
 
 /** Gate that blocks all navigation until auth state is resolved. */
 function AuthGate({ children }: { children: React.ReactNode }) {
-  const { isLoading } = useAuth();
   const [isSplashAnimationDone, setIsSplashAnimationDone] = useState(hasCompletedStartupSplash);
 
   const handleSplashComplete = () => {

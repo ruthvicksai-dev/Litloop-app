@@ -20,10 +20,6 @@ export function useRequestRentalScreen(bookId: string) {
     const [landmark, setLandmark] = useState("");
     const [loading, setLoading] = useState(false);
 
-    // Legacy / Shared
-    const [area, setArea] = useState("");
-    const [city, setCity] = useState("");
-
     // College Specifics
     const [roomNo, setRoomNo] = useState("");
     const [yearOfStudy, setYearOfStudy] = useState("");
@@ -55,7 +51,7 @@ export function useRequestRentalScreen(bookId: string) {
                 return;
             }
         } else if (zone === "Home") {
-            if (!formattedAddress.trim() && !area.trim()) {
+            if (!formattedAddress.trim()) {
                 showToast("Delivery address is required for Home delivery.", "error");
                 return;
             }
@@ -70,8 +66,6 @@ export function useRequestRentalScreen(bookId: string) {
                 deliveryLocation: {
                     phone,
                     landmark,
-                    area,
-                    city,
                     roomNo,
                     yearOfStudy,
                     department,
@@ -98,10 +92,6 @@ export function useRequestRentalScreen(bookId: string) {
         book,
         zone,
         setZone,
-        area,
-        setArea,
-        city,
-        setCity,
         landmark,
         setLandmark,
         phone,

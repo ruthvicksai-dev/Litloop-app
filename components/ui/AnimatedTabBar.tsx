@@ -81,7 +81,7 @@ export default function AnimatedTabBar({
                 easing: Easing.out(Easing.cubic),
             });
         }
-    }, [state.index, renderRoutes, TAB_WIDTH]);
+    }, [state.index, state.routes, renderRoutes, TAB_WIDTH, tabPositionX]);
 
     // Translate entire massive SVG left/right so its CENTER perfectly aligns with tab_center
     const svgStyle = useAnimatedStyle(() => {

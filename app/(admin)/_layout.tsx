@@ -1,5 +1,5 @@
 import { Colors } from "@/constants/theme";
-import { useAdminRouteGuard } from "@/hooks/useRouteGuards";
+import { useAdminRouteGuard } from "@/hooks";
 import { Stack } from "expo-router";
 
 export default function AdminLayout() {

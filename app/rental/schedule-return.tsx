@@ -5,7 +5,7 @@ import InputField from "@/components/ui/InputField";
 import TimePickerField from "@/components/ui/TimePickerField";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
-import { useScheduleReturnScreen } from "@/hooks/useScheduleReturnScreen";
+import { useScheduleReturnScreen } from "@/hooks";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -41,10 +41,6 @@ export default function ScheduleReturnScreen() {
         setPhone,
         landmark,
         setLandmark,
-        area,
-        setArea,
-        city,
-        setCity,
         roomNo,
         setRoomNo,
         yearOfStudy,

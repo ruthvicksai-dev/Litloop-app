@@ -24,8 +24,6 @@ export function useScheduleReturnScreen(rentalId: string) {
     const [useSameAddress, setUseSameAddress] = useState(true);
     const [phone, setPhone] = useState("");
     const [landmark, setLandmark] = useState("");
-    const [area, setArea] = useState("");
-    const [city, setCity] = useState("");
     const [roomNo, setRoomNo] = useState("");
     const [yearOfStudy, setYearOfStudy] = useState("");
     const [department, setDepartment] = useState("");
@@ -95,8 +93,6 @@ export function useScheduleReturnScreen(rentalId: string) {
             pickupLocation = {
                 phone: phone.trim(),
                 landmark: landmark.trim(),
-                area: area.trim(),
-                city: city.trim(),
                 roomNo: roomNo.trim(),
                 yearOfStudy: yearOfStudy.trim(),
                 department: department.trim(),
@@ -148,10 +144,6 @@ export function useScheduleReturnScreen(rentalId: string) {
         setPhone,
         landmark,
         setLandmark,
-        area,
-        setArea,
-        city,
-        setCity,
         roomNo,
         setRoomNo,
         yearOfStudy,

@@ -1,9 +1,15 @@
 import InputField from "@/components/ui/InputField";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
+import { Id } from "@/convex/_generated/dataModel";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+
+type SeriesOption = {
+    _id: Id<"book_series">;
+    name: string;
+};
 
 type FeaturedSectionsFieldsProps = {
     isTop10: boolean;
@@ -12,14 +18,14 @@ type FeaturedSectionsFieldsProps = {
     isTrending: boolean;
     isSeries: boolean;
     series: string;
-    seriesList: any[] | undefined;
-    seriesId?: string;
+    seriesList: SeriesOption[] | undefined;
+    seriesId?: Id<"book_series">;
     onToggleTop10: () => void;
     onToggleFamous: () => void;
     onToggleTrending: () => void;
     onToggleSeries: () => void;
     onChangeSeries: (value: string) => void;
-    onSelectSeriesId: (id: any) => void;
+    onSelectSeriesId: (id: Id<"book_series"> | undefined) => void;
     onChangeTop10Position: (value: string) => void;
 };
 

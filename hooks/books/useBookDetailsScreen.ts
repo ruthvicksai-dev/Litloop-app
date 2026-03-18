@@ -2,9 +2,9 @@ import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { useFadeSlideScaleIn } from "@/hooks/useFadeSlideScaleIn";
-import { useFavorites } from "@/hooks/useFavorites";
-import { useReadLater } from "@/hooks/useReadLater";
+import { useFadeSlideScaleIn } from "@/hooks/animations/useFadeSlideScaleIn";
+import { useFavorites } from "@/hooks/books/useFavorites";
+import { useReadLater } from "@/hooks/books/useReadLater";
 import { useMutation, useQuery } from "convex/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Animated } from "react-native";
-import { useFadeSlideIn } from "./useFadeSlideIn";
+import { useFadeSlideIn } from "@/hooks/animations/useFadeSlideIn";
 
 export function useHomeEntrance() {
     const { fadeAnim, slideAnim } = useFadeSlideIn({ autoStart: false });

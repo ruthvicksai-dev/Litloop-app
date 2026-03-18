@@ -1,4 +1,5 @@
 import { MAIN_GENRES } from "@/constants/mainGenres";
+import { SERIES_PAGINATION_OPTS } from "@/constants/pagination";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -9,7 +10,7 @@ import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Alert } from "react-native";
-import { useBookCoverManager } from "./useBookCoverManager";
+import { useBookCoverManager } from "@/hooks/books/useBookCoverManager";
 
 export function useEditBookScreen(bookId: string) {
     const router = useRouter();
@@ -41,7 +42,9 @@ export function useEditBookScreen(bookId: string) {
     const [deleting, setDeleting] = useState(false);
     const [initialized, setInitialized] = useState(false);
 
-    const seriesList = useQuery(api.series.list);
+    const seriesList = useQuery(api.series.list, {
+        paginationOpts: SERIES_PAGINATION_OPTS,
+    });
 
     const {
         coverUris,
@@ -309,7 +312,7 @@ export function useEditBookScreen(bookId: string) {
         setSeries,
         seriesId,
         setSeriesId,
-        seriesList,
+        seriesList: seriesList?.page ?? [],
         isFetchingBookInfo,
         toggleGenre,
         loading,

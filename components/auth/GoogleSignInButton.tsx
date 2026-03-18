@@ -1,6 +1,6 @@
 import { isGoogleSignInEnabled } from "@/constants/features";
 import { Colors } from "@/constants/theme";
-import { useGoogleAuth } from "@/hooks/useGoogleAuth";
+import { useGoogleAuth } from "@/hooks";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {

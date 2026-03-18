@@ -1,7 +1,6 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing, scale } from "@/constants/theme";
-import { useFavorites } from "@/hooks/useFavorites";
-import { useReadLater } from "@/hooks/useReadLater";
+import { useFavorites, useReadLater } from "@/hooks";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";

@@ -5,9 +5,7 @@ import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, scale, Spacing } from "@/constants/theme";
-import { useAuthRedirect } from "@/hooks/useAuthRedirect";
-import { useFadeSlideScaleIn } from "@/hooks/useFadeSlideScaleIn";
-import { useSignInScreen } from "@/hooks/useSignInScreen";
+import { useAuthRedirect, useFadeSlideScaleIn, useSignInScreen } from "@/hooks";
 import { useRouter } from "expo-router";
 import React from "react";
 import {

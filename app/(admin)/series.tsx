@@ -2,6 +2,7 @@ import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
+import { SERIES_PAGINATION_OPTS } from "@/constants/pagination";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -22,28 +23,39 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+type SeriesItem = {
+    _id: Id<"book_series">;
+    name: string;
+    description?: string;
+    coverImage: Id<"_storage">;
+    coverUrl?: string | null;
+};
+
 export default function SeriesManagementScreen() {
     const router = useRouter();
     const { showToast } = useToast();
-    const seriesList = useQuery(api.series.list);
+    const seriesQuery = useQuery(api.series.list, {
+        paginationOpts: SERIES_PAGINATION_OPTS,
+    });
+    const seriesList = seriesQuery?.page ?? [];
     const addSeries = useMutation(api.series.add);
     const updateSeries = useMutation(api.series.update);
     const removeSeries = useMutation(api.series.remove);
     const generateUploadUrl = useMutation(api.books.generateUploadUrl);
 
     const [modalVisible, setModalVisible] = useState(false);
-    const [editingSeries, setEditingSeries] = useState<any>(null);
+    const [editingSeries, setEditingSeries] = useState<SeriesItem | null>(null);
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
     const [coverUri, setCoverUri] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
-    const handleOpenModal = (series?: any) => {
+    const handleOpenModal = (series?: SeriesItem) => {
         if (series) {
             setEditingSeries(series);
             setName(series.name);
             setDescription(series.description || "");
-            setCoverUri(series.coverUrl);
+            setCoverUri(series.coverUrl ?? null);
         } else {
             setEditingSeries(null);
             setName("");
@@ -78,7 +90,7 @@ export default function SeriesManagementScreen() {
 
         setLoading(true);
         try {
-            let coverImageId = editingSeries?.coverImage;
+            let coverImageId: Id<"_storage"> | undefined = editingSeries?.coverImage;
 
             if (coverUri && !coverUri.startsWith("http")) {
                 const uploadUrl = await generateUploadUrl();
@@ -89,7 +101,9 @@ export default function SeriesManagementScreen() {
                     headers: { "Content-Type": blob.type || "image/jpeg" },
                     body: blob,
                 });
-                const { storageId } = await uploadResult.json();
+                const { storageId } = (await uploadResult.json()) as {
+                    storageId: Id<"_storage">;
+                };
                 coverImageId = storageId;
             }
 
@@ -110,8 +124,9 @@ export default function SeriesManagementScreen() {
                 showToast("Series added successfully!", "success");
             }
             setModalVisible(false);
-        } catch (error: any) {
-            showToast(error.message || "Failed to save series.", "error");
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Failed to save series.";
+            showToast(message, "error");
         } finally {
             setLoading(false);
         }
@@ -121,14 +136,21 @@ export default function SeriesManagementScreen() {
         try {
             await removeSeries({ seriesId: id });
             showToast("Series deleted.", "success");
-        } catch (error: any) {
-            showToast(error.message || "Failed to delete series.", "error");
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Failed to delete series.";
+            showToast(message, "error");
         }
     };
 
-    const renderItem = ({ item }: { item: any }) => (
+    const renderItem = ({ item }: { item: SeriesItem }) => (
         <View style={styles.card}>
-            <Image source={{ uri: item.coverUrl }} style={styles.cardImage} />
+            {item.coverUrl ? (
+                <Image source={{ uri: item.coverUrl }} style={styles.cardImage} />
+            ) : (
+                <View style={styles.cardImageFallback}>
+                    <Ionicons name="layers-outline" size={22} color={Colors.textLight} />
+                </View>
+            )}
             <View style={styles.cardContent}>
                 <Text style={styles.cardName}>{item.name}</Text>
                 <Text style={styles.cardDesc} numberOfLines={2}>
@@ -164,7 +186,7 @@ export default function SeriesManagementScreen() {
                 </TouchableOpacity>
             </View>
 
-            {seriesList === undefined ? (
+            {seriesQuery === undefined ? (
                 <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 50 }} />
             ) : (
                 <FlatList
@@ -281,6 +303,14 @@ const styles = StyleSheet.create({
         height: 90,
         borderRadius: 8,
         backgroundColor: Colors.background,
+    },
+    cardImageFallback: {
+        width: 60,
+        height: 90,
+        borderRadius: 8,
+        backgroundColor: Colors.background,
+        alignItems: "center",
+        justifyContent: "center",
     },
     cardContent: {
         flex: 1,

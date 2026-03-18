@@ -1,14 +1,19 @@
 import { MAIN_GENRES } from "@/constants/mainGenres";
+import { BOOKS_PAGINATION_OPTS } from "@/constants/pagination";
 import { api } from "@/convex/_generated/api";
 import { useQuery } from "convex/react";
 import { useMemo, useState } from "react";
 
 export function useHomeScreen() {
-    const books = useQuery(api.books.list);
+    const booksQuery = useQuery(api.books.list, {
+        paginationOpts: BOOKS_PAGINATION_OPTS,
+    });
     const [search, setSearch] = useState("");
 
     const filteredBooks = useMemo(() => {
-        if (!books) {
+        const books = booksQuery?.page ?? [];
+
+        if (!booksQuery) {
             return [];
         }
 
@@ -22,7 +27,7 @@ export function useHomeScreen() {
                 book.title.toLowerCase().includes(query) ||
                 book.author.toLowerCase().includes(query)
         );
-    }, [books, search]);
+    }, [booksQuery, search]);
 
     const genreSections = useMemo(
         () => {
@@ -40,7 +45,7 @@ export function useHomeScreen() {
     );
 
     return {
-        books,
+        books: booksQuery,
         search,
         setSearch,
         filteredBooks,

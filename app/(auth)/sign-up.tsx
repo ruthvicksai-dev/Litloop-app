@@ -3,9 +3,7 @@ import AuthHeader from "@/components/auth/AuthHeader";
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
 import { Colors, Layout, Spacing, scale } from "@/constants/theme";
-import { useAuthRedirect } from "@/hooks/useAuthRedirect";
-import { useFadeSlideScaleIn } from "@/hooks/useFadeSlideScaleIn";
-import { useSignUpScreen } from "@/hooks/useSignUpScreen";
+import { useAuthRedirect, useFadeSlideScaleIn, useSignUpScreen } from "@/hooks";
 import { useRouter } from "expo-router";
 import React from "react";
 import {

@@ -4,7 +4,7 @@ import Button from "@/components/ui/Button";
 import DiscoverBookCard from "@/components/ui/DiscoverBookCard";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing } from "@/constants/theme";
-import { useBookDetailsScreen } from "@/hooks/useBookDetailsScreen";
+import { useBookDetailsScreen } from "@/hooks";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";

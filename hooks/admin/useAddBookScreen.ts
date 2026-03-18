@@ -1,4 +1,5 @@
 import { MAIN_GENRES } from "@/constants/mainGenres";
+import { SERIES_PAGINATION_OPTS } from "@/constants/pagination";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -8,7 +9,7 @@ import { validateEnglishSafeDescription } from "@/utils/descriptionPolicy";
 import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
-import { useBookCoverManager } from "./useBookCoverManager";
+import { useBookCoverManager } from "@/hooks/books/useBookCoverManager";
 
 export function useAddBookScreen() {
     const { showToast } = useToast();
@@ -35,7 +36,9 @@ export function useAddBookScreen() {
     const [isFetchingBookInfo, setIsFetchingBookInfo] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    const seriesList = useQuery(api.series.list);
+    const seriesList = useQuery(api.series.list, {
+        paginationOpts: SERIES_PAGINATION_OPTS,
+    });
 
     const coverManager = useBookCoverManager({
         title,
@@ -233,7 +236,7 @@ export function useAddBookScreen() {
         setSeries,
         seriesId,
         setSeriesId,
-        seriesList,
+        seriesList: seriesList?.page ?? [],
         isFetchingBookInfo,
         toggleGenre,
         loading,

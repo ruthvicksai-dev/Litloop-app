@@ -1,6 +1,6 @@
 import { MAIN_GENRES } from "@/constants/mainGenres";
 import { api } from "@/convex/_generated/api";
-import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { useDebouncedValue } from "@/hooks/shared/useDebouncedValue";
 import { usePaginatedQuery } from "convex/react";
 import { useCallback, useMemo, useState } from "react";
 

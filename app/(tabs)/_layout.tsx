@@ -1,5 +1,5 @@
 import AnimatedTabBar from "@/components/ui/AnimatedTabBar";
-import { useTabsRouteGuard } from "@/hooks/useRouteGuards";
+import { useTabsRouteGuard } from "@/hooks";
 import { Tabs } from "expo-router";
 import React from "react";
 

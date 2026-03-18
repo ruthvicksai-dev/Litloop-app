@@ -8,7 +8,7 @@ import {
 } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";
-import { useFadeSlideIn } from "@/hooks/useFadeSlideIn";
+import { useFadeSlideIn } from "@/hooks";
 import { responsiveFont } from "@/utils/responsiveFont";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";

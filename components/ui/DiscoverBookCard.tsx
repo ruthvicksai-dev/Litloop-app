@@ -1,6 +1,6 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, scale, Spacing } from "@/constants/theme";
-import { useFavorites } from "@/hooks/useFavorites";
+import { useFavorites } from "@/hooks";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";

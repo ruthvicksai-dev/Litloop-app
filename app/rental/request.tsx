@@ -4,8 +4,7 @@ import InputField from "@/components/ui/InputField";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing, ZONES } from "@/constants/theme";
 import { useToast } from "@/context/ToastContext";
-import { useFadeSlideIn } from "@/hooks/useFadeSlideIn";
-import { useRequestRentalScreen } from "@/hooks/useRequestRentalScreen";
+import { useFadeSlideIn, useRequestRentalScreen } from "@/hooks";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -31,10 +30,6 @@ export default function RequestRentalScreen() {
         book,
         zone,
         setZone,
-        area,
-        setArea,
-        city,
-        setCity,
         landmark,
         setLandmark,
         phone,
@@ -91,7 +86,7 @@ export default function RequestRentalScreen() {
                 setFormattedAddress(fullAddress);
             }
             showToast("Location updated!", "success");
-        } catch (error) {
+        } catch {
             showToast("Failed to fetch location. Please try manually.", "error");
         } finally {
             setIsLocating(false);

@@ -1,6 +1,6 @@
 import BookLoader from "@/components/ui/BookLoader";
 import { Colors } from "@/constants/theme";
-import { useRootRedirect } from "@/hooks/useRouteGuards";
+import { useRootRedirect } from "@/hooks";
 import { StyleSheet, View } from "react-native";
 
 export default function Index() {

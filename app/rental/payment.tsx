@@ -3,7 +3,7 @@ import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
 import { Colors, Spacing } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
-import { usePaymentScreen } from "@/hooks/usePaymentScreen";
+import { usePaymentScreen } from "@/hooks";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {

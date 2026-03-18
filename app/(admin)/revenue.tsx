@@ -5,6 +5,7 @@ import BookLoader from "@/components/ui/BookLoader";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { api } from "@/convex/_generated/api";
+import { RENTALS_PAGINATION_OPTS } from "@/constants/pagination";
 import {
     formatMonthLabel,
     getCurrentMonthKey,
@@ -25,8 +26,11 @@ const formatCurrency = (value: number) =>
 
 export default function AdminRevenueScreen() {
     const router = useRouter();
-    const rentals = useQuery(api.rentals.getAllRentals);
+    const rentalsQuery = useQuery(api.rentals.getAllRentals, {
+        paginationOpts: RENTALS_PAGINATION_OPTS,
+    });
     const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthKey());
+    const rentals = useMemo(() => rentalsQuery?.page ?? [], [rentalsQuery]);
 
     const monthOptions = useMemo(
         () => getMonthOptions(rentals, 6),
@@ -44,7 +48,7 @@ export default function AdminRevenueScreen() {
         [activeMonth, rentals]
     );
 
-    if (rentals === undefined) {
+    if (rentalsQuery === undefined) {
         return (
             <View style={styles.center}>
                 <BookLoader label="Loading revenue..." />
