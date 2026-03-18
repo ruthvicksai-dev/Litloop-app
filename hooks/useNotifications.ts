@@ -17,7 +17,7 @@ Notifications.setNotificationHandler({
     }),
 });
 
-export function useNotifications(userId: Id<"users"> | null) {
+export function useNotifications(userId: Id<"users"> | null, userRole?: string) {
     const [expoPushToken, setExpoPushToken] = useState<string>("");
     const notificationListener = useRef<Notifications.Subscription | null>(null);
     const responseListener = useRef<Notifications.Subscription | null>(null);
@@ -26,13 +26,17 @@ export function useNotifications(userId: Id<"users"> | null) {
 
     const handleNotificationClick = useCallback(
         (data: Record<string, unknown>) => {
-            if (data.type === "rental" && data.rentalId) {
-                router.push(`/rental/${data.rentalId}` as any);
+            if (data.type === "rental") {
+                if (userRole === "admin" && data.rentalId) {
+                    router.push(`/(admin)/rental/${data.rentalId}` as any);
+                } else {
+                    router.push("/(tabs)/my-rentals" as any);
+                }
             } else if (data.type === "book" && data.bookId) {
                 router.push(`/book/${data.bookId}` as any);
             }
         },
-        [router]
+        [router, userRole]
     );
 
     useEffect(() => {

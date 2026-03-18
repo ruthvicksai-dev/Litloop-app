@@ -19,13 +19,13 @@ let hasCompletedStartupSplash = false;
 
 /** Blocks navigation until startup splash and auth state are both resolved. */
 function AppGate({ fontsLoaded }: { fontsLoaded: boolean }) {
-  const { isLoading, userId } = useAuth();
+  const { isLoading, userId, user } = useAuth();
   const [isSplashAnimationDone, setIsSplashAnimationDone] = useState(hasCompletedStartupSplash);
   const [hasResolvedInitialAuth, setHasResolvedInitialAuth] = useState(false);
   const showSplash = !fontsLoaded || !isSplashAnimationDone || !hasResolvedInitialAuth;
 
   // Initialize push notifications for the logged-in user
-  useNotifications(userId);
+  useNotifications(userId, user?.role);
 
   const handleSplashComplete = () => {
     hasCompletedStartupSplash = true;

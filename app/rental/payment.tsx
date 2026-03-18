@@ -145,7 +145,7 @@ export default function PaymentScreen() {
                                         <Text style={styles.qrUpi}>library@upi</Text>
                                     </View>
                                     <Text style={styles.qrNote}>
-                                        Pay â‚¹{rental.totalRent || 0} to the above UPI ID
+                                        Pay ₹{rental.totalRent || 0} to the above UPI ID
                                     </Text>
                                 </View>
 
@@ -183,7 +183,7 @@ export default function PaymentScreen() {
                                     <Text style={styles.cashIcon}>Cash</Text>
                                     <Text style={styles.cashTitle}>Cash on Pickup</Text>
                                     <Text style={styles.cashDesc}>
-                                        Pay â‚¹{rental.totalRent || 0} in cash when the book is picked up. Our
+                                        Pay  ₹{rental.totalRent || 0} in cash when the book is picked up. Our
                                         delivery agent will collect the amount.
                                     </Text>
                                 </View>

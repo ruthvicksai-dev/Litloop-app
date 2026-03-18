@@ -48,7 +48,7 @@ export default function VerifyPaymentScreen() {
                     <View style={styles.detailCard}>
                         <Text style={styles.detailTitle}>{singleRental.book?.title}</Text>
                         <Text style={styles.detailSub}>
-                            User: {singleRental.user?.name} â€¢ {singleRental.user?.phone}
+                            User: {singleRental.user?.name}  •{singleRental.user?.phone}
                         </Text>
                         <Text style={styles.detailSub}>
                             Method: {singleRental.paymentMethod?.toUpperCase()}
@@ -56,7 +56,7 @@ export default function VerifyPaymentScreen() {
                         {singleRental.utrNumber ? (
                             <Text style={styles.detailSub}>UTR: {singleRental.utrNumber}</Text>
                         ) : null}
-                        <Text style={styles.detailSub}>Amount: â‚¹{singleRental.totalRent}</Text>
+                        <Text style={styles.detailSub}>Amount: ₹{singleRental.totalRent}</Text>
                     </View>
 
                     {singleRental.screenshotUrl ? (

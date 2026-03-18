@@ -4,8 +4,10 @@ import SeriesSectionRow from "@/components/ui/SeriesSectionRow";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
+import { api } from "@/convex/_generated/api";
 import { useDiscoverSections, useHomeEntrance } from "@/hooks";
 import { Ionicons } from "@expo/vector-icons";
+import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
@@ -19,10 +21,14 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
-  const { user } = useAuth();
+  const { user, userId } = useAuth();
   const router = useRouter();
   const { fadeAnim, slideAnim } = useHomeEntrance();
   const { topPicks, top10Books, trendingBooks, famousBooks, seriesBooks, newlyAddedBooks } = useDiscoverSections();
+  const unreadCount = useQuery(
+    api.notifications.getUnreadCount,
+    userId ? { userId } : "skip"
+  ) ?? 0;
 
   const isLoading =
     topPicks === undefined &&
@@ -65,8 +71,8 @@ export default function HomeScreen() {
             activeOpacity={0.7}
             onPress={() => router.push("/notifications" as any)}
           >
-            <Ionicons name="notifications-outline" size={24} color={Colors.primary} />
-            <View style={styles.notifBadge} />
+            <Ionicons name={unreadCount > 0 ? "notifications" : "notifications-outline"} size={24} color={Colors.primary} />
+            {unreadCount > 0 && <View style={styles.notifBadge} />}
           </TouchableOpacity>
         </View>
       </Animated.View>

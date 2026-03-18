@@ -26,6 +26,18 @@ export default defineSchema({
         .index("by_bookId", ["bookId"])
         .index("by_userId_bookId", ["userId", "bookId"]),
 
+    user_notifications: defineTable({
+        userId: v.id("users"),
+        title: v.string(),
+        body: v.string(),
+        type: v.string(),          // "rental" | "book" | "general"
+        dataJson: v.optional(v.string()), // JSON-encoded navigation data
+        isRead: v.boolean(),
+        createdAt: v.number(),
+    })
+        .index("by_userId", ["userId"])
+        .index("by_userId_isRead", ["userId", "isRead"]),
+
     sessions: defineTable({
         userId: v.id("users"),
         refreshTokenHash: v.optional(v.string()),

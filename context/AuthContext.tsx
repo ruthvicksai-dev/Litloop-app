@@ -28,6 +28,7 @@ interface AuthContextType {
     userId: Id<"users"> | null;
     accessToken: string | null;
     isLoading: boolean;
+    isRefreshing: boolean;
     isAdmin: boolean;
     signIn: (email: string, password: string) => Promise<void>;
     signUp: (
@@ -45,6 +46,7 @@ const AuthContext = createContext<AuthContextType>({
     userId: null,
     accessToken: null,
     isLoading: true,
+    isRefreshing: false,
     isAdmin: false,
     signIn: async () => { },
     signUp: async () => { },
@@ -65,7 +67,8 @@ const REFRESH_TOKEN_KEY = "litloop_refresh_token";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [accessToken, setAccessToken] = useState<string | null>(null);
-    const [tokenLoaded, setTokenLoaded] = useState(false); // SecureStore read complete
+    const [tokenLoaded, setTokenLoaded] = useState(false);
+    const [isRefreshing, setIsRefreshing] = useState(false);
     const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const signOutInProgressRef = useRef(false);
 
@@ -145,6 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 );
                 if (!storedRefreshToken || signOutInProgressRef.current) return;
 
+                setIsRefreshing(true);
                 try {
                     const result = await refreshSessionMutation({
                         refreshToken: storedRefreshToken,
@@ -174,6 +178,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                             await clearLocalSession();
                         }
                     }
+                } finally {
+                    setIsRefreshing(false);
                 }
             }, refreshIn);
         },
@@ -201,7 +207,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     setAccessToken(storedAccess);
                     scheduleRefresh(storedAccess);
                 } else {
-                    // Access token expired — try to refresh
+                    // Access token expired — try to refresh silently
+                    setIsRefreshing(true);
                     try {
                         const result = await refreshSessionMutation({
                             refreshToken: storedRefresh,
@@ -225,6 +232,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                         if (currentRefreshToken === storedRefresh) {
                             await clearLocalSession();
                         }
+                    } finally {
+                        setIsRefreshing(false);
                     }
                 }
             } catch {
@@ -309,6 +318,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 userId: user?._id ?? null,
                 accessToken,
                 isLoading,
+                isRefreshing,
                 isAdmin: user?.role === "admin",
                 signIn,
                 signUp,
