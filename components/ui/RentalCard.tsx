@@ -93,7 +93,12 @@ export default function RentalCard({
                         </Text>
                         <View style={[styles.statusBadge, { backgroundColor: statusColor + "18" }]}>
                             <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
-                            <Text style={[styles.statusText, { color: statusColor }]}>
+                            <Text
+                                style={[styles.statusText, { color: statusColor }]}
+                                numberOfLines={1}
+                                adjustsFontSizeToFit
+                                minimumFontScale={0.8}
+                            >
                                 {statusLabel}
                             </Text>
                         </View>
@@ -138,6 +143,13 @@ export default function RentalCard({
                         </View>
                     ) : null}
 
+                    <View style={styles.cardFooter}>
+                        <Text style={styles.cardRate}>{`\u20B9${rentPerDay} / day`}</Text>
+                        {totalRent !== undefined && totalRent > 0 ? (
+                            <Text style={styles.totalRent}>{`Total: \u20B9 ${totalRent}`}</Text>
+                        ) : null}
+                    </View>
+
                     {status === "delivered" && deliveryDate ? (
                         <View style={styles.timerContainer}>
                             <View style={styles.timerHeader}>
@@ -146,17 +158,10 @@ export default function RentalCard({
                             </View>
                             <View style={styles.timerValues}>
                                 <Text style={styles.timerDays}>{currentDays}d</Text>
-                                <Text style={styles.timerRent}>Rs {currentRent}</Text>
+                                <Text style={styles.timerRent}>{`\u20B9 ${currentRent}`}</Text>
                             </View>
                         </View>
                     ) : null}
-
-                    <View style={styles.cardFooter}>
-                        <Text style={styles.cardRate}>Rs {rentPerDay}/day</Text>
-                        {totalRent !== undefined && totalRent > 0 ? (
-                            <Text style={styles.totalRent}>Total: Rs {totalRent}</Text>
-                        ) : null}
-                    </View>
                 </View>
             </View>
         </TouchableOpacity>
@@ -201,7 +206,7 @@ const styles = StyleSheet.create({
     },
     cardTopRow: {
         flexDirection: "row",
-        alignItems: "flex-start",
+        alignItems: "center",
         gap: Spacing.xs,
     },
     cardTitle: {
@@ -209,18 +214,20 @@ const styles = StyleSheet.create({
         fontSize: FontSizes.subtitle,
         color: Colors.text,
         fontFamily: Fonts.bold,
-        marginTop: Spacing.xs / 4,
+        minWidth: 0,
     },
     statusBadge: {
         flexDirection: "row",
         alignItems: "center",
-        gap: scale(5),
-        paddingHorizontal: Spacing.sm,
-        paddingVertical: scale(3),
+        gap: scale(4),
+        paddingHorizontal: scale(7),
+        paddingVertical: scale(2),
         borderRadius: 999,
         borderWidth: 1,
         borderColor: Colors.border,
-        maxWidth: "46%",
+        width: scale(102),
+        minHeight: scale(24),
+        flexShrink: 0,
     },
     statusDot: {
         width: scale(6),
@@ -230,7 +237,8 @@ const styles = StyleSheet.create({
     statusText: {
         fontSize: FontSizes.tiny,
         fontFamily: Fonts.bold,
-        flexShrink: 1,
+        flex: 1,
+        textAlign: "center",
     },
     cardAuthor: {
         fontSize: FontSizes.small,
@@ -335,5 +343,6 @@ const styles = StyleSheet.create({
         fontSize: FontSizes.body,
         color: Colors.primary,
         fontFamily: Fonts.bold,
+        textAlign: "right",
     },
 });

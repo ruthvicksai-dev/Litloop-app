@@ -2,15 +2,19 @@ import BookLoader from "@/components/ui/BookLoader";
 import Button from "@/components/ui/Button";
 import DatePickerField from "@/components/ui/DatePickerField";
 import InputField from "@/components/ui/InputField";
+import MapLocationPicker from "@/components/ui/MapLocationPicker";
 import TimePickerField from "@/components/ui/TimePickerField";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
+import { useToast } from "@/context/ToastContext";
 import { useScheduleReturnScreen } from "@/hooks";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
+    KeyboardAvoidingView,
+    Platform,
     ScrollView,
     StyleSheet,
     Text,
@@ -22,6 +26,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function ScheduleReturnScreen() {
     const { rentalId } = useLocalSearchParams<{ rentalId: string }>();
     const router = useRouter();
+    const { showToast } = useToast();
     const {
         rental,
         pickupDate,
@@ -34,7 +39,6 @@ export default function ScheduleReturnScreen() {
         estimatedDays,
         estimatedRent,
         handleSchedule,
-        // Address Props
         useSameAddress,
         setUseSameAddress,
         phone,
@@ -51,9 +55,31 @@ export default function ScheduleReturnScreen() {
         setRollNo,
         setLatitude,
         setLongitude,
+        latitude,
+        longitude,
         formattedAddress,
         setFormattedAddress,
     } = useScheduleReturnScreen(rentalId);
+    const [isMapPickerVisible, setIsMapPickerVisible] = React.useState(false);
+
+    const updateAddressFromCoords = async (nextLatitude: number, nextLongitude: number) => {
+        setLatitude(nextLatitude);
+        setLongitude(nextLongitude);
+
+        const address = await Location.reverseGeocodeAsync({
+            latitude: nextLatitude,
+            longitude: nextLongitude,
+        });
+
+        if (address && address.length > 0) {
+            const addr = address[0];
+            setFormattedAddress(
+                [addr.name, addr.street, addr.district, addr.city, addr.region, addr.postalCode]
+                    .filter(Boolean)
+                    .join(", ")
+            );
+        }
+    };
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -78,6 +104,7 @@ export default function ScheduleReturnScreen() {
         minimumPickupDate.getTime() <= maxPickupDate.getTime()
             ? maxPickupDate
             : minimumPickupDate;
+
     if (rental === undefined) {
         return (
             <View style={styles.center}>
@@ -88,184 +115,234 @@ export default function ScheduleReturnScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
-            <ScrollView
-                contentContainerStyle={styles.scroll}
-                keyboardShouldPersistTaps="handled"
+            <KeyboardAvoidingView
+                style={styles.flex}
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
             >
-                <TouchableOpacity onPress={() => router.back()}>
-                    <Text style={styles.backText}>Back</Text>
-                </TouchableOpacity>
-
-                <Text style={styles.title}>Schedule Return</Text>
-                <Text style={styles.subtitle}>{rental?.book?.title || "Loading..."}</Text>
-
-                {rental?.deliveryDate ? (
-                    <View style={styles.infoCard}>
-                        <Text style={styles.infoLabel}>Delivered on</Text>
-                        <Text style={styles.infoValue}>{rental.deliveryDate}</Text>
-                    </View>
-                ) : null}
-
-                <DatePickerField
-                    label="Pickup Date"
-                    placeholder="Select pickup date"
-                    value={pickupDate}
-                    minimumDate={minimumPickupDate}
-                    maximumDate={pickupMaximumDate}
-                    onChange={setPickupDate}
-                />
-                <TimePickerField
-                    label="Pickup Time"
-                    placeholder="Select pickup time"
-                    value={pickupTime}
-                    onChange={setPickupTime}
-                />
-
-                {/* Pickup Address Section */}
-                <View style={styles.sectionDivider}>
-                    <Text style={styles.sectionTitle}>Pickup Address</Text>
-                    <TouchableOpacity
-                        style={styles.checkboxRow}
-                        onPress={() => setUseSameAddress(!useSameAddress)}
-                    >
-                        <View style={[styles.checkbox, useSameAddress && styles.checkboxActive]}>
-                            {useSameAddress && <Ionicons name="checkmark" size={12} color={Colors.white} />}
+                <ScrollView
+                    contentContainerStyle={styles.scroll}
+                    keyboardShouldPersistTaps="handled"
+                    keyboardDismissMode="on-drag"
+                    showsVerticalScrollIndicator={false}
+                >
+                    <View>
+                        <View style={styles.header}>
+                            <TouchableOpacity
+                                onPress={() => router.back()}
+                                style={styles.backButton}
+                                accessibilityRole="button"
+                                accessibilityLabel="Go back"
+                            >
+                                <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+                            </TouchableOpacity>
+                            <View style={styles.headerText}>
+                                <Text style={styles.title}>Schedule Return</Text>
+                                <Text style={styles.subtitle}>{rental?.book?.title || "Loading..."}</Text>
+                            </View>
                         </View>
-                        <Text style={styles.checkboxLabel}>Same as delivery address</Text>
-                    </TouchableOpacity>
-                </View>
 
-                {!useSameAddress && (
-                    <View style={styles.customAddressSection}>
-                        {rental.zone === "College" ? (
-                            <>
-                                <InputField
-                                    label="Room No"
-                                    placeholder="e.g. 205"
-                                    value={roomNo}
-                                    onChangeText={setRoomNo}
-                                />
-                                <View style={styles.row}>
-                                    <View style={{ flex: 1, marginRight: Spacing.sm }}>
-                                        <InputField
-                                            label="Year of Study"
-                                            placeholder="e.g. 3rd"
-                                            value={yearOfStudy}
-                                            onChangeText={setYearOfStudy}
-                                        />
-                                    </View>
-                                    <View style={{ flex: 1 }}>
-                                        <InputField
-                                            label="Department"
-                                            placeholder="e.g. CSE"
-                                            value={department}
-                                            onChangeText={setDepartment}
-                                        />
-                                    </View>
+                        {rental?.deliveryDate ? (
+                            <View style={styles.infoCard}>
+                                <Text style={styles.infoLabel}>Delivered on</Text>
+                                <Text style={styles.infoValue}>{rental.deliveryDate}</Text>
+                            </View>
+                        ) : null}
+
+                        <DatePickerField
+                            label="Pickup Date"
+                            placeholder="Select pickup date"
+                            value={pickupDate}
+                            minimumDate={minimumPickupDate}
+                            maximumDate={pickupMaximumDate}
+                            onChange={setPickupDate}
+                        />
+                        <TimePickerField
+                            label="Pickup Time"
+                            placeholder="Select pickup time"
+                            value={pickupTime}
+                            onChange={setPickupTime}
+                        />
+
+                        <View style={styles.sectionDivider}>
+                            <Text style={styles.sectionTitle}>Pickup Address</Text>
+                            <TouchableOpacity
+                                style={styles.checkboxRow}
+                                onPress={() => setUseSameAddress(!useSameAddress)}
+                            >
+                                <View style={[styles.checkbox, useSameAddress && styles.checkboxActive]}>
+                                    {useSameAddress && <Ionicons name="checkmark" size={12} color={Colors.white} />}
                                 </View>
+                                <Text style={styles.checkboxLabel}>Same as delivery address</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {!useSameAddress && (
+                            <View style={styles.customAddressSection}>
+                                {rental.zone === "College" ? (
+                                    <>
+                                        <InputField
+                                            label="Room No"
+                                            placeholder="e.g. 205"
+                                            value={roomNo}
+                                            onChangeText={setRoomNo}
+                                        />
+                                        <View style={styles.row}>
+                                            <View style={styles.halfColumn}>
+                                                <InputField
+                                                    label="Year of Study"
+                                                    placeholder="e.g. 3rd"
+                                                    value={yearOfStudy}
+                                                    onChangeText={setYearOfStudy}
+                                                />
+                                            </View>
+                                            <View style={styles.halfColumn}>
+                                                <InputField
+                                                    label="Department"
+                                                    placeholder="e.g. CSE"
+                                                    value={department}
+                                                    onChangeText={setDepartment}
+                                                />
+                                            </View>
+                                        </View>
+                                        <InputField
+                                            label="Roll No"
+                                            placeholder="e.g. 21K61A0501"
+                                            value={rollNo}
+                                            onChangeText={setRollNo}
+                                        />
+                                    </>
+                                ) : (
+                                    <>
+                                        <TouchableOpacity
+                                            style={styles.locationBtn}
+                                            onPress={async () => {
+                                                let { status } = await Location.requestForegroundPermissionsAsync();
+                                                if (status !== "granted") {
+                                                    showToast("Permission to access location was denied", "error");
+                                                    return;
+                                                }
+                                                let location = await Location.getCurrentPositionAsync({});
+                                                await updateAddressFromCoords(
+                                                    location.coords.latitude,
+                                                    location.coords.longitude
+                                                );
+                                                showToast("Location updated!", "success");
+                                            }}
+                                        >
+                                            <View style={styles.locationBtnContent}>
+                                                <Ionicons name="location" size={18} color={Colors.primary} />
+                                                <Text style={styles.locationBtnText}>Use Current Location</Text>
+                                            </View>
+                                        </TouchableOpacity>
+                                        {formattedAddress ? (
+                                            <View style={styles.addressDisplay}>
+                                                <Text style={styles.addressText}>{formattedAddress}</Text>
+                                                {latitude !== undefined && longitude !== undefined ? (
+                                                    <TouchableOpacity
+                                                        style={styles.adjustLocationButton}
+                                                        onPress={() => setIsMapPickerVisible(true)}
+                                                    >
+                                                        <Ionicons
+                                                            name="map-outline"
+                                                            size={16}
+                                                            color={Colors.primary}
+                                                        />
+                                                        <Text style={styles.adjustLocationText}>
+                                                            Adjust on map
+                                                        </Text>
+                                                    </TouchableOpacity>
+                                                ) : null}
+                                            </View>
+                                        ) : null}
+                                        <InputField
+                                            label="Landmark / Area"
+                                            placeholder="e.g. Near Temple"
+                                            value={landmark}
+                                            onChangeText={setLandmark}
+                                        />
+                                    </>
+                                )}
                                 <InputField
-                                    label="Roll No"
-                                    placeholder="e.g. 21K61A0501"
-                                    value={rollNo}
-                                    onChangeText={setRollNo}
+                                    label="Pickup Contact"
+                                    placeholder="Phone number"
+                                    value={phone}
+                                    onChangeText={setPhone}
+                                    keyboardType="phone-pad"
                                 />
-                            </>
-                        ) : (
-                            <>
-                                <TouchableOpacity
-                                    style={styles.locationBtn}
-                                    onPress={async () => {
-                                        let { status } = await Location.requestForegroundPermissionsAsync();
-                                        if (status !== "granted") return;
-                                        let location = await Location.getCurrentPositionAsync({});
-                                        setLatitude(location.coords.latitude);
-                                        setLongitude(location.coords.longitude);
-                                        let address = await Location.reverseGeocodeAsync({
-                                            latitude: location.coords.latitude,
-                                            longitude: location.coords.longitude,
-                                        });
-                                        if (address && address.length > 0) {
-                                            const addr = address[0];
-                                            setFormattedAddress([addr.name, addr.street, addr.district, addr.city].filter(Boolean).join(", "));
-                                        }
-                                    }}
-                                >
-                                    <View style={styles.locationBtnContent}>
-                                        <Ionicons name="location" size={18} color={Colors.primary} />
-                                        <Text style={styles.locationBtnText}>Use Current Location</Text>
-                                    </View>
-                                </TouchableOpacity>
-                                {formattedAddress ? (
-                                    <View style={styles.addressDisplay}>
-                                        <Text style={styles.addressText}>{formattedAddress}</Text>
-                                    </View>
-                                ) : null}
-                                <InputField
-                                    label="Landmark / Area"
-                                    placeholder="e.g. Near Temple"
-                                    value={landmark}
-                                    onChangeText={setLandmark}
-                                />
-                            </>
+                            </View>
                         )}
-                        <InputField
-                            label="Pickup Contact"
-                            placeholder="Phone number"
-                            value={phone}
-                            onChangeText={setPhone}
-                            keyboardType="phone-pad"
+
+                        <View style={styles.ratingCard}>
+                            <Text style={styles.ratingTitle}>Rate this book</Text>
+                            <Text style={styles.ratingSubtitle}>
+                                Your rating will be shown to other readers in book cards.
+                            </Text>
+                            <View style={styles.starsRow}>
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                    <TouchableOpacity
+                                        key={star}
+                                        onPress={() => setUserRating(star)}
+                                        activeOpacity={0.8}
+                                        style={styles.starButton}
+                                    >
+                                        <Ionicons
+                                            name={userRating >= star ? "star" : "star-outline"}
+                                            size={30}
+                                            color={userRating >= star ? Colors.warning : Colors.textLight}
+                                        />
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        </View>
+
+                        {estimatedDays > 0 ? (
+                            <View style={styles.estimateCard}>
+                                <Text style={styles.estimateTitle}>Rent Estimate</Text>
+                                <View style={styles.estimateRow}>
+                                    <Text style={styles.estimateLabel}>Days</Text>
+                                    <Text style={styles.estimateValue}>{estimatedDays}</Text>
+                                </View>
+                                <View style={styles.estimateRow}>
+                                    <Text style={styles.estimateLabel}>Rate</Text>
+                                    <Text style={styles.estimateValue}>₹{rental?.rentPerDay}/day</Text>
+                                </View>
+                                <View style={[styles.estimateRow, styles.totalRow]}>
+                                    <Text style={[styles.estimateLabel, styles.totalLabel]}>Total</Text>
+                                    <Text style={styles.totalValue}>₹{estimatedRent}</Text>
+                                </View>
+                            </View>
+                        ) : null}
+
+                        <Button
+                            title="Schedule Pickup"
+                            onPress={handleSchedule}
+                            loading={loading}
+                            style={{ marginTop: Spacing.md }}
                         />
                     </View>
-                )}
-
-                <View style={styles.ratingCard}>
-                    <Text style={styles.ratingTitle}>Rate this book</Text>
-                    <Text style={styles.ratingSubtitle}>
-                        Your rating will be shown to other readers in book cards.
-                    </Text>
-                    <View style={styles.starsRow}>
-                        {[1, 2, 3, 4, 5].map((star) => (
-                            <TouchableOpacity
-                                key={star}
-                                onPress={() => setUserRating(star)}
-                                activeOpacity={0.8}
-                                style={styles.starButton}
-                            >
-                                <Ionicons
-                                    name={userRating >= star ? "star" : "star-outline"}
-                                    size={30}
-                                    color={userRating >= star ? Colors.warning : Colors.textLight}
-                                />
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                </View>
-
-                {estimatedDays > 0 ? (
-                    <View style={styles.estimateCard}>
-                        <Text style={styles.estimateTitle}>Rent Estimate</Text>
-                        <View style={styles.estimateRow}>
-                            <Text style={styles.estimateLabel}>Days</Text>
-                            <Text style={styles.estimateValue}>{estimatedDays}</Text>
-                        </View>
-                        <View style={styles.estimateRow}>
-                            <Text style={styles.estimateLabel}>Rate</Text>
-                            <Text style={styles.estimateValue}>₹{rental?.rentPerDay}/day</Text>
-                        </View>
-                        <View style={[styles.estimateRow, styles.totalRow]}>
-                            <Text style={[styles.estimateLabel, styles.totalLabel]}>Total</Text>
-                            <Text style={styles.totalValue}>₹{estimatedRent}</Text>
-                        </View>
-                    </View>
-                ) : null}
-
-                <Button
-                    title="Schedule Pickup"
-                    onPress={handleSchedule}
-                    loading={loading}
-                    style={{ marginTop: Spacing.md }}
+                </ScrollView>
+            </KeyboardAvoidingView>
+            {latitude !== undefined && longitude !== undefined ? (
+                <MapLocationPicker
+                    visible={isMapPickerVisible}
+                    latitude={latitude}
+                    longitude={longitude}
+                    title="Adjust Pickup Location"
+                    subtitle="Drag the pin or tap the map, then confirm the exact pickup point."
+                    onClose={() => setIsMapPickerVisible(false)}
+                    onConfirm={async (coords) => {
+                        try {
+                            await updateAddressFromCoords(coords.latitude, coords.longitude);
+                            showToast("Location adjusted successfully!", "success");
+                        } catch {
+                            showToast("Failed to update the selected location.", "error");
+                        } finally {
+                            setIsMapPickerVisible(false);
+                        }
+                    }}
                 />
-            </ScrollView>
+            ) : null}
         </SafeAreaView>
     );
 }
@@ -275,27 +352,38 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: Colors.background,
     },
+    flex: {
+        flex: 1,
+    },
     scroll: {
+        flexGrow: 1,
         paddingHorizontal: Spacing.lg,
         paddingTop: Spacing.lg,
-        paddingBottom: Spacing.xl,
+        paddingBottom: Spacing.xl * 1.5,
     },
-    backText: {
-        fontSize: FontSizes.subtitle,
-        color: Colors.primary,
-        fontFamily: Fonts.medium,
+    header: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: Spacing.md,
         marginBottom: Spacing.md,
+    },
+    backButton: {
+        alignSelf: "flex-start",
+        padding: 4,
+        marginLeft: -4,
+    },
+    headerText: {
+        flex: 1,
     },
     title: {
         fontSize: FontSizes.heading,
         color: Colors.text,
-        marginBottom: 4,
         fontFamily: Fonts.bold,
     },
     subtitle: {
         fontSize: FontSizes.body,
         color: Colors.textSecondary,
-        marginBottom: Spacing.lg,
+        marginTop: 2,
         fontFamily: Fonts.regular,
     },
     infoCard: {
@@ -432,6 +520,11 @@ const styles = StyleSheet.create({
     },
     row: {
         flexDirection: "row",
+        gap: Spacing.sm,
+    },
+    halfColumn: {
+        flex: 1,
+        minWidth: 0,
     },
     locationBtn: {
         flexDirection: "row",
@@ -463,5 +556,23 @@ const styles = StyleSheet.create({
         fontSize: FontSizes.small,
         fontFamily: Fonts.regular,
         color: Colors.text,
+    },
+    adjustLocationButton: {
+        flexDirection: "row",
+        alignItems: "center",
+        alignSelf: "flex-start",
+        gap: 6,
+        marginTop: Spacing.sm,
+        paddingHorizontal: Spacing.sm,
+        paddingVertical: Spacing.xs,
+        borderRadius: 999,
+        backgroundColor: Colors.white,
+        borderWidth: 1,
+        borderColor: Colors.primary + "30",
+    },
+    adjustLocationText: {
+        fontSize: FontSizes.small,
+        fontFamily: Fonts.medium,
+        color: Colors.primary,
     },
 });

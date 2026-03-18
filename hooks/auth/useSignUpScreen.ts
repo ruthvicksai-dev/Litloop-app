@@ -1,5 +1,6 @@
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
+import { getPhoneValidationError, normalizePhoneNumber } from "@/utils/phone";
 import { useState } from "react";
 
 export function useSignUpScreen() {
@@ -21,8 +22,9 @@ export function useSignUpScreen() {
             showToast("Email is required.", "error");
             return;
         }
-        if (!phone.trim()) {
-            showToast("Phone number is required.", "error");
+        const phoneError = getPhoneValidationError(phone);
+        if (phoneError) {
+            showToast(phoneError, "error");
             return;
         }
         if (password.length < 6) {
@@ -36,7 +38,7 @@ export function useSignUpScreen() {
 
         setLoading(true);
         try {
-            await signUp(name, email, phone, password);
+            await signUp(name, email, normalizePhoneNumber(phone), password);
             showToast("Account created successfully!", "success");
         } catch (error: unknown) {
             const message =

@@ -1,6 +1,7 @@
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { getPhoneValidationError, normalizePhoneNumber } from "@/utils/phone";
 import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
@@ -86,12 +87,13 @@ export function useScheduleReturnScreen(rentalId: string) {
         if (useSameAddress && rental) {
             pickupLocation = rental.deliveryLocation;
         } else {
-            if (!phone.trim()) {
-                showToast("Pickup phone is required.", "error");
+            const phoneError = getPhoneValidationError(phone, "Pickup phone number");
+            if (phoneError) {
+                showToast(phoneError, "error");
                 return;
             }
             pickupLocation = {
-                phone: phone.trim(),
+                phone: normalizePhoneNumber(phone),
                 landmark: landmark.trim(),
                 roomNo: roomNo.trim(),
                 yearOfStudy: yearOfStudy.trim(),

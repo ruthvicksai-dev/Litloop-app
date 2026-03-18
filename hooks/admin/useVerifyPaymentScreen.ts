@@ -2,9 +2,11 @@ import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
+import { useRouter } from "expo-router";
 
 export function useVerifyPaymentScreen(rentalId?: string) {
     const { showToast } = useToast();
+    const router = useRouter();
     const verifyPayment = useMutation(api.payments.verifyPayment);
     const pendingPayments = useQuery(api.payments.getPendingPayments);
     const singleRental = useQuery(
@@ -22,6 +24,13 @@ export function useVerifyPaymentScreen(rentalId?: string) {
                 approved ? "Payment approved!" : "Payment rejected.",
                 approved ? "success" : "error"
             );
+
+            if (approved && rentalId && rentalId === targetRentalId) {
+                router.replace({
+                    pathname: "/(admin)/rental/[id]",
+                    params: { id: targetRentalId },
+                } as any);
+            }
         } catch (error: unknown) {
             const message =
                 error instanceof Error ? error.message : "Failed to verify payment.";

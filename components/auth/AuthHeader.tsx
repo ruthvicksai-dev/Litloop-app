@@ -30,18 +30,24 @@ export default function AuthHeader({
             ]}
         >
             <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-                <Image
-                    source={require("../../assets/images/icon.png")}
-                    style={styles.logo}
-                />
+                <Animated.View style={styles.logoFrame}>
+                    <Image
+                        source={require("../../assets/images/icon.png")}
+                        style={styles.logo}
+                    />
+                </Animated.View>
             </Animated.View>
-            <Text style={styles.title}>
-                <Text style={{ color: "orange" }}>{words[0] || ""}</Text>
-                <Text style={{ color: Colors.primaryDark }}>
+            <Text style={styles.title} allowFontScaling={false}>
+                <Text style={{ color: "orange" }} allowFontScaling={false}>
+                    {words[0] || ""}
+                </Text>
+                <Text style={{ color: Colors.primaryDark }} allowFontScaling={false}>
                     {words[1] ? " " + words[1] : ""}
                 </Text>
             </Text>
-            <Text style={styles.subtitle}>{subtitle}</Text>
+            <Text style={styles.subtitle} allowFontScaling={false}>
+                {subtitle}
+            </Text>
         </Animated.View>
     );
 }
@@ -50,12 +56,18 @@ const styles = StyleSheet.create({
     header: {
         alignItems: "center",
     },
+    logoFrame: {
+        width: scale(142),
+        height: scale(82),
+        overflow: "hidden",
+        marginBottom: Spacing.xs,
+    },
     logo: {
-        width: scale(180),
-        height: scale(95),
+        width: scale(165),
+        height: scale(165),
         maxWidth: Layout.maxContentWidth * 0.42,
-        marginBottom: Spacing.sm,
         resizeMode: "contain",
+        transform: [{ translateX: scale(-11) }, { translateY: scale(-40) }],
     },
     title: {
         fontSize: FontSizes.display,

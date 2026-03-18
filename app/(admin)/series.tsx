@@ -15,7 +15,10 @@ import {
     ActivityIndicator,
     FlatList,
     Image,
+    KeyboardAvoidingView,
     Modal,
+    Platform,
+    ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -206,58 +209,68 @@ export default function SeriesManagementScreen() {
             <Modal
                 visible={modalVisible}
                 animationType="slide"
-                transparent={true}
+                transparent
                 onRequestClose={() => setModalVisible(false)}
             >
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>
-                            {editingSeries ? "Edit Series" : "New Series"}
-                        </Text>
+                <KeyboardAvoidingView
+                    style={styles.modalOverlay}
+                    behavior={Platform.OS === "ios" ? "padding" : "height"}
+                >
+                    <ScrollView
+                        contentContainerStyle={styles.modalScroll}
+                        keyboardShouldPersistTaps="handled"
+                        keyboardDismissMode="on-drag"
+                        showsVerticalScrollIndicator={false}
+                    >
+                        <View style={styles.modalContent}>
+                            <Text style={styles.modalTitle}>
+                                {editingSeries ? "Edit Series" : "New Series"}
+                            </Text>
 
-                        <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
-                            {coverUri ? (
-                                <Image source={{ uri: coverUri }} style={styles.pickedImage} />
-                            ) : (
-                                <View style={styles.imagePlaceholder}>
-                                    <Ionicons name="camera" size={40} color={Colors.textLight} />
-                                    <Text style={styles.imagePlaceholderText}>Upload Cover</Text>
-                                </View>
-                            )}
-                        </TouchableOpacity>
+                            <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
+                                {coverUri ? (
+                                    <Image source={{ uri: coverUri }} style={styles.pickedImage} />
+                                ) : (
+                                    <View style={styles.imagePlaceholder}>
+                                        <Ionicons name="camera" size={40} color={Colors.textLight} />
+                                        <Text style={styles.imagePlaceholderText}>Upload Cover</Text>
+                                    </View>
+                                )}
+                            </TouchableOpacity>
 
-                        <InputField
-                            label="Name"
-                            placeholder="Series name"
-                            value={name}
-                            onChangeText={setName}
-                        />
-                        <InputField
-                            label="Description"
-                            placeholder="Optional description"
-                            value={description}
-                            onChangeText={setDescription}
-                            multiline
-                            numberOfLines={3}
-                        />
-
-                        <View style={styles.modalButtons}>
-                            <Button
-                                title="Cancel"
-                                onPress={() => setModalVisible(false)}
-                                variant="secondary"
-                                style={styles.modalBtn}
-                                disabled={loading}
+                            <InputField
+                                label="Name"
+                                placeholder="Series name"
+                                value={name}
+                                onChangeText={setName}
                             />
-                            <Button
-                                title="Save"
-                                onPress={handleSave}
-                                loading={loading}
-                                style={styles.modalBtn}
+                            <InputField
+                                label="Description"
+                                placeholder="Optional description"
+                                value={description}
+                                onChangeText={setDescription}
+                                multiline
+                                numberOfLines={3}
                             />
+
+                            <View style={styles.modalButtons}>
+                                <Button
+                                    title="Cancel"
+                                    onPress={() => setModalVisible(false)}
+                                    variant="secondary"
+                                    style={styles.modalBtn}
+                                    disabled={loading}
+                                />
+                                <Button
+                                    title="Save"
+                                    onPress={handleSave}
+                                    loading={loading}
+                                    style={styles.modalBtn}
+                                />
+                            </View>
                         </View>
-                    </View>
-                </View>
+                    </ScrollView>
+                </KeyboardAvoidingView>
             </Modal>
         </SafeAreaView>
     );
@@ -352,12 +365,16 @@ const styles = StyleSheet.create({
         backgroundColor: "rgba(0,0,0,0.5)",
         justifyContent: "flex-end",
     },
+    modalScroll: {
+        flexGrow: 1,
+        justifyContent: "flex-end",
+    },
     modalContent: {
         backgroundColor: Colors.white,
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
         padding: 24,
-        maxHeight: "90%",
+        paddingBottom: 32,
     },
     modalTitle: {
         fontSize: FontSizes.title,
@@ -367,8 +384,9 @@ const styles = StyleSheet.create({
         textAlign: "center",
     },
     imagePicker: {
-        width: 140,
-        height: 210,
+        width: "100%",
+        maxWidth: 220,
+        aspectRatio: 2 / 3,
         borderRadius: 12,
         backgroundColor: Colors.background,
         alignSelf: "center",

@@ -58,7 +58,9 @@ export default function SignInScreen() {
                         scaleAnim={scaleAnim}
                     />
 
-                    <Text style={styles.formHint}>Use your email and password to continue.</Text>
+                    <Text style={styles.formHint} allowFontScaling={false}>
+                        Use your email and password to continue.
+                    </Text>
 
                     <View style={styles.form}>
                         <InputField
@@ -86,7 +88,9 @@ export default function SignInScreen() {
 
                         <View style={styles.divider}>
                             <View style={styles.dividerLine} />
-                            <Text style={styles.dividerText}>OR</Text>
+                            <Text style={styles.dividerText} allowFontScaling={false}>
+                                OR
+                            </Text>
                             <View style={styles.dividerLine} />
                         </View>
 

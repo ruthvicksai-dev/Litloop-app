@@ -7,7 +7,6 @@ import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { useFadeSlideScaleIn } from "@/hooks";
-import { responsiveFont } from "@/utils/responsiveFont";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";
 import { LinearGradient } from "expo-linear-gradient";
@@ -112,14 +111,6 @@ export default function ProfileScreen() {
 
     return (
         <View style={styles.container}>
-            {/* Background Gradient for Premium feel */}
-            <LinearGradient
-                colors={["#E6F4FE", Colors.background]}
-                style={StyleSheet.absoluteFillObject}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0, y: 0.3 }}
-            />
-
             <SafeAreaView style={styles.safeArea}>
                 {favoriteBooks === undefined || readLaterBooks === undefined ? (
                     <View style={styles.center}>
@@ -141,7 +132,9 @@ export default function ProfileScreen() {
                                 },
                             ]}
                         >
-                            <Text style={styles.pageTitle}>Profile</Text>
+                            <Text style={styles.pageTitle} allowFontScaling={false}>
+                                Profile
+                            </Text>
                             <TouchableOpacity style={styles.settingsBtn} onPress={() => setShowLogoutConfirm(true)}>
                                 <Ionicons name="log-out-outline" size={24} color={Colors.text} />
                             </TouchableOpacity>
@@ -172,7 +165,7 @@ export default function ProfileScreen() {
                                     ]}
                                 >
                                     <View style={styles.avatar}>
-                                        <Text style={styles.avatarText}>
+                                        <Text style={styles.avatarText} allowFontScaling={false}>
                                             {user?.name?.charAt(0).toUpperCase() || "U"}
                                         </Text>
                                     </View>
@@ -184,22 +177,36 @@ export default function ProfileScreen() {
                                 </Animated.View>
 
                                 <View style={styles.userInfo}>
-                                    <Text style={styles.name}>{user?.name}</Text>
-                                    <Text style={styles.email}>{user?.email}</Text>
-                                    <Text style={styles.phone}>{user?.phone}</Text>
+                                    <Text style={styles.name} allowFontScaling={false}>
+                                        {user?.name}
+                                    </Text>
+                                    <Text style={styles.email} allowFontScaling={false}>
+                                        {user?.email}
+                                    </Text>
+                                    <Text style={styles.phone} allowFontScaling={false}>
+                                        {user?.phone}
+                                    </Text>
                                 </View>
                             </View>
 
                             {/* Quick Stats */}
                             <View style={styles.statsRow}>
                                 <View style={styles.statBox}>
-                                    <Text style={styles.statNumber}>{favoriteCount ?? 0}</Text>
-                                    <Text style={styles.statLabel}>Favorites</Text>
+                                    <Text style={styles.statNumber} allowFontScaling={false}>
+                                        {favoriteCount ?? 0}
+                                    </Text>
+                                    <Text style={styles.statLabel} allowFontScaling={false}>
+                                        Favorites
+                                    </Text>
                                 </View>
                                 <View style={styles.statDivider} />
                                 <View style={styles.statBox}>
-                                    <Text style={styles.statNumber}>{readLaterCount ?? 0}</Text>
-                                    <Text style={styles.statLabel}>Read Later</Text>
+                                    <Text style={styles.statNumber} allowFontScaling={false}>
+                                        {readLaterCount ?? 0}
+                                    </Text>
+                                    <Text style={styles.statLabel} allowFontScaling={false}>
+                                        Read Later
+                                    </Text>
                                 </View>
                                 <View style={styles.statDivider} />
                                 <TouchableOpacity
@@ -207,7 +214,9 @@ export default function ProfileScreen() {
                                     onPress={() => router.push("/profile/edit")}
                                 >
                                     <Ionicons name="pencil" size={18} color={Colors.primary} />
-                                    <Text style={styles.editProfileText}>Edit</Text>
+                                    <Text style={styles.editProfileText} allowFontScaling={false}>
+                                        Edit
+                                    </Text>
                                 </TouchableOpacity>
                             </View>
                         </Animated.View>
@@ -225,7 +234,9 @@ export default function ProfileScreen() {
                                         style={StyleSheet.absoluteFillObject}
                                     />
                                     <Ionicons name="settings-outline" size={20} color={Colors.white} style={{ marginRight: 8 }} />
-                                    <Text style={styles.adminLinkText}>Admin Dashboard</Text>
+                                    <Text style={styles.adminLinkText} allowFontScaling={false}>
+                                        Admin Dashboard
+                                    </Text>
                                     <Ionicons name="arrow-forward" size={18} color={Colors.white} style={{ marginLeft: "auto" }} />
                                 </TouchableOpacity>
                             </Animated.View>
@@ -243,7 +254,10 @@ export default function ProfileScreen() {
                                         size={18}
                                         color={activeTab === "favorites" ? Colors.white : Colors.textSecondary}
                                     />
-                                    <Text style={[styles.tabText, activeTab === "favorites" && styles.activeTabText]}>
+                                    <Text
+                                        style={[styles.tabText, activeTab === "favorites" && styles.activeTabText]}
+                                        allowFontScaling={false}
+                                    >
                                         Favorites
                                     </Text>
                                 </Pressable>
@@ -256,7 +270,10 @@ export default function ProfileScreen() {
                                         size={18}
                                         color={activeTab === "readLater" ? Colors.white : Colors.textSecondary}
                                     />
-                                    <Text style={[styles.tabText, activeTab === "readLater" && styles.activeTabText]}>
+                                    <Text
+                                        style={[styles.tabText, activeTab === "readLater" && styles.activeTabText]}
+                                        allowFontScaling={false}
+                                    >
                                         Read Later
                                     </Text>
                                 </Pressable>
@@ -286,10 +303,10 @@ export default function ProfileScreen() {
                                         size={48}
                                         color={Colors.border}
                                     />
-                                    <Text style={styles.emptyText}>
+                                    <Text style={styles.emptyText} allowFontScaling={false}>
                                         {activeTab === "favorites" ? "No favorites yet" : "Read list is empty"}
                                     </Text>
-                                    <Text style={styles.emptySubtext}>
+                                    <Text style={styles.emptySubtext} allowFontScaling={false}>
                                         {activeTab === "favorites"
                                             ? "Books you like will appear here."
                                             : "Save books to read them later."}
@@ -325,6 +342,7 @@ const styles = StyleSheet.create({
     },
     safeArea: {
         flex: 1,
+        backgroundColor: Colors.background,
     },
     content: {
         flexGrow: 1,
@@ -339,7 +357,7 @@ const styles = StyleSheet.create({
         paddingBottom: Spacing.md,
     },
     pageTitle: {
-        fontSize: responsiveFont(28),
+        fontSize: 28,
         color: Colors.text,
         fontFamily: Fonts.bold,
         letterSpacing: -0.5,
@@ -406,13 +424,13 @@ const styles = StyleSheet.create({
         marginLeft: Spacing.md,
     },
     name: {
-        fontSize: FontSizes.heading,
+        fontSize: FontSizes.title,
         fontFamily: Fonts.bold,
         color: Colors.text,
         marginBottom: 2,
     },
     email: {
-        fontSize: FontSizes.body,
+        fontSize: FontSizes.small,
         color: Colors.textSecondary,
         fontFamily: Fonts.medium,
         marginBottom: 2,

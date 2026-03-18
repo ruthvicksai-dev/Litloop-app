@@ -1,6 +1,7 @@
 import BookLoader from "@/components/ui/BookLoader";
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
+import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { usePaymentScreen } from "@/hooks";
@@ -8,6 +9,8 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
     Image,
+    KeyboardAvoidingView,
+    Platform,
     ScrollView,
     StyleSheet,
     Text,
@@ -15,7 +18,6 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Fonts, FontSizes } from "@/constants/fonts";
 
 export default function PaymentScreen() {
     const { rentalId } = useLocalSearchParams<{ rentalId: string }>();
@@ -43,143 +45,159 @@ export default function PaymentScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
-            <ScrollView
-                contentContainerStyle={styles.scroll}
-                keyboardShouldPersistTaps="handled"
+            <KeyboardAvoidingView
+                style={styles.flex}
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
             >
-                <TouchableOpacity onPress={() => router.back()}>
-                    <Text style={styles.backText}>Back</Text>
-                </TouchableOpacity>
-
-                <Text style={styles.title}>Payment</Text>
-                <Text style={styles.subtitle}>{rental.book?.title}</Text>
-
-                <View style={styles.amountCard}>
-                    <Text style={styles.amountLabel}>Total Amount</Text>
-                    <Text style={styles.amountValue}>₹{rental.totalRent || 0}</Text>
-                </View>
-
-                <Text style={styles.sectionTitle}>Choose Payment Method</Text>
-                <View style={styles.methodRow}>
-                    <TouchableOpacity
-                        style={[
-                            styles.methodCard,
-                            paymentMethod === "upi" && styles.methodActive,
-                        ]}
-                        onPress={() => setPaymentMethod("upi")}
-                    >
-                        <View
-                            style={[
-                                styles.methodIconWrap,
-                                paymentMethod === "upi" && styles.methodIconWrapActive,
-                            ]}
-                        >
-                            <Ionicons
-                                name="phone-portrait-outline"
-                                size={22}
-                                color={paymentMethod === "upi" ? Colors.white : Colors.primary}
-                            />
-                        </View>
-                        <Text
-                            style={[
-                                styles.methodText,
-                                paymentMethod === "upi" && styles.methodTextActive,
-                            ]}
-                        >
-                            UPI
-                        </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[
-                            styles.methodCard,
-                            paymentMethod === "cash" && styles.methodActive,
-                        ]}
-                        onPress={() => setPaymentMethod("cash")}
-                    >
-                        <View
-                            style={[
-                                styles.methodIconWrap,
-                                paymentMethod === "cash" && styles.methodIconWrapActive,
-                            ]}
-                        >
-                            <Ionicons
-                                name="cash-outline"
-                                size={22}
-                                color={paymentMethod === "cash" ? Colors.white : Colors.primary}
-                            />
-                        </View>
-                        <Text
-                            style={[
-                                styles.methodText,
-                                paymentMethod === "cash" && styles.methodTextActive,
-                            ]}
-                        >
-                            Cash
-                        </Text>
-                    </TouchableOpacity>
-                </View>
-
-                {paymentMethod === "upi" ? (
-                    <View style={styles.section}>
-                        <View style={styles.qrCard}>
-                            <Text style={styles.qrTitle}>Scan QR to Pay</Text>
-                            <View style={styles.qrPlaceholder}>
-                                <Text style={styles.qrIcon}>QR</Text>
-                                <Text style={styles.qrUpi}>library@upi</Text>
+                <ScrollView
+                    contentContainerStyle={styles.scroll}
+                    keyboardShouldPersistTaps="handled"
+                    keyboardDismissMode="on-drag"
+                    showsVerticalScrollIndicator={false}
+                >
+                        <View style={styles.header}>
+                            <TouchableOpacity
+                                onPress={() => router.back()}
+                                style={styles.backButton}
+                                accessibilityRole="button"
+                                accessibilityLabel="Go back"
+                            >
+                                <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+                            </TouchableOpacity>
+                            <View style={styles.headerText}>
+                                <Text style={styles.title}>Payment</Text>
+                                <Text style={styles.subtitle}>{rental.book?.title}</Text>
                             </View>
-                            <Text style={styles.qrNote}>
-                                Pay ₹{rental.totalRent || 0} to the above UPI ID
-                            </Text>
                         </View>
 
-                        <InputField
-                            label="UTR / Transaction Number"
-                            placeholder="Enter 12-digit UTR number"
-                            value={utrNumber}
-                            onChangeText={setUtrNumber}
-                        />
+                        <View style={styles.amountCard}>
+                            <Text style={styles.amountLabel}>Total Amount</Text>
+                            <Text style={styles.amountValue}>₹ {rental.totalRent || 0}</Text>
+                        </View>
 
-                        <Text style={styles.uploadLabel}>Payment Screenshot</Text>
-                        <TouchableOpacity style={styles.uploadBtn} onPress={pickImage}>
-                            {screenshot ? (
-                                <Image source={{ uri: screenshot }} style={styles.screenshotPreview} />
-                            ) : (
-                                <View style={styles.uploadPlaceholder}>
-                                    <Text style={styles.uploadIcon}>IMG</Text>
-                                    <Text style={styles.uploadText}>Tap to upload screenshot</Text>
+                        <Text style={styles.sectionTitle}>Choose Payment Method</Text>
+                        <View style={styles.methodRow}>
+                            <TouchableOpacity
+                                style={[
+                                    styles.methodCard,
+                                    paymentMethod === "upi" && styles.methodActive,
+                                ]}
+                                onPress={() => setPaymentMethod("upi")}
+                            >
+                                <View
+                                    style={[
+                                        styles.methodIconWrap,
+                                        paymentMethod === "upi" && styles.methodIconWrapActive,
+                                    ]}
+                                >
+                                    <Ionicons
+                                        name="phone-portrait-outline"
+                                        size={22}
+                                        color={paymentMethod === "upi" ? Colors.white : Colors.primary}
+                                    />
                                 </View>
-                            )}
-                        </TouchableOpacity>
-
-                        <Button
-                            title="Submit Payment"
-                            onPress={handleUpiPayment}
-                            loading={uploading}
-                            style={{ marginTop: Spacing.md }}
-                        />
-                    </View>
-                ) : null}
-
-                {paymentMethod === "cash" ? (
-                    <View style={styles.section}>
-                        <View style={styles.cashCard}>
-                            <Text style={styles.cashIcon}>Cash</Text>
-                            <Text style={styles.cashTitle}>Cash on Pickup</Text>
-                            <Text style={styles.cashDesc}>
-                                Pay ₹{rental.totalRent || 0} in cash when the book is picked up. Our
-                                delivery agent will collect the amount.
-                            </Text>
+                                <Text
+                                    style={[
+                                        styles.methodText,
+                                        paymentMethod === "upi" && styles.methodTextActive,
+                                    ]}
+                                >
+                                    UPI
+                                </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[
+                                    styles.methodCard,
+                                    paymentMethod === "cash" && styles.methodActive,
+                                ]}
+                                onPress={() => setPaymentMethod("cash")}
+                            >
+                                <View
+                                    style={[
+                                        styles.methodIconWrap,
+                                        paymentMethod === "cash" && styles.methodIconWrapActive,
+                                    ]}
+                                >
+                                    <Ionicons
+                                        name="cash-outline"
+                                        size={22}
+                                        color={paymentMethod === "cash" ? Colors.white : Colors.primary}
+                                    />
+                                </View>
+                                <Text
+                                    style={[
+                                        styles.methodText,
+                                        paymentMethod === "cash" && styles.methodTextActive,
+                                    ]}
+                                >
+                                    Cash
+                                </Text>
+                            </TouchableOpacity>
                         </View>
 
-                        <Button
-                            title="Confirm Cash Payment"
-                            onPress={handleCashPayment}
-                            loading={uploading}
-                            style={{ marginTop: Spacing.md }}
-                        />
-                    </View>
-                ) : null}
-            </ScrollView>
+                        {paymentMethod === "upi" ? (
+                            <View style={styles.section}>
+                                <View style={styles.qrCard}>
+                                    <Text style={styles.qrTitle}>Scan QR to Pay</Text>
+                                    <View style={styles.qrPlaceholder}>
+                                        <Text style={styles.qrIcon}>QR</Text>
+                                        <Text style={styles.qrUpi}>library@upi</Text>
+                                    </View>
+                                    <Text style={styles.qrNote}>
+                                        Pay â‚¹{rental.totalRent || 0} to the above UPI ID
+                                    </Text>
+                                </View>
+
+                                <InputField
+                                    label="UTR / Transaction Number"
+                                    placeholder="Enter 12-digit UTR number"
+                                    value={utrNumber}
+                                    onChangeText={setUtrNumber}
+                                />
+
+                                <Text style={styles.uploadLabel}>Payment Screenshot</Text>
+                                <TouchableOpacity style={styles.uploadBtn} onPress={pickImage}>
+                                    {screenshot ? (
+                                        <Image source={{ uri: screenshot }} style={styles.screenshotPreview} />
+                                    ) : (
+                                        <View style={styles.uploadPlaceholder}>
+                                            <Text style={styles.uploadIcon}>IMG</Text>
+                                            <Text style={styles.uploadText}>Tap to upload screenshot</Text>
+                                        </View>
+                                    )}
+                                </TouchableOpacity>
+
+                                <Button
+                                    title="Submit Payment"
+                                    onPress={handleUpiPayment}
+                                    loading={uploading}
+                                    style={{ marginTop: Spacing.md }}
+                                />
+                            </View>
+                        ) : null}
+
+                        {paymentMethod === "cash" ? (
+                            <View style={styles.section}>
+                                <View style={styles.cashCard}>
+                                    <Text style={styles.cashIcon}>Cash</Text>
+                                    <Text style={styles.cashTitle}>Cash on Pickup</Text>
+                                    <Text style={styles.cashDesc}>
+                                        Pay â‚¹{rental.totalRent || 0} in cash when the book is picked up. Our
+                                        delivery agent will collect the amount.
+                                    </Text>
+                                </View>
+
+                                <Button
+                                    title="Confirm Cash Payment"
+                                    onPress={handleCashPayment}
+                                    loading={uploading}
+                                    style={{ marginTop: Spacing.md }}
+                                />
+                            </View>
+                        ) : null}
+                </ScrollView>
+            </KeyboardAvoidingView>
         </SafeAreaView>
     );
 }
@@ -195,27 +213,38 @@ const styles = StyleSheet.create({
         alignItems: "center",
         backgroundColor: Colors.background,
     },
+    flex: {
+        flex: 1,
+    },
     scroll: {
+        flexGrow: 1,
         paddingHorizontal: Spacing.lg,
         paddingTop: Spacing.lg,
-        paddingBottom: Spacing.xl,
+        paddingBottom: Spacing.xl * 1.5,
     },
-    backText: {
-        fontSize: FontSizes.subtitle,
-        color: Colors.primary,
-        fontFamily: Fonts.medium,
+    header: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: Spacing.md,
         marginBottom: Spacing.md,
+    },
+    backButton: {
+        alignSelf: "flex-start",
+        padding: 4,
+        marginLeft: -4,
+    },
+    headerText: {
+        flex: 1,
     },
     title: {
         fontSize: FontSizes.heading,
         color: Colors.text,
-        marginBottom: 4,
         fontFamily: Fonts.bold,
     },
     subtitle: {
         fontSize: FontSizes.body,
         color: Colors.textSecondary,
-        marginBottom: Spacing.lg,
+        marginTop: 2,
         fontFamily: Fonts.regular,
     },
     amountCard: {
@@ -244,11 +273,13 @@ const styles = StyleSheet.create({
     },
     methodRow: {
         flexDirection: "row",
+        flexWrap: "wrap",
         gap: Spacing.md,
         marginBottom: Spacing.lg,
     },
     methodCard: {
         flex: 1,
+        minWidth: 140,
         backgroundColor: Colors.white,
         borderRadius: 12,
         padding: Spacing.md,
@@ -297,8 +328,9 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.md,
     },
     qrPlaceholder: {
-        width: 160,
-        height: 160,
+        width: "100%",
+        maxWidth: 160,
+        aspectRatio: 1,
         backgroundColor: Colors.background,
         borderRadius: 12,
         alignItems: "center",
@@ -354,7 +386,7 @@ const styles = StyleSheet.create({
     },
     screenshotPreview: {
         width: "100%",
-        height: 200,
+        aspectRatio: 1.35,
         resizeMode: "cover",
     },
     cashCard: {

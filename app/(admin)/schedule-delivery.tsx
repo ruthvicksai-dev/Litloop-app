@@ -49,11 +49,19 @@ export default function ScheduleDeliveryScreen() {
                 contentContainerStyle={styles.scroll}
                 keyboardShouldPersistTaps="handled"
             >
-                <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                    <Ionicons name="arrow-back" size={24} color={Colors.primary} />
-                </TouchableOpacity>
-
-                <Text style={styles.title}>Schedule Delivery</Text>
+                <View style={styles.header}>
+                    <TouchableOpacity
+                        onPress={() => router.back()}
+                        style={styles.backBtn}
+                        accessibilityRole="button"
+                        accessibilityLabel="Go back"
+                    >
+                        <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+                    </TouchableOpacity>
+                    <View style={styles.headerText}>
+                        <Text style={styles.title}>Schedule Delivery</Text>
+                    </View>
+                </View>
 
 <View style={styles.infoCard}>
     <Text style={styles.infoTitle}>{rental.book?.title}</Text>
@@ -131,17 +139,19 @@ const styles = StyleSheet.create({
         paddingTop: Spacing.lg,
         paddingBottom: Spacing.xl,
     },
+    header: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: Spacing.md,
+        marginBottom: Spacing.lg,
+    },
     backBtn: {
-        marginBottom: Spacing.md,
         alignSelf: "flex-start",
         padding: 4,
         marginLeft: -4,
     },
-    backText: {
-        fontSize: FontSizes.subtitle,
-        color: Colors.primary,
-        fontFamily: Fonts.medium,
-        marginBottom: Spacing.md,
+    headerText: {
+        flex: 1,
     },
     infoLine: {
         flexDirection: "row",
@@ -152,7 +162,6 @@ const styles = StyleSheet.create({
     title: {
         fontSize: FontSizes.heading,
         color: Colors.text,
-        marginBottom: Spacing.lg,
         fontFamily: Fonts.bold,
     },
     infoCard: {

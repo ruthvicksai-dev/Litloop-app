@@ -52,20 +52,26 @@ export default function SeriesSectionRow({
         <View style={styles.container}>
             <View style={styles.header}>
                 <View style={styles.headerLeft}>
-                    <Text style={styles.titleText}>
+                    <Text style={styles.titleText} allowFontScaling={false}>
                         {activeSeries ? activeSeries.name : title}
                     </Text>
                     {subtitle && !activeSeries ? (
-                        <Text style={styles.subtitle}>{subtitle}</Text>
+                        <Text style={styles.subtitle} allowFontScaling={false}>
+                            {subtitle}
+                        </Text>
                     ) : null}
                     {activeSeries ? (
-                        <Text style={styles.subtitle}>Showing {activeSeries.books.length} books</Text>
+                        <Text style={styles.subtitle} allowFontScaling={false}>
+                            Showing {activeSeries.books.length} books
+                        </Text>
                     ) : null}
                 </View>
                 {activeSeries ? (
                     <TouchableOpacity style={styles.backBtn} onPress={handleBack}>
                         <Ionicons name="arrow-back" size={16} color={Colors.primary} />
-                        <Text style={styles.backBtnText}>Back</Text>
+                        <Text style={styles.backBtnText} allowFontScaling={false}>
+                            Back
+                        </Text>
                     </TouchableOpacity>
                 ) : null}
             </View>

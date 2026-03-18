@@ -5,6 +5,7 @@ import { Colors, Layout, Spacing, scale } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
+import { getPhoneValidationError, normalizePhoneNumber } from "@/utils/phone";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation } from "convex/react";
 import { useRouter } from "expo-router";
@@ -55,12 +56,18 @@ export default function EditProfileScreen() {
             return;
         }
 
+        const phoneError = getPhoneValidationError(phone);
+        if (phoneError) {
+            showToast(phoneError, "error");
+            return;
+        }
+
         setIsSavingProfile(true);
         try {
             await updateUserMutation({
                 accessToken,
                 name,
-                phone,
+                phone: normalizePhoneNumber(phone),
             });
             showToast("Profile updated successfully.", "success");
             router.back();
@@ -121,81 +128,82 @@ export default function EditProfileScreen() {
                 <ScrollView
                     contentContainerStyle={styles.content}
                     keyboardShouldPersistTaps="handled"
+                    keyboardDismissMode="on-drag"
                     showsVerticalScrollIndicator={false}
                 >
-                    <View style={styles.header}>
-                        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                            <Ionicons name="arrow-back" size={scale(22)} color={Colors.primary} />
-                        </TouchableOpacity>
-                        <View style={styles.headerText}>
-                            <Text style={styles.title}>Edit Profile</Text>
-                            <Text style={styles.subtitle}>Update your details and password</Text>
+                        <View style={styles.header}>
+                            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                                <Ionicons name="arrow-back" size={scale(22)} color={Colors.primary} />
+                            </TouchableOpacity>
+                            <View style={styles.headerText}>
+                                <Text style={styles.title}>Edit Profile</Text>
+                                <Text style={styles.subtitle}>Update your details and password</Text>
+                            </View>
                         </View>
-                    </View>
 
-                    <View style={styles.card}>
-                        <Text style={styles.sectionTitle}>Profile Details</Text>
-                        <InputField
-                            label="Full Name"
-                            placeholder="Enter your name"
-                            value={name}
-                            onChangeText={setName}
-                        />
-                        <InputField
-                            label="Email"
-                            placeholder="Your email"
-                            value={user.email}
-                            editable={false}
-                            inputStyle={styles.disabledInput}
-                        />
-                        <InputField
-                            label="Phone Number"
-                            placeholder="Enter your phone number"
-                            value={phone}
-                            onChangeText={setPhone}
-                            keyboardType="phone-pad"
-                        />
-                        <Button
-                            title="Save Profile"
-                            onPress={handleSaveProfile}
-                            loading={isSavingProfile}
-                            style={styles.sectionButton}
-                        />
-                    </View>
+                        <View style={styles.card}>
+                            <Text style={styles.sectionTitle}>Profile Details</Text>
+                            <InputField
+                                label="Full Name"
+                                placeholder="Enter your name"
+                                value={name}
+                                onChangeText={setName}
+                            />
+                            <InputField
+                                label="Email"
+                                placeholder="Your email"
+                                value={user.email}
+                                editable={false}
+                                inputStyle={styles.disabledInput}
+                            />
+                            <InputField
+                                label="Phone Number"
+                                placeholder="Enter your phone number"
+                                value={phone}
+                                onChangeText={setPhone}
+                                keyboardType="phone-pad"
+                            />
+                            <Button
+                                title="Save Profile"
+                                onPress={handleSaveProfile}
+                                loading={isSavingProfile}
+                                style={styles.sectionButton}
+                            />
+                        </View>
 
-                    <View style={styles.card}>
-                        <Text style={styles.sectionTitle}>Change Password</Text>
-                        <Text style={styles.sectionDescription}>
-                            Enter your current password to set a new one.
-                        </Text>
-                        <InputField
-                            label="Current Password"
-                            placeholder="Enter current password"
-                            value={currentPassword}
-                            onChangeText={setCurrentPassword}
-                            secureTextEntry
-                        />
-                        <InputField
-                            label="New Password"
-                            placeholder="Enter new password"
-                            value={newPassword}
-                            onChangeText={setNewPassword}
-                            secureTextEntry
-                        />
-                        <InputField
-                            label="Confirm New Password"
-                            placeholder="Confirm new password"
-                            value={confirmPassword}
-                            onChangeText={setConfirmPassword}
-                            secureTextEntry
-                        />
-                        <Button
-                            title="Update Password"
-                            onPress={handleChangePassword}
-                            loading={isSavingPassword}
-                            style={styles.sectionButton}
-                        />
-                    </View>
+                        <View style={styles.card}>
+                            <Text style={styles.sectionTitle}>Change Password</Text>
+                            <Text style={styles.sectionDescription}>
+                                Enter your current password to set a new one.
+                            </Text>
+                            <InputField
+                                label="Current Password"
+                                placeholder="Enter current password"
+                                value={currentPassword}
+                                onChangeText={setCurrentPassword}
+                                secureTextEntry
+                            />
+                            <InputField
+                                label="New Password"
+                                placeholder="Enter new password"
+                                value={newPassword}
+                                onChangeText={setNewPassword}
+                                secureTextEntry
+                            />
+                            <InputField
+                                label="Confirm New Password"
+                                placeholder="Confirm new password"
+                                value={confirmPassword}
+                                onChangeText={setConfirmPassword}
+                                secureTextEntry
+                            />
+                            <Button
+                                title="Update Password"
+                                onPress={handleChangePassword}
+                                loading={isSavingPassword}
+                                style={styles.sectionButton}
+                            />
+                        </View>
                 </ScrollView>
             </KeyboardAvoidingView>
         </SafeAreaView>
@@ -211,9 +219,10 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     content: {
+        flexGrow: 1,
         paddingHorizontal: Layout.screenPaddingWide,
         paddingTop: Spacing.sm,
-        paddingBottom: Spacing.xl,
+        paddingBottom: Spacing.xl * 1.5,
         gap: Spacing.lg,
     },
     header: {

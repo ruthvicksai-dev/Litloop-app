@@ -63,7 +63,9 @@ export default function SignUpScreen() {
                         scaleAnim={scaleAnim}
                     />
 
-                    <Text style={styles.formHint}>Create your account to start requesting books.</Text>
+                    <Text style={styles.formHint} allowFontScaling={false}>
+                        Create your account to start requesting books.
+                    </Text>
 
                     <View style={styles.form}>
                         <InputField

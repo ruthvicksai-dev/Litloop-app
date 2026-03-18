@@ -53,10 +53,12 @@ export default function HomeScreen() {
       >
         <View style={styles.headerTop}>
           <View>
-            <Text style={styles.greeting}>
+            <Text style={styles.greeting} allowFontScaling={false}>
               Hello, {user?.name?.split(" ")[0] || "Reader"}
             </Text>
-            <Text style={styles.pageTitle}>Discover Books</Text>
+            <Text style={styles.pageTitle} allowFontScaling={false}>
+              Discover Books
+            </Text>
           </View>
           <TouchableOpacity
             style={styles.notifBtn}

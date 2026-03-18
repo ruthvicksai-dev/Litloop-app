@@ -103,7 +103,9 @@ export default function DiscoverBookCard({
                             end={{ x: 1, y: 1 }}
                             style={styles.top10Badge}
                         >
-                            <Text style={styles.top10Text}>#{top10Position}</Text>
+                            <Text style={styles.top10Text} allowFontScaling={false}>
+                                #{top10Position}
+                            </Text>
                         </LinearGradient>
                     ) : null}
 
@@ -122,10 +124,10 @@ export default function DiscoverBookCard({
                     </TouchableOpacity>
                 </View>
 
-                <Text style={styles.title} numberOfLines={2}>
+                <Text style={styles.title} numberOfLines={2} allowFontScaling={false}>
                     {title}
                 </Text>
-                <Text style={styles.author} numberOfLines={1}>
+                <Text style={styles.author} numberOfLines={1} allowFontScaling={false}>
                     {author}
                 </Text>
             </TouchableOpacity>

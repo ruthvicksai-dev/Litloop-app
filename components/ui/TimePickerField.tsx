@@ -139,6 +139,7 @@ export default function TimePickerField({
                     <DateTimePicker
                         value={pickerValue}
                         mode="time"
+                        is24Hour={false}
                         display={Platform.OS === "ios" ? "spinner" : "default"}
                         onChange={handleChange}
                     />
@@ -152,8 +153,6 @@ export default function TimePickerField({
                     ) : null}
                 </View>
             ) : null}
-
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
         </View>
     );
 }
@@ -212,11 +211,5 @@ const styles = StyleSheet.create({
         fontSize: FontSizes.body,
         fontFamily: Fonts.bold,
         color: Colors.primary,
-    },
-    errorText: {
-        color: Colors.error,
-        fontSize: FontSizes.caption,
-        marginTop: Spacing.xs,
-        fontFamily: Fonts.regular,
     },
 });

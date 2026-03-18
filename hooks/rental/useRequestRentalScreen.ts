@@ -2,6 +2,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { getPhoneValidationError, normalizePhoneNumber } from "@/utils/phone";
 import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -36,8 +37,9 @@ export function useRequestRentalScreen(bookId: string) {
             showToast("Please select a zone.", "error");
             return;
         }
-        if (!phone.trim()) {
-            showToast("Phone number is required.", "error");
+        const phoneError = getPhoneValidationError(phone);
+        if (phoneError) {
+            showToast(phoneError, "error");
             return;
         }
 
@@ -57,6 +59,8 @@ export function useRequestRentalScreen(bookId: string) {
             }
         }
 
+        const normalizedPhone = normalizePhoneNumber(phone);
+
         setLoading(true);
         try {
             await requestRental({
@@ -64,7 +68,7 @@ export function useRequestRentalScreen(bookId: string) {
                 bookId: bookId as Id<"books">,
                 zone,
                 deliveryLocation: {
-                    phone,
+                    phone: normalizedPhone,
                     landmark,
                     roomNo,
                     yearOfStudy,

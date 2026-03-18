@@ -18,6 +18,7 @@ import {
     StyleSheet,
     Text,
     TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -81,11 +82,19 @@ export default function AddBookScreen() {
                     keyboardShouldPersistTaps="handled"
                     keyboardDismissMode="on-drag"
                 >
-                    <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                        <Ionicons name="arrow-back" size={24} color={Colors.primary} />
-                    </TouchableOpacity>
-
-                    <Text style={styles.title}>Add New Book</Text>
+                    <View style={styles.header}>
+                        <TouchableOpacity
+                            onPress={() => router.back()}
+                            style={styles.backBtn}
+                            accessibilityRole="button"
+                            accessibilityLabel="Go back"
+                        >
+                            <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+                        </TouchableOpacity>
+                        <View style={styles.headerText}>
+                            <Text style={styles.title}>Add New Book</Text>
+                        </View>
+                    </View>
 
                     <InputField
                         label="Title"
@@ -204,11 +213,19 @@ const styles = StyleSheet.create({
         paddingTop: Spacing.lg,
         paddingBottom: Spacing.xl,
     },
+    header: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: Spacing.md,
+        marginBottom: Spacing.lg,
+    },
     backBtn: {
-        marginBottom: Spacing.md,
         alignSelf: "flex-start",
         padding: 4,
         marginLeft: -4,
+    },
+    headerText: {
+        flex: 1,
     },
     fetchInfoBtn: {
         marginBottom: Spacing.md,
@@ -216,7 +233,6 @@ const styles = StyleSheet.create({
     title: {
         fontSize: FontSizes.heading,
         color: Colors.text,
-        marginBottom: Spacing.lg,
         fontFamily: Fonts.bold,
     },
 });

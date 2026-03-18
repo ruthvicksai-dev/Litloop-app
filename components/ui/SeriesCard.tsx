@@ -37,7 +37,9 @@ export default function SeriesCard({
                             <Image source={{ uri: coverUrl }} style={styles.image} />
                         ) : (
                             <View style={[styles.image, styles.placeholder]}>
-                                <Text style={styles.placeholderText}>{name[0]}</Text>
+                                <Text style={styles.placeholderText} allowFontScaling={false}>
+                                    {name[0]}
+                                </Text>
                             </View>
                         )}
 
@@ -47,11 +49,13 @@ export default function SeriesCard({
                         />
 
                         <View style={styles.content}>
-                            <Text style={styles.name} numberOfLines={2}>
+                            <Text style={styles.name} numberOfLines={2} allowFontScaling={false}>
                                 {name}
                             </Text>
                             <View style={styles.badge}>
-                                <Text style={styles.badgeText}>SERIES</Text>
+                                <Text style={styles.badgeText} allowFontScaling={false}>
+                                    SERIES
+                                </Text>
                             </View>
                         </View>
 

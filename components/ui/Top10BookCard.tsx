@@ -79,12 +79,18 @@ export default function Top10BookCard({
                         end={{ x: 1, y: 1 }}
                         style={styles.badge}
                     >
-                        <Text style={styles.badgeText}>{rankStyle.label}</Text>
+                        <Text style={styles.badgeText} allowFontScaling={false}>
+                            {rankStyle.label}
+                        </Text>
                     </LinearGradient>
                 </View>
 
-                <Text style={styles.title} numberOfLines={2}>{title}</Text>
-                <Text style={styles.author} numberOfLines={1}>{author}</Text>
+                <Text style={styles.title} numberOfLines={2} allowFontScaling={false}>
+                    {title}
+                </Text>
+                <Text style={styles.author} numberOfLines={1} allowFontScaling={false}>
+                    {author}
+                </Text>
             </TouchableOpacity>
         </Animated.View>
     );

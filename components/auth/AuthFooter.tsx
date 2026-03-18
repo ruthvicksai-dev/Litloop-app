@@ -18,8 +18,10 @@ export default function AuthFooter({
 }: AuthFooterProps) {
     return (
         <Animated.View style={[styles.footer, { opacity: fadeAnim }]}>
-            <Text style={styles.footerText}>{prefix} </Text>
-            <Text style={styles.link} onPress={onPress}>
+            <Text style={styles.footerText} allowFontScaling={false}>
+                {prefix}{" "}
+            </Text>
+            <Text style={styles.link} onPress={onPress} allowFontScaling={false}>
                 {linkLabel}
             </Text>
         </Animated.View>

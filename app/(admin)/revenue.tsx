@@ -63,10 +63,12 @@ export default function AdminRevenueScreen() {
                     <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
                         <Ionicons name="arrow-back" size={24} color={Colors.primary} />
                     </TouchableOpacity>
-                    <Text style={styles.title}>Revenue Analytics</Text>
-                    <Text style={styles.subtitle}>
-                        {activeMonthOption?.fullLabel ?? formatMonthLabel(activeMonth)}
-                    </Text>
+                    <View style={styles.headerText}>
+                        <Text style={styles.title}>Revenue Analytics</Text>
+                        <Text style={styles.subtitle}>
+                            {activeMonthOption?.fullLabel ?? formatMonthLabel(activeMonth)}
+                        </Text>
+                    </View>
                 </View>
 
                 <ScrollView
@@ -177,6 +179,9 @@ const styles = StyleSheet.create({
         paddingBottom: Spacing.xl,
     },
     header: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: Spacing.md,
         paddingHorizontal: 20,
         paddingTop: Spacing.sm,
         paddingBottom: Spacing.md,
@@ -185,7 +190,9 @@ const styles = StyleSheet.create({
         alignSelf: "flex-start",
         padding: 4,
         marginLeft: -4,
-        marginBottom: Spacing.sm,
+    },
+    headerText: {
+        flex: 1,
     },
     title: {
         fontSize: FontSizes.hero,
@@ -196,7 +203,7 @@ const styles = StyleSheet.create({
         fontSize: FontSizes.body,
         fontFamily: Fonts.regular,
         color: Colors.textSecondary,
-        marginTop: 4,
+        marginTop: 2,
     },
     monthScroll: {
         flexGrow: 0,

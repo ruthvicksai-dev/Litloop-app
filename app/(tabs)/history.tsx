@@ -9,7 +9,6 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";
 import { useFadeSlideIn } from "@/hooks";
-import { responsiveFont } from "@/utils/responsiveFont";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";
 import { LinearGradient } from "expo-linear-gradient";
@@ -61,11 +60,18 @@ function DetailTile({ label, value, highlight = false }: DetailRowProps) {
                         color={highlight ? Colors.primary : Colors.white}
                     />
                 </View>
-                <Text style={[styles.detailLabel, highlight && styles.detailLabelHighlight]}>
+                <Text
+                    style={[styles.detailLabel, highlight && styles.detailLabelHighlight]}
+                    allowFontScaling={false}
+                >
                     {label}
                 </Text>
             </View>
-            <Text numberOfLines={2} style={[styles.detailValue, highlight && styles.detailValueHighlight]}>
+            <Text
+                numberOfLines={2}
+                style={[styles.detailValue, highlight && styles.detailValueHighlight]}
+                allowFontScaling={false}
+            >
                 {value}
             </Text>
         </View>
@@ -109,8 +115,12 @@ export default function RentalHistoryScreen() {
             >
                 <View style={styles.headerTopRow}>
                     <View style={styles.headerTextWrap}>
-                        <Text style={styles.title}>Rental History</Text>
-                        <Text style={styles.subtitle}>Past completed rentals</Text>
+                        <Text style={styles.title} allowFontScaling={false}>
+                            Rental History
+                        </Text>
+                        <Text style={styles.subtitle} allowFontScaling={false}>
+                            Past completed rentals
+                        </Text>
                     </View>
                     <TouchableOpacity
                         style={styles.filterButton}
@@ -122,7 +132,9 @@ export default function RentalHistoryScreen() {
                 </View>
                 {showFilters ? (
                     <View style={styles.filterPanel}>
-                        <Text style={styles.filterSectionTitle}>Status</Text>
+                        <Text style={styles.filterSectionTitle} allowFontScaling={false}>
+                            Status
+                        </Text>
                         <View style={styles.filterRow}>
                             {[
                                 { label: "All Orders", value: "all" },
@@ -134,7 +146,11 @@ export default function RentalHistoryScreen() {
                                 return (
                                     <TouchableOpacity
                                         key={option.value}
-                                        style={[styles.filterChip, isActive && styles.filterChipActive]}
+                                        style={[
+                                            styles.filterChip,
+                                            styles.filterChipThird,
+                                            isActive && styles.filterChipActive,
+                                        ]}
                                         onPress={() =>
                                             setStatusFilter(option.value as "all" | "paid" | "returned")
                                         }
@@ -145,6 +161,10 @@ export default function RentalHistoryScreen() {
                                                 styles.filterChipText,
                                                 isActive && styles.filterChipTextActive,
                                             ]}
+                                            allowFontScaling={false}
+                                            numberOfLines={1}
+                                            adjustsFontSizeToFit
+                                            minimumFontScale={0.8}
                                         >
                                             {option.label}
                                         </Text>
@@ -153,7 +173,9 @@ export default function RentalHistoryScreen() {
                             })}
                         </View>
 
-                        <Text style={styles.filterSectionTitle}>Time</Text>
+                        <Text style={styles.filterSectionTitle} allowFontScaling={false}>
+                            Time
+                        </Text>
                         <View style={styles.filterRow}>
                             {[
                                 { label: "All Time", value: "all" },
@@ -166,7 +188,11 @@ export default function RentalHistoryScreen() {
                                 return (
                                     <TouchableOpacity
                                         key={option.value}
-                                        style={[styles.filterChip, isActive && styles.filterChipActive]}
+                                        style={[
+                                            styles.filterChip,
+                                            styles.filterChipHalf,
+                                            isActive && styles.filterChipActive,
+                                        ]}
                                         onPress={() =>
                                             setTimeframeFilter(
                                                 option.value as
@@ -183,6 +209,10 @@ export default function RentalHistoryScreen() {
                                                 styles.filterChipText,
                                                 isActive && styles.filterChipTextActive,
                                             ]}
+                                            allowFontScaling={false}
+                                            numberOfLines={1}
+                                            adjustsFontSizeToFit
+                                            minimumFontScale={0.8}
                                         >
                                             {option.label}
                                         </Text>
@@ -236,25 +266,25 @@ export default function RentalHistoryScreen() {
 
                                     <View style={styles.cardBody}>
                                         <View style={styles.cardTopRow}>
-                                            <Text numberOfLines={1} style={styles.cardTitle}>
+                                            <Text numberOfLines={1} style={styles.cardTitle} allowFontScaling={false}>
                                                 {item.book?.title || "Unknown Book"}
                                             </Text>
                                             <View style={[styles.statusBadge, { backgroundColor: statusColor + "18" }]}>
                                                 <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
-                                                <Text style={[styles.statusText, { color: statusColor }]}>
+                                                <Text style={[styles.statusText, { color: statusColor }]} allowFontScaling={false}>
                                                     {statusLabel}
                                                 </Text>
                                             </View>
                                         </View>
 
-                                        <Text numberOfLines={1} style={styles.cardAuthor}>
+                                        <Text numberOfLines={1} style={styles.cardAuthor} allowFontScaling={false}>
                                             {item.book?.author || "Unknown Author"}
                                         </Text>
 
                                         <View style={styles.metaRow}>
                                             <View style={styles.metaPill}>
                                                 <Ionicons name="calendar-outline" size={12} color={Colors.textSecondary} />
-                                                <Text style={styles.metaPillText}>
+                                                <Text style={styles.metaPillText} allowFontScaling={false}>
                                                     {item.pickupDate
                                                         ? item.pickupDate
                                                         : item.deliveryDate || "Date unavailable"}
@@ -262,12 +292,16 @@ export default function RentalHistoryScreen() {
                                             </View>
                                             <View style={styles.metaPill}>
                                                 <Ionicons name="location-outline" size={12} color={Colors.textSecondary} />
-                                                <Text style={styles.metaPillText}>{item.zone}</Text>
+                                                <Text style={styles.metaPillText} allowFontScaling={false}>
+                                                    {item.zone}
+                                                </Text>
                                             </View>
                                         </View>
 
                                         <View style={styles.cardFooter}>
-                                            <Text style={styles.cardRent}>₹ {item.totalRent ?? 0}</Text>
+                                            <Text style={styles.cardRent} allowFontScaling={false}>
+                                                ₹ {item.totalRent ?? 0}
+                                            </Text>
                                             <TouchableOpacity
                                                 style={styles.detailsButton}
                                                 onPress={() =>
@@ -277,7 +311,7 @@ export default function RentalHistoryScreen() {
                                                 }
                                                 activeOpacity={0.85}
                                             >
-                                                <Text style={styles.detailsButtonText}>
+                                                <Text style={styles.detailsButtonText} allowFontScaling={false}>
                                                     {isExpanded ? "Hide Details" : "View Details"}
                                                 </Text>
                                                 <Ionicons
@@ -293,9 +327,13 @@ export default function RentalHistoryScreen() {
                                 {isExpanded ? (
                                     <View style={styles.detailsSection}>
                                         <View style={styles.detailsHeaderRow}>
-                                            <Text style={styles.detailsTitle}>Rental Breakdown</Text>
+                                            <Text style={styles.detailsTitle} allowFontScaling={false}>
+                                                Rental Breakdown
+                                            </Text>
                                             <View style={styles.detailsTag}>
-                                                <Text style={styles.detailsTagText}>{statusLabel}</Text>
+                                                <Text style={styles.detailsTagText} allowFontScaling={false}>
+                                                    {statusLabel}
+                                                </Text>
                                             </View>
                                         </View>
                                         <View style={styles.detailsGrid}>
@@ -326,7 +364,9 @@ export default function RentalHistoryScreen() {
                             color={Colors.textLight}
                             style={{ marginBottom: Spacing.md }}
                         />
-                        <Text style={styles.emptyText}>No rental history yet</Text>
+                        <Text style={styles.emptyText} allowFontScaling={false}>
+                            No rental history yet
+                        </Text>
                     </View>
                 }
             />
@@ -360,7 +400,7 @@ const styles = StyleSheet.create({
         marginRight: Spacing.sm,
     },
     title: {
-        fontSize: responsiveFont(24),
+        fontSize: 24,
         color: Colors.text,
         fontFamily: Fonts.bold,
     },
@@ -396,26 +436,36 @@ const styles = StyleSheet.create({
     },
     filterRow: {
         flexDirection: "row",
-        gap: 8,
-        flexWrap: "wrap",
+        flexWrap: "nowrap",
+        gap: 6,
         marginBottom: Spacing.sm,
     },
     filterChip: {
-        paddingHorizontal: 12,
+        flex: 1,
+        minHeight: 38,
         paddingVertical: 7,
         borderRadius: 999,
         backgroundColor: Colors.white,
         borderWidth: 1,
         borderColor: Colors.border,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    filterChipThird: {
+        paddingHorizontal: 6,
+    },
+    filterChipHalf: {
+        paddingHorizontal: 6,
     },
     filterChipActive: {
         backgroundColor: Colors.primary,
         borderColor: Colors.primary,
     },
     filterChipText: {
-        fontSize: FontSizes.caption,
+        fontSize: FontSizes.tiny,
         color: Colors.textSecondary,
         fontFamily: Fonts.medium,
+        textAlign: "center",
     },
     filterChipTextActive: {
         color: Colors.white,

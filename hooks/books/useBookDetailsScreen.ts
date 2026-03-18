@@ -1,5 +1,3 @@
-import { useAuth } from "@/context/AuthContext";
-import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useFadeSlideScaleIn } from "@/hooks/animations/useFadeSlideScaleIn";
@@ -11,8 +9,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 export function useBookDetailsScreen(bookId: string) {
     const descriptionLineLimit = 3;
     const descriptionToggleThreshold = 140;
-    const { accessToken } = useAuth();
-    const { showToast } = useToast();
     const { isFavorite, toggleFavorite } = useFavorites();
     const { isReadLater, toggleReadLater } = useReadLater();
     const { fadeAnim, slideAnim, scaleAnim } = useFadeSlideScaleIn({
@@ -80,32 +76,12 @@ export function useBookDetailsScreen(bookId: string) {
 
     const handleFavoritePress = async () => {
         if (!book) return;
-        if (!accessToken) {
-            showToast("Sign in to save books to favorites.", "info");
-            return;
-        }
-
-        const wasFavorite = isFavorite(book._id);
-        await toggleFavorite(book._id);
-        showToast(
-            wasFavorite ? "Removed from favorites." : "Added to favorites.",
-            wasFavorite ? "info" : "success"
-        );
+        await toggleFavorite(book._id, { showFeedback: true });
     };
 
     const handleReadLaterPress = async () => {
         if (!book) return;
-        if (!accessToken) {
-            showToast("Sign in to save books for later.", "info");
-            return;
-        }
-
-        const wasSaved = isReadLater(book._id);
-        await toggleReadLater(book._id);
-        showToast(
-            wasSaved ? "Removed from read later list." : "Saved for later reading.",
-            wasSaved ? "info" : "success"
-        );
+        await toggleReadLater(book._id, { showFeedback: true });
     };
 
     return {

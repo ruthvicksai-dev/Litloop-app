@@ -50,9 +50,13 @@ function DiscoverSectionRow({
         <View style={styles.container}>
             <View style={styles.header}>
                 <View style={styles.headerLeft}>
-                    <Text style={styles.titleText}>{title}</Text>
+                    <Text style={styles.titleText} allowFontScaling={false}>
+                        {title}
+                    </Text>
                     {subtitle ? (
-                        <Text style={styles.subtitle}>{subtitle}</Text>
+                        <Text style={styles.subtitle} allowFontScaling={false}>
+                            {subtitle}
+                        </Text>
                     ) : null}
                 </View>
                 {seeAllKey ? (
@@ -64,7 +68,9 @@ function DiscoverSectionRow({
                             )
                         }
                     >
-                        <Text style={styles.seeAllText}>See All</Text>
+                        <Text style={styles.seeAllText} allowFontScaling={false}>
+                            See All
+                        </Text>
                         <Ionicons name="chevron-forward" size={14} color={Colors.primary} />
                     </TouchableOpacity>
                 ) : null}

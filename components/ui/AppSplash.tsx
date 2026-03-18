@@ -1,3 +1,4 @@
+import { Fonts, FontSizes } from "@/constants/fonts";
 import React, { useEffect, useRef } from "react";
 import { Animated, Easing, Image, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -92,7 +93,7 @@ export default function AppSplash({ onAnimationComplete }: AppSplashProps) {
           ]}
         >
           <Image
-            source={require("../../assets/images/android-icon-foreground.png")}
+            source={require("../../assets/images/splash-icon.png")}
             style={styles.icon}
             resizeMode="contain"
           />
@@ -134,24 +135,25 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   icon: {
-    width: 180,
-    height: 180,
+    width: 176,
+    height: 112,
   },
   textWrap: {
-    marginTop: 16,
+    marginTop: 8,
     alignItems: "center",
   },
   title: {
-    fontSize: 30,
+    fontSize: FontSizes.hero,
     color: "#FFFFFF",
-    fontWeight: "700",
+    fontFamily: Fonts.bold,
     letterSpacing: 2,
     textAlign: "center",
   },
   subtitle: {
     marginTop: 4,
-    fontSize: 14,
+    fontSize: FontSizes.body,
     color: "#d1d5db",
+    fontFamily: Fonts.regular,
     letterSpacing: 1,
     textAlign: "center",
   },

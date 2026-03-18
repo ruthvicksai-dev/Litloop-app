@@ -43,7 +43,6 @@ export default function InputField({
                 selectionColor={Colors.primary}
                 {...props}
             />
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
         </View>
     );
 }
@@ -77,11 +76,5 @@ const styles = StyleSheet.create({
     },
     inputError: {
         borderColor: Colors.error,
-    },
-    errorText: {
-        color: Colors.error,
-        fontSize: FontSizes.caption,
-        marginTop: Spacing.xs,
-        fontFamily: Fonts.regular,
     },
 });

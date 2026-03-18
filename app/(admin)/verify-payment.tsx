@@ -9,6 +9,7 @@ import React from "react";
 import {
     FlatList,
     Image,
+    ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -26,17 +27,28 @@ export default function VerifyPaymentScreen() {
     if (params.rentalId && singleRental) {
         return (
             <SafeAreaView style={styles.container}>
-                <View style={styles.scroll}>
-                    <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                        <Ionicons name="arrow-back" size={24} color={Colors.primary} />
-                    </TouchableOpacity>
-
-                    <Text style={styles.title}>Verify Payment</Text>
+                <ScrollView
+                    contentContainerStyle={styles.singleScroll}
+                    showsVerticalScrollIndicator={false}
+                >
+                    <View style={styles.singleHeader}>
+                        <TouchableOpacity
+                            onPress={() => router.back()}
+                            style={styles.backBtn}
+                            accessibilityRole="button"
+                            accessibilityLabel="Go back"
+                        >
+                            <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+                        </TouchableOpacity>
+                        <View style={styles.headerText}>
+                            <Text style={styles.title}>Verify Payment</Text>
+                        </View>
+                    </View>
 
                     <View style={styles.detailCard}>
                         <Text style={styles.detailTitle}>{singleRental.book?.title}</Text>
                         <Text style={styles.detailSub}>
-                            User: {singleRental.user?.name} • {singleRental.user?.phone}
+                            User: {singleRental.user?.name} â€¢ {singleRental.user?.phone}
                         </Text>
                         <Text style={styles.detailSub}>
                             Method: {singleRental.paymentMethod?.toUpperCase()}
@@ -44,7 +56,7 @@ export default function VerifyPaymentScreen() {
                         {singleRental.utrNumber ? (
                             <Text style={styles.detailSub}>UTR: {singleRental.utrNumber}</Text>
                         ) : null}
-                        <Text style={styles.detailSub}>Amount: ₹{singleRental.totalRent}</Text>
+                        <Text style={styles.detailSub}>Amount: â‚¹{singleRental.totalRent}</Text>
                     </View>
 
                     {singleRental.screenshotUrl ? (
@@ -70,7 +82,7 @@ export default function VerifyPaymentScreen() {
                             style={{ flex: 1 }}
                         />
                     </View>
-                </View>
+                </ScrollView>
             </SafeAreaView>
         );
     }
@@ -89,11 +101,13 @@ export default function VerifyPaymentScreen() {
                 <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
                     <Ionicons name="arrow-back" size={24} color={Colors.primary} />
                 </TouchableOpacity>
-                <Text style={styles.title}>Pending Payments</Text>
-                <Text style={styles.subtitle}>
-                    {pendingPayments.length} payment{pendingPayments.length !== 1 ? "s" : ""} to
-                    verify
-                </Text>
+                <View style={styles.headerText}>
+                    <Text style={styles.title}>Pending Payments</Text>
+                    <Text style={styles.subtitle}>
+                        {pendingPayments.length} payment{pendingPayments.length !== 1 ? "s" : ""} to
+                        verify
+                    </Text>
+                </View>
             </View>
 
             <FlatList
@@ -105,10 +119,10 @@ export default function VerifyPaymentScreen() {
                             <View style={styles.paymentHeaderInfo}>
                                 <Text style={styles.paymentTitle}>{item.book?.title}</Text>
                                 <Text style={styles.paymentSub}>
-                                    {item.user?.name} • {item.paymentMethod?.toUpperCase()}
+                                    {item.user?.name} â€¢ {item.paymentMethod?.toUpperCase()}
                                 </Text>
                             </View>
-                            <Text style={styles.paymentAmount}>₹{item.totalRent}</Text>
+                            <Text style={styles.paymentAmount}>â‚¹{item.totalRent}</Text>
                         </View>
 
                         {item.utrNumber ? (
@@ -178,40 +192,47 @@ const styles = StyleSheet.create({
         alignItems: "center",
         backgroundColor: Colors.background,
     },
-    scroll: {
+    singleScroll: {
+        flexGrow: 1,
         paddingHorizontal: Spacing.lg,
         paddingTop: Spacing.lg,
-        paddingBottom: Spacing.xl,
+        paddingBottom: Spacing.xl * 1.5,
+    },
+    singleHeader: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: Spacing.md,
+        marginBottom: Spacing.md,
     },
     header: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: Spacing.md,
         paddingHorizontal: Spacing.lg,
         paddingTop: Spacing.lg,
         paddingBottom: Spacing.md,
     },
     backBtn: {
-        marginBottom: Spacing.sm,
         alignSelf: "flex-start",
         padding: 4,
         marginLeft: -4,
     },
-    backText: {
-        fontSize: FontSizes.subtitle,
-        color: Colors.primary,
-        fontFamily: Fonts.medium,
-        marginBottom: Spacing.md,
+    headerText: {
+        flex: 1,
     },
     title: {
         fontSize: FontSizes.heading,
         color: Colors.text,
-        marginBottom: 4,
         fontFamily: Fonts.bold,
     },
     subtitle: {
         fontSize: FontSizes.small,
         color: Colors.textSecondary,
         fontFamily: Fonts.regular,
+        marginTop: 2,
     },
     list: {
+        flexGrow: 1,
         paddingHorizontal: Spacing.lg,
         paddingBottom: 20,
     },
@@ -244,7 +265,7 @@ const styles = StyleSheet.create({
     },
     screenshot: {
         width: "100%",
-        height: 300,
+        aspectRatio: 1.35,
         borderRadius: 12,
         resizeMode: "contain",
         backgroundColor: Colors.white,
@@ -297,7 +318,7 @@ const styles = StyleSheet.create({
     },
     paymentScreenshot: {
         width: "100%",
-        height: 150,
+        aspectRatio: 1.75,
         borderRadius: 8,
         marginTop: Spacing.sm,
         resizeMode: "cover",
@@ -335,10 +356,6 @@ const styles = StyleSheet.create({
     empty: {
         alignItems: "center",
         paddingTop: 60,
-    },
-    emptyIcon: {
-        fontSize: FontSizes.display,
-        marginBottom: Spacing.md,
     },
     emptyText: {
         fontSize: FontSizes.subtitle,

@@ -1,6 +1,7 @@
 import BookLoader from "@/components/ui/BookLoader";
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
+import MapLocationPicker from "@/components/ui/MapLocationPicker";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing, ZONES } from "@/constants/theme";
 import { useToast } from "@/context/ToastContext";
@@ -54,6 +55,30 @@ export default function RequestRentalScreen() {
 
     const { showToast } = useToast();
     const [isLocating, setIsLocating] = React.useState(false);
+    const [isMapPickerVisible, setIsMapPickerVisible] = React.useState(false);
+
+    const updateAddressFromCoords = async (nextLatitude: number, nextLongitude: number) => {
+        setLatitude(nextLatitude);
+        setLongitude(nextLongitude);
+
+        const address = await Location.reverseGeocodeAsync({
+            latitude: nextLatitude,
+            longitude: nextLongitude,
+        });
+
+        if (address && address.length > 0) {
+            const addr = address[0];
+            const fullAddress = [
+                addr.name,
+                addr.street,
+                addr.district,
+                addr.city,
+                addr.region,
+                addr.postalCode,
+            ].filter(Boolean).join(", ");
+            setFormattedAddress(fullAddress);
+        }
+    };
 
     const handleGetLocation = async () => {
         setIsLocating(true);
@@ -65,26 +90,10 @@ export default function RequestRentalScreen() {
             }
 
             let location = await Location.getCurrentPositionAsync({});
-            setLatitude(location.coords.latitude);
-            setLongitude(location.coords.longitude);
-
-            let address = await Location.reverseGeocodeAsync({
-                latitude: location.coords.latitude,
-                longitude: location.coords.longitude,
-            });
-
-            if (address && address.length > 0) {
-                const addr = address[0];
-                const fullAddress = [
-                    addr.name,
-                    addr.street,
-                    addr.district,
-                    addr.city,
-                    addr.region,
-                    addr.postalCode,
-                ].filter(Boolean).join(", ");
-                setFormattedAddress(fullAddress);
-            }
+            await updateAddressFromCoords(
+                location.coords.latitude,
+                location.coords.longitude
+            );
             showToast("Location updated!", "success");
         } catch {
             showToast("Failed to fetch location. Please try manually.", "error");
@@ -112,22 +121,30 @@ export default function RequestRentalScreen() {
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
                 >
-                    <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                        <Ionicons name="arrow-back" size={24} color={Colors.primary} />
-                    </TouchableOpacity>
-
                     <Animated.View
                         style={{
                             opacity: fadeAnim,
                             transform: [{ translateY: slideAnim }],
                         }}
                     >
-                        <Text style={styles.title}>Request Rental</Text>
-                        {book ? (
-                            <Text style={styles.bookInfo}>
-                                {book.title}  {"\u20B9"}{book.rentPerDay}/day
-                            </Text>
-                        ) : null}
+                        <View style={styles.header}>
+                            <TouchableOpacity
+                                onPress={() => router.back()}
+                                style={styles.backBtn}
+                                accessibilityRole="button"
+                                accessibilityLabel="Go back"
+                            >
+                                <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+                            </TouchableOpacity>
+                            <View style={styles.headerText}>
+                                <Text style={styles.title}>Request Rental</Text>
+                                {book ? (
+                                    <Text style={styles.bookInfo}>
+                                        {book.title}  {"\u20B9"}{book.rentPerDay}/day
+                                    </Text>
+                                ) : null}
+                            </View>
+                        </View>
 
                         <Text style={styles.sectionTitle}>Delivery Zone</Text>
                         <View style={styles.zoneGrid}>
@@ -222,6 +239,21 @@ export default function RequestRentalScreen() {
                                         <Text style={styles.coordsText}>
                                             Lat: {latitude?.toFixed(4)}, Lng: {longitude?.toFixed(4)}
                                         </Text>
+                                        {latitude !== undefined && longitude !== undefined ? (
+                                            <TouchableOpacity
+                                                style={styles.adjustLocationButton}
+                                                onPress={() => setIsMapPickerVisible(true)}
+                                            >
+                                                <Ionicons
+                                                    name="map-outline"
+                                                    size={16}
+                                                    color={Colors.primary}
+                                                />
+                                                <Text style={styles.adjustLocationText}>
+                                                    Adjust on map
+                                                </Text>
+                                            </TouchableOpacity>
+                                        ) : null}
                                     </View>
                                 ) : null}
 
@@ -253,6 +285,26 @@ export default function RequestRentalScreen() {
                     </Animated.View>
                 </ScrollView>
             </KeyboardAvoidingView>
+            {latitude !== undefined && longitude !== undefined ? (
+                <MapLocationPicker
+                    visible={isMapPickerVisible}
+                    latitude={latitude}
+                    longitude={longitude}
+                    title="Adjust Delivery Location"
+                    subtitle="Drag the pin or tap the map, then confirm the exact delivery point."
+                    onClose={() => setIsMapPickerVisible(false)}
+                    onConfirm={async (coords) => {
+                        try {
+                            await updateAddressFromCoords(coords.latitude, coords.longitude);
+                            showToast("Location adjusted successfully!", "success");
+                        } catch {
+                            showToast("Failed to update the selected location.", "error");
+                        } finally {
+                            setIsMapPickerVisible(false);
+                        }
+                    }}
+                />
+            ) : null}
         </SafeAreaView>
     );
 }
@@ -271,11 +323,19 @@ const styles = StyleSheet.create({
         paddingTop: Spacing.sm,
         paddingBottom: 28,
     },
+    header: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: Spacing.md,
+        marginBottom: Spacing.lg,
+    },
     backBtn: {
-        marginBottom: Spacing.md,
         alignSelf: "flex-start",
         padding: 4,
         marginLeft: -4,
+    },
+    headerText: {
+        flex: 1,
     },
     row: {
         flexDirection: "row",
@@ -339,28 +399,39 @@ const styles = StyleSheet.create({
         color: Colors.textSecondary,
         fontFamily: Fonts.regular,
     },
+    adjustLocationButton: {
+        flexDirection: "row",
+        alignItems: "center",
+        alignSelf: "flex-start",
+        gap: 6,
+        marginTop: Spacing.sm,
+        paddingHorizontal: Spacing.sm,
+        paddingVertical: Spacing.xs,
+        borderRadius: 999,
+        backgroundColor: Colors.white,
+        borderWidth: 1,
+        borderColor: Colors.primary + "30",
+    },
+    adjustLocationText: {
+        fontSize: FontSizes.small,
+        fontFamily: Fonts.medium,
+        color: Colors.primary,
+    },
     placeholderText: {
         color: Colors.textSecondary,
         fontFamily: Fonts.regular,
         textAlign: "center",
         marginVertical: Spacing.xl,
     },
-    backText: {
-        fontSize: FontSizes.subtitle,
-        color: Colors.primary,
-        fontFamily: Fonts.medium,
-        marginBottom: Spacing.md,
-    },
     title: {
         fontSize: FontSizes.heading,
         color: Colors.text,
-        marginBottom: 4,
         fontFamily: Fonts.bold,
     },
     bookInfo: {
         fontSize: FontSizes.body,
         color: Colors.textSecondary,
-        marginBottom: Spacing.lg,
+        marginTop: 2,
         fontFamily: Fonts.regular,
     },
     sectionTitle: {

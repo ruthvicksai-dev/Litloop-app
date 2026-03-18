@@ -7,11 +7,17 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState } from "react";
-import { StatusBar } from "react-native";
+import { StatusBar, Text, TextInput } from "react-native";
 
 const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!, {
   unsavedChangesWarning: false,
 });
+
+Text.defaultProps = Text.defaultProps ?? {};
+Text.defaultProps.allowFontScaling = false;
+
+TextInput.defaultProps = TextInput.defaultProps ?? {};
+TextInput.defaultProps.allowFontScaling = false;
 
 SplashScreen.preventAutoHideAsync();
 let hasCompletedStartupSplash = false;

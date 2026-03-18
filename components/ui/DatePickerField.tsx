@@ -131,8 +131,6 @@ export default function DatePickerField({
                     ) : null}
                 </View>
             ) : null}
-
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
         </View>
     );
 }
@@ -191,11 +189,5 @@ const styles = StyleSheet.create({
         fontSize: FontSizes.body,
         fontFamily: Fonts.bold,
         color: Colors.primary,
-    },
-    errorText: {
-        color: Colors.error,
-        fontSize: FontSizes.caption,
-        marginTop: Spacing.xs,
-        fontFamily: Fonts.regular,
     },
 });
