@@ -125,6 +125,7 @@ export default function BookDetailsScreen() {
                         images={images}
                         activeIndex={activeIndex}
                         onIndexChange={setActiveIndex}
+                        isUnavailable={book.availableCopies === 0}
                     />
                     {book.top10Position && (
                         <LinearGradient

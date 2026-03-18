@@ -1,7 +1,7 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
+import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useRef } from "react";
 import { Animated, Easing, Image, StyleSheet, Text, View } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 
 type AppSplashProps = {
   onAnimationComplete?: () => void;
@@ -133,10 +133,12 @@ const styles = StyleSheet.create({
   iconWrap: {
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "transparent",
   },
   icon: {
     width: 176,
     height: 112,
+    backgroundColor: "transparent",
   },
   textWrap: {
     marginTop: 8,

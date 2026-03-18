@@ -8,12 +8,14 @@ type BookImageCarouselProps = {
     images: string[];
     activeIndex: number;
     onIndexChange: (index: number) => void;
+    isUnavailable?: boolean;
 };
 
 export default function BookImageCarousel({
     images,
     activeIndex,
     onIndexChange,
+    isUnavailable = false,
 }: BookImageCarouselProps) {
     const scrollX = useRef(new Animated.Value(0)).current;
     const flatListRef = useRef<FlatList<string>>(null);
@@ -66,10 +68,20 @@ export default function BookImageCarousel({
                 renderItem={({ item }) => (
                     <View style={[styles.galleryItem, { width: carouselWidth }]}>
                         <View style={styles.imageShadow}>
-                            <Image
-                                source={{ uri: item }}
-                                style={[styles.cover, { width: imageWidth, height: imageHeight }]}
-                            />
+                            <View style={[styles.coverWrap, { width: imageWidth, height: imageHeight }]}>
+                                <Image
+                                    source={{ uri: item }}
+                                    style={[styles.cover, { width: imageWidth, height: imageHeight }]}
+                                />
+                                {isUnavailable ? (
+                                    <View style={styles.unavailableOverlay}>
+                                        <View style={styles.unavailableBadge}>
+                                            <View style={styles.unavailableDot} />
+                                            <Text style={styles.unavailableText}>Unavailable</Text>
+                                        </View>
+                                    </View>
+                                ) : null}
+                            </View>
                         </View>
                     </View>
                 )}
@@ -128,6 +140,42 @@ const styles = StyleSheet.create({
     cover: {
         borderRadius: 20,
         backgroundColor: Colors.primaryLight,
+    },
+    coverWrap: {
+        position: "relative",
+        borderRadius: 20,
+        overflow: "hidden",
+    },
+    unavailableOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        justifyContent: "flex-end",
+        backgroundColor: "rgba(0, 0, 0, 0.28)",
+        paddingHorizontal: 14,
+        paddingBottom: 14,
+    },
+    unavailableBadge: {
+        flexDirection: "row",
+        alignItems: "center",
+        alignSelf: "stretch",
+        paddingHorizontal: 14,
+        paddingVertical: 12,
+        borderRadius: 14,
+        backgroundColor: "rgba(24, 24, 27, 0.78)",
+        borderWidth: 1,
+        borderColor: "rgba(255, 255, 255, 0.12)",
+    },
+    unavailableDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 999,
+        backgroundColor: Colors.error,
+        marginRight: 10,
+    },
+    unavailableText: {
+        color: Colors.error,
+        fontSize: FontSizes.body,
+        fontFamily: Fonts.bold,
+        letterSpacing: 0.2,
     },
     placeholder: {
         alignItems: "center",

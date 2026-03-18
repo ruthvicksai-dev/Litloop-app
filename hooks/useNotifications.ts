@@ -1,4 +1,5 @@
 import { useMutation } from "convex/react";
+import Constants from "expo-constants";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
@@ -68,6 +69,9 @@ export function useNotifications(userId: Id<"users"> | null) {
 
 async function registerForPushNotificationsAsync(): Promise<string | undefined> {
     let token: string | undefined;
+    const projectId =
+        Constants.expoConfig?.extra?.eas?.projectId ??
+        Constants.easConfig?.projectId;
 
     if (Platform.OS === "android") {
         await Notifications.setNotificationChannelAsync("default", {
@@ -79,6 +83,11 @@ async function registerForPushNotificationsAsync(): Promise<string | undefined> 
     }
 
     if (Device.isDevice) {
+        if (!projectId) {
+            console.warn("Push notifications skipped: missing Expo projectId in app config.");
+            return undefined;
+        }
+
         const { status: existingStatus } = await Notifications.getPermissionsAsync();
         let finalStatus = existingStatus;
         if (existingStatus !== "granted") {
@@ -91,12 +100,23 @@ async function registerForPushNotificationsAsync(): Promise<string | undefined> 
         }
 
         try {
-            token = (await Notifications.getExpoPushTokenAsync()).data;
+            token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
         } catch (e) {
+            const message = e instanceof Error ? e.message : String(e);
+            if (
+                Platform.OS === "android" &&
+                message.includes("Default FirebaseApp is not initialized")
+            ) {
+                console.error(
+                    "Error getting push token: Android push notifications are not configured. " +
+                    "Add Firebase `google-services.json`, connect it in Expo config, rebuild the Android app, and then retry."
+                );
+                return undefined;
+            }
             console.error("Error getting push token:", e);
         }
     } else {
-        console.log("Must use a physical device for Push Notifications.");
+        console.log("Push notifications require a physical device.");
     }
 
     return token;
