@@ -369,27 +369,26 @@ export const refreshSession = mutation({
             throw new Error("Invalid session data.");
         }
 
-        const userId = payload.sub as Id<"users">;
-
-        // 3. Attack Detection: If session is already revoked, it's a replay attack!
-        if (isSessionRevoked(session)) {
-            console.error("[Auth] Security Alert: Refresh token reuse detected! Full account lockout triggered.", { userId, sid });
-
-            // Revoke ALL active sessions for this user (Lockdown)
-            const activeSessions = await ctx.db
-                .query("sessions")
-                .withIndex("by_userId_active", (q) => q.eq("userId", userId).eq("isRevoked", false))
-                .collect();
-
-            for (const s of activeSessions) {
-                await ctx.db.patch(s._id, { isRevoked: true });
-            }
-
-            throw new Error("SESSION_COMPROMISED");
-        }
-
         if (session.expiresAt < Date.now()) {
             await ctx.db.patch(sid, { isRevoked: true });
+            throw new Error("Session expired. Please sign in again.");
+        }
+
+        const userId = payload.sub as Id<"users">;
+
+        // 3. A revoked session can be a normal stale retry after rotation or sign-out.
+        // Treat it as an expired session instead of locking out the whole account.
+        if (isSessionRevoked(session)) {
+            if (session.replacedBySessionId) {
+                console.warn("[Auth] Stale refresh retry after rotation", {
+                    userId,
+                    sid,
+                    replacedBySessionId: session.replacedBySessionId,
+                });
+            } else {
+                console.warn("[Auth] Refresh token used for a revoked session", { userId, sid });
+            }
+
             throw new Error("Session expired. Please sign in again.");
         }
 

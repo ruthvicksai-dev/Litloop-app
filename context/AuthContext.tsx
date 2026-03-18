@@ -67,6 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [accessToken, setAccessToken] = useState<string | null>(null);
     const [tokenLoaded, setTokenLoaded] = useState(false); // SecureStore read complete
     const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const signOutInProgressRef = useRef(false);
 
     const signInMutation = useMutation(api.auth.signIn);
     const signUpMutation = useMutation(api.auth.signUp);
@@ -82,12 +83,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const user = sessionUser
         ? ({
-            _id: (sessionUser as any)._id,
-            name: (sessionUser as any).name,
-            email: (sessionUser as any).email,
-            phone: (sessionUser as any).phone,
-            avatarUrl: (sessionUser as any).avatarUrl,
-            role: (sessionUser as any).role as "user" | "admin",
+            _id: sessionUser._id,
+            name: sessionUser.name,
+            email: sessionUser.email,
+            phone: sessionUser.phone,
+            avatarUrl: sessionUser.avatarUrl,
+            role: sessionUser.role,
         } as User)
         : null;
 
@@ -111,6 +112,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, []);
 
+    const clearLocalSession = useCallback(async () => {
+        if (refreshTimerRef.current) {
+            clearTimeout(refreshTimerRef.current);
+            refreshTimerRef.current = null;
+        }
+
+        await SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY);
+        await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
+        setAccessToken(null);
+    }, []);
+
     /** Schedule automatic refresh before the access token expires. */
     const scheduleRefresh = useCallback(
         (token: string) => {
@@ -128,19 +140,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const refreshIn = Math.max(msUntilExpiry - 2 * 60 * 1000, 0);
 
             refreshTimerRef.current = setTimeout(async () => {
-                try {
-                    const storedRefreshToken = await SecureStore.getItemAsync(
-                        REFRESH_TOKEN_KEY
-                    );
-                    if (!storedRefreshToken) return;
+                const storedRefreshToken = await SecureStore.getItemAsync(
+                    REFRESH_TOKEN_KEY
+                );
+                if (!storedRefreshToken || signOutInProgressRef.current) return;
 
+                try {
                     const result = await refreshSessionMutation({
                         refreshToken: storedRefreshToken,
                     });
 
+                    if (signOutInProgressRef.current) return;
+
                     await SecureStore.setItemAsync(
                         ACCESS_TOKEN_KEY,
                         result.accessToken
+                    );
+                    await SecureStore.setItemAsync(
+                        REFRESH_TOKEN_KEY,
+                        result.refreshToken
                     );
                     setAccessToken(result.accessToken);
 
@@ -148,13 +166,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     scheduleRefresh(result.accessToken);
                 } catch {
                     // Refresh failed — force sign out
-                    await SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY);
-                    await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
-                    setAccessToken(null);
+                    if (!signOutInProgressRef.current) {
+                        const currentRefreshToken = await SecureStore.getItemAsync(
+                            REFRESH_TOKEN_KEY
+                        );
+                        if (currentRefreshToken === storedRefreshToken) {
+                            await clearLocalSession();
+                        }
+                    }
                 }
             }, refreshIn);
         },
-        [decodeTokenPayload, refreshSessionMutation]
+        [clearLocalSession, decodeTokenPayload, refreshSessionMutation]
     );
 
     // ─── Load session on mount ───────────────────────────────────────────
@@ -183,16 +206,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                         const result = await refreshSessionMutation({
                             refreshToken: storedRefresh,
                         });
+                        if (signOutInProgressRef.current) return;
                         await SecureStore.setItemAsync(
                             ACCESS_TOKEN_KEY,
                             result.accessToken
+                        );
+                        await SecureStore.setItemAsync(
+                            REFRESH_TOKEN_KEY,
+                            result.refreshToken
                         );
                         setAccessToken(result.accessToken);
                         scheduleRefresh(result.accessToken);
                     } catch {
                         // Refresh also failed — clean up
-                        await SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY);
-                        await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
+                        const currentRefreshToken = await SecureStore.getItemAsync(
+                            REFRESH_TOKEN_KEY
+                        );
+                        if (currentRefreshToken === storedRefresh) {
+                            await clearLocalSession();
+                        }
                     }
                 }
             } catch {
@@ -256,6 +288,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     const signOut = useCallback(async () => {
+        signOutInProgressRef.current = true;
         try {
             const storedRefresh = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
             if (storedRefresh) {
@@ -263,18 +296,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
         } catch {
             // Ignore backend errors on sign-out
+        } finally {
+            await clearLocalSession();
+            signOutInProgressRef.current = false;
         }
-
-        // Clear timer
-        if (refreshTimerRef.current) {
-            clearTimeout(refreshTimerRef.current);
-            refreshTimerRef.current = null;
-        }
-
-        await SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY);
-        await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
-        setAccessToken(null);
-    }, [signOutMutation]);
+    }, [clearLocalSession, signOutMutation]);
 
     return (
         <AuthContext.Provider
