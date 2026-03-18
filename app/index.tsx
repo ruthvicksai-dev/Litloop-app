@@ -1,23 +1,21 @@
-import BookLoader from "@/components/ui/BookLoader";
-import { Colors } from "@/constants/theme";
-import { useRootRedirect } from "@/hooks";
-import { StyleSheet, View } from "react-native";
+import { useRouter } from "expo-router";
+import { useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import AppSplash from "@/components/ui/AppSplash";
 
 export default function Index() {
-    useRootRedirect();
+    const { user, isLoading } = useAuth();
+    const router = useRouter();
 
-    return (
-        <View style={styles.container}>
-            <BookLoader label="Opening Litloop..." />
-        </View>
-    );
+    useEffect(() => {
+        if (isLoading) return;
+
+        if (user) {
+            router.replace(user.role === "admin" ? "/(admin)/dashboard" : "/(tabs)");
+        } else {
+            router.replace("/(auth)/sign-in");
+        }
+    }, [user, isLoading]);
+
+    return <AppSplash animate={false} />;
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: Colors.background,
-    },
-});

@@ -1,6 +1,6 @@
 import { Colors } from "@/constants/theme";
 import AppSplash from "@/components/ui/AppSplash";
-import { AuthProvider } from "@/context/AuthContext";
+import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { ToastProvider } from "@/context/ToastContext";
 import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { useFonts } from "expo-font";
@@ -16,8 +16,9 @@ const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!, {
 SplashScreen.preventAutoHideAsync();
 let hasCompletedStartupSplash = false;
 
-/** Gate that blocks all navigation until auth state is resolved. */
-function AuthGate({ children }: { children: React.ReactNode }) {
+/** Blocks navigation until startup splash and auth state are both resolved. */
+function AppGate() {
+  const { isLoading } = useAuth();
   const [isSplashAnimationDone, setIsSplashAnimationDone] = useState(hasCompletedStartupSplash);
 
   const handleSplashComplete = () => {
@@ -25,7 +26,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     setIsSplashAnimationDone(true);
   };
 
-  if (!isSplashAnimationDone) {
+  if (!isSplashAnimationDone || isLoading) {
     return (
       <AppSplash
         animate={!isSplashAnimationDone}
@@ -34,7 +35,25 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return <>{children}</>;
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        animation: "slide_from_right",
+        contentStyle: { backgroundColor: Colors.background },
+      }}
+    >
+      <Stack.Screen name="index" />
+      <Stack.Screen name="(auth)" />
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="(admin)" />
+      <Stack.Screen name="book/[id]" />
+      <Stack.Screen name="notifications" />
+      <Stack.Screen name="section-books" />
+      <Stack.Screen name="profile/edit" />
+      <Stack.Screen name="rental" />
+    </Stack>
+  );
 }
 
 export default function RootLayout() {
@@ -64,22 +83,7 @@ export default function RootLayout() {
       <AuthProvider>
         <ToastProvider>
           <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
-          <AuthGate>
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                animation: "slide_from_right",
-                contentStyle: { backgroundColor: Colors.background },
-              }}
-            >
-              <Stack.Screen name="(auth)" />
-              <Stack.Screen name="(tabs)" />
-              <Stack.Screen name="(admin)" />
-              <Stack.Screen name="book/[id]" />
-              <Stack.Screen name="profile/edit" />
-              <Stack.Screen name="rental" />
-            </Stack>
-          </AuthGate>
+          <AppGate />
         </ToastProvider>
       </AuthProvider>
     </ConvexProvider>
