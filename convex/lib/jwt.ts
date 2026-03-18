@@ -71,6 +71,8 @@ async function verify(
 export interface JwtPayload {
     /** Subject — the user ID */
     sub: string;
+    /** Session ID — the ID of the session in the DB */
+    sid: string;
     /** Token type: "access" or "refresh" */
     type: "access" | "refresh";
     /** Issued-at timestamp (ms) */
@@ -84,13 +86,13 @@ export interface JwtPayload {
 /**
  * Create a signed JWT token.
  *
- * @param payload  - Data to encode (sub, type)
+ * @param payload  - Data to encode (sub, sid, type)
  * @param secret   - HMAC-SHA256 signing secret
  * @param expiresInMs - Token lifetime in milliseconds
  * @returns Signed JWT string (header.payload.signature)
  */
 export async function createToken(
-    payload: { sub: string; type: "access" | "refresh" },
+    payload: { sub: string; sid: string; type: "access" | "refresh" },
     secret: string,
     expiresInMs: number
 ): Promise<string> {

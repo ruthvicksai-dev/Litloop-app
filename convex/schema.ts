@@ -5,8 +5,11 @@ export default defineSchema({
     users: defineTable({
         name: v.string(),
         email: v.string(),
-        phone: v.string(),
-        passwordHash: v.string(),
+        phone: v.optional(v.string()),
+        passwordHash: v.optional(v.string()),
+        providers: v.optional(v.array(v.union(v.literal("local"), v.literal("google")))),
+        avatarUrl: v.optional(v.string()),
+        lastLoginProvider: v.optional(v.union(v.literal("local"), v.literal("google"))),
         role: v.union(v.literal("user"), v.literal("admin")),
         createdAt: v.number(),
     })
@@ -16,12 +19,18 @@ export default defineSchema({
 
     sessions: defineTable({
         userId: v.id("users"),
-        tokenHash: v.string(),
+        refreshTokenHash: v.optional(v.string()),
+        tokenHash: v.optional(v.string()),
+        deviceInfo: v.optional(v.string()),
+        ipAddress: v.optional(v.string()),
+        isRevoked: v.optional(v.boolean()),
         expiresAt: v.number(),
+        replacedBySessionId: v.optional(v.id("sessions")),
         createdAt: v.number(),
     })
-        .index("by_tokenHash", ["tokenHash"])
-        .index("by_userId", ["userId"]),
+        .index("by_userId", ["userId"])
+        .index("by_refreshTokenHash", ["refreshTokenHash"])
+        .index("by_userId_active", ["userId", "isRevoked"]),
 
     book_series: defineTable({
         name: v.string(),

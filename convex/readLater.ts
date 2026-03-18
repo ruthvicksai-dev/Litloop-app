@@ -2,24 +2,7 @@ import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import { mapBookForClient } from "./books";
-import { verifyToken } from "./lib/jwt";
-
-function getJwtSecret(): string {
-    const secret = process.env.JWT_SECRET;
-    if (!secret) {
-        throw new Error("JWT_SECRET environment variable is not set.");
-    }
-    return secret;
-}
-
-async function getUserIdFromAccessToken(accessToken: string): Promise<Id<"users">> {
-    const secret = getJwtSecret();
-    const payload = await verifyToken(accessToken, secret);
-    if (payload.type !== "access") {
-        throw new Error("Invalid token type.");
-    }
-    return payload.sub as Id<"users">;
-}
+import { getUserIdFromAccessToken } from "./lib/authHelpers";
 
 export const toggleReadLater = mutation({
     args: { accessToken: v.string(), bookId: v.id("books") },

@@ -1,9 +1,10 @@
 import AuthFooter from "@/components/auth/AuthFooter";
 import AuthHeader from "@/components/auth/AuthHeader";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Layout, Spacing, scale } from "@/constants/theme";
+import { Colors, Layout, scale, Spacing } from "@/constants/theme";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { useFadeSlideScaleIn } from "@/hooks/useFadeSlideScaleIn";
 import { useSignInScreen } from "@/hooks/useSignInScreen";
@@ -84,6 +85,14 @@ export default function SignInScreen() {
                             loading={loading}
                             style={{ marginTop: Spacing.md }}
                         />
+
+                        <View style={styles.divider}>
+                            <View style={styles.dividerLine} />
+                            <Text style={styles.dividerText}>OR</Text>
+                            <View style={styles.dividerLine} />
+                        </View>
+
+                        <GoogleSignInButton />
                     </View>
 
                     <AuthFooter
@@ -135,5 +144,22 @@ const styles = StyleSheet.create({
         fontFamily: Fonts.regular,
         textAlign: "center",
         marginBottom: Spacing.md,
+    },
+    divider: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginVertical: Spacing.lg,
+    },
+    dividerLine: {
+        flex: 1,
+        height: 1,
+        backgroundColor: Colors.border,
+        opacity: 0.5,
+    },
+    dividerText: {
+        marginHorizontal: Spacing.md,
+        color: Colors.textSecondary,
+        fontSize: FontSizes.caption,
+        fontFamily: Fonts.medium,
     },
 });

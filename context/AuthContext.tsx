@@ -18,7 +18,8 @@ interface User {
     _id: Id<"users">;
     name: string;
     email: string;
-    phone: string;
+    phone?: string;
+    avatarUrl?: string;
     role: "user" | "admin";
 }
 
@@ -35,6 +36,7 @@ interface AuthContextType {
         phone: string,
         password: string
     ) => Promise<void>;
+    signInWithGoogle: (idToken: string) => Promise<void>;
     signOut: () => Promise<void>;
 }
 
@@ -46,6 +48,7 @@ const AuthContext = createContext<AuthContextType>({
     isAdmin: false,
     signIn: async () => { },
     signUp: async () => { },
+    signInWithGoogle: async () => { },
     signOut: async () => { },
 });
 
@@ -69,6 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const signUpMutation = useMutation(api.auth.signUp);
     const refreshSessionMutation = useMutation(api.auth.refreshSession);
     const signOutMutation = useMutation(api.auth.signOut);
+    const googleSignInMutation = useMutation(api.auth.googleSignIn);
 
     // Fetch user from Convex using the current access token
     const sessionUser = useQuery(
@@ -78,11 +82,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const user = sessionUser
         ? ({
-            _id: sessionUser._id,
-            name: sessionUser.name,
-            email: sessionUser.email,
-            phone: sessionUser.phone,
-            role: sessionUser.role as "user" | "admin",
+            _id: (sessionUser as any)._id,
+            name: (sessionUser as any).name,
+            email: (sessionUser as any).email,
+            phone: (sessionUser as any).phone,
+            avatarUrl: (sessionUser as any).avatarUrl,
+            role: (sessionUser as any).role as "user" | "admin",
         } as User)
         : null;
 
@@ -239,6 +244,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         [signUpMutation, scheduleRefresh]
     );
 
+    const signInWithGoogle = useCallback(
+        async (idToken: string) => {
+            const result = await googleSignInMutation({ idToken });
+            await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, result.accessToken);
+            await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, result.refreshToken);
+            setAccessToken(result.accessToken);
+            scheduleRefresh(result.accessToken);
+        },
+        [googleSignInMutation, scheduleRefresh]
+    );
+
     const signOut = useCallback(async () => {
         try {
             const storedRefresh = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
@@ -270,6 +286,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 isAdmin: user?.role === "admin",
                 signIn,
                 signUp,
+                signInWithGoogle,
                 signOut,
             }}
         >
