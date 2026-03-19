@@ -110,6 +110,11 @@ export default function SeriesManagementScreen() {
                 coverImageId = storageId;
             }
 
+            if (!coverImageId) {
+                showToast("Cover image is required.", "error");
+                return;
+            }
+
             if (editingSeries) {
                 await updateSeries({
                     seriesId: editingSeries._id,
