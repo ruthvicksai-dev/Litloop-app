@@ -1,5 +1,14 @@
 import { v } from "convex/values";
 import { internalMutation, mutation, query } from "./_generated/server";
+import { assertRateLimit, buildRateLimitKey } from "./lib/rateLimit";
+
+const NOTIFICATION_RATE_LIMITS = {
+    subscribeToBook: {
+        limit: 10,
+        windowMs: 60 * 60 * 1000,
+        message: "Too many notification subscriptions. Please try again later.",
+    },
+} as const;
 
 /**
  * Sends a push notification via Expo's Push API AND saves it to the in-app feed.
@@ -62,6 +71,13 @@ export const subscribeToBook = mutation({
         bookId: v.id("books"),
     },
     handler: async (ctx, args) => {
+        const subscribeKey = buildRateLimitKey(
+            "notification",
+            "subscribeToBook",
+            args.userId
+        );
+        assertRateLimit(subscribeKey, NOTIFICATION_RATE_LIMITS.subscribeToBook);
+
         const existing = await ctx.db
             .query("book_notifications")
             .withIndex("by_userId_bookId", (q) =>

@@ -1,11 +1,11 @@
 import BookLoader from "@/components/ui/BookLoader";
-import { EmptyState } from "@/components/ui/EmptyState";
 import RentalCard from "@/components/ui/RentalCard";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";
 import { useFadeSlideIn } from "@/hooks";
+import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import React from "react";
@@ -92,10 +92,13 @@ export default function MyRentalsScreen() {
                 showsVerticalScrollIndicator={false}
                 ListEmptyComponent={
                     <View style={styles.emptyWrapper}>
-                        <EmptyState
-                            icon="clipboard-outline"
-                            title="No active rentals"
+                        <Ionicons
+                            name="clipboard-outline"
+                            size={48}
+                            color={Colors.textLight}
+                            style={styles.emptyIcon}
                         />
+                        <Text style={styles.emptyTitle}>No active rentals</Text>
                         <TouchableOpacity style={styles.browseBtn} onPress={() => router.push("/(tabs)")}>
                             <Text style={styles.browseLink}>Browse Books</Text>
                         </TouchableOpacity>
@@ -142,9 +145,19 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: "center",
         justifyContent: "center",
+        paddingHorizontal: 24,
+    },
+    emptyIcon: {
+        marginBottom: Spacing.md,
+    },
+    emptyTitle: {
+        fontSize: FontSizes.subtitle,
+        color: Colors.text,
+        fontFamily: Fonts.bold,
+        textAlign: "center",
     },
     browseBtn: {
-        marginTop: -Spacing.md,
+        marginTop: Spacing.sm,
     },
     browseLink: {
         fontSize: FontSizes.subtitle,

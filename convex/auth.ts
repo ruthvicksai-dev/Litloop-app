@@ -11,6 +11,7 @@ import {
 } from "./lib/authHelpers";
 import { verifyGoogleIdToken } from "./lib/google";
 import { createToken, sha256, verifyToken } from "./lib/jwt";
+import { assertRateLimit, buildRateLimitKey, clearRateLimit } from "./lib/rateLimit";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -47,6 +48,29 @@ function getSessionRefreshTokenHash(
 ): string | undefined {
     return session?.refreshTokenHash ?? session?.tokenHash;
 }
+
+const AUTH_RATE_LIMITS = {
+    signUp: {
+        limit: 5,
+        windowMs: 30 * 60 * 1000,
+        message: "Too many sign-up attempts. Please try again later.",
+    },
+    signIn: {
+        limit: 5,
+        windowMs: 10 * 60 * 1000,
+        message: "Too many sign-in attempts. Please try again later.",
+    },
+    googleSignIn: {
+        limit: 8,
+        windowMs: 10 * 60 * 1000,
+        message: "Too many Google sign-in attempts. Please try again later.",
+    },
+    changePassword: {
+        limit: 5,
+        windowMs: 15 * 60 * 1000,
+        message: "Too many password change attempts. Please try again later.",
+    },
+} as const;
 
 /**
  * Generate an access + refresh token pair and persist the refresh token.
@@ -113,6 +137,11 @@ export const signUp = mutation({
 
         const normalizedEmail = args.email.toLowerCase().trim();
         const normalizedPhone = normalizePhone(args.phone.trim());
+        const signUpEmailKey = buildRateLimitKey("auth", "signUp", "email", normalizedEmail);
+        const signUpPhoneKey = buildRateLimitKey("auth", "signUp", "phone", normalizedPhone);
+
+        assertRateLimit(signUpEmailKey, AUTH_RATE_LIMITS.signUp);
+        assertRateLimit(signUpPhoneKey, AUTH_RATE_LIMITS.signUp);
 
         if (normalizedPhone.length < 10) {
             throw new Error("Please enter a valid phone number.");
@@ -154,6 +183,8 @@ export const signUp = mutation({
         await recordUserRegistered(ctx, userId, Date.now());
 
         const { accessToken, refreshToken } = await createSessionTokens(ctx, userId, args.deviceInfo, args.ipAddress);
+        clearRateLimit(signUpEmailKey);
+        clearRateLimit(signUpPhoneKey);
         return { userId, accessToken, refreshToken };
     },
 });
@@ -170,11 +201,15 @@ export const signIn = mutation({
     handler: async (ctx, args) => {
         if (!args.email.trim()) throw new Error("Email is required.");
         if (!args.password) throw new Error("Password is required.");
+        const normalizedEmail = args.email.toLowerCase().trim();
+        const signInKey = buildRateLimitKey("auth", "signIn", normalizedEmail);
+
+        assertRateLimit(signInKey, AUTH_RATE_LIMITS.signIn);
 
         const user = await ctx.db
             .query("users")
             .withIndex("by_email", (q) =>
-                q.eq("email", args.email.toLowerCase().trim())
+                q.eq("email", normalizedEmail)
             )
             .first();
 
@@ -199,35 +234,12 @@ export const signIn = mutation({
 
         const { accessToken, refreshToken } = await createSessionTokens(ctx, user._id, args.deviceInfo, args.ipAddress);
         await ctx.db.patch(user._id, { lastLoginProvider: "local" });
+        clearRateLimit(signInKey);
         return { userId: user._id, role: user.role, accessToken, refreshToken };
     },
 });
 
 // ─── Google Sign In (Rate Limiting) ──────────────────────────────────────────
-
-const LOGIN_ATTEMPTS = new Map<string, { count: number; lastAttempt: number }>();
-const MAX_ATTEMPTS = 5;
-const COOLDOWN_MS = 60 * 1000; // 1 minute
-
-function checkRateLimit(email: string) {
-    const now = Date.now();
-    const stats = LOGIN_ATTEMPTS.get(email);
-
-    if (stats) {
-        if (now - stats.lastAttempt < COOLDOWN_MS) {
-            if (stats.count >= MAX_ATTEMPTS) {
-                console.warn("[Auth] Rate limit exceeded", { email });
-                throw new Error("Too many login attempts. Please try again later.");
-            }
-            stats.count += 1;
-        } else {
-            stats.count = 1;
-        }
-        stats.lastAttempt = now;
-    } else {
-        LOGIN_ATTEMPTS.set(email, { count: 1, lastAttempt: now });
-    }
-}
 
 export const googleSignIn = mutation({
     args: {
@@ -245,8 +257,8 @@ export const googleSignIn = mutation({
         const payload = await verifyGoogleIdToken(args.idToken, clientId);
         const normalizedEmail = payload.email; // Already lowercased and trimmed by verifyGoogleIdToken
 
-        // 2. Lightweight Rate Limiting
-        checkRateLimit(normalizedEmail);
+        const googleSignInKey = buildRateLimitKey("auth", "googleSignIn", normalizedEmail);
+        assertRateLimit(googleSignInKey, AUTH_RATE_LIMITS.googleSignIn);
 
         // 3. Find existing user by email
         const existingUser = await ctx.db
@@ -290,6 +302,7 @@ export const googleSignIn = mutation({
         const { accessToken, refreshToken } = await createSessionTokens(ctx, userId, args.deviceInfo, args.ipAddress);
         const user = (await ctx.db.get(userId))!;
 
+        clearRateLimit(googleSignInKey);
         return { userId, role: user.role, accessToken, refreshToken };
     },
 });
@@ -607,6 +620,9 @@ export const changePassword = mutation({
             throw new Error("New password must be at least 6 characters.");
         }
 
+        const changePasswordKey = buildRateLimitKey("auth", "changePassword", userId);
+        assertRateLimit(changePasswordKey, AUTH_RATE_LIMITS.changePassword);
+
         const user = await ctx.db.get(userId);
         if (!user) {
             throw new Error("User not found.");
@@ -630,6 +646,7 @@ export const changePassword = mutation({
             passwordHash: newPasswordHash,
         });
 
+        clearRateLimit(changePasswordKey);
         return true;
     },
 });

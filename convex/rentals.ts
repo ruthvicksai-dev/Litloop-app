@@ -3,8 +3,16 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
 import { recordRentalCreated, recordUserActivity } from "./analytics";
+import { assertRateLimit, buildRateLimitKey } from "./lib/rateLimit";
 
 const LATE_FEE_PER_DAY = 3; // ₹3 per day
+const RENTAL_RATE_LIMITS = {
+    requestRental: {
+        limit: 5,
+        windowMs: 30 * 60 * 1000,
+        message: "Too many rental requests. Please try again later.",
+    },
+} as const;
 
 function daysBetween(dateStr1: string, dateStr2: string): number {
     const d1 = new Date(dateStr1);
@@ -53,6 +61,9 @@ export const requestRental = mutation({
         }),
     },
     handler: async (ctx, args) => {
+        const rentalRequestKey = buildRateLimitKey("rental", "request", args.userId);
+        assertRateLimit(rentalRequestKey, RENTAL_RATE_LIMITS.requestRental);
+
         const book = await ctx.db.get(args.bookId);
         if (!book) throw new Error("Book not found.");
         if (book.availableCopies <= 0)

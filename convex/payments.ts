@@ -1,6 +1,20 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { recordPaymentCompleted, recordUserActivity } from "./analytics";
+import { assertRateLimit, buildRateLimitKey } from "./lib/rateLimit";
+
+const PAYMENT_RATE_LIMITS = {
+    submitUpiPayment: {
+        limit: 5,
+        windowMs: 15 * 60 * 1000,
+        message: "Too many payment submissions. Please try again later.",
+    },
+    selectCashPayment: {
+        limit: 5,
+        windowMs: 15 * 60 * 1000,
+        message: "Too many payment selections. Please try again later.",
+    },
+} as const;
 
 async function getBookWithCoverUrls(ctx: any, bookId: any) {
     const book = await ctx.db.get(bookId);
@@ -40,6 +54,14 @@ export const submitUpiPayment = mutation({
         if (rental.status !== "pickup_scheduled")
             throw new Error("Pickup must be scheduled before payment.");
 
+        const submitPaymentKey = buildRateLimitKey(
+            "payment",
+            "submitUpi",
+            rental.userId,
+            args.rentalId
+        );
+        assertRateLimit(submitPaymentKey, PAYMENT_RATE_LIMITS.submitUpiPayment);
+
         if (!args.utrNumber.trim()) throw new Error("UTR number is required.");
 
         await ctx.db.patch(args.rentalId, {
@@ -59,6 +81,14 @@ export const selectCashPayment = mutation({
         if (!rental) throw new Error("Rental not found.");
         if (rental.status !== "pickup_scheduled")
             throw new Error("Pickup must be scheduled before payment.");
+
+        const selectCashKey = buildRateLimitKey(
+            "payment",
+            "selectCash",
+            rental.userId,
+            args.rentalId
+        );
+        assertRateLimit(selectCashKey, PAYMENT_RATE_LIMITS.selectCashPayment);
 
         await ctx.db.patch(args.rentalId, {
             paymentMethod: "cash",
