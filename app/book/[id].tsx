@@ -63,7 +63,7 @@ export default function BookDetailsScreen() {
         try {
             await subscribeToBook({ userId, bookId: book._id as Id<"books"> });
             showToast("You'll be notified when this book is available! 🔔", "success");
-        } catch (error) {
+        } catch {
             showToast("Failed to subscribe. Please try again.", "error");
         } finally {
             setIsSubscribing(false);

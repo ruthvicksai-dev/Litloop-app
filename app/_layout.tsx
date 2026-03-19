@@ -22,7 +22,7 @@ function AppGate({ fontsLoaded }: { fontsLoaded: boolean }) {
   const { isLoading, userId, user } = useAuth();
   const [isSplashAnimationDone, setIsSplashAnimationDone] = useState(hasCompletedStartupSplash);
   const [hasResolvedInitialAuth, setHasResolvedInitialAuth] = useState(false);
-  const showSplash = !fontsLoaded || !isSplashAnimationDone || !hasResolvedInitialAuth;
+  const showSplash = !isSplashAnimationDone || !hasResolvedInitialAuth;
 
   // Initialize push notifications for the logged-in user
   useNotifications(userId, user?.role);
@@ -37,6 +37,10 @@ function AppGate({ fontsLoaded }: { fontsLoaded: boolean }) {
       setHasResolvedInitialAuth(true);
     }
   }, [isLoading]);
+
+  if (!fontsLoaded) {
+    return null;
+  }
 
   return (
     <>
@@ -82,8 +86,10 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    SplashScreen.hideAsync();
-  }, []);
+    if (fontsLoaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded]);
 
   return (
     <ConvexProvider client={convex}>

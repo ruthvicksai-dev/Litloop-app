@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     title: {
-        fontSize: FontSizes.hero,
+        fontSize: FontSizes.title,
         fontFamily: Fonts.bold,
         color: Colors.text,
     },

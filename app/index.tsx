@@ -15,7 +15,7 @@ export default function Index() {
         } else {
             router.replace("/(auth)/sign-in");
         }
-    }, [user, isLoading]);
+    }, [user, isLoading, router]);
 
     return <AppSplash />;
 }

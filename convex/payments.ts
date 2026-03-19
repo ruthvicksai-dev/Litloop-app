@@ -2,6 +2,32 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { recordPaymentCompleted, recordUserActivity } from "./analytics";
 
+async function getBookWithCoverUrls(ctx: any, bookId: any) {
+    const book = await ctx.db.get(bookId);
+    if (!book) return null;
+
+    let coverUrl: string | null = null;
+    const coverUrls: string[] = [];
+
+    if (book.coverImages && book.coverImages.length > 0) {
+        for (const imageId of book.coverImages) {
+            const url = await ctx.storage.getUrl(imageId);
+            if (url) coverUrls.push(url);
+        }
+        if (coverUrls.length > 0) coverUrl = coverUrls[0];
+    } else if (book.coverImage) {
+        coverUrl = await ctx.storage.getUrl(book.coverImage);
+        if (coverUrl) coverUrls.push(coverUrl);
+    }
+
+    return {
+        title: book.title,
+        author: book.author,
+        coverUrl,
+        coverUrls,
+    };
+}
+
 export const submitUpiPayment = mutation({
     args: {
         rentalId: v.id("rentals"),
@@ -103,7 +129,7 @@ export const getPendingPayments = query({
 
         const rentalsWithDetails = await Promise.all(
             rentals.map(async (rental) => {
-                const book = await ctx.db.get(rental.bookId);
+                const book = await getBookWithCoverUrls(ctx, rental.bookId);
                 const user = await ctx.db.get(rental.userId);
                 let screenshotUrl: string | null = null;
                 if (rental.paymentScreenshot) {
@@ -112,7 +138,9 @@ export const getPendingPayments = query({
                 return {
                     ...rental,
                     screenshotUrl,
-                    book: book ? { title: book.title, author: book.author } : null,
+                    coverUrl: book?.coverUrl ?? null,
+                    coverUrls: book?.coverUrls ?? [],
+                    book,
                     user: user
                         ? { name: user.name, email: user.email, phone: user.phone }
                         : null,

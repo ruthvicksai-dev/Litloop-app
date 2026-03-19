@@ -1,5 +1,5 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, RENTAL_STATUS_LABELS, STATUS_COLORS } from "@/constants/theme";
+import { Colors, RENTAL_STATUS_LABELS, STATUS_COLORS, scale } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
@@ -57,9 +57,22 @@ export default function AdminRentalCard({
                     )}
                 </View>
                 <View style={styles.rentalInfo}>
-                    <Text style={styles.rentalTitle} numberOfLines={1}>
-                        {item.book?.title || "Unknown"}
-                    </Text>
+                    <View style={styles.headerRow}>
+                        <Text style={styles.rentalTitle} numberOfLines={1}>
+                            {item.book?.title || "Unknown"}
+                        </Text>
+                        <View style={[styles.statusBadge, { backgroundColor: statusColor + "18" }]}>
+                            <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
+                            <Text
+                                style={[styles.statusText, { color: statusColor }]}
+                                numberOfLines={1}
+                                adjustsFontSizeToFit
+                                minimumFontScale={0.8}
+                            >
+                                {RENTAL_STATUS_LABELS[item.status]}
+                            </Text>
+                        </View>
+                    </View>
                     <View style={styles.subInfo}>
                         <Ionicons
                             name="person-outline"
@@ -116,12 +129,6 @@ export default function AdminRentalCard({
                             </Text>
                         </View>
                     )}
-                </View>
-                <View style={[styles.statusBadge, { backgroundColor: statusColor + "18" }]}>
-                    <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
-                    <Text style={[styles.statusText, { color: statusColor }]}>
-                        {RENTAL_STATUS_LABELS[item.status]}
-                    </Text>
                 </View>
             </TouchableOpacity>
 
@@ -201,14 +208,21 @@ const styles = StyleSheet.create({
     },
     rentalInfo: {
         flex: 1,
-        marginRight: 80,
         paddingTop: 2,
+        minWidth: 0,
+    },
+    headerRow: {
+        flexDirection: "row",
+        alignItems: "flex-start",
+        gap: 8,
+        marginBottom: 8,
     },
     rentalTitle: {
+        flex: 1,
         fontSize: FontSizes.bodyLarge,
         fontFamily: Fonts.bold,
         color: Colors.text,
-        marginBottom: 8,
+        minWidth: 0,
     },
     subInfo: {
         flexDirection: "row",
@@ -258,24 +272,28 @@ const styles = StyleSheet.create({
     statusBadge: {
         flexDirection: "row",
         alignItems: "center",
-        gap: 5,
-        paddingHorizontal: 10,
-        paddingVertical: 5,
+        gap: scale(4),
+        paddingHorizontal: scale(7),
+        paddingVertical: scale(2),
         borderRadius: 999,
         borderWidth: 1,
         borderColor: Colors.border,
-        position: 'absolute',
-        top: 16,
-        right: 16,
+        width: scale(102),
+        minHeight: scale(24),
+        flexShrink: 0,
+        alignSelf: "flex-start",
+        marginTop: 1,
     },
     statusDot: {
-        width: 6,
-        height: 6,
-        borderRadius: 3,
+        width: scale(6),
+        height: scale(6),
+        borderRadius: scale(3),
     },
     statusText: {
         fontSize: FontSizes.tiny,
         fontFamily: Fonts.bold,
+        flex: 1,
+        textAlign: "center",
     },
     actionRow: {
         flexDirection: "row",
