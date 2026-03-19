@@ -3,7 +3,7 @@ import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
 import MapLocationPicker from "@/components/ui/MapLocationPicker";
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Spacing, ZONES } from "@/constants/theme";
+import { Colors, FEATURE_FLAGS, Spacing, ZONES } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { useFadeSlideIn, useRequestRentalScreen } from "@/hooks";
@@ -72,44 +72,78 @@ export default function RentalRequestModal({
         setLatitude(nextLatitude);
         setLongitude(nextLongitude);
 
-        const address = await Location.reverseGeocodeAsync({
-            latitude: nextLatitude,
-            longitude: nextLongitude,
-        });
+        try {
+            console.log(`[Location] Reverse geocoding for: ${nextLatitude}, ${nextLongitude}`);
+            const address = await Location.reverseGeocodeAsync({
+                latitude: nextLatitude,
+                longitude: nextLongitude,
+            });
 
-        if (address && address.length > 0) {
-            const addr = address[0];
-            const fullAddress = [
-                addr.name,
-                addr.street,
-                addr.district,
-                addr.city,
-                addr.region,
-                addr.postalCode,
-            ]
-                .filter(Boolean)
-                .join(", ");
-            setFormattedAddress(fullAddress);
+            if (address && address.length > 0) {
+                const addr = address[0];
+                console.log("[Location] Reverse geocode success:", addr);
+                const fullAddress = [
+                    addr.name,
+                    addr.street,
+                    addr.district,
+                    addr.city,
+                    addr.region,
+                    addr.postalCode,
+                ]
+                    .filter(Boolean)
+                    .join(", ");
+                setFormattedAddress(fullAddress);
+            } else {
+                console.warn("[Location] No address results found.");
+            }
+        } catch (error) {
+            console.error("[Location] Reverse geocode error:", error);
+            throw error;
         }
     };
 
     const handleGetLocation = async () => {
         setIsLocating(true);
         try {
+            console.log("[Location] Checking if services are enabled...");
+            const enabled = await Location.hasServicesEnabledAsync();
+            if (!enabled) {
+                console.warn("[Location] Location services are disabled on device.");
+                showToast("Please enable location services in your device settings.", "error");
+                return;
+            }
+
+            console.log("[Location] Requesting permissions...");
             let { status } = await Location.requestForegroundPermissionsAsync();
             if (status !== "granted") {
+                console.warn("[Location] Permission denied.");
                 showToast("Permission to access location was denied", "error");
                 return;
             }
 
-            let location = await Location.getCurrentPositionAsync({});
-            await updateAddressFromCoords(
-                location.coords.latitude,
-                location.coords.longitude
-            );
-            showToast("Location updated!", "success");
-        } catch {
-            showToast("Failed to fetch location. Please try manually.", "error");
+            console.log("[Location] Attempting to get last known position...");
+            let location = await Location.getLastKnownPositionAsync({});
+
+            if (!location) {
+                console.log("[Location] No last known position. Fetching current position (this may take a moment)...");
+                location = await Location.getCurrentPositionAsync({
+                    accuracy: Location.Accuracy.Balanced,
+                });
+            }
+
+            if (location) {
+                console.log("[Location] Position received:", location.coords);
+                await updateAddressFromCoords(
+                    location.coords.latitude,
+                    location.coords.longitude
+                );
+                showToast("Location updated!", "success");
+            } else {
+                throw new Error("Could not determine location.");
+            }
+        } catch (error) {
+            console.error("[Location] handleGetLocation error:", error);
+            showToast("Failed to fetch location. Please ensure GPS is on and try again.", "error");
         } finally {
             setIsLocating(false);
         }
@@ -261,7 +295,7 @@ export default function RentalRequestModal({
                                         <Text style={styles.coordsText}>
                                             Lat: {latitude?.toFixed(4)}, Lng: {longitude?.toFixed(4)}
                                         </Text>
-                                        {latitude !== undefined && longitude !== undefined ? (
+                                        {FEATURE_FLAGS.enableMapAdjustment && latitude !== undefined && longitude !== undefined ? (
                                             <TouchableOpacity
                                                 style={styles.adjustLocationButton}
                                                 onPress={() => setIsMapPickerVisible(true)}
@@ -311,48 +345,47 @@ export default function RentalRequestModal({
     };
 
     return (
-        <>
-            <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
-                <SafeAreaView style={styles.container}>
-                    <View style={styles.header}>
-                        <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-                            <Ionicons name="close" size={24} color={Colors.text} />
-                        </TouchableOpacity>
-                        <View style={styles.headerText}>
-                            <Text style={styles.title}>Request Rental</Text>
-                            {book ? (
-                                <Text style={styles.bookInfo} numberOfLines={1}>
-                                    {book.title}
-                                </Text>
-                            ) : null}
-                        </View>
+        <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
+            <SafeAreaView style={styles.container}>
+                <View style={styles.header}>
+                    <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+                        <Ionicons name="close" size={24} color={Colors.text} />
+                    </TouchableOpacity>
+                    <View style={styles.headerText}>
+                        <Text style={styles.title}>Request Rental</Text>
+                        {book ? (
+                            <Text style={styles.bookInfo} numberOfLines={1}>
+                                {book.title}
+                            </Text>
+                        ) : null}
                     </View>
+                </View>
 
-                    {renderContent()}
-                </SafeAreaView>
-            </Modal>
+                {renderContent()}
 
-            {latitude !== undefined && longitude !== undefined ? (
-                <MapLocationPicker
-                    visible={isMapPickerVisible}
-                    latitude={latitude}
-                    longitude={longitude}
-                    title="Adjust Delivery Location"
-                    subtitle="Drag the pin or tap the map, then confirm the exact delivery point."
-                    onClose={() => setIsMapPickerVisible(false)}
-                    onConfirm={async (coords) => {
-                        try {
-                            await updateAddressFromCoords(coords.latitude, coords.longitude);
-                            showToast("Location adjusted successfully!", "success");
-                        } catch {
-                            showToast("Failed to update the selected location.", "error");
-                        } finally {
-                            setIsMapPickerVisible(false);
-                        }
-                    }}
-                />
-            ) : null}
-        </>
+                {/* Sub-modal for map location adjustment */}
+                {FEATURE_FLAGS.enableMapAdjustment && isMapPickerVisible && latitude !== undefined && longitude !== undefined ? (
+                    <MapLocationPicker
+                        visible={isMapPickerVisible}
+                        latitude={latitude}
+                        longitude={longitude}
+                        title="Adjust Delivery Location"
+                        subtitle="Drag the pin or tap the map, then confirm the exact delivery point."
+                        onClose={() => setIsMapPickerVisible(false)}
+                        onConfirm={async (coords) => {
+                            try {
+                                await updateAddressFromCoords(coords.latitude, coords.longitude);
+                                showToast("Location adjusted successfully!", "success");
+                            } catch {
+                                showToast("Failed to update the selected location.", "error");
+                            } finally {
+                                setIsMapPickerVisible(false);
+                            }
+                        }}
+                    />
+                ) : null}
+            </SafeAreaView>
+        </Modal>
     );
 }
 

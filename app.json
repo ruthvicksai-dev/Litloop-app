@@ -9,7 +9,11 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ruthvicksai.litloop",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Litloop needs your location to provide accurate book delivery to your doorstep."
+      }
     },
     "android": {
       "googleServicesFile": "./google-services.json",
@@ -21,7 +25,17 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.ruthvicksai.litloop"
+      "package": "com.ruthvicksai.litloop",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "FOREGROUND_SERVICE"
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDecgwCCo27qJ5jZaXR5SywcZ0rsTZm5QQ"
+        }
+      }
     },
     "web": {
       "output": "static",
@@ -39,7 +53,8 @@
       ],
       "expo-notifications",
       "@react-native-community/datetimepicker",
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-location"
     ],
     "experiments": {
       "typedRoutes": true,

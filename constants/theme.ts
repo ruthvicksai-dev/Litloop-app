@@ -96,3 +96,7 @@ export const STATUS_COLORS: Record<string, string> = {
   paid: "#22C55E",
   returned: "#6B7280",
 };
+
+export const FEATURE_FLAGS = {
+  enableMapAdjustment: false,
+};

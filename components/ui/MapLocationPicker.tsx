@@ -36,15 +36,22 @@ export default function MapLocationPicker({
     onClose,
     onConfirm,
 }: MapLocationPickerProps) {
-    const [markerCoords, setMarkerCoords] = useState({ latitude, longitude });
+    const isValidCoords = (lat: number, lng: number) => {
+        return typeof lat === "number" && typeof lng === "number" && !isNaN(lat) && !isNaN(lng);
+    };
+
+    const [markerCoords, setMarkerCoords] = useState({
+        latitude: isValidCoords(latitude, longitude) ? latitude : 0,
+        longitude: isValidCoords(latitude, longitude) ? longitude : 0
+    });
     const [region, setRegion] = useState<Region>({
-        latitude,
-        longitude,
+        latitude: isValidCoords(latitude, longitude) ? latitude : 0,
+        longitude: isValidCoords(latitude, longitude) ? longitude : 0,
         ...DELTA,
     });
 
     useEffect(() => {
-        if (!visible) {
+        if (!visible || !isValidCoords(latitude, longitude)) {
             return;
         }
 
