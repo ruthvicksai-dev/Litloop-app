@@ -1,3 +1,4 @@
+import { GuestView } from "@/components/profile/GuestProfileView";
 import BookLoader from "@/components/ui/BookLoader";
 import RentalCard from "@/components/ui/RentalCard";
 import { Fonts, FontSizes } from "@/constants/fonts";
@@ -20,10 +21,48 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function MyRentalsScreen() {
-    const { userId } = useAuth();
+    const { user, userId, isLoading } = useAuth();
     const rentals = useQuery(api.rentals.getUserRentals, userId ? { userId } : "skip");
     const router = useRouter();
     const { fadeAnim, slideAnim } = useFadeSlideIn();
+
+    if (isLoading) {
+        return (
+            <View style={styles.center}>
+                <BookLoader label="Loading rentals..." />
+            </View>
+        );
+    }
+
+    if (!user) {
+        return (
+            <GuestView
+                title="Sign in to see rentals"
+                subtitle="Manage your active book rentals, track deliveries, and more by signing in!"
+                headerTitle="My Rentals"
+                icon="book-outline"
+            />
+        );
+    }
+
+    if (user.role === "admin") {
+        return (
+            <SafeAreaView style={styles.container}>
+                <View style={styles.center}>
+                    <Text style={styles.emptyTitle}>Admin Access</Text>
+                    <Text style={[styles.subtitle, { textAlign: "center", paddingHorizontal: 40 }]}>
+                        User rentals are managed through the Admin Dashboard.
+                    </Text>
+                    <TouchableOpacity
+                        style={[styles.browseBtn, { marginTop: 20 }]}
+                        onPress={() => router.replace("/(admin)/dashboard")}
+                    >
+                        <Text style={styles.browseLink}>Go to Dashboard</Text>
+                    </TouchableOpacity>
+                </View>
+            </SafeAreaView>
+        );
+    }
 
     if (rentals === undefined) {
         return (

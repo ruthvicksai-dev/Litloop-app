@@ -9,12 +9,12 @@ import { useToast } from "@/context/ToastContext";
 import { useFadeSlideIn, useRequestRentalScreen } from "@/hooks";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import {
     ActivityIndicator,
     Animated,
     KeyboardAvoidingView,
+    Modal,
     Platform,
     ScrollView,
     StyleSheet,
@@ -23,12 +23,19 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { GuestView } from "../profile/GuestProfileView";
 
-import { GuestView } from "@/components/profile/GuestProfileView";
+interface RentalRequestModalProps {
+    visible: boolean;
+    onClose: () => void;
+    bookId: string;
+}
 
-export default function RequestRentalScreen() {
-    const { bookId } = useLocalSearchParams<{ bookId: string }>();
-    const router = useRouter();
+export default function RentalRequestModal({
+    visible,
+    onClose,
+    bookId,
+}: RentalRequestModalProps) {
     const { user, isLoading: isAuthLoading } = useAuth();
     const { fadeAnim, slideAnim } = useFadeSlideIn();
     const {
@@ -58,8 +65,8 @@ export default function RequestRentalScreen() {
     } = useRequestRentalScreen(bookId);
 
     const { showToast } = useToast();
-    const [isLocating, setIsLocating] = React.useState(false);
-    const [isMapPickerVisible, setIsMapPickerVisible] = React.useState(false);
+    const [isLocating, setIsLocating] = useState(false);
+    const [isMapPickerVisible, setIsMapPickerVisible] = useState(false);
 
     const updateAddressFromCoords = async (nextLatitude: number, nextLongitude: number) => {
         setLatitude(nextLatitude);
@@ -79,7 +86,9 @@ export default function RequestRentalScreen() {
                 addr.city,
                 addr.region,
                 addr.postalCode,
-            ].filter(Boolean).join(", ");
+            ]
+                .filter(Boolean)
+                .join(", ");
             setFormattedAddress(fullAddress);
         }
     };
@@ -106,35 +115,43 @@ export default function RequestRentalScreen() {
         }
     };
 
-    if (isAuthLoading) {
-        return (
-            <View style={styles.center}>
-                <BookLoader label="Authenticating..." />
-            </View>
-        );
-    }
+    const onFormSubmit = async () => {
+        await handleRequest();
+        // Hook internal handles navigation on success, but we should also close modal 
+        // if we want to stay on the same screen (not the case for Litloop's current flow)
+        // However, if we stay on current screen, we should call onClose().
+    };
 
-    if (!user) {
-        return (
-            <GuestView
-                title="Sign in to rent books"
-                subtitle="You need an active account to request a book rental. Sign in now to continue!"
-                headerTitle="Rent Book"
-                icon="book-outline"
-                showBackButton={true}
-            />
-        );
-    }
-    if (book === undefined) {
-        return (
-            <View style={styles.center}>
-                <BookLoader label="Loading details..." />
-            </View>
-        );
-    }
+    const renderContent = () => {
+        if (isAuthLoading) {
+            return (
+                <View style={styles.center}>
+                    <BookLoader label="Authenticating..." />
+                </View>
+            );
+        }
 
-    return (
-        <SafeAreaView style={styles.container}>
+        if (!user) {
+            return (
+                <GuestView
+                    title="Sign in to rent books"
+                    subtitle="You need an active account to request a book rental. Sign in now to continue!"
+                    headerTitle="Rent Book"
+                    icon="book-outline"
+                    showBackButton={true}
+                />
+            );
+        }
+
+        if (book === undefined) {
+            return (
+                <View style={styles.center}>
+                    <BookLoader label="Loading details..." />
+                </View>
+            );
+        }
+
+        return (
             <KeyboardAvoidingView
                 style={styles.flex}
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -151,25 +168,6 @@ export default function RequestRentalScreen() {
                             transform: [{ translateY: slideAnim }],
                         }}
                     >
-                        <View style={styles.header}>
-                            <TouchableOpacity
-                                onPress={() => router.back()}
-                                style={styles.backBtn}
-                                accessibilityRole="button"
-                                accessibilityLabel="Go back"
-                            >
-                                <Ionicons name="arrow-back" size={24} color={Colors.primary} />
-                            </TouchableOpacity>
-                            <View style={styles.headerText}>
-                                <Text style={styles.title}>Request Rental</Text>
-                                {book ? (
-                                    <Text style={styles.bookInfo}>
-                                        {book.title}  {"\u20B9"}{book.rentPerDay}/day
-                                    </Text>
-                                ) : null}
-                            </View>
-                        </View>
-
                         <Text style={styles.sectionTitle}>Delivery Zone</Text>
                         <View style={styles.zoneGrid}>
                             {ZONES.map((item) => (
@@ -302,34 +300,57 @@ export default function RequestRentalScreen() {
 
                         <Button
                             title="Submit Request"
-                            onPress={handleRequest}
+                            onPress={onFormSubmit}
                             loading={loading}
                             style={{ marginTop: Spacing.md }}
                         />
                     </Animated.View>
                 </ScrollView>
             </KeyboardAvoidingView>
-            {latitude !== undefined && longitude !== undefined ? (
-                <MapLocationPicker
-                    visible={isMapPickerVisible}
-                    latitude={latitude}
-                    longitude={longitude}
-                    title="Adjust Delivery Location"
-                    subtitle="Drag the pin or tap the map, then confirm the exact delivery point."
-                    onClose={() => setIsMapPickerVisible(false)}
-                    onConfirm={async (coords) => {
-                        try {
-                            await updateAddressFromCoords(coords.latitude, coords.longitude);
-                            showToast("Location adjusted successfully!", "success");
-                        } catch {
-                            showToast("Failed to update the selected location.", "error");
-                        } finally {
-                            setIsMapPickerVisible(false);
-                        }
-                    }}
-                />
-            ) : null}
-        </SafeAreaView>
+        );
+    };
+
+    return (
+        <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
+            <SafeAreaView style={styles.container}>
+                <View style={styles.header}>
+                    <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+                        <Ionicons name="close" size={24} color={Colors.text} />
+                    </TouchableOpacity>
+                    <View style={styles.headerText}>
+                        <Text style={styles.title}>Request Rental</Text>
+                        {book ? (
+                            <Text style={styles.bookInfo} numberOfLines={1}>
+                                {book.title}
+                            </Text>
+                        ) : null}
+                    </View>
+                </View>
+
+                {renderContent()}
+
+                {latitude !== undefined && longitude !== undefined ? (
+                    <MapLocationPicker
+                        visible={isMapPickerVisible}
+                        latitude={latitude}
+                        longitude={longitude}
+                        title="Adjust Delivery Location"
+                        subtitle="Drag the pin or tap the map, then confirm the exact delivery point."
+                        onClose={() => setIsMapPickerVisible(false)}
+                        onConfirm={async (coords) => {
+                            try {
+                                await updateAddressFromCoords(coords.latitude, coords.longitude);
+                                showToast("Location adjusted successfully!", "success");
+                            } catch {
+                                showToast("Failed to update the selected location.", "error");
+                            } finally {
+                                setIsMapPickerVisible(false);
+                            }
+                        }}
+                    />
+                ) : null}
+            </SafeAreaView>
+        </Modal>
     );
 }
 
@@ -351,10 +372,12 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         gap: Spacing.md,
-        marginBottom: Spacing.lg,
+        paddingHorizontal: 20,
+        paddingVertical: Spacing.md,
+        borderBottomWidth: 1,
+        borderBottomColor: Colors.border + "40",
     },
-    backBtn: {
-        alignSelf: "flex-start",
+    closeBtn: {
         padding: 4,
         marginLeft: -4,
     },
@@ -448,12 +471,12 @@ const styles = StyleSheet.create({
         marginVertical: Spacing.xl,
     },
     title: {
-        fontSize: FontSizes.heading,
+        fontSize: FontSizes.title,
         color: Colors.text,
         fontFamily: Fonts.bold,
     },
     bookInfo: {
-        fontSize: FontSizes.body,
+        fontSize: FontSizes.caption,
         color: Colors.textSecondary,
         marginTop: 2,
         fontFamily: Fonts.regular,

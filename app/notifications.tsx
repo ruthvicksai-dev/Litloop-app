@@ -1,5 +1,7 @@
+import { GuestView } from "@/components/profile/GuestProfileView";
 import { NotificationItem } from "@/components/notifications/NotificationItem";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
@@ -10,6 +12,7 @@ import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
+    ActivityIndicator,
     FlatList,
     StyleSheet,
     Text,
@@ -25,7 +28,7 @@ const TYPE_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
 };
 
 export default function NotificationsScreen() {
-    const { userId, user } = useAuth();
+    const { userId, user, isLoading } = useAuth();
     const isAdmin = user?.role === "admin";
     const router = useRouter();
 
@@ -61,6 +64,30 @@ export default function NotificationsScreen() {
             markAllReadMutation({ userId });
         }
     };
+
+    if (isLoading) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <View style={styles.header}>
+                    <Skeleton width={180} height={32} />
+                </View>
+                <View style={styles.emptyContainer}>
+                    <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 40 }} />
+                </View>
+            </SafeAreaView>
+        );
+    }
+
+    if (!user) {
+        return (
+            <GuestView
+                title="Sign in for notifications"
+                subtitle="Get alerts for book availability, delivery updates, and more!"
+                headerTitle="Notifications"
+                icon="notifications-outline"
+            />
+        );
+    }
 
     return (
         <SafeAreaView style={styles.container}>

@@ -1,4 +1,5 @@
 import { RentalHistoryCard } from "@/components/history/RentalHistoryCard";
+import { GuestView } from "@/components/profile/GuestProfileView";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { RentalHistorySkeleton } from "@/components/ui/RentalHistorySkeleton";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -10,6 +11,7 @@ import { useFadeSlideIn, useRentalFilters } from "@/hooks";
 import { triggerHaptic } from "@/utils/haptics";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";
+import { router } from "expo-router";
 import React, { useState } from "react";
 import {
     Animated,
@@ -23,7 +25,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function RentalHistoryScreen() {
-    const { userId } = useAuth();
+    const { user, userId, isLoading } = useAuth();
     const [refreshing, setRefreshing] = useState(false);
     const {
         statusFilter,
@@ -58,6 +60,54 @@ export default function RentalHistoryScreen() {
             setTimeframeFilter(value as any);
         }
     };
+
+    if (isLoading) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <View style={styles.header}>
+                    <Skeleton width={180} height={32} style={{ marginBottom: 8 }} />
+                    <Skeleton width={150} height={16} />
+                </View>
+                <View style={styles.list}>
+                    <RentalHistorySkeleton />
+                    <RentalHistorySkeleton />
+                    <RentalHistorySkeleton />
+                </View>
+            </SafeAreaView>
+        );
+    }
+
+    if (!user) {
+        return (
+            <GuestView
+                title="Sign in for history"
+                subtitle="View your past rentals and returned books by signing in to your account!"
+                headerTitle="Rental History"
+                icon="time-outline"
+            />
+        );
+    }
+
+    if (user.role === "admin") {
+        return (
+            <SafeAreaView style={styles.container}>
+                <View style={styles.center}>
+                    <Text style={styles.title}>Admin Access</Text>
+                    <Text style={[styles.subtitle, { textAlign: "center", paddingHorizontal: 40, marginTop: 8 }]}>
+                        Rental history is managed through the Admin Dashboard.
+                    </Text>
+                    <TouchableOpacity
+                        style={{ marginTop: 24 }}
+                        onPress={() => router.replace("/(admin)/dashboard")}
+                    >
+                        <Text style={{ color: Colors.primary, fontFamily: Fonts.bold, fontSize: FontSizes.subtitle }}>
+                            Go to Dashboard
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+            </SafeAreaView>
+        );
+    }
 
     if (history === undefined) {
         return (

@@ -66,23 +66,39 @@ export default function HomeScreen() {
         <View style={styles.headerTop}>
           <View>
             <Text style={styles.greeting} allowFontScaling={false}>
-              Hello, {user?.name?.split(" ")[0] || "Reader"}
+              {user ? (user.role === "admin" ? "Hello, Admin" : `Hello, ${user.name.split(" ")[0]}`) : "Hello, Reader"}
             </Text>
             <Text style={styles.pageTitle} allowFontScaling={false}>
               Discover Books
             </Text>
           </View>
-          <TouchableOpacity
-            style={styles.notifBtn}
-            activeOpacity={0.7}
-            onPress={() => {
-              triggerHaptic("light");
-              router.push("/notifications" as any);
-            }}
-          >
-            <Ionicons name={unreadCount > 0 ? "notifications" : "notifications-outline"} size={24} color={Colors.primary} />
-            {unreadCount > 0 && <View style={styles.notifBadge} />}
-          </TouchableOpacity>
+
+          {user ? (
+            user.role !== "admin" ? (
+              <TouchableOpacity
+                style={styles.notifBtn}
+                activeOpacity={0.7}
+                onPress={() => {
+                  triggerHaptic("light");
+                  router.push("/notifications" as any);
+                }}
+              >
+                <Ionicons name={unreadCount > 0 ? "notifications" : "notifications-outline"} size={24} color={Colors.primary} />
+                {unreadCount > 0 && <View style={styles.notifBadge} />}
+              </TouchableOpacity>
+            ) : null
+          ) : (
+            <TouchableOpacity
+              style={styles.loginBtn}
+              activeOpacity={0.7}
+              onPress={() => {
+                triggerHaptic("light");
+                router.push("/(auth)/sign-in");
+              }}
+            >
+              <Ionicons name="log-in-outline" size={26} color={Colors.primary} />
+            </TouchableOpacity>
+          )}
         </View>
       </Animated.View>
 
@@ -155,6 +171,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+  },
+  loginBtn: {
+    width: Layout.touchSize,
+    height: Layout.touchSize,
+    alignItems: "center",
+    justifyContent: "center",
   },
   notifBtn: {
     width: Layout.touchSize,

@@ -1,6 +1,8 @@
 import BookImageCarousel from "@/components/books/BookImageCarousel";
+import RentalRequestModal from "@/components/books/RentalRequestModal";
 import BookLoader from "@/components/ui/BookLoader";
 import Button from "@/components/ui/Button";
+import ConfirmActionModal from "@/components/ui/ConfirmActionModal";
 import DiscoverBookCard from "@/components/ui/DiscoverBookCard";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing } from "@/constants/theme";
@@ -31,6 +33,8 @@ export default function BookDetailsScreen() {
     const { showToast } = useToast();
     const subscribeToBook = useMutation(api.notifications.subscribeToBook);
     const [isSubscribing, setIsSubscribing] = useState(false);
+    const [isRentalModalVisible, setIsRentalModalVisible] = useState(false);
+    const [showSignInPrompt, setShowSignInPrompt] = useState(false);
 
     const {
         book,
@@ -68,6 +72,15 @@ export default function BookDetailsScreen() {
         } finally {
             setIsSubscribing(false);
         }
+    };
+
+    const handleRentNowPress = () => {
+        if (!userId) {
+            setShowSignInPrompt(true);
+            return;
+        }
+
+        setIsRentalModalVisible(true);
     };
 
     if (book === undefined) {
@@ -235,7 +248,7 @@ export default function BookDetailsScreen() {
                         {book.availableCopies > 0 ? (
                             <Button
                                 title="Rent Now"
-                                onPress={() => router.push(`/rental/request?bookId=${book._id}`)}
+                                onPress={handleRentNowPress}
                                 style={styles.primaryCta}
                             />
                         ) : (
@@ -296,6 +309,25 @@ export default function BookDetailsScreen() {
                     ) : null}
                 </Animated.View>
             </ScrollView>
+
+            <RentalRequestModal
+                visible={isRentalModalVisible}
+                onClose={() => setIsRentalModalVisible(false)}
+                bookId={id}
+            />
+
+            <ConfirmActionModal
+                visible={showSignInPrompt}
+                title="Sign In Required"
+                message="To rent this book, you need to log in to your account."
+                confirmLabel="Sign In"
+                cancelLabel="Cancel"
+                onCancel={() => setShowSignInPrompt(false)}
+                onConfirm={() => {
+                    setShowSignInPrompt(false);
+                    router.push("/(auth)/sign-in");
+                }}
+            />
         </SafeAreaView>
     );
 }

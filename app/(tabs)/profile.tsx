@@ -1,4 +1,5 @@
 import { ProfileUserCard } from "@/components/profile/ProfileUserCard";
+import { GuestView } from "@/components/profile/GuestProfileView";
 import { BookCardSkeleton } from "@/components/ui/BookCardSkeleton";
 import ConfirmActionModal from "@/components/ui/ConfirmActionModal";
 import DiscoverSectionRow from "@/components/ui/DiscoverSectionRow";
@@ -35,8 +36,9 @@ const TAB_OPTIONS: SegmentOption[] = [
     { label: "Read Later", value: "readLater", icon: "bookmark-outline", activeIcon: "bookmark" },
 ];
 
+
 export default function ProfileScreen() {
-    const { user, signOut, isAdmin, accessToken } = useAuth();
+    const { user, signOut, isAdmin, accessToken, isLoading } = useAuth();
     const { showToast } = useToast();
     const router = useRouter();
     const { fadeAnim, slideAnim, scaleAnim } = useFadeSlideScaleIn();
@@ -92,7 +94,7 @@ export default function ProfileScreen() {
         handleTabChange(value as any);
     };
 
-    if (favoriteBooks === undefined || readLaterBooks === undefined) {
+    if (isLoading) {
         return (
             <SafeAreaView style={styles.container}>
                 <View style={styles.header}>
@@ -109,6 +111,84 @@ export default function ProfileScreen() {
                         <BookCardSkeleton />
                     </View>
                 </View>
+            </SafeAreaView>
+        );
+    }
+
+    if (!user) {
+        return (
+            <GuestView
+                title="Login to access your profile"
+                subtitle="Join Litloop to manage your rentals, save your favorite books, and more!"
+                headerTitle="Profile"
+                icon="person-circle-outline"
+            />
+        );
+    }
+
+    if (isAdmin) {
+        // Redirect or inline render? The user wants Admin Dashboard
+        // Inline render is safer to avoid navigation loops if back button is pressed
+        return (
+            <SafeAreaView style={styles.container}>
+                <ScrollView contentContainerStyle={styles.content}>
+                    <View style={styles.header}>
+                        <Text style={styles.pageTitle} allowFontScaling={false}>
+                            Admin Panel
+                        </Text>
+                        <TouchableOpacity
+                            style={styles.settingsBtn}
+                            onPress={() => {
+                                triggerHaptic("medium");
+                                setShowLogoutConfirm(true);
+                            }}
+                        >
+                            <Ionicons name="log-out-outline" size={24} color={Colors.text} />
+                        </TouchableOpacity>
+                    </View>
+
+                    <ProfileUserCard
+                        user={user}
+                        isAdmin={true}
+                        favoriteCount={0}
+                        readLaterCount={0}
+                        onEditProfile={() => router.push("/profile/edit")}
+                        fadeAnim={fadeAnim}
+                        slideAnim={slideAnim}
+                        scaleAnim={scaleAnim}
+                    />
+
+                    <View style={{ paddingHorizontal: 20, marginTop: 10 }}>
+                        <TouchableOpacity
+                            style={styles.adminLink}
+                            onPress={() => {
+                                triggerHaptic("medium");
+                                router.replace("/(admin)/dashboard");
+                            }}
+                        >
+                            <View style={[StyleSheet.absoluteFillObject, { backgroundColor: Colors.primary, borderRadius: 16 }]} />
+                            <Ionicons name="apps-outline" size={20} color={Colors.white} style={{ marginRight: 8 }} />
+                            <Text style={styles.adminLinkText} allowFontScaling={false}>
+                                Open Admin Dashboard
+                            </Text>
+                            <Ionicons name="arrow-forward" size={18} color={Colors.white} style={{ marginLeft: "auto" }} />
+                        </TouchableOpacity>
+                    </View>
+                </ScrollView>
+
+                <ConfirmActionModal
+                    visible={showLogoutConfirm}
+                    title="Sign Out"
+                    message="Are you sure you want to securely log out of the admin account?"
+                    confirmLabel="Log Out"
+                    cancelLabel="Cancel"
+                    tone="danger"
+                    onCancel={() => setShowLogoutConfirm(false)}
+                    onConfirm={async () => {
+                        setShowLogoutConfirm(false);
+                        await handleSignOut();
+                    }}
+                />
             </SafeAreaView>
         );
     }

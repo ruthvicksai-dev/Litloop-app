@@ -15,7 +15,7 @@ export function useRootRedirect() {
             return;
         }
 
-        router.replace("/(auth)/sign-in");
+        router.replace("/(tabs)");
     }, [isLoading, isRefreshing, router, user]);
 }
 
@@ -27,11 +27,10 @@ export function useTabsRouteGuard() {
         // Never redirect while auth is loading or a silent token refresh is in progress
         if (isLoading || isRefreshing) return;
 
-        if (!user) {
-            router.replace("/(auth)/sign-in");
-        } else if (user.role === "admin") {
+        if (user && user.role === "admin") {
             router.replace("/(admin)/dashboard");
         }
+        // No redirect for guests (!user); they can stay in the tabs
     }, [isLoading, isRefreshing, router, user]);
 }
 

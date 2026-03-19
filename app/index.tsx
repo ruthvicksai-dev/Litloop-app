@@ -1,8 +1,8 @@
+import AppSplash from "@/components/ui/AppSplash";
+import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
 import { useRouter } from "expo-router";
 import { useEffect } from "react";
-import { useAuth } from "@/context/AuthContext";
-import AppSplash from "@/components/ui/AppSplash";
-import { useToast } from "@/context/ToastContext";
 
 export default function Index() {
     const { user, isLoading, consumePendingAuthToast } = useAuth();
@@ -19,7 +19,7 @@ export default function Index() {
             }
             router.replace(user.role === "admin" ? "/(admin)/dashboard" : "/(tabs)");
         } else {
-            router.replace("/(auth)/sign-in");
+            router.replace("/(tabs)");
         }
     }, [user, isLoading, consumePendingAuthToast, router, showToast]);
 
