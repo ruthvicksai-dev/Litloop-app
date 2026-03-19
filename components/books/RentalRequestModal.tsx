@@ -311,46 +311,48 @@ export default function RentalRequestModal({
     };
 
     return (
-        <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
-            <SafeAreaView style={styles.container}>
-                <View style={styles.header}>
-                    <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-                        <Ionicons name="close" size={24} color={Colors.text} />
-                    </TouchableOpacity>
-                    <View style={styles.headerText}>
-                        <Text style={styles.title}>Request Rental</Text>
-                        {book ? (
-                            <Text style={styles.bookInfo} numberOfLines={1}>
-                                {book.title}
-                            </Text>
-                        ) : null}
+        <>
+            <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
+                <SafeAreaView style={styles.container}>
+                    <View style={styles.header}>
+                        <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+                            <Ionicons name="close" size={24} color={Colors.text} />
+                        </TouchableOpacity>
+                        <View style={styles.headerText}>
+                            <Text style={styles.title}>Request Rental</Text>
+                            {book ? (
+                                <Text style={styles.bookInfo} numberOfLines={1}>
+                                    {book.title}
+                                </Text>
+                            ) : null}
+                        </View>
                     </View>
-                </View>
 
-                {renderContent()}
+                    {renderContent()}
+                </SafeAreaView>
+            </Modal>
 
-                {latitude !== undefined && longitude !== undefined ? (
-                    <MapLocationPicker
-                        visible={isMapPickerVisible}
-                        latitude={latitude}
-                        longitude={longitude}
-                        title="Adjust Delivery Location"
-                        subtitle="Drag the pin or tap the map, then confirm the exact delivery point."
-                        onClose={() => setIsMapPickerVisible(false)}
-                        onConfirm={async (coords) => {
-                            try {
-                                await updateAddressFromCoords(coords.latitude, coords.longitude);
-                                showToast("Location adjusted successfully!", "success");
-                            } catch {
-                                showToast("Failed to update the selected location.", "error");
-                            } finally {
-                                setIsMapPickerVisible(false);
-                            }
-                        }}
-                    />
-                ) : null}
-            </SafeAreaView>
-        </Modal>
+            {latitude !== undefined && longitude !== undefined ? (
+                <MapLocationPicker
+                    visible={isMapPickerVisible}
+                    latitude={latitude}
+                    longitude={longitude}
+                    title="Adjust Delivery Location"
+                    subtitle="Drag the pin or tap the map, then confirm the exact delivery point."
+                    onClose={() => setIsMapPickerVisible(false)}
+                    onConfirm={async (coords) => {
+                        try {
+                            await updateAddressFromCoords(coords.latitude, coords.longitude);
+                            showToast("Location adjusted successfully!", "success");
+                        } catch {
+                            showToast("Failed to update the selected location.", "error");
+                        } finally {
+                            setIsMapPickerVisible(false);
+                        }
+                    }}
+                />
+            ) : null}
+        </>
     );
 }
 
