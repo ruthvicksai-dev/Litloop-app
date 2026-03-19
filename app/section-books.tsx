@@ -1,5 +1,6 @@
 import BookCard from "@/components/search/BookCard";
 import BookLoader from "@/components/ui/BookLoader";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { api } from "@/convex/_generated/api";
@@ -106,15 +107,10 @@ export default function SectionBooksScreen() {
                     <BookLoader label="Loading books..." />
                 </View>
             ) : books.length === 0 ? (
-                <View style={styles.empty}>
-                    <Ionicons
-                        name="book-outline"
-                        size={60}
-                        color={Colors.textLight}
-                        style={{ marginBottom: Spacing.md }}
-                    />
-                    <Text style={styles.emptyText}>No books in this section yet</Text>
-                </View>
+                <EmptyState
+                    icon="book-outline"
+                    title="No books in this section yet"
+                />
             ) : (
                 <FlatList
                     data={books}
@@ -178,18 +174,6 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
-    },
-    empty: {
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-        paddingHorizontal: 24,
-    },
-    emptyText: {
-        fontSize: FontSizes.subtitle,
-        color: Colors.textSecondary,
-        fontFamily: Fonts.regular,
-        textAlign: "center",
     },
     list: {
         paddingHorizontal: 16,

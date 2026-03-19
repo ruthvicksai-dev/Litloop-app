@@ -1,5 +1,7 @@
+import { NotificationItem } from "@/components/notifications/NotificationItem";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Layout, scale, Spacing } from "@/constants/theme";
+import { Colors, Layout, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -21,18 +23,6 @@ const TYPE_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
     book: "book-outline",
     general: "notifications-outline",
 };
-
-function timeAgo(ts: number): string {
-    const diff = Date.now() - ts;
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return "Just now";
-    if (mins < 60) return `${mins}m ago`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h ago`;
-    const days = Math.floor(hrs / 24);
-    if (days < 7) return `${days}d ago`;
-    return new Date(ts).toLocaleDateString();
-}
 
 export default function NotificationsScreen() {
     const { userId, user } = useAuth();
@@ -56,10 +46,8 @@ export default function NotificationsScreen() {
             const data = JSON.parse(item.dataJson);
             if (data.type === "rental") {
                 if (isAdmin && data.rentalId) {
-                    // Admin → full rental detail screen
                     router.push(`/(admin)/rental/${data.rentalId}` as any);
                 } else {
-                    // User → My Rentals tab (no standalone user rental detail)
                     router.push("/(tabs)/my-rentals" as any);
                 }
             } else if (data.type === "book" && data.bookId) {
@@ -98,44 +86,20 @@ export default function NotificationsScreen() {
                 }
                 ListEmptyComponent={
                     notifications === undefined ? null : (
-                        <View style={styles.empty}>
-                            <Ionicons name="notifications-outline" size={46} color={Colors.textLight} />
-                            <Text style={styles.emptyTitle}>No notifications yet</Text>
-                            <Text style={styles.emptySubtitle}>
-                                Delivery, pickup, and availability alerts will appear here.
-                            </Text>
-                        </View>
+                        <EmptyState
+                            icon="notifications-outline"
+                            title="No notifications yet"
+                            subtitle="Delivery, pickup, and availability alerts will appear here."
+                        />
                     )
                 }
-                renderItem={({ item }) => {
-                    const icon = TYPE_ICON[item.type] ?? "notifications-outline";
-                    return (
-                        <TouchableOpacity
-                            style={[styles.item, !item.isRead && styles.itemUnread]}
-                            onPress={() => handlePress(item)}
-                            activeOpacity={0.75}
-                        >
-                            <View style={[styles.iconWrap, !item.isRead && styles.iconWrapUnread]}>
-                                <Ionicons
-                                    name={icon}
-                                    size={20}
-                                    color={item.isRead ? Colors.textSecondary : Colors.primary}
-                                />
-                            </View>
-                            <View style={styles.textWrap}>
-                                <View style={styles.titleRow}>
-                                    <Text style={[styles.itemTitle, !item.isRead && styles.itemTitleUnread]}
-                                        numberOfLines={1}>
-                                        {item.title}
-                                    </Text>
-                                    {!item.isRead && <View style={styles.dot} />}
-                                </View>
-                                <Text style={styles.itemBody} numberOfLines={2}>{item.body}</Text>
-                                <Text style={styles.itemTime}>{timeAgo(item.createdAt)}</Text>
-                            </View>
-                        </TouchableOpacity>
-                    );
-                }}
+                renderItem={({ item }) => (
+                    <NotificationItem
+                        item={item}
+                        onPress={handlePress}
+                        icon={TYPE_ICON[item.type] ?? "notifications-outline"}
+                    />
+                )}
                 ItemSeparatorComponent={() => <View style={styles.separator} />}
             />
         </SafeAreaView>
@@ -182,86 +146,6 @@ const styles = StyleSheet.create({
     },
     emptyContainer: {
         flex: 1,
-    },
-    empty: {
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-        paddingHorizontal: scale(28),
-        marginTop: scale(80),
-    },
-    emptyTitle: {
-        marginTop: Spacing.sm,
-        fontSize: FontSizes.subtitle,
-        color: Colors.text,
-        fontFamily: Fonts.bold,
-    },
-    emptySubtitle: {
-        marginTop: Spacing.xs,
-        textAlign: "center",
-        fontSize: FontSizes.body,
-        color: Colors.textSecondary,
-        fontFamily: Fonts.regular,
-    },
-    item: {
-        flexDirection: "row",
-        alignItems: "flex-start",
-        paddingHorizontal: Layout.screenPaddingWide,
-        paddingVertical: Spacing.md,
-        backgroundColor: Colors.background,
-    },
-    itemUnread: {
-        backgroundColor: Colors.primaryLight + "55",
-    },
-    iconWrap: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: Colors.border + "60",
-        alignItems: "center",
-        justifyContent: "center",
-        marginRight: Spacing.md,
-        marginTop: 2,
-    },
-    iconWrapUnread: {
-        backgroundColor: Colors.primaryLight,
-    },
-    textWrap: {
-        flex: 1,
-    },
-    titleRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: Spacing.xs,
-    },
-    itemTitle: {
-        flex: 1,
-        fontSize: FontSizes.body,
-        color: Colors.textSecondary,
-        fontFamily: Fonts.medium,
-    },
-    itemTitleUnread: {
-        color: Colors.text,
-        fontFamily: Fonts.bold,
-    },
-    dot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        backgroundColor: Colors.primary,
-    },
-    itemBody: {
-        marginTop: 2,
-        fontSize: FontSizes.caption,
-        color: Colors.textSecondary,
-        fontFamily: Fonts.regular,
-        lineHeight: 18,
-    },
-    itemTime: {
-        marginTop: 4,
-        fontSize: FontSizes.small,
-        color: Colors.textLight,
-        fontFamily: Fonts.regular,
     },
     separator: {
         height: StyleSheet.hairlineWidth,

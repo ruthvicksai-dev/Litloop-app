@@ -1,21 +1,22 @@
+import { ProfileUserCard } from "@/components/profile/ProfileUserCard";
 import BookLoader from "@/components/ui/BookLoader";
 import ConfirmActionModal from "@/components/ui/ConfirmActionModal";
 import DiscoverSectionRow from "@/components/ui/DiscoverSectionRow";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { SegmentedControl, SegmentOption } from "@/components/ui/SegmentedControl";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
-import { useFadeSlideScaleIn } from "@/hooks";
+import { useFadeSlideScaleIn, useProfileTabs } from "@/hooks";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";
-import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import {
     Animated,
     Dimensions,
-    Pressable,
     ScrollView,
     StyleSheet,
     Text,
@@ -26,6 +27,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const { height } = Dimensions.get("window");
 
+const TAB_OPTIONS: SegmentOption[] = [
+    { label: "Favorites", value: "favorites", icon: "heart-outline", activeIcon: "heart" },
+    { label: "Read Later", value: "readLater", icon: "bookmark-outline", activeIcon: "bookmark" },
+];
+
 export default function ProfileScreen() {
     const { user, signOut, isAdmin, accessToken } = useAuth();
     const { showToast } = useToast();
@@ -33,54 +39,17 @@ export default function ProfileScreen() {
     const { fadeAnim, slideAnim, scaleAnim } = useFadeSlideScaleIn();
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
-    // Tab State: "favorites" | "readLater"
-    const [activeTab, setActiveTab] = useState<"favorites" | "readLater">("favorites");
-
-    // Animations for tabs
-    const slideAnimDist = useRef(new Animated.Value(0)).current;
-    const listOpacity = useRef(new Animated.Value(1)).current;
+    const {
+        activeTab,
+        handleTabChange,
+        slideAnimDist,
+        listOpacity,
+    } = useProfileTabs();
 
     const handleSignOut = async () => {
         await signOut();
         showToast("Signed out successfully.", "info");
         router.replace("/(auth)/sign-in");
-    };
-
-    const handleTabChange = (tab: "favorites" | "readLater") => {
-        if (tab === activeTab) return;
-
-        // Slide out
-        Animated.parallel([
-            Animated.timing(listOpacity, {
-                toValue: 0,
-                duration: 150,
-                useNativeDriver: true,
-            }),
-            Animated.timing(slideAnimDist, {
-                toValue: tab === "favorites" ? -20 : 20,
-                duration: 150,
-                useNativeDriver: true,
-            }),
-        ]).start(() => {
-            setActiveTab(tab);
-
-            // Prepare for slide in from opposite side
-            slideAnimDist.setValue(tab === "favorites" ? 20 : -20);
-
-            // Slide in
-            Animated.parallel([
-                Animated.timing(listOpacity, {
-                    toValue: 1,
-                    duration: 200,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(slideAnimDist, {
-                    toValue: 0,
-                    duration: 200,
-                    useNativeDriver: true,
-                }),
-            ]).start();
-        });
     };
 
     const favoriteBooks =
@@ -141,85 +110,16 @@ export default function ProfileScreen() {
                         </Animated.View>
 
                         {/* Premium User Card */}
-                        <Animated.View
-                            style={[
-                                styles.userCard,
-                                {
-                                    opacity: fadeAnim,
-                                    transform: [{ translateY: slideAnim }],
-                                },
-                            ]}
-                        >
-                            <LinearGradient
-                                colors={["#FFFFFF", "rgba(255,255,255,0.8)"]}
-                                style={StyleSheet.absoluteFillObject}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 1 }}
-                            />
-
-                            <View style={styles.userCardContent}>
-                                <Animated.View
-                                    style={[
-                                        styles.avatarContainer,
-                                        { transform: [{ scale: scaleAnim }] },
-                                    ]}
-                                >
-                                    <View style={styles.avatar}>
-                                        <Text style={styles.avatarText} allowFontScaling={false}>
-                                            {user?.name?.charAt(0).toUpperCase() || "U"}
-                                        </Text>
-                                    </View>
-                                    {isAdmin && (
-                                        <View style={styles.adminBadgeIcon}>
-                                            <Ionicons name="shield-checkmark" size={14} color={Colors.white} />
-                                        </View>
-                                    )}
-                                </Animated.View>
-
-                                <View style={styles.userInfo}>
-                                    <Text style={styles.name} allowFontScaling={false}>
-                                        {user?.name}
-                                    </Text>
-                                    <Text style={styles.email} allowFontScaling={false}>
-                                        {user?.email}
-                                    </Text>
-                                    <Text style={styles.phone} allowFontScaling={false}>
-                                        {user?.phone}
-                                    </Text>
-                                </View>
-                            </View>
-
-                            {/* Quick Stats */}
-                            <View style={styles.statsRow}>
-                                <View style={styles.statBox}>
-                                    <Text style={styles.statNumber} allowFontScaling={false}>
-                                        {favoriteCount ?? 0}
-                                    </Text>
-                                    <Text style={styles.statLabel} allowFontScaling={false}>
-                                        Favorites
-                                    </Text>
-                                </View>
-                                <View style={styles.statDivider} />
-                                <View style={styles.statBox}>
-                                    <Text style={styles.statNumber} allowFontScaling={false}>
-                                        {readLaterCount ?? 0}
-                                    </Text>
-                                    <Text style={styles.statLabel} allowFontScaling={false}>
-                                        Read Later
-                                    </Text>
-                                </View>
-                                <View style={styles.statDivider} />
-                                <TouchableOpacity
-                                    style={styles.editProfileBtn}
-                                    onPress={() => router.push("/profile/edit")}
-                                >
-                                    <Ionicons name="pencil" size={18} color={Colors.primary} />
-                                    <Text style={styles.editProfileText} allowFontScaling={false}>
-                                        Edit
-                                    </Text>
-                                </TouchableOpacity>
-                            </View>
-                        </Animated.View>
+                        <ProfileUserCard
+                            user={user}
+                            isAdmin={isAdmin ?? false}
+                            favoriteCount={favoriteCount ?? 0}
+                            readLaterCount={readLaterCount ?? 0}
+                            onEditProfile={() => router.push("/profile/edit")}
+                            fadeAnim={fadeAnim}
+                            slideAnim={slideAnim}
+                            scaleAnim={scaleAnim}
+                        />
 
                         {isAdmin && (
                             <Animated.View style={{ opacity: fadeAnim, paddingHorizontal: 20 }}>
@@ -227,12 +127,7 @@ export default function ProfileScreen() {
                                     style={styles.adminLink}
                                     onPress={() => router.replace("/(admin)/dashboard")}
                                 >
-                                    <LinearGradient
-                                        colors={[Colors.primary, Colors.primaryDark]}
-                                        start={{ x: 0, y: 0 }}
-                                        end={{ x: 1, y: 0 }}
-                                        style={StyleSheet.absoluteFillObject}
-                                    />
+                                    <View style={[StyleSheet.absoluteFillObject, { backgroundColor: Colors.primary, borderRadius: 16 }]} />
                                     <Ionicons name="settings-outline" size={20} color={Colors.white} style={{ marginRight: 8 }} />
                                     <Text style={styles.adminLinkText} allowFontScaling={false}>
                                         Admin Dashboard
@@ -243,42 +138,12 @@ export default function ProfileScreen() {
                         )}
 
                         {/* Segmented Control Tabs */}
-                        <Animated.View style={[styles.tabsContainer, { opacity: fadeAnim }]}>
-                            <View style={styles.tabsWrapper}>
-                                <Pressable
-                                    style={[styles.tab, activeTab === "favorites" && styles.activeTab]}
-                                    onPress={() => handleTabChange("favorites")}
-                                >
-                                    <Ionicons
-                                        name={activeTab === "favorites" ? "heart" : "heart-outline"}
-                                        size={18}
-                                        color={activeTab === "favorites" ? Colors.white : Colors.textSecondary}
-                                    />
-                                    <Text
-                                        style={[styles.tabText, activeTab === "favorites" && styles.activeTabText]}
-                                        allowFontScaling={false}
-                                    >
-                                        Favorites
-                                    </Text>
-                                </Pressable>
-                                <Pressable
-                                    style={[styles.tab, activeTab === "readLater" && styles.activeTab]}
-                                    onPress={() => handleTabChange("readLater")}
-                                >
-                                    <Ionicons
-                                        name={activeTab === "readLater" ? "bookmark" : "bookmark-outline"}
-                                        size={18}
-                                        color={activeTab === "readLater" ? Colors.white : Colors.textSecondary}
-                                    />
-                                    <Text
-                                        style={[styles.tabText, activeTab === "readLater" && styles.activeTabText]}
-                                        allowFontScaling={false}
-                                    >
-                                        Read Later
-                                    </Text>
-                                </Pressable>
-                            </View>
-                        </Animated.View>
+                        <SegmentedControl
+                            options={TAB_OPTIONS}
+                            activeValue={activeTab}
+                            onChange={handleTabChange}
+                            fadeAnim={fadeAnim}
+                        />
 
                         {/* List Section */}
                         <Animated.View
@@ -290,27 +155,21 @@ export default function ProfileScreen() {
                                 }
                             ]}
                         >
-                            {activeBooks!.length > 0 ? (
+                            {activeBooks && activeBooks.length > 0 ? (
                                 <DiscoverSectionRow
                                     title={activeTab === "favorites" ? "Loved Books" : "Saved For Later"}
                                     subtitle={activeTab === "favorites" ? "Books you have liked" : "Your reading list"}
-                                    books={activeBooks!}
+                                    books={activeBooks}
                                 />
                             ) : (
-                                <View style={styles.emptyCard}>
-                                    <Ionicons
-                                        name={activeTab === "favorites" ? "heart-outline" : "bookmark-outline"}
-                                        size={48}
-                                        color={Colors.border}
-                                    />
-                                    <Text style={styles.emptyText} allowFontScaling={false}>
-                                        {activeTab === "favorites" ? "No favorites yet" : "Read list is empty"}
-                                    </Text>
-                                    <Text style={styles.emptySubtext} allowFontScaling={false}>
-                                        {activeTab === "favorites"
+                                <View style={styles.emptyWrapper}>
+                                    <EmptyState
+                                        icon={activeTab === "favorites" ? "heart-outline" : "bookmark-outline"}
+                                        title={activeTab === "favorites" ? "No favorites yet" : "Read list is empty"}
+                                        subtitle={activeTab === "favorites"
                                             ? "Books you like will appear here."
                                             : "Save books to read them later."}
-                                    </Text>
+                                    />
                                 </View>
                             )}
                         </Animated.View>
@@ -375,112 +234,6 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
         elevation: 2,
     },
-    userCard: {
-        marginHorizontal: 20,
-        borderRadius: 24,
-        overflow: "hidden",
-        marginBottom: Spacing.lg,
-        borderWidth: 1,
-        borderColor: "rgba(0,0,0,0.05)",
-    },
-    userCardContent: {
-        flexDirection: "row",
-        alignItems: "center",
-        padding: Spacing.lg,
-    },
-    avatarContainer: {
-        position: "relative",
-    },
-    avatar: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-        backgroundColor: Colors.primary,
-        justifyContent: "center",
-        alignItems: "center",
-        borderWidth: 3,
-        borderColor: Colors.white,
-    },
-    avatarText: {
-        fontSize: FontSizes.display,
-        fontFamily: Fonts.bold,
-        color: Colors.white,
-    },
-    adminBadgeIcon: {
-        position: "absolute",
-        bottom: 0,
-        right: 0,
-        backgroundColor: Colors.success,
-        width: 26,
-        height: 26,
-        borderRadius: 13,
-        justifyContent: "center",
-        alignItems: "center",
-        borderWidth: 2,
-        borderColor: Colors.white,
-    },
-    userInfo: {
-        flex: 1,
-        marginLeft: Spacing.md,
-    },
-    name: {
-        fontSize: FontSizes.title,
-        fontFamily: Fonts.bold,
-        color: Colors.text,
-        marginBottom: 2,
-    },
-    email: {
-        fontSize: FontSizes.small,
-        color: Colors.textSecondary,
-        fontFamily: Fonts.medium,
-        marginBottom: 2,
-    },
-    phone: {
-        fontSize: FontSizes.small,
-        color: Colors.textLight,
-        fontFamily: Fonts.regular,
-    },
-    statsRow: {
-        flexDirection: "row",
-        borderTopWidth: 1,
-        borderColor: "rgba(0,0,0,0.05)",
-        backgroundColor: "rgba(255,255,255,0.4)",
-    },
-    statBox: {
-        flex: 1,
-        paddingVertical: Spacing.md,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    statDivider: {
-        width: 1,
-        backgroundColor: "rgba(0,0,0,0.05)",
-        marginVertical: Spacing.sm,
-    },
-    statNumber: {
-        fontSize: FontSizes.heading,
-        fontFamily: Fonts.bold,
-        color: Colors.primaryDark,
-    },
-    statLabel: {
-        fontSize: FontSizes.caption,
-        fontFamily: Fonts.medium,
-        color: Colors.textSecondary,
-        marginTop: 2,
-    },
-    editProfileBtn: {
-        flex: 1,
-        paddingVertical: Spacing.md,
-        alignItems: "center",
-        justifyContent: "center",
-        flexDirection: "row",
-        gap: 6,
-    },
-    editProfileText: {
-        fontSize: FontSizes.body,
-        fontFamily: Fonts.bold,
-        color: Colors.primary,
-    },
     adminLink: {
         borderRadius: 16,
         paddingVertical: 16,
@@ -500,71 +253,18 @@ const styles = StyleSheet.create({
         fontFamily: Fonts.bold,
         fontSize: FontSizes.bodyLarge,
     },
-    tabsContainer: {
-        backgroundColor: Colors.background,
-        paddingHorizontal: 20,
-        paddingBottom: Spacing.xs,
-        zIndex: 10,
-    },
-    tabsWrapper: {
-        flexDirection: "row",
-        backgroundColor: "rgba(0,0,0,0.04)",
-        borderRadius: 16,
-        padding: 4,
-    },
-    tab: {
-        flex: 1,
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        paddingVertical: 10,
-        borderRadius: 12,
-        gap: 6,
-    },
-    activeTab: {
-        backgroundColor: Colors.primary,
-        shadowColor: Colors.primary,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-        elevation: 2,
-    },
-    tabText: {
-        fontFamily: Fonts.bold,
-        fontSize: FontSizes.body,
-        color: Colors.textSecondary,
-    },
-    activeTabText: {
-        color: Colors.white,
-    },
     listSection: {
         paddingTop: Spacing.md,
         minHeight: height * 0.5,
         backgroundColor: "transparent",
     },
-    emptyCard: {
+    emptyWrapper: {
         marginHorizontal: 20,
         marginTop: Spacing.xl,
         backgroundColor: Colors.white,
         borderRadius: 20,
-        padding: 40,
-        alignItems: "center",
-        justifyContent: "center",
         borderWidth: 1,
-        borderColor: Colors.border + "40", // Subtle border instead of shadow
-    },
-    emptyText: {
-        fontSize: FontSizes.subtitle,
-        fontFamily: Fonts.bold,
-        color: Colors.text,
-        marginTop: Spacing.md,
-        marginBottom: 4,
-    },
-    emptySubtext: {
-        fontSize: FontSizes.small,
-        fontFamily: Fonts.regular,
-        color: Colors.textLight,
-        textAlign: "center",
+        borderColor: Colors.border + "40",
     },
     center: {
         flex: 1,

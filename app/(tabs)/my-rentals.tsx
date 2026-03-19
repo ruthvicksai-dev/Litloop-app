@@ -1,11 +1,11 @@
 import BookLoader from "@/components/ui/BookLoader";
+import { EmptyState } from "@/components/ui/EmptyState";
 import RentalCard from "@/components/ui/RentalCard";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";
 import { useFadeSlideIn } from "@/hooks";
-import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import React from "react";
@@ -91,10 +91,12 @@ export default function MyRentalsScreen() {
                 contentContainerStyle={styles.list}
                 showsVerticalScrollIndicator={false}
                 ListEmptyComponent={
-                    <View style={styles.empty}>
-                        <Ionicons name="clipboard-outline" size={48} color={Colors.textLight} style={{ marginBottom: Spacing.md }} />
-                        <Text style={styles.emptyText}>No active rentals</Text>
-                        <TouchableOpacity onPress={() => router.push("/(tabs)")}>
+                    <View style={styles.emptyWrapper}>
+                        <EmptyState
+                            icon="clipboard-outline"
+                            title="No active rentals"
+                        />
+                        <TouchableOpacity style={styles.browseBtn} onPress={() => router.push("/(tabs)")}>
                             <Text style={styles.browseLink}>Browse Books</Text>
                         </TouchableOpacity>
                     </View>
@@ -136,22 +138,13 @@ const styles = StyleSheet.create({
         paddingHorizontal: Layout.screenPaddingWide,
         paddingBottom: Layout.touchSize * 2,
     },
-    empty: {
+    emptyWrapper: {
         flex: 1,
         alignItems: "center",
         justifyContent: "center",
-        paddingHorizontal: Layout.screenPadding + Spacing.sm,
-        paddingVertical: Spacing.xl + Spacing.xl,
     },
-    emptyIcon: {
-        fontSize: FontSizes.display,
-        marginBottom: Spacing.md,
-    },
-    emptyText: {
-        fontSize: FontSizes.subtitle,
-        color: Colors.textSecondary,
-        marginBottom: Spacing.md,
-        fontFamily: Fonts.regular,
+    browseBtn: {
+        marginTop: -Spacing.md,
     },
     browseLink: {
         fontSize: FontSizes.subtitle,

@@ -19,7 +19,10 @@ export * from "./books/useSearchScreen";
 export * from "./home/useDiscoverSections";
 export * from "./home/useHomeEntrance";
 export * from "./home/useHomeScreen";
+export * from "./profile/useProfileTabs";
 export * from "./rental/usePaymentScreen";
+export * from "./rental/useRentalFilters";
 export * from "./rental/useRequestRentalScreen";
 export * from "./rental/useScheduleReturnScreen";
 export * from "./shared/useDebouncedValue";
+
