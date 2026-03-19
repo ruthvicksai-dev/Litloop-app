@@ -14,6 +14,7 @@ import {
     Image,
     Linking,
     Platform,
+    RefreshControl,
     ScrollView,
     StyleSheet,
     Text,
@@ -30,6 +31,7 @@ export default function AdminRentalDetailScreen() {
     const markReturned = useMutation(api.rentals.markReturned);
 
     const [loading, setLoading] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
     const [actionModal, setActionModal] = useState<{
         visible: boolean;
         title: string;
@@ -41,6 +43,12 @@ export default function AdminRentalDetailScreen() {
         message: "",
         action: async () => { },
     });
+
+    const onRefresh = React.useCallback(() => {
+        setRefreshing(true);
+        triggerHaptic("light");
+        setTimeout(() => setRefreshing(false), 1000);
+    }, []);
 
     if (rental === undefined) {
         return (
@@ -129,7 +137,17 @@ export default function AdminRentalDetailScreen() {
                 </View>
             </View>
 
-            <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+            <ScrollView
+                contentContainerStyle={styles.scroll}
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={[Colors.primary]}
+                    />
+                }
+            >
                 {/* Amazon/Flipkart Style Timeline */}
                 <View style={styles.timelineSection}>
                     <Text style={styles.sectionTitle}>Order Status</Text>

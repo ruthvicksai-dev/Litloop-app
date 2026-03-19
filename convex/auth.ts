@@ -70,6 +70,11 @@ const AUTH_RATE_LIMITS = {
         windowMs: 15 * 60 * 1000,
         message: "Too many password change attempts. Please try again later.",
     },
+    global: {
+        limit: 20,
+        windowMs: 30 * 60 * 1000,
+        message: "Too many authentication requests from this IP. Please try again later.",
+    },
 } as const;
 
 /**
@@ -137,8 +142,15 @@ export const signUp = mutation({
 
         const normalizedEmail = args.email.toLowerCase().trim();
         const normalizedPhone = normalizePhone(args.phone.trim());
-        const signUpEmailKey = buildRateLimitKey("auth", "signUp", "email", normalizedEmail);
-        const signUpPhoneKey = buildRateLimitKey("auth", "signUp", "phone", normalizedPhone);
+
+        // Global IP rate limit
+        if (args.ipAddress) {
+            const globalKey = buildRateLimitKey("auth", "global", args.ipAddress);
+            assertRateLimit(globalKey, AUTH_RATE_LIMITS.global);
+        }
+
+        const signUpEmailKey = buildRateLimitKey("auth", "signUp", "email", normalizedEmail, args.ipAddress);
+        const signUpPhoneKey = buildRateLimitKey("auth", "signUp", "phone", normalizedPhone, args.ipAddress);
 
         assertRateLimit(signUpEmailKey, AUTH_RATE_LIMITS.signUp);
         assertRateLimit(signUpPhoneKey, AUTH_RATE_LIMITS.signUp);
@@ -202,7 +214,14 @@ export const signIn = mutation({
         if (!args.email.trim()) throw new Error("Email is required.");
         if (!args.password) throw new Error("Password is required.");
         const normalizedEmail = args.email.toLowerCase().trim();
-        const signInKey = buildRateLimitKey("auth", "signIn", normalizedEmail);
+
+        // Global IP rate limit
+        if (args.ipAddress) {
+            const globalKey = buildRateLimitKey("auth", "global", args.ipAddress);
+            assertRateLimit(globalKey, AUTH_RATE_LIMITS.global);
+        }
+
+        const signInKey = buildRateLimitKey("auth", "signIn", normalizedEmail, args.ipAddress);
 
         assertRateLimit(signInKey, AUTH_RATE_LIMITS.signIn);
 
@@ -257,7 +276,13 @@ export const googleSignIn = mutation({
         const payload = await verifyGoogleIdToken(args.idToken, clientId);
         const normalizedEmail = payload.email; // Already lowercased and trimmed by verifyGoogleIdToken
 
-        const googleSignInKey = buildRateLimitKey("auth", "googleSignIn", normalizedEmail);
+        // Global IP rate limit
+        if (args.ipAddress) {
+            const globalKey = buildRateLimitKey("auth", "global", args.ipAddress);
+            assertRateLimit(globalKey, AUTH_RATE_LIMITS.global);
+        }
+
+        const googleSignInKey = buildRateLimitKey("auth", "googleSignIn", normalizedEmail, args.ipAddress);
         assertRateLimit(googleSignInKey, AUTH_RATE_LIMITS.googleSignIn);
 
         // 3. Find existing user by email

@@ -11,7 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const FILTERS = [
@@ -29,7 +29,13 @@ const formatCurrency = (value: number) =>
 export default function AdminAnalyticsDashboard() {
     const router = useRouter();
     const [range, setRange] = useState<(typeof FILTERS)[number]["key"]>("30d");
+    const [refreshing, setRefreshing] = useState(false);
     const analytics = useQuery(api.analytics.getDashboardAnalytics, { range });
+
+    const onRefresh = React.useCallback(() => {
+        setRefreshing(true);
+        setTimeout(() => setRefreshing(false), 1000);
+    }, []);
 
     if (!analytics) {
         return (
@@ -41,7 +47,17 @@ export default function AdminAnalyticsDashboard() {
 
     return (
         <SafeAreaView style={styles.container}>
-            <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+            <ScrollView
+                contentContainerStyle={styles.content}
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={[Colors.primary]}
+                    />
+                }
+            >
                 <View style={styles.header}>
                     <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
                         <Ionicons name="arrow-back" size={24} color={Colors.primary} />

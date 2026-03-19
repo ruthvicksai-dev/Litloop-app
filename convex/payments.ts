@@ -14,6 +14,11 @@ const PAYMENT_RATE_LIMITS = {
         windowMs: 15 * 60 * 1000,
         message: "Too many payment selections. Please try again later.",
     },
+    global: {
+        limit: 15,
+        windowMs: 30 * 60 * 1000,
+        message: "Too many payment requests from this IP. Please try again later.",
+    },
 } as const;
 
 async function getBookWithCoverUrls(ctx: any, bookId: any) {
@@ -47,6 +52,8 @@ export const submitUpiPayment = mutation({
         rentalId: v.id("rentals"),
         utrNumber: v.string(),
         paymentScreenshot: v.id("_storage"),
+        ipAddress: v.optional(v.string()),
+        deviceInfo: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
         const rental = await ctx.db.get(args.rentalId);
@@ -54,11 +61,17 @@ export const submitUpiPayment = mutation({
         if (rental.status !== "pickup_scheduled")
             throw new Error("Pickup must be scheduled before payment.");
 
+        // Global IP rate limit
+        if (args.ipAddress) {
+            const globalKey = buildRateLimitKey("payment", "global", args.ipAddress);
+            assertRateLimit(globalKey, PAYMENT_RATE_LIMITS.global);
+        }
+
         const submitPaymentKey = buildRateLimitKey(
             "payment",
             "submitUpi",
             rental.userId,
-            args.rentalId
+            args.ipAddress
         );
         assertRateLimit(submitPaymentKey, PAYMENT_RATE_LIMITS.submitUpiPayment);
 
@@ -75,18 +88,28 @@ export const submitUpiPayment = mutation({
 });
 
 export const selectCashPayment = mutation({
-    args: { rentalId: v.id("rentals") },
+    args: {
+        rentalId: v.id("rentals"),
+        ipAddress: v.optional(v.string()),
+        deviceInfo: v.optional(v.string()),
+    },
     handler: async (ctx, args) => {
         const rental = await ctx.db.get(args.rentalId);
         if (!rental) throw new Error("Rental not found.");
         if (rental.status !== "pickup_scheduled")
             throw new Error("Pickup must be scheduled before payment.");
 
+        // Global IP rate limit
+        if (args.ipAddress) {
+            const globalKey = buildRateLimitKey("payment", "global", args.ipAddress);
+            assertRateLimit(globalKey, PAYMENT_RATE_LIMITS.global);
+        }
+
         const selectCashKey = buildRateLimitKey(
             "payment",
             "selectCash",
             rental.userId,
-            args.rentalId
+            args.ipAddress
         );
         assertRateLimit(selectCashKey, PAYMENT_RATE_LIMITS.selectCashPayment);
 

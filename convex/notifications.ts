@@ -131,13 +131,16 @@ export const subscribeToBook = mutation({
     args: {
         accessToken: v.string(),
         bookId: v.id("books"),
+        ipAddress: v.optional(v.string()),
+        deviceInfo: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
         const userId = await getUserIdFromAccessToken(args.accessToken);
         const subscribeKey = buildRateLimitKey(
             "notification",
             "subscribeToBook",
-            userId
+            userId,
+            args.ipAddress
         );
         assertRateLimit(subscribeKey, NOTIFICATION_RATE_LIMITS.subscribeToBook);
 

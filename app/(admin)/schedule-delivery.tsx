@@ -9,6 +9,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
+    RefreshControl,
     ScrollView,
     StyleSheet,
     Text,
@@ -20,6 +21,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function ScheduleDeliveryScreen() {
     const { rentalId } = useLocalSearchParams<{ rentalId: string }>();
     const router = useRouter();
+    const [refreshing, setRefreshing] = React.useState(false);
     const {
         rental,
         deliveryDate,
@@ -35,6 +37,11 @@ export default function ScheduleDeliveryScreen() {
     const maxDeliveryDate = new Date(today);
     maxDeliveryDate.setDate(today.getDate() + 9);
 
+    const onRefresh = React.useCallback(() => {
+        setRefreshing(true);
+        setTimeout(() => setRefreshing(false), 1000);
+    }, []);
+
     if (!rental) {
         return (
             <View style={styles.center}>
@@ -48,6 +55,13 @@ export default function ScheduleDeliveryScreen() {
             <ScrollView
                 contentContainerStyle={styles.scroll}
                 keyboardShouldPersistTaps="handled"
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={[Colors.primary]}
+                    />
+                }
             >
                 <View style={styles.header}>
                     <TouchableOpacity

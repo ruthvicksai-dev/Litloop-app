@@ -18,6 +18,7 @@ import {
     KeyboardAvoidingView,
     Modal,
     Platform,
+    RefreshControl,
     ScrollView,
     StyleSheet,
     Text,
@@ -52,6 +53,12 @@ export default function SeriesManagementScreen() {
     const [description, setDescription] = useState("");
     const [coverUri, setCoverUri] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
+
+    const onRefresh = React.useCallback(() => {
+        setRefreshing(true);
+        setTimeout(() => setRefreshing(false), 1000);
+    }, []);
 
     const handleOpenModal = (series?: SeriesItem) => {
         if (series) {
@@ -202,6 +209,13 @@ export default function SeriesManagementScreen() {
                     renderItem={renderItem}
                     keyExtractor={(item) => item._id}
                     contentContainerStyle={styles.list}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            colors={[Colors.primary]}
+                        />
+                    }
                     ListEmptyComponent={
                         <View style={styles.empty}>
                             <Ionicons name="layers-outline" size={60} color={Colors.textLight} />

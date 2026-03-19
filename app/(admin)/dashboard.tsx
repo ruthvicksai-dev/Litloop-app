@@ -16,6 +16,7 @@ import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
     Animated,
+    RefreshControl,
     SectionList,
     StyleSheet,
     Text,
@@ -27,6 +28,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function AdminDashboard() {
     const router = useRouter();
     const { accessToken } = useAuth();
+    const [refreshing, setRefreshing] = useState(false);
     const {
         rentals,
         stats,
@@ -45,6 +47,12 @@ export default function AdminDashboard() {
         api.notifications.getUnreadCount,
         accessToken ? { accessToken } : "skip"
     ) ?? 0;
+
+    const onRefresh = React.useCallback(() => {
+        setRefreshing(true);
+        triggerHaptic("light");
+        setTimeout(() => setRefreshing(false), 1000);
+    }, []);
 
     if (rentals === undefined) {
         return (
@@ -151,6 +159,13 @@ export default function AdminDashboard() {
                     />
                 )}
                 contentContainerStyle={styles.list}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={[Colors.primary]}
+                    />
+                }
                 ListEmptyComponent={
                     <View style={styles.empty}>
                         <Ionicons name="clipboard-outline" size={48} color={Colors.textLight} style={{ marginBottom: Spacing.md }} />

@@ -10,6 +10,7 @@ import React from "react";
 import {
     Animated,
     FlatList,
+    RefreshControl,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -19,8 +20,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function AdminBooksScreen() {
     const router = useRouter();
+    const [refreshing, setRefreshing] = React.useState(false);
     const { books, search, setSearch, genreSections } = useAdminBooksScreen();
     const { fadeAnim, slideAnim } = useFadeSlideIn({ slideFrom: 20, duration: 400 });
+
+    const onRefresh = React.useCallback(() => {
+        setRefreshing(true);
+        setTimeout(() => setRefreshing(false), 1000);
+    }, []);
 
     if (books === undefined) {
         return (
@@ -66,6 +73,13 @@ export default function AdminBooksScreen() {
                 data={genreSections}
                 keyExtractor={(item) => item.genre}
                 contentContainerStyle={styles.list}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={[Colors.primary]}
+                    />
+                }
                 renderItem={({ item, index }) => (
                     <Animated.View
                         style={[

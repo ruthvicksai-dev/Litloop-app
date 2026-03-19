@@ -59,9 +59,11 @@ export const requestRental = mutation({
             longitude: v.optional(v.number()),
             formattedAddress: v.optional(v.string()),
         }),
+        ipAddress: v.optional(v.string()),
+        deviceInfo: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
-        const rentalRequestKey = buildRateLimitKey("rental", "request", args.userId);
+        const rentalRequestKey = buildRateLimitKey("rental", "request", args.userId, args.ipAddress);
         assertRateLimit(rentalRequestKey, RENTAL_RATE_LIMITS.requestRental);
 
         const book = await ctx.db.get(args.bookId);

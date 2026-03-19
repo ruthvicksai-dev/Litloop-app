@@ -10,6 +10,7 @@ import React from "react";
 import {
     FlatList,
     Image,
+    RefreshControl,
     ScrollView,
     StyleSheet,
     Text,
@@ -114,9 +115,15 @@ const getBookCoverUri = (value: unknown) => {
 export default function VerifyPaymentScreen() {
     const params = useLocalSearchParams<{ rentalId?: string }>();
     const router = useRouter();
+    const [refreshing, setRefreshing] = React.useState(false);
     const { pendingPayments, singleRental, handleVerify } = useVerifyPaymentScreen(
         params.rentalId
     );
+
+    const onRefresh = React.useCallback(() => {
+        setRefreshing(true);
+        setTimeout(() => setRefreshing(false), 1000);
+    }, []);
 
     if ((params.rentalId && singleRental === undefined) || pendingPayments === undefined) {
         return (
@@ -160,6 +167,13 @@ export default function VerifyPaymentScreen() {
                 <ScrollView
                     contentContainerStyle={styles.singleScroll}
                     showsVerticalScrollIndicator={false}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            colors={[Colors.primary]}
+                        />
+                    }
                 >
                     <View style={styles.screenHeader}>
                         <TouchableOpacity
@@ -288,6 +302,13 @@ export default function VerifyPaymentScreen() {
             <FlatList
                 data={pendingPayments}
                 keyExtractor={(item) => item._id}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={[Colors.primary]}
+                    />
+                }
                 renderItem={({ item }) => {
                     const coverUri = getBookCoverUri(item);
                     const paymentMethod = item.paymentMethod?.toUpperCase() || "N/A";
