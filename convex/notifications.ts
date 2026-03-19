@@ -1,5 +1,13 @@
 import { v } from "convex/values";
-import { internalMutation, mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
+import {
+    internalAction,
+    internalMutation,
+    internalQuery,
+    mutation,
+    query,
+} from "./_generated/server";
+import { getUserIdFromAccessToken } from "./lib/authHelpers";
 import { assertRateLimit, buildRateLimitKey } from "./lib/rateLimit";
 
 const NOTIFICATION_RATE_LIMITS = {
@@ -10,16 +18,17 @@ const NOTIFICATION_RATE_LIMITS = {
     },
 } as const;
 
-/**
- * Sends a push notification via Expo's Push API AND saves it to the in-app feed.
- */
+function isExpoPushToken(token: string) {
+    return token.startsWith("ExponentPushToken") || token.startsWith("ExpoPushToken");
+}
+
 async function sendPush(
     token: string,
     title: string,
     body: string,
     data?: Record<string, string>
 ) {
-    if (!token || !token.startsWith("ExponentPushToken")) {
+    if (!token || !isExpoPushToken(token)) {
         return;
     }
 
@@ -29,10 +38,12 @@ async function sendPush(
         title,
         body,
         data: data ?? {},
+        priority: "high",
+        channelId: "default",
     };
 
     try {
-        await fetch("https://exp.host/--/api/v2/push/send", {
+        const response = await fetch("https://exp.host/--/api/v2/push/send", {
             method: "POST",
             headers: {
                 Accept: "application/json",
@@ -41,145 +52,282 @@ async function sendPush(
             },
             body: JSON.stringify(message),
         });
+
+        const payload = await response.json().catch(() => null);
+
+        if (!response.ok) {
+            console.error("Expo push request failed:", payload ?? response.statusText);
+            return;
+        }
+
+        if (payload?.errors?.length) {
+            console.error("Expo push request errors:", payload.errors);
+        }
+
+        const tickets = Array.isArray(payload?.data)
+            ? payload.data
+            : payload?.data
+                ? [payload.data]
+                : [];
+
+        for (const ticket of tickets) {
+            if (ticket?.status === "error") {
+                console.error("Expo push ticket error:", ticket);
+            }
+        }
     } catch (error) {
         console.error("Failed to send push notification:", error);
     }
 }
 
-// ─── User Push Token ─────────────────────────────────────────────────────────
-
 export const updatePushToken = mutation({
     args: {
-        userId: v.id("users"),
-        pushToken: v.string()
+        accessToken: v.string(),
+        pushToken: v.string(),
     },
     handler: async (ctx, args) => {
-        if (!args.pushToken.startsWith("ExponentPushToken")) {
+        if (!isExpoPushToken(args.pushToken)) {
             return;
         }
-        await ctx.db.patch(args.userId, {
+
+        const userId = await getUserIdFromAccessToken(args.accessToken);
+        const users = await ctx.db.query("users").collect();
+
+        await Promise.all(
+            users
+                .filter((user) => user._id !== userId && user.pushToken === args.pushToken)
+                .map((user) => ctx.db.patch(user._id, { pushToken: undefined }))
+        );
+
+        await ctx.db.patch(userId, {
             pushToken: args.pushToken,
         });
     },
 });
 
-// ─── Book Availability Subscription ──────────────────────────────────────────
+export const clearPushToken = mutation({
+    args: {
+        accessToken: v.string(),
+        pushToken: v.string(),
+    },
+    handler: async (ctx, args) => {
+        if (!isExpoPushToken(args.pushToken)) {
+            return;
+        }
+
+        const userId = await getUserIdFromAccessToken(args.accessToken);
+        const user = await ctx.db.get(userId);
+        if (!user || user.pushToken !== args.pushToken) {
+            return;
+        }
+
+        await ctx.db.patch(userId, {
+            pushToken: undefined,
+        });
+    },
+});
 
 export const subscribeToBook = mutation({
     args: {
-        userId: v.id("users"),
+        accessToken: v.string(),
         bookId: v.id("books"),
     },
     handler: async (ctx, args) => {
+        const userId = await getUserIdFromAccessToken(args.accessToken);
         const subscribeKey = buildRateLimitKey(
             "notification",
             "subscribeToBook",
-            args.userId
+            userId
         );
         assertRateLimit(subscribeKey, NOTIFICATION_RATE_LIMITS.subscribeToBook);
 
         const existing = await ctx.db
             .query("book_notifications")
             .withIndex("by_userId_bookId", (q) =>
-                q.eq("userId", args.userId).eq("bookId", args.bookId)
+                q.eq("userId", userId).eq("bookId", args.bookId)
             )
             .first();
-        if (existing) return;
+
+        if (existing) {
+            return;
+        }
+
         await ctx.db.insert("book_notifications", {
-            userId: args.userId,
+            userId,
             bookId: args.bookId,
             createdAt: Date.now(),
         });
     },
 });
 
-// ─── In-App Notification Feed ─────────────────────────────────────────────────
-
-/** Get all notifications for a user, newest first. */
 export const getNotifications = query({
-    args: { userId: v.id("users") },
+    args: { accessToken: v.string() },
     handler: async (ctx, args) => {
-        const notifications = await ctx.db
+        const userId = await getUserIdFromAccessToken(args.accessToken);
+        return await ctx.db
             .query("user_notifications")
-            .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+            .withIndex("by_userId", (q) => q.eq("userId", userId))
             .order("desc")
             .collect();
-        return notifications;
     },
 });
 
-/** Count of unread notifications — used for badge. */
 export const getUnreadCount = query({
-    args: { userId: v.id("users") },
+    args: { accessToken: v.string() },
     handler: async (ctx, args) => {
+        const userId = await getUserIdFromAccessToken(args.accessToken);
         const unread = await ctx.db
             .query("user_notifications")
             .withIndex("by_userId_isRead", (q) =>
-                q.eq("userId", args.userId).eq("isRead", false)
+                q.eq("userId", userId).eq("isRead", false)
             )
             .collect();
+
         return unread.length;
     },
 });
 
-/** Mark a single notification as read. */
 export const markRead = mutation({
-    args: { notificationId: v.id("user_notifications") },
+    args: {
+        accessToken: v.string(),
+        notificationId: v.id("user_notifications"),
+    },
     handler: async (ctx, args) => {
+        const userId = await getUserIdFromAccessToken(args.accessToken);
+        const notification = await ctx.db.get(args.notificationId);
+        if (!notification || notification.userId !== userId) {
+            throw new Error("Notification not found.");
+        }
+
         await ctx.db.patch(args.notificationId, { isRead: true });
     },
 });
 
-/** Mark all notifications as read for a user. */
 export const markAllRead = mutation({
-    args: { userId: v.id("users") },
+    args: { accessToken: v.string() },
     handler: async (ctx, args) => {
+        const userId = await getUserIdFromAccessToken(args.accessToken);
         const unread = await ctx.db
             .query("user_notifications")
             .withIndex("by_userId_isRead", (q) =>
-                q.eq("userId", args.userId).eq("isRead", false)
+                q.eq("userId", userId).eq("isRead", false)
             )
             .collect();
-        await Promise.all(unread.map((n) => ctx.db.patch(n._id, { isRead: true })));
+
+        await Promise.all(unread.map((notification) => ctx.db.patch(notification._id, { isRead: true })));
     },
 });
 
-// ─── Internal: Save + Push ────────────────────────────────────────────────────
-
-/**
- * Internal helper: saves to in-app feed AND sends push.
- */
-async function saveAndPush(
+async function saveAndPushToRecipient(
     ctx: any,
-    userId: any,
+    recipient: { userId: any; pushToken?: string | null } | null,
     title: string,
     body: string,
     type: string,
     dataJson?: string
 ) {
-    // Save to in-app feed
-    await ctx.db.insert("user_notifications", {
-        userId,
+    if (!recipient) {
+        return;
+    }
+
+    await ctx.runMutation(internal.notifications.saveNotificationRecord, {
+        userId: recipient.userId,
         title,
         body,
         type,
         dataJson,
-        isRead: false,
-        createdAt: Date.now(),
     });
 
-    // Send push notification
-    const user = await ctx.db.get(userId);
-    if (user?.pushToken) {
+    if (recipient.pushToken) {
         const data = dataJson
             ? (JSON.parse(dataJson) as Record<string, string>)
             : undefined;
-        await sendPush(user.pushToken, title, body, data);
+        await sendPush(recipient.pushToken, title, body, data);
     }
 }
 
-/** Notify a specific user (rental status updates). */
-export const notifyUser = internalMutation({
+export const saveNotificationRecord = internalMutation({
+    args: {
+        userId: v.id("users"),
+        title: v.string(),
+        body: v.string(),
+        type: v.string(),
+        dataJson: v.optional(v.string()),
+    },
+    handler: async (ctx, args) => {
+        await ctx.db.insert("user_notifications", {
+            userId: args.userId,
+            title: args.title,
+            body: args.body,
+            type: args.type,
+            dataJson: args.dataJson,
+            isRead: false,
+            createdAt: Date.now(),
+        });
+    },
+});
+
+export const getUserPushRecipient = internalQuery({
+    args: { userId: v.id("users") },
+    handler: async (ctx, args) => {
+        const user = await ctx.db.get(args.userId);
+        if (!user) {
+            return null;
+        }
+
+        return {
+            userId: user._id,
+            pushToken: user.pushToken ?? null,
+        };
+    },
+});
+
+export const getAdminRecipients = internalQuery({
+    args: {},
+    handler: async (ctx) => {
+        const admins = await ctx.db
+            .query("users")
+            .filter((q: any) => q.eq(q.field("role"), "admin"))
+            .collect();
+
+        return admins.map((admin) => ({
+            userId: admin._id,
+            pushToken: admin.pushToken ?? null,
+        }));
+    },
+});
+
+export const getBookSubscriberRecipients = internalQuery({
+    args: { bookId: v.id("books") },
+    handler: async (ctx, args) => {
+        const subscribers = await ctx.db
+            .query("book_notifications")
+            .withIndex("by_bookId", (q) => q.eq("bookId", args.bookId))
+            .collect();
+
+        const recipients = await Promise.all(
+            subscribers.map(async (subscriber) => {
+                const user = await ctx.db.get(subscriber.userId);
+                return {
+                    subscriptionId: subscriber._id,
+                    userId: user?._id ?? null,
+                    pushToken: user?.pushToken ?? null,
+                };
+            })
+        );
+
+        return recipients;
+    },
+});
+
+export const deleteBookSubscription = internalMutation({
+    args: { subscriptionId: v.id("book_notifications") },
+    handler: async (ctx, args) => {
+        await ctx.db.delete(args.subscriptionId);
+    },
+});
+
+export const notifyUser = internalAction({
     args: {
         userId: v.id("users"),
         title: v.string(),
@@ -187,26 +335,25 @@ export const notifyUser = internalMutation({
         dataJson: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
-        await saveAndPush(ctx, args.userId, args.title, args.body, "rental", args.dataJson);
+        const recipient = await ctx.runQuery(internal.notifications.getUserPushRecipient, {
+            userId: args.userId,
+        });
+
+        await saveAndPushToRecipient(ctx, recipient, args.title, args.body, "rental", args.dataJson);
     },
 });
 
-/** Notifies all admin users about a new rental. */
-export const notifyAdminsOfNewRental = internalMutation({
+export const notifyAdminsOfNewRental = internalAction({
     args: { rentalId: v.id("rentals"), bookTitle: v.string(), userName: v.string() },
     handler: async (ctx, args) => {
-        const admins = await ctx.db
-            .query("users")
-            .filter((q: any) => q.eq(q.field("role"), "admin"))
-            .collect();
-
+        const admins = await ctx.runQuery(internal.notifications.getAdminRecipients, {});
         const dataJson = JSON.stringify({ rentalId: args.rentalId, type: "rental" });
 
         for (const admin of admins) {
-            await saveAndPush(
+            await saveAndPushToRecipient(
                 ctx,
-                admin._id,
-                "New Rental Request 📚",
+                admin,
+                "New Rental Request",
                 `${args.userName} has requested "${args.bookTitle}".`,
                 "rental",
                 dataJson
@@ -215,27 +362,26 @@ export const notifyAdminsOfNewRental = internalMutation({
     },
 });
 
-/** Notifies all subscribers that a book is now available. */
-export const notifySubscribersOfAvailability = internalMutation({
+export const notifySubscribersOfAvailability = internalAction({
     args: { bookId: v.id("books"), bookTitle: v.string() },
     handler: async (ctx, args) => {
-        const subscribers = await ctx.db
-            .query("book_notifications")
-            .withIndex("by_bookId", (q) => q.eq("bookId", args.bookId))
-            .collect();
-
+        const subscribers = await ctx.runQuery(internal.notifications.getBookSubscriberRecipients, {
+            bookId: args.bookId,
+        });
         const dataJson = JSON.stringify({ bookId: args.bookId, type: "book" });
 
-        for (const sub of subscribers) {
-            await saveAndPush(
+        for (const subscriber of subscribers) {
+            await saveAndPushToRecipient(
                 ctx,
-                sub.userId,
-                "Book Available! ✨",
+                subscriber.userId ? subscriber : null,
+                "Book Available!",
                 `"${args.bookTitle}" is now back in stock.`,
                 "book",
                 dataJson
             );
-            await ctx.db.delete(sub._id);
+            await ctx.runMutation(internal.notifications.deleteBookSubscription, {
+                subscriptionId: subscriber.subscriptionId,
+            });
         }
     },
 });

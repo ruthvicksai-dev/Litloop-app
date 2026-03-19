@@ -5,13 +5,15 @@ import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 type AdminDashboardHeaderProps = {
-    onAddBook: () => void;
+    onNotificationsPress: () => void;
     onSignOut: () => void;
+    unreadCount?: number;
 };
 
 export default function AdminDashboardHeader({
-    onAddBook,
+    onNotificationsPress,
     onSignOut,
+    unreadCount = 0,
 }: AdminDashboardHeaderProps) {
     return (
         <View style={styles.header}>
@@ -20,8 +22,13 @@ export default function AdminDashboardHeader({
                 <Text style={styles.title}>Dashboard</Text>
             </View>
             <View style={styles.headerActions}>
-                <TouchableOpacity style={styles.iconBtn} onPress={onAddBook}>
-                    <Ionicons name="add" size={20} color={Colors.white} />
+                <TouchableOpacity style={styles.iconBtn} onPress={onNotificationsPress}>
+                    <Ionicons
+                        name={unreadCount > 0 ? "notifications" : "notifications-outline"}
+                        size={20}
+                        color={Colors.primary}
+                    />
+                    {unreadCount > 0 ? <View style={styles.badge} /> : null}
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.logoutBtn} onPress={onSignOut}>
                     <Ionicons name="log-out-outline" size={20} color={Colors.textSecondary} />
@@ -57,17 +64,26 @@ const styles = StyleSheet.create({
         flexShrink: 0,
     },
     iconBtn: {
-        backgroundColor: Colors.primary,
+        backgroundColor: Colors.white,
         width: 40,
         aspectRatio: 1,
         borderRadius: 10,
         justifyContent: "center",
         alignItems: "center",
+        borderWidth: 1.5,
+        borderColor: Colors.border,
+        position: "relative",
     },
-    iconBtnText: {
-        color: Colors.white,
-        fontFamily: Fonts.bold,
-        fontSize: FontSizes.small,
+    badge: {
+        position: "absolute",
+        top: 7,
+        right: 8,
+        width: 9,
+        height: 9,
+        borderRadius: 4.5,
+        backgroundColor: Colors.error,
+        borderWidth: 1.5,
+        borderColor: Colors.white,
     },
     logoutBtn: {
         width: 40,

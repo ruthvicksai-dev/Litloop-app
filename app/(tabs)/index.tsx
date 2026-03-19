@@ -23,14 +23,14 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
-  const { user, userId } = useAuth();
+  const { user, accessToken } = useAuth();
   const router = useRouter();
   const [refreshing, setRefreshing] = React.useState(false);
   const { fadeAnim, slideAnim } = useHomeEntrance();
   const { topPicks, top10Books, trendingBooks, famousBooks, seriesBooks, newlyAddedBooks } = useDiscoverSections();
   const unreadCount = useQuery(
     api.notifications.getUnreadCount,
-    userId ? { userId } : "skip"
+    accessToken ? { accessToken } : "skip"
   ) ?? 0;
 
   const onRefresh = React.useCallback(() => {

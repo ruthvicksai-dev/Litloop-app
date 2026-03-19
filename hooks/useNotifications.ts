@@ -17,12 +17,22 @@ Notifications.setNotificationHandler({
     }),
 });
 
-export function useNotifications(userId: Id<"users"> | null, userRole?: string) {
+export function useNotifications(
+    userId: Id<"users"> | null,
+    accessToken: string | null,
+    userRole?: string
+) {
     const [expoPushToken, setExpoPushToken] = useState<string>("");
     const notificationListener = useRef<Notifications.Subscription | null>(null);
     const responseListener = useRef<Notifications.Subscription | null>(null);
+    const tokenRegistrationRef = useRef<{
+        userId: Id<"users">;
+        accessToken: string;
+        pushToken: string;
+    } | null>(null);
     const router = useRouter();
     const updateTokenMutation = useMutation(api.notifications.updatePushToken);
+    const clearTokenMutation = useMutation(api.notifications.clearPushToken);
 
     const handleNotificationClick = useCallback(
         (data: Record<string, unknown>) => {
@@ -40,18 +50,46 @@ export function useNotifications(userId: Id<"users"> | null, userRole?: string) 
     );
 
     useEffect(() => {
-        if (!userId) return;
+        const previousRegistration = tokenRegistrationRef.current;
+        if (
+            previousRegistration &&
+            (!userId || previousRegistration.userId !== userId)
+        ) {
+            clearTokenMutation({
+                accessToken: previousRegistration.accessToken,
+                pushToken: previousRegistration.pushToken,
+            }).catch(() => {
+                // Ignore cleanup errors during auth transitions
+            });
+            tokenRegistrationRef.current = null;
+            setExpoPushToken("");
+        }
+
+        if (!userId || !accessToken) {
+            return;
+        }
+
+        let isCancelled = false;
 
         registerForPushNotificationsAsync().then((token) => {
-            if (token) {
-                setExpoPushToken(token);
-                updateTokenMutation({ userId, pushToken: token });
+            if (!token || isCancelled) {
+                return;
             }
+
+            setExpoPushToken(token);
+            updateTokenMutation({ accessToken, pushToken: token });
+            tokenRegistrationRef.current = { userId, accessToken, pushToken: token };
         });
 
+        return () => {
+            isCancelled = true;
+        };
+    }, [userId, accessToken, updateTokenMutation, clearTokenMutation]);
+
+    useEffect(() => {
         notificationListener.current = Notifications.addNotificationReceivedListener(
-            (_notification) => {
-                // Foreground notification received — nothing extra needed
+            () => {
+                // Foreground notification received; Expo handles presentation.
             }
         );
 
@@ -66,7 +104,24 @@ export function useNotifications(userId: Id<"users"> | null, userRole?: string) 
             notificationListener.current?.remove();
             responseListener.current?.remove();
         };
-    }, [userId, handleNotificationClick]);
+    }, [handleNotificationClick]);
+
+    useEffect(() => {
+        return () => {
+            const registration = tokenRegistrationRef.current;
+            if (!registration) {
+                return;
+            }
+
+            clearTokenMutation({
+                accessToken: registration.accessToken,
+                pushToken: registration.pushToken,
+            }).catch(() => {
+                // Ignore cleanup errors while unmounting
+            });
+            tokenRegistrationRef.current = null;
+        };
+    }, [clearTokenMutation]);
 
     return { expoPushToken };
 }
@@ -99,14 +154,14 @@ async function registerForPushNotificationsAsync(): Promise<string | undefined> 
             finalStatus = status;
         }
         if (finalStatus !== "granted") {
-            console.log("Failed to get push token — permission denied.");
+            console.log("Failed to get push token: permission denied.");
             return undefined;
         }
 
         try {
             token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
-        } catch (e) {
-            const message = e instanceof Error ? e.message : String(e);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
             if (
                 Platform.OS === "android" &&
                 message.includes("Default FirebaseApp is not initialized")
@@ -117,7 +172,7 @@ async function registerForPushNotificationsAsync(): Promise<string | undefined> 
                 );
                 return undefined;
             }
-            console.error("Error getting push token:", e);
+            console.error("Error getting push token:", error);
         }
     } else {
         console.log("Push notifications require a physical device.");

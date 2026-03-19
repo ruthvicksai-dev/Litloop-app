@@ -28,13 +28,13 @@ const TYPE_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
 };
 
 export default function NotificationsScreen() {
-    const { userId, user, isLoading } = useAuth();
+    const { accessToken, user, isLoading } = useAuth();
     const isAdmin = user?.role === "admin";
     const router = useRouter();
 
     const notifications = useQuery(
         api.notifications.getNotifications,
-        userId ? { userId } : "skip"
+        accessToken ? { accessToken } : "skip"
     );
     const markReadMutation = useMutation(api.notifications.markRead);
     const markAllReadMutation = useMutation(api.notifications.markAllRead);
@@ -43,7 +43,13 @@ export default function NotificationsScreen() {
 
     const handlePress = async (item: any) => {
         if (!item.isRead) {
-            await markReadMutation({ notificationId: item._id as Id<"user_notifications"> });
+            if (!accessToken) {
+                return;
+            }
+            await markReadMutation({
+                accessToken,
+                notificationId: item._id as Id<"user_notifications">,
+            });
         }
         if (item.dataJson) {
             const data = JSON.parse(item.dataJson);
@@ -60,8 +66,8 @@ export default function NotificationsScreen() {
     };
 
     const handleMarkAllRead = () => {
-        if (userId && unreadCount > 0) {
-            markAllReadMutation({ userId });
+        if (accessToken && unreadCount > 0) {
+            markAllReadMutation({ accessToken });
         }
     };
 

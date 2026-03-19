@@ -29,7 +29,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function BookDetailsScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const router = useRouter();
-    const { userId } = useAuth();
+    const { userId, accessToken } = useAuth();
     const { showToast } = useToast();
     const subscribeToBook = useMutation(api.notifications.subscribeToBook);
     const [isSubscribing, setIsSubscribing] = useState(false);
@@ -65,7 +65,10 @@ export default function BookDetailsScreen() {
         if (!book) return;
         setIsSubscribing(true);
         try {
-            await subscribeToBook({ userId, bookId: book._id as Id<"books"> });
+            if (!accessToken) {
+                throw new Error("Missing session.");
+            }
+            await subscribeToBook({ accessToken, bookId: book._id as Id<"books"> });
             showToast("You'll be notified when this book is available! 🔔", "success");
         } catch {
             showToast("Failed to subscribe. Please try again.", "error");

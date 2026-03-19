@@ -6,9 +6,12 @@ import BookLoader from "@/components/ui/BookLoader";
 import ConfirmActionModal from "@/components/ui/ConfirmActionModal";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
+import { useAuth } from "@/context/AuthContext";
+import { api } from "@/convex/_generated/api";
 import { useAdminDashboard, useFadeSlideIn } from "@/hooks";
 import { triggerHaptic } from "@/utils/haptics";
 import { Ionicons } from "@expo/vector-icons";
+import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -23,6 +26,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function AdminDashboard() {
     const router = useRouter();
+    const { accessToken } = useAuth();
     const {
         rentals,
         stats,
@@ -37,6 +41,10 @@ export default function AdminDashboard() {
     } = useAdminDashboard();
     const { fadeAnim, slideAnim } = useFadeSlideIn();
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+    const unreadCount = useQuery(
+        api.notifications.getUnreadCount,
+        accessToken ? { accessToken } : "skip"
+    ) ?? 0;
 
     if (rentals === undefined) {
         return (
@@ -57,9 +65,10 @@ export default function AdminDashboard() {
                         style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}
                     >
                         <AdminDashboardHeader
-                            onAddBook={() => {
-                                triggerHaptic("medium");
-                                router.push("/(admin)/add-book");
+                            unreadCount={unreadCount}
+                            onNotificationsPress={() => {
+                                triggerHaptic("light");
+                                router.push("/notifications" as any);
                             }}
                             onSignOut={() => {
                                 triggerHaptic("medium");
