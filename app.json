@@ -32,15 +32,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-gradient.png",
-          "imageWidth": 1000,
-          "resizeMode": "cover",
-          "enableFullScreenImage_legacy": true,
-          "backgroundColor": "#0F2027",
-          "dark": {
-            "image": "./assets/images/splash-gradient.png",
-            "backgroundColor": "#0F2027"
-          }
+          "backgroundColor": "#0F2027"
         }
       ],
       "expo-notifications",
