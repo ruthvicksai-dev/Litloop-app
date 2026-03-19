@@ -1,5 +1,6 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
+import { triggerHaptic } from "@/utils/haptics";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
@@ -33,7 +34,10 @@ export function SegmentedControl({
                         <Pressable
                             key={option.value}
                             style={[styles.tab, isActive && styles.activeTab]}
-                            onPress={() => onChange(option.value)}
+                            onPress={() => {
+                                triggerHaptic("light");
+                                onChange(option.value);
+                            }}
                         >
                             <Ionicons
                                 name={isActive ? option.activeIcon : option.icon}

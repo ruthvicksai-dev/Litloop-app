@@ -1,6 +1,7 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Layout, Spacing, scale } from "@/constants/theme";
+import { Colors, Layout, scale, Spacing } from "@/constants/theme";
 import { useFavorites, useReadLater } from "@/hooks";
+import { triggerHaptic } from "@/utils/haptics";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -77,6 +78,7 @@ function BookCard({
     });
 
     const handlePressIn = () => {
+        triggerHaptic("light");
         scale.value = withSpring(0.97, { stiffness: 400, damping: 20 });
     };
 
@@ -85,10 +87,12 @@ function BookCard({
     };
 
     const handleToggleFavorite = () => {
+        triggerHaptic("medium");
         toggleFavorite(bookId);
     };
 
     const handleToggleReadLater = () => {
+        triggerHaptic("light");
         toggleReadLater(bookId);
     };
 

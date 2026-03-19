@@ -1,5 +1,6 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, RENTAL_STATUS_LABELS, STATUS_COLORS, scale } from "@/constants/theme";
+import { Colors, RENTAL_STATUS_LABELS, scale, STATUS_COLORS } from "@/constants/theme";
+import { triggerHaptic } from "@/utils/haptics";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
@@ -34,10 +35,13 @@ export default function AdminRentalCard({
         <View style={styles.rentalCard}>
             <TouchableOpacity
                 style={styles.rentalTop}
-                onPress={() => router.push({
-                    pathname: "/(admin)/rental/[id]",
-                    params: { id: item._id }
-                } as any)}
+                onPress={() => {
+                    triggerHaptic("light");
+                    router.push({
+                        pathname: "/(admin)/rental/[id]",
+                        params: { id: item._id }
+                    } as any);
+                }}
                 activeOpacity={0.7}
             >
                 <View style={styles.coverWrap}>
@@ -138,7 +142,13 @@ export default function AdminRentalCard({
                 item.status === "payment_pending") && (
                     <View style={styles.actionRow}>
                         {item.status === "requested" ? (
-                            <TouchableOpacity style={styles.actionBtn} onPress={onScheduleDelivery}>
+                            <TouchableOpacity
+                                style={styles.actionBtn}
+                                onPress={() => {
+                                    triggerHaptic("medium");
+                                    onScheduleDelivery();
+                                }}
+                            >
                                 <Ionicons name="calendar-outline" size={14} color={Colors.white} style={{ marginRight: 4 }} />
                                 <Text style={styles.actionBtnText}>Schedule Delivery</Text>
                             </TouchableOpacity>
@@ -146,7 +156,10 @@ export default function AdminRentalCard({
                         {item.status === "delivery_scheduled" ? (
                             <TouchableOpacity
                                 style={[styles.actionBtn, styles.successBtn]}
-                                onPress={onMarkDelivered}
+                                onPress={() => {
+                                    triggerHaptic("medium");
+                                    onMarkDelivered();
+                                }}
                             >
                                 <Ionicons name="checkmark-done" size={14} color={Colors.white} style={{ marginRight: 4 }} />
                                 <Text style={styles.actionBtnText}>Mark Delivered</Text>
@@ -155,14 +168,23 @@ export default function AdminRentalCard({
                         {item.status === "paid" ? (
                             <TouchableOpacity
                                 style={[styles.actionBtn, styles.successBtn]}
-                                onPress={onMarkReturned}
+                                onPress={() => {
+                                    triggerHaptic("medium");
+                                    onMarkReturned();
+                                }}
                             >
                                 <Ionicons name="archive-outline" size={14} color={Colors.white} style={{ marginRight: 4 }} />
                                 <Text style={styles.actionBtnText}>Mark Returned</Text>
                             </TouchableOpacity>
                         ) : null}
                         {item.status === "payment_pending" ? (
-                            <TouchableOpacity style={styles.actionBtn} onPress={onVerifyPayment}>
+                            <TouchableOpacity
+                                style={styles.actionBtn}
+                                onPress={() => {
+                                    triggerHaptic("medium");
+                                    onVerifyPayment();
+                                }}
+                            >
                                 <Ionicons name="card-outline" size={14} color={Colors.white} style={{ marginRight: 4 }} />
                                 <Text style={styles.actionBtnText}>Verify Payment</Text>
                             </TouchableOpacity>

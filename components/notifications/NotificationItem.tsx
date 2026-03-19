@@ -3,7 +3,8 @@ import { Colors, Spacing } from "@/constants/theme";
 import { timeAgo } from "@/utils/date";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+import { AnimatedPressable } from "../ui/AnimatedPressable";
 
 type NotificationItemProps = {
     item: any;
@@ -13,10 +14,9 @@ type NotificationItemProps = {
 
 export function NotificationItem({ item, onPress, icon }: NotificationItemProps) {
     return (
-        <TouchableOpacity
+        <AnimatedPressable
             style={[styles.item, !item.isRead && styles.itemUnread]}
             onPress={() => onPress(item)}
-            activeOpacity={0.75}
         >
             <View style={[styles.iconWrap, !item.isRead && styles.iconWrapUnread]}>
                 <Ionicons
@@ -36,7 +36,7 @@ export function NotificationItem({ item, onPress, icon }: NotificationItemProps)
                 <Text style={styles.itemBody} numberOfLines={2}>{item.body}</Text>
                 <Text style={styles.itemTime}>{timeAgo(item.createdAt)}</Text>
             </View>
-        </TouchableOpacity>
+        </AnimatedPressable>
     );
 }
 

@@ -17,22 +17,7 @@ interface GoogleSignInButtonProps {
 
 export function GoogleSignInButton({ onSuccess }: GoogleSignInButtonProps) {
     if (!isGoogleSignInEnabled) {
-        return (
-            <View style={styles.container}>
-                <View style={[styles.button, styles.comingSoon]}>
-                    <Ionicons
-                        name="logo-google"
-                        size={20}
-                        color="#9CA3AF"
-                        style={styles.icon}
-                    />
-                    <Text style={styles.comingSoonText}>Continue with Google</Text>
-                    <View style={styles.badge}>
-                        <Text style={styles.badgeText}>Soon</Text>
-                    </View>
-                </View>
-            </View>
-        );
+        return null;
     }
 
     return <EnabledGoogleSignInButton onSuccess={onSuccess} />;
@@ -95,11 +80,6 @@ const styles = StyleSheet.create({
         shadowRadius: 2,
         elevation: 2,
     },
-    comingSoon: {
-        backgroundColor: "#F9FAFB",
-        borderColor: "#E5E7EB",
-        opacity: 0.7,
-    },
     disabled: {
         opacity: 0.6,
     },
@@ -110,25 +90,6 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: "600",
         color: "#374151",
-    },
-    comingSoonText: {
-        fontSize: 16,
-        fontWeight: "600",
-        color: "#9CA3AF",
-        flex: 1,
-    },
-    badge: {
-        backgroundColor: "#FEF3C7",
-        borderRadius: 8,
-        paddingHorizontal: 8,
-        paddingVertical: 2,
-        marginLeft: 8,
-    },
-    badgeText: {
-        fontSize: 11,
-        fontWeight: "700",
-        color: "#D97706",
-        letterSpacing: 0.3,
     },
     errorText: {
         color: Colors.error || "#EF4444",

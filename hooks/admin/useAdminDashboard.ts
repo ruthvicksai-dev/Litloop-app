@@ -3,7 +3,6 @@ import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
-import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { formatMonthLabel, getCurrentMonthKey, getRevenueMetricsForMonth } from "@/utils/adminRevenueAnalytics";
 
@@ -28,7 +27,6 @@ export function useAdminDashboard() {
     const markDelivered = useMutation(api.rentals.markDelivered);
     const markReturned = useMutation(api.rentals.markReturned);
     const { showToast } = useToast();
-    const router = useRouter();
     const { signOut } = useAuth();
     const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>("all");
 
@@ -111,7 +109,6 @@ const stats = useMemo(() => {
 
     const handleSignOut = async () => {
         await signOut();
-        router.replace("/(auth)/sign-in");
     };
 
     return {

@@ -10,8 +10,35 @@ import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState } from "react";
 import { StatusBar } from "react-native";
 
+const shouldSuppressConvexLog = (args: unknown[]) => {
+  const message = args
+    .map((value) => (typeof value === "string" ? value : ""))
+    .join(" ");
+
+  return (
+    message.includes("[CONVEX M(auth:signIn)]") &&
+    (
+      message.includes("Invalid email or password.") ||
+      message.includes("This account uses social login.")
+    )
+  );
+};
+
+const convexLogger = {
+  log: (...args: unknown[]) => console.log(...args),
+  warn: (...args: unknown[]) => console.warn(...args),
+  error: (...args: unknown[]) => {
+    if (shouldSuppressConvexLog(args)) {
+      return;
+    }
+    console.error(...args);
+  },
+  logVerbose: (...args: unknown[]) => console.log(...args),
+};
+
 const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!, {
   unsavedChangesWarning: false,
+  logger: convexLogger,
 });
 
 SplashScreen.preventAutoHideAsync();

@@ -1,17 +1,19 @@
-import BookLoader from "@/components/ui/BookLoader";
 import DiscoverSectionRow from "@/components/ui/DiscoverSectionRow";
+import { HomeSkeleton } from "@/components/ui/HomeSkeleton";
 import SeriesSectionRow from "@/components/ui/SeriesSectionRow";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";
 import { useDiscoverSections, useHomeEntrance } from "@/hooks";
+import { triggerHaptic } from "@/utils/haptics";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
   Animated,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -23,12 +25,20 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function HomeScreen() {
   const { user, userId } = useAuth();
   const router = useRouter();
+  const [refreshing, setRefreshing] = React.useState(false);
   const { fadeAnim, slideAnim } = useHomeEntrance();
   const { topPicks, top10Books, trendingBooks, famousBooks, seriesBooks, newlyAddedBooks } = useDiscoverSections();
   const unreadCount = useQuery(
     api.notifications.getUnreadCount,
     userId ? { userId } : "skip"
   ) ?? 0;
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    triggerHaptic("light");
+    // Simulate refresh
+    setTimeout(() => setRefreshing(false), 1000);
+  }, []);
 
   const isLoading =
     topPicks === undefined &&
@@ -39,11 +49,7 @@ export default function HomeScreen() {
     newlyAddedBooks === undefined;
 
   if (isLoading) {
-    return (
-      <View style={styles.center}>
-        <BookLoader label="Loading books..." />
-      </View>
-    );
+    return <HomeSkeleton />;
   }
 
   return (
@@ -69,7 +75,10 @@ export default function HomeScreen() {
           <TouchableOpacity
             style={styles.notifBtn}
             activeOpacity={0.7}
-            onPress={() => router.push("/notifications" as any)}
+            onPress={() => {
+              triggerHaptic("light");
+              router.push("/notifications" as any);
+            }}
           >
             <Ionicons name={unreadCount > 0 ? "notifications" : "notifications-outline"} size={24} color={Colors.primary} />
             {unreadCount > 0 && <View style={styles.notifBadge} />}
@@ -81,6 +90,9 @@ export default function HomeScreen() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scroll}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />
+        }
       >
         <DiscoverSectionRow
           title="Top Picks For You"

@@ -1,6 +1,7 @@
 import AuthFooter from "@/components/auth/AuthFooter";
 import AuthHeader from "@/components/auth/AuthHeader";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
+import { isGoogleSignInEnabled } from "@/constants/features";
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
 import { Fonts, FontSizes } from "@/constants/fonts";
@@ -86,15 +87,19 @@ export default function SignInScreen() {
                             style={{ marginTop: Spacing.md }}
                         />
 
-                        <View style={styles.divider}>
-                            <View style={styles.dividerLine} />
-                            <Text style={styles.dividerText} allowFontScaling={false}>
-                                OR
-                            </Text>
-                            <View style={styles.dividerLine} />
-                        </View>
+                        {isGoogleSignInEnabled ? (
+                            <>
+                                <View style={styles.divider}>
+                                    <View style={styles.dividerLine} />
+                                    <Text style={styles.dividerText} allowFontScaling={false}>
+                                        OR
+                                    </Text>
+                                    <View style={styles.dividerLine} />
+                                </View>
 
-                        <GoogleSignInButton />
+                                <GoogleSignInButton />
+                            </>
+                        ) : null}
                     </View>
 
                     <AuthFooter

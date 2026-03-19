@@ -1,9 +1,10 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, RENTAL_STATUS_LABELS, STATUS_COLORS, Spacing } from "@/constants/theme";
+import { Colors, RENTAL_STATUS_LABELS, Spacing, STATUS_COLORS } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
-import { Animated, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Animated, Image, StyleSheet, Text, View } from "react-native";
+import { AnimatedPressable } from "../ui/AnimatedPressable";
 import { HistoryDetailTile } from "./HistoryDetailTile";
 
 type RentalItem = {
@@ -114,10 +115,9 @@ export function RentalHistoryCard({
                             <Text style={styles.cardRent} allowFontScaling={false}>
                                 ₹ {item.totalRent ?? 0}
                             </Text>
-                            <TouchableOpacity
+                            <AnimatedPressable
                                 style={styles.detailsButton}
                                 onPress={() => onToggleExpand(item._id)}
-                                activeOpacity={0.85}
                             >
                                 <Text style={styles.detailsButtonText} allowFontScaling={false}>
                                     {isExpanded ? "Hide Details" : "View Details"}
@@ -127,7 +127,7 @@ export function RentalHistoryCard({
                                     size={14}
                                     color={Colors.white}
                                 />
-                            </TouchableOpacity>
+                            </AnimatedPressable>
                         </View>
                     </View>
                 </View>

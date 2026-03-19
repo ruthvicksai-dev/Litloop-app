@@ -1,17 +1,20 @@
 import { RentalHistoryCard } from "@/components/history/RentalHistoryCard";
-import BookLoader from "@/components/ui/BookLoader";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { RentalHistorySkeleton } from "@/components/ui/RentalHistorySkeleton";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";
 import { useFadeSlideIn, useRentalFilters } from "@/hooks";
+import { triggerHaptic } from "@/utils/haptics";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";
 import React, { useState } from "react";
 import {
     Animated,
     FlatList,
+    RefreshControl,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -21,6 +24,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function RentalHistoryScreen() {
     const { userId } = useAuth();
+    const [refreshing, setRefreshing] = useState(false);
     const {
         statusFilter,
         setStatusFilter,
@@ -39,11 +43,35 @@ export default function RentalHistoryScreen() {
     const { fadeAnim, slideAnim } = useFadeSlideIn();
     const [expandedRentalId, setExpandedRentalId] = useState<string | null>(null);
 
+    const onRefresh = React.useCallback(() => {
+        setRefreshing(true);
+        triggerHaptic("light");
+        // Convex queries auto-refresh, so we just simulate a delay for UX
+        setTimeout(() => setRefreshing(false), 800);
+    }, []);
+
+    const handleFilterPress = (type: "status" | "time", value: string) => {
+        triggerHaptic("light");
+        if (type === "status") {
+            setStatusFilter(value as any);
+        } else {
+            setTimeframeFilter(value as any);
+        }
+    };
+
     if (history === undefined) {
         return (
-            <View style={styles.center}>
-                <BookLoader label="Loading history..." />
-            </View>
+            <SafeAreaView style={styles.container}>
+                <View style={styles.header}>
+                    <Skeleton width={180} height={32} style={{ marginBottom: 8 }} />
+                    <Skeleton width={150} height={16} />
+                </View>
+                <View style={styles.list}>
+                    <RentalHistorySkeleton />
+                    <RentalHistorySkeleton />
+                    <RentalHistorySkeleton />
+                </View>
+            </SafeAreaView>
         );
     }
 
@@ -69,7 +97,10 @@ export default function RentalHistoryScreen() {
                     </View>
                     <TouchableOpacity
                         style={styles.filterButton}
-                        onPress={toggleFilters}
+                        onPress={() => {
+                            triggerHaptic("light");
+                            toggleFilters();
+                        }}
                         activeOpacity={0.85}
                     >
                         <Ionicons name="filter-outline" size={18} color={Colors.primary} />
@@ -96,9 +127,7 @@ export default function RentalHistoryScreen() {
                                             styles.filterChipThird,
                                             isActive && styles.filterChipActive,
                                         ]}
-                                        onPress={() =>
-                                            setStatusFilter(option.value as any)
-                                        }
+                                        onPress={() => handleFilterPress("status", option.value)}
                                         activeOpacity={0.85}
                                     >
                                         <Text
@@ -138,9 +167,7 @@ export default function RentalHistoryScreen() {
                                             styles.filterChipHalf,
                                             isActive && styles.filterChipActive,
                                         ]}
-                                        onPress={() =>
-                                            setTimeframeFilter(option.value as any)
-                                        }
+                                        onPress={() => handleFilterPress("time", option.value)}
                                         activeOpacity={0.85}
                                     >
                                         <Text
@@ -166,12 +193,18 @@ export default function RentalHistoryScreen() {
             <FlatList
                 data={history}
                 keyExtractor={(item) => item._id}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />
+                }
                 renderItem={({ item, index }) => (
                     <RentalHistoryCard
                         item={item}
                         index={index}
                         isExpanded={expandedRentalId === item._id}
-                        onToggleExpand={(id) => setExpandedRentalId(prev => prev === id ? null : id)}
+                        onToggleExpand={(id) => {
+                            triggerHaptic("light");
+                            setExpandedRentalId(prev => prev === id ? null : id);
+                        }}
                         fadeAnim={fadeAnim}
                         slideAnim={slideAnim}
                     />

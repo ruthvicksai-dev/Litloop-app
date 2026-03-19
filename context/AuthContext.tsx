@@ -23,6 +23,11 @@ interface User {
     role: "user" | "admin";
 }
 
+type PendingToast = {
+    message: string;
+    type: "success" | "error" | "info";
+};
+
 interface AuthContextType {
     user: User | null;
     userId: Id<"users"> | null;
@@ -39,6 +44,7 @@ interface AuthContextType {
     ) => Promise<void>;
     signInWithGoogle: (idToken: string) => Promise<void>;
     signOut: () => Promise<void>;
+    consumePendingAuthToast: () => PendingToast | null;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -52,6 +58,7 @@ const AuthContext = createContext<AuthContextType>({
     signUp: async () => { },
     signInWithGoogle: async () => { },
     signOut: async () => { },
+    consumePendingAuthToast: () => null,
 });
 
 export function useAuth() {
@@ -69,6 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [accessToken, setAccessToken] = useState<string | null>(null);
     const [tokenLoaded, setTokenLoaded] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [pendingAuthToast, setPendingAuthToast] = useState<PendingToast | null>(null);
     const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const signOutInProgressRef = useRef(false);
 
@@ -259,6 +267,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, result.accessToken);
             await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, result.refreshToken);
             setAccessToken(result.accessToken);
+            setPendingAuthToast({ message: "Welcome back!", type: "success" });
             scheduleRefresh(result.accessToken);
         },
         [signInMutation, scheduleRefresh]
@@ -291,6 +300,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, result.accessToken);
             await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, result.refreshToken);
             setAccessToken(result.accessToken);
+            setPendingAuthToast({ message: "Welcome back!", type: "success" });
             scheduleRefresh(result.accessToken);
         },
         [googleSignInMutation, scheduleRefresh]
@@ -311,6 +321,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, [clearLocalSession, signOutMutation]);
 
+    const consumePendingAuthToast = useCallback(() => {
+        if (!pendingAuthToast) {
+            return null;
+        }
+
+        const toast = pendingAuthToast;
+        setPendingAuthToast(null);
+        return toast;
+    }, [pendingAuthToast]);
+
     return (
         <AuthContext.Provider
             value={{
@@ -324,6 +344,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 signUp,
                 signInWithGoogle,
                 signOut,
+                consumePendingAuthToast,
             }}
         >
             {children}

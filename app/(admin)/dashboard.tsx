@@ -7,6 +7,7 @@ import ConfirmActionModal from "@/components/ui/ConfirmActionModal";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useAdminDashboard, useFadeSlideIn } from "@/hooks";
+import { triggerHaptic } from "@/utils/haptics";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -56,34 +57,52 @@ export default function AdminDashboard() {
                         style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}
                     >
                         <AdminDashboardHeader
-                            onAddBook={() => router.push("/(admin)/add-book")}
-                            onSignOut={() => setShowLogoutConfirm(true)}
+                            onAddBook={() => {
+                                triggerHaptic("medium");
+                                router.push("/(admin)/add-book");
+                            }}
+                            onSignOut={() => {
+                                triggerHaptic("medium");
+                                setShowLogoutConfirm(true);
+                            }}
                         />
 
                         <AdminDashboardStats
                             stats={stats}
                             revenue={revenue}
-                            onPressRevenue={() => router.push("/(admin)/analytics")}
+                            onPressRevenue={() => {
+                                triggerHaptic("light");
+                                router.push("/(admin)/analytics");
+                            }}
                         />
 
                         <View style={styles.quickActions}>
                             <TouchableOpacity
                                 style={styles.quickAction}
-                                onPress={() => router.push("/(admin)/verify-payment")}
+                                onPress={() => {
+                                    triggerHaptic("light");
+                                    router.push("/(admin)/verify-payment");
+                                }}
                             >
                                 <Ionicons name="card" size={20} color={Colors.primary} />
                                 <Text style={styles.quickActionText}>Verify Payments</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.quickAction}
-                                onPress={() => router.push("/(admin)/books")}
+                                onPress={() => {
+                                    triggerHaptic("light");
+                                    router.push("/(admin)/books");
+                                }}
                             >
                                 <Ionicons name="book" size={20} color={Colors.primary} />
                                 <Text style={styles.quickActionText}>View Books</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.quickAction}
-                                onPress={() => router.push("/(admin)/series" as any)}
+                                onPress={() => {
+                                    triggerHaptic("light");
+                                    router.push("/(admin)/series" as any);
+                                }}
                             >
                                 <Ionicons name="layers" size={20} color={Colors.primary} />
                                 <Text style={styles.quickActionText}>Manage Series</Text>
@@ -93,9 +112,10 @@ export default function AdminDashboard() {
                         <AdminStatusFilters
                             items={statusFilters}
                             selected={statusFilter}
-                            onSelect={(item) =>
-                                setStatusFilter(item as (typeof statusFilters)[number])
-                            }
+                            onSelect={(item) => {
+                                triggerHaptic("light");
+                                setStatusFilter(item as (typeof statusFilters)[number]);
+                            }}
                         />
                     </Animated.View>
                 }

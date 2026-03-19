@@ -5,6 +5,7 @@ import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors } from "@/constants/theme";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { triggerHaptic } from "@/utils/haptics";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery } from "convex/react";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -61,6 +62,7 @@ export default function AdminRentalDetailScreen() {
     const coverUri = rental.coverUrl || rental.coverUrls?.[0] || null;
 
     const handleAction = async (title: string, message: string, action: () => Promise<void>) => {
+        triggerHaptic("medium");
         setActionModal({
             visible: true,
             title,
@@ -82,6 +84,7 @@ export default function AdminRentalDetailScreen() {
     };
 
     const openMap = () => {
+        triggerHaptic("light");
         const { latitude, longitude } = rental.deliveryLocation;
         if (latitude && longitude) {
             const url = Platform.select({
@@ -111,7 +114,13 @@ export default function AdminRentalDetailScreen() {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+                <TouchableOpacity
+                    onPress={() => {
+                        triggerHaptic("light");
+                        router.back();
+                    }}
+                    style={styles.backBtn}
+                >
                     <Ionicons name="arrow-back" size={24} color={Colors.primary} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Order Details</Text>
