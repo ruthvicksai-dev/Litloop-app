@@ -27,6 +27,7 @@
       "predictiveBackGestureEnabled": false,
       "package": "com.ruthvicksai.litloop",
       "permissions": [
+        "POST_NOTIFICATIONS",
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
         "FOREGROUND_SERVICE"

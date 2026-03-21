@@ -138,6 +138,14 @@ export const requestRental = mutation({
             userName: user?.name ?? "A user",
         });
 
+        // Notify the user themselves
+        await ctx.scheduler.runAfter(0, internal.notifications.notifyUser, {
+            userId: args.userId,
+            title: "Rental Requested 📚",
+            body: `Your request for "${book.title}" has been received and is pending approval.`,
+            dataJson: JSON.stringify({ rentalId, type: "rental" }),
+        });
+
         return rentalId;
     },
 });
@@ -256,6 +264,14 @@ export const schedulePickup = mutation({
             userRating: args.userRating,
             ratedAt: Date.now(),
             status: "pickup_scheduled",
+        });
+
+        // Notify admins that a pickup is scheduled
+        const user = await ctx.db.get(rental.userId);
+        await ctx.scheduler.runAfter(0, internal.notifications.notifyAdminsOfPickupScheduled, {
+            rentalId: args.rentalId,
+            bookTitle: book?.title ?? "A book",
+            userName: user?.name ?? "A user",
         });
     },
 });

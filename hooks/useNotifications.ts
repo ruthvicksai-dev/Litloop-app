@@ -13,7 +13,7 @@ Notifications.setNotificationHandler({
         shouldShowBanner: true,
         shouldShowList: true,
         shouldPlaySound: true,
-        shouldSetBadge: false,
+        shouldSetBadge: true,
     }),
 });
 
@@ -77,8 +77,12 @@ export function useNotifications(
             }
 
             setExpoPushToken(token);
-            updateTokenMutation({ accessToken, pushToken: token });
+            updateTokenMutation({ accessToken, pushToken: token }).catch((error) => {
+                console.error("Failed to save push token:", error);
+            });
             tokenRegistrationRef.current = { userId, accessToken, pushToken: token };
+        }).catch((error) => {
+            console.error("Push registration failed:", error);
         });
 
         return () => {
@@ -141,41 +145,45 @@ async function registerForPushNotificationsAsync(): Promise<string | undefined> 
         });
     }
 
-    if (Device.isDevice) {
-        if (!projectId) {
-            console.warn("Push notifications skipped: missing Expo projectId in app config.");
+    // In development mode, we can try to get a token even if we're not on a physical device.
+    // Some modern emulators support it, and it gives us better logging.
+    if (!Device.isDevice && !__DEV__) {
+        console.log("Push notifications require a physical device in production.");
+        return undefined;
+    }
+
+    if (!projectId) {
+        console.warn("Push notifications skipped: missing Expo projectId in app config.");
+        return undefined;
+    }
+
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    if (existingStatus !== "granted") {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+    }
+    if (finalStatus !== "granted") {
+        console.log("Failed to get push token: permission denied.");
+        return undefined;
+    }
+
+    try {
+        token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
+        console.log("[Notifications] Push token generated:", token);
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (
+            Platform.OS === "android" &&
+            message.includes("Default FirebaseApp is not initialized")
+        ) {
+            console.error(
+                "Error getting push token: Android push notifications are not configured. " +
+                "Add Firebase `google-services.json`, connect it in Expo config, rebuild the Android app, and then retry."
+            );
             return undefined;
         }
-
-        const { status: existingStatus } = await Notifications.getPermissionsAsync();
-        let finalStatus = existingStatus;
-        if (existingStatus !== "granted") {
-            const { status } = await Notifications.requestPermissionsAsync();
-            finalStatus = status;
-        }
-        if (finalStatus !== "granted") {
-            console.log("Failed to get push token: permission denied.");
-            return undefined;
-        }
-
-        try {
-            token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
-        } catch (error) {
-            const message = error instanceof Error ? error.message : String(error);
-            if (
-                Platform.OS === "android" &&
-                message.includes("Default FirebaseApp is not initialized")
-            ) {
-                console.error(
-                    "Error getting push token: Android push notifications are not configured. " +
-                    "Add Firebase `google-services.json`, connect it in Expo config, rebuild the Android app, and then retry."
-                );
-                return undefined;
-            }
-            console.error("Error getting push token:", error);
-        }
-    } else {
-        console.log("Push notifications require a physical device.");
+        console.error("Error getting push token:", error);
     }
 
     return token;

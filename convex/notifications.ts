@@ -388,3 +388,41 @@ export const notifySubscribersOfAvailability = internalAction({
         }
     },
 });
+
+export const notifyAdminsOfPaymentSubmission = internalAction({
+    args: { rentalId: v.id("rentals"), bookTitle: v.string(), userName: v.string(), method: v.string() },
+    handler: async (ctx, args) => {
+        const admins = await ctx.runQuery(internal.notifications.getAdminRecipients, {});
+        const dataJson = JSON.stringify({ rentalId: args.rentalId, type: "rental" });
+
+        for (const admin of admins) {
+            await saveAndPushToRecipient(
+                ctx,
+                admin,
+                "Payment Submitted 💰",
+                `${args.userName} submitted a ${args.method} payment for "${args.bookTitle}".`,
+                "rental",
+                dataJson
+            );
+        }
+    },
+});
+
+export const notifyAdminsOfPickupScheduled = internalAction({
+    args: { rentalId: v.id("rentals"), bookTitle: v.string(), userName: v.string() },
+    handler: async (ctx, args) => {
+        const admins = await ctx.runQuery(internal.notifications.getAdminRecipients, {});
+        const dataJson = JSON.stringify({ rentalId: args.rentalId, type: "rental" });
+
+        for (const admin of admins) {
+            await saveAndPushToRecipient(
+                ctx,
+                admin,
+                "Pickup Scheduled 📦",
+                `${args.userName} scheduled a pickup for "${args.bookTitle}".`,
+                "rental",
+                dataJson
+            );
+        }
+    },
+});

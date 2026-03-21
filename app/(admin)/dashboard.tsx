@@ -76,7 +76,7 @@ export default function AdminDashboard() {
                             unreadCount={unreadCount}
                             onNotificationsPress={() => {
                                 triggerHaptic("light");
-                                router.push("/notifications" as any);
+                                router.push("/(admin)/notifications" as any);
                             }}
                             onSignOut={() => {
                                 triggerHaptic("medium");

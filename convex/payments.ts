@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
 import { recordPaymentCompleted, recordUserActivity } from "./analytics";
 import { assertRateLimit, buildRateLimitKey } from "./lib/rateLimit";
@@ -84,6 +85,16 @@ export const submitUpiPayment = mutation({
             paymentScreenshot: args.paymentScreenshot,
             status: "payment_pending",
         });
+
+        const book = await ctx.db.get(rental.bookId);
+        const user = await ctx.db.get(rental.userId);
+
+        await ctx.scheduler.runAfter(0, internal.notifications.notifyAdminsOfPaymentSubmission, {
+            rentalId: args.rentalId,
+            bookTitle: book?.title ?? "A book",
+            userName: user?.name ?? "A user",
+            method: "UPI",
+        });
     },
 });
 
@@ -117,6 +128,16 @@ export const selectCashPayment = mutation({
             paymentMethod: "cash",
             paymentStatus: "cash_pending",
             status: "payment_pending",
+        });
+
+        const book = await ctx.db.get(rental.bookId);
+        const user = await ctx.db.get(rental.userId);
+
+        await ctx.scheduler.runAfter(0, internal.notifications.notifyAdminsOfPaymentSubmission, {
+            rentalId: args.rentalId,
+            bookTitle: book?.title ?? "A book",
+            userName: user?.name ?? "A user",
+            method: "Cash",
         });
     },
 });
