@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const LAST_UPDATED = "March 24, 2025";
+const LAST_UPDATED = "March 24, 2026";
 const CONTACT_EMAIL = "litloopbooks@gmail.com";
 const APP_NAME = "Lit Loop";
 const COMPANY = "Lit Loop";
@@ -115,12 +115,23 @@ export default function TermsOfServiceScreen() {
 
                 <Section title="5. Pricing and Payments">
                     <Para>
-                        Rental pricing is displayed in the app as a per-day rate. Total rent is calculated based on the actual rental duration.
+                        Rental pricing is displayed in the app as a per-day rate. Total rent is calculated based on the actual rental duration. All payments made through {APP_NAME} are for physical book rental services only — not for digital goods, in-app credits, or subscription services.
                     </Para>
                     <Bullet text="Payment is due at the time of pickup scheduling, before the book is collected." />
-                    <Bullet text="We accept UPI (with screenshot submission for verification) and Cash (collected at pickup)." />
-                    <Bullet text="UPI payments are verified by our team within 24 hours. If rejected, you may resubmit." />
+                    <Bullet text="We accept UPI (via QR code scan or deep link) and Cash (collected at pickup)." />
+                    <Bullet text="UPI payments are NOT auto-confirmed. After scanning the QR and completing payment in your UPI app, you must enter your UTR (transaction reference ID) in the app for our team to verify." />
+                    <Bullet text="Payment verification is completed within 24 hours of submission. You will receive an in-app notification when verified." />
+                    <Bullet text="The QR code encodes the exact rental amount and order ID. Do not alter the payment amount when scanning." />
                     <Bullet text="All prices are listed in Indian Rupees (INR)." />
+                </Section>
+
+                <Section title="5a. Payment Failure and Refund Policy">
+                    <Para>If your UPI payment is rejected:</Para>
+                    <Bullet text="You will be notified via in-app notification and push notification." />
+                    <Bullet text="Your rental status will return to 'pickup scheduled' so you can resubmit payment." />
+                    <Bullet text="If you were charged by your bank but the payment was rejected by us (e.g. wrong UTR submitted), contact us at litloopbooks@gmail.com with proof of transaction. We will verify and resolve within 3 business days." />
+                    <Bullet text="Refunds, if applicable, will be processed to the original payment method within 5–7 business days." />
+                    <Bullet text="No refunds are issued for rentals already delivered and in your possession." />
                 </Section>
 
                 <Section title="6. Late Returns and Late Fees">
@@ -138,10 +149,13 @@ export default function TermsOfServiceScreen() {
                 <Section title="8. User Conduct">
                     <Para>You agree not to:</Para>
                     <Bullet text="Use the app for any unlawful purpose." />
-                    <Bullet text="Submit fraudulent payment screenshots or UTR numbers." />
+                    <Bullet text="Submit fraudulent, reused, or fabricated UTR numbers or payment screenshots." />
+                    <Bullet text="Deliberately submit the same UTR number for multiple rental payments." />
+                    <Bullet text="Alter the QR code amount or attempt to pay a different amount than shown." />
                     <Bullet text="Attempt to circumvent the rate limiting or security systems." />
                     <Bullet text="Interfere with the normal operation of the service." />
                     <Bullet text="Use another user's credentials to access the platform." />
+                    <Para>Misuse of the payment system, including submission of fake UTR numbers or fraudulent screenshots, will result in immediate account suspension and may be reported to relevant authorities.</Para>
                 </Section>
 
                 <Section title="9. Intellectual Property">

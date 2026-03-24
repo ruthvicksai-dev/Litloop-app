@@ -1,10 +1,12 @@
 import AppSplash from "@/components/ui/AppSplash";
+import { NotificationPermissionModal, useNotificationRationale } from "@/components/ui/NotificationPermissionModal";
 import { Colors } from "@/constants/theme";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { ToastProvider } from "@/context/ToastContext";
 import { useNotifications } from "@/hooks/useNotifications";
 import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { useFonts } from "expo-font";
+import * as Notifications from "expo-notifications";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState } from "react";
@@ -54,6 +56,14 @@ function AppGate({ fontsLoaded }: { fontsLoaded: boolean }) {
   // Initialize push notifications for the logged-in user
   useNotifications(userId, accessToken, user?.role);
 
+  // P4: Notification permission rationale (shown once per install, after login)
+  const { shouldShow, onAllow, onDecline } = useNotificationRationale();
+  const showNotificationRationale = shouldShow && !!userId && !showSplash;
+
+  const requestSystemNotificationPermission = async () => {
+    await Notifications.requestPermissionsAsync();
+  };
+
   const handleSplashComplete = () => {
     hasCompletedStartupSplash = true;
     setIsSplashAnimationDone(true);
@@ -98,6 +108,14 @@ function AppGate({ fontsLoaded }: { fontsLoaded: boolean }) {
           <Stack.Screen name="legal/terms-of-service" />
         </Stack>
       )}
+
+      {/* P4: Notification permission rationale — shown once per install after login */}
+      <NotificationPermissionModal
+        visible={showNotificationRationale}
+        onAllow={onAllow}
+        onDecline={onDecline}
+        onGranted={requestSystemNotificationPermission}
+      />
     </>
   );
 }

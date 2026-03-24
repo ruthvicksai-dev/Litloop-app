@@ -25,7 +25,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function RentalHistoryScreen() {
-    const { user, userId, isLoading } = useAuth();
+    const { user, userId, accessToken, isLoading } = useAuth();
     const [refreshing, setRefreshing] = useState(false);
     const {
         statusFilter,
@@ -38,8 +38,8 @@ export default function RentalHistoryScreen() {
 
     const history = useQuery(
         api.rentals.getRentalHistory,
-        userId
-            ? { userId, status: statusFilter, timeframe: timeframeFilter }
+        userId && accessToken
+            ? { userId, accessToken, status: statusFilter, timeframe: timeframeFilter }
             : "skip"
     );
     const { fadeAnim, slideAnim } = useFadeSlideIn();

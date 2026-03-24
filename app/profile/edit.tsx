@@ -1,7 +1,7 @@
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Layout, Spacing, scale } from "@/constants/theme";
+import { Colors, Layout, scale, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
@@ -12,6 +12,7 @@ import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
     KeyboardAvoidingView,
+    Modal,
     Platform,
     ScrollView,
     StyleSheet,
@@ -23,10 +24,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function EditProfileScreen() {
     const router = useRouter();
-    const { user, accessToken, isLoading } = useAuth();
+    const { user, accessToken, isLoading, signOut } = useAuth();
     const { showToast } = useToast();
     const updateUserMutation = useMutation(api.users.updateUser);
     const changePasswordMutation = useMutation(api.auth.changePassword);
+    const deleteAccountMutation = useMutation(api.users.deleteAccount);
 
     const [name, setName] = useState("");
     const [phone, setPhone] = useState("");
@@ -35,6 +37,9 @@ export default function EditProfileScreen() {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [isSavingProfile, setIsSavingProfile] = useState(false);
     const [isSavingPassword, setIsSavingPassword] = useState(false);
+    const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
     useEffect(() => {
         if (!isLoading && !user) {
@@ -86,8 +91,8 @@ export default function EditProfileScreen() {
             showToast("Current password is required.", "error");
             return;
         }
-        if (newPassword.length < 6) {
-            showToast("New password must be at least 6 characters.", "error");
+        if (newPassword.length < 8) {
+            showToast("New password must be at least 8 characters.", "error");
             return;
         }
         if (newPassword !== confirmPassword) {
@@ -115,6 +120,28 @@ export default function EditProfileScreen() {
         }
     };
 
+    const handleDeleteAccount = async () => {
+        if (!accessToken) return;
+        if (deleteConfirmText !== "DELETE") {
+            showToast("Please type DELETE to confirm.", "error");
+            return;
+        }
+
+        setIsDeletingAccount(true);
+        try {
+            await deleteAccountMutation({ accessToken, confirmText: deleteConfirmText });
+            setShowDeleteModal(false);
+            showToast("Your account has been permanently deleted.", "info");
+            await signOut();
+        } catch (error) {
+            const message =
+                error instanceof Error ? error.message : "Failed to delete account.";
+            showToast(message, "error");
+        } finally {
+            setIsDeletingAccount(false);
+        }
+    };
+
     if (!user) {
         return null;
     }
@@ -131,81 +158,146 @@ export default function EditProfileScreen() {
                     keyboardDismissMode="on-drag"
                     showsVerticalScrollIndicator={false}
                 >
-                        <View style={styles.header}>
-                            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                                <Ionicons name="arrow-back" size={scale(22)} color={Colors.primary} />
-                            </TouchableOpacity>
-                            <View style={styles.headerText}>
-                                <Text style={styles.title}>Edit Profile</Text>
-                                <Text style={styles.subtitle}>Update your details and password</Text>
-                            </View>
+                    <View style={styles.header}>
+                        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                            <Ionicons name="arrow-back" size={scale(22)} color={Colors.primary} />
+                        </TouchableOpacity>
+                        <View style={styles.headerText}>
+                            <Text style={styles.title}>Edit Profile</Text>
+                            <Text style={styles.subtitle}>Update your details and password</Text>
                         </View>
+                    </View>
 
-                        <View style={styles.card}>
-                            <Text style={styles.sectionTitle}>Profile Details</Text>
-                            <InputField
-                                label="Full Name"
-                                placeholder="Enter your name"
-                                value={name}
-                                onChangeText={setName}
-                            />
-                            <InputField
-                                label="Email"
-                                placeholder="Your email"
-                                value={user.email}
-                                editable={false}
-                                inputStyle={styles.disabledInput}
-                            />
-                            <InputField
-                                label="Phone Number"
-                                placeholder="Enter your phone number"
-                                value={phone}
-                                onChangeText={setPhone}
-                                keyboardType="phone-pad"
-                            />
-                            <Button
-                                title="Save Profile"
-                                onPress={handleSaveProfile}
-                                loading={isSavingProfile}
-                                style={styles.sectionButton}
-                            />
-                        </View>
+                    {/* Profile Details */}
+                    <View style={styles.card}>
+                        <Text style={styles.sectionTitle}>Profile Details</Text>
+                        <InputField
+                            label="Full Name"
+                            placeholder="Enter your name"
+                            value={name}
+                            onChangeText={setName}
+                        />
+                        <InputField
+                            label="Email"
+                            placeholder="Your email"
+                            value={user.email}
+                            editable={false}
+                            inputStyle={styles.disabledInput}
+                        />
+                        <InputField
+                            label="Phone Number"
+                            placeholder="Enter your phone number"
+                            value={phone}
+                            onChangeText={setPhone}
+                            keyboardType="phone-pad"
+                        />
+                        <Button
+                            title="Save Profile"
+                            onPress={handleSaveProfile}
+                            loading={isSavingProfile}
+                            style={styles.sectionButton}
+                        />
+                    </View>
 
-                        <View style={styles.card}>
-                            <Text style={styles.sectionTitle}>Change Password</Text>
-                            <Text style={styles.sectionDescription}>
-                                Enter your current password to set a new one.
-                            </Text>
-                            <InputField
-                                label="Current Password"
-                                placeholder="Enter current password"
-                                value={currentPassword}
-                                onChangeText={setCurrentPassword}
-                                secureTextEntry
-                            />
-                            <InputField
-                                label="New Password"
-                                placeholder="Enter new password"
-                                value={newPassword}
-                                onChangeText={setNewPassword}
-                                secureTextEntry
-                            />
-                            <InputField
-                                label="Confirm New Password"
-                                placeholder="Confirm new password"
-                                value={confirmPassword}
-                                onChangeText={setConfirmPassword}
-                                secureTextEntry
-                            />
-                            <Button
-                                title="Update Password"
-                                onPress={handleChangePassword}
-                                loading={isSavingPassword}
-                                style={styles.sectionButton}
-                            />
-                        </View>
+                    {/* Change Password */}
+                    <View style={styles.card}>
+                        <Text style={styles.sectionTitle}>Change Password</Text>
+                        <Text style={styles.sectionDescription}>
+                            Enter your current password to set a new one.
+                        </Text>
+                        <InputField
+                            label="Current Password"
+                            placeholder="Enter current password"
+                            value={currentPassword}
+                            onChangeText={setCurrentPassword}
+                            secureTextEntry
+                        />
+                        <InputField
+                            label="New Password"
+                            placeholder="Enter new password (min 8 chars)"
+                            value={newPassword}
+                            onChangeText={setNewPassword}
+                            secureTextEntry
+                        />
+                        <InputField
+                            label="Confirm New Password"
+                            placeholder="Confirm new password"
+                            value={confirmPassword}
+                            onChangeText={setConfirmPassword}
+                            secureTextEntry
+                        />
+                        <Button
+                            title="Update Password"
+                            onPress={handleChangePassword}
+                            loading={isSavingPassword}
+                            style={styles.sectionButton}
+                        />
+                    </View>
+
+                    {/* Danger Zone — required for Google Play policy compliance */}
+                    <View style={[styles.card, styles.dangerCard]}>
+                        <Text style={styles.dangerTitle}>Danger Zone</Text>
+                        <Text style={styles.sectionDescription}>
+                            Permanently delete your Lit Loop account and all associated data.
+                            This action cannot be undone.
+                        </Text>
+                        <TouchableOpacity
+                            style={styles.deleteButton}
+                            onPress={() => {
+                                setDeleteConfirmText("");
+                                setShowDeleteModal(true);
+                            }}
+                        >
+                            <Ionicons name="trash-outline" size={scale(16)} color="#fff" />
+                            <Text style={styles.deleteButtonText}>Delete My Account</Text>
+                        </TouchableOpacity>
+                    </View>
                 </ScrollView>
             </KeyboardAvoidingView>
+
+            {/* Delete Confirmation Modal */}
+            <Modal
+                visible={showDeleteModal}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setShowDeleteModal(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalCard}>
+                        <Ionicons name="warning-outline" size={scale(36)} color="#DC2626" />
+                        <Text style={styles.modalTitle}>Delete Account</Text>
+                        <Text style={styles.modalBody}>
+                            This will permanently delete your account, rental history, favorites,
+                            and all data. This action{" "}
+                            <Text style={{ fontFamily: Fonts.bold }}>cannot be undone</Text>.
+                        </Text>
+                        <Text style={styles.modalInstructions}>
+                            Type <Text style={styles.deleteWord}>DELETE</Text> to confirm:
+                        </Text>
+                        <InputField
+                            label=""
+                            placeholder="Type DELETE here"
+                            value={deleteConfirmText}
+                            onChangeText={setDeleteConfirmText}
+                            autoCapitalize="characters"
+                        />
+                        <View style={styles.modalActions}>
+                            <TouchableOpacity
+                                style={styles.cancelButton}
+                                onPress={() => setShowDeleteModal(false)}
+                            >
+                                <Text style={styles.cancelText}>Cancel</Text>
+                            </TouchableOpacity>
+                            <Button
+                                title="Delete Account"
+                                onPress={handleDeleteAccount}
+                                loading={isDeletingAccount}
+                                style={styles.confirmDeleteButton}
+                            />
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 }
@@ -256,9 +348,19 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: Colors.border,
     },
+    dangerCard: {
+        borderColor: "#FCA5A5",
+        backgroundColor: "#FFF5F5",
+    },
     sectionTitle: {
         fontSize: FontSizes.title,
         color: Colors.text,
+        fontFamily: Fonts.bold,
+        marginBottom: Spacing.sm,
+    },
+    dangerTitle: {
+        fontSize: FontSizes.title,
+        color: "#DC2626",
         fontFamily: Fonts.bold,
         marginBottom: Spacing.sm,
     },
@@ -271,8 +373,85 @@ const styles = StyleSheet.create({
     sectionButton: {
         marginTop: Spacing.sm,
     },
+    deleteButton: {
+        backgroundColor: "#DC2626",
+        borderRadius: Layout.cardRadius,
+        paddingVertical: Spacing.sm,
+        paddingHorizontal: Spacing.md,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: Spacing.xs,
+    },
+    deleteButtonText: {
+        color: "#fff",
+        fontFamily: Fonts.bold,
+        fontSize: FontSizes.body,
+    },
     disabledInput: {
         color: Colors.textSecondary,
         backgroundColor: Colors.background,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: "rgba(0,0,0,0.55)",
+        justifyContent: "center",
+        alignItems: "center",
+        paddingHorizontal: Spacing.lg,
+    },
+    modalCard: {
+        backgroundColor: Colors.white,
+        borderRadius: Layout.cardRadiusLarge,
+        padding: Spacing.xl,
+        width: "100%",
+        alignItems: "center",
+        gap: Spacing.sm,
+    },
+    modalTitle: {
+        fontSize: FontSizes.titleLarge,
+        fontFamily: Fonts.bold,
+        color: "#DC2626",
+    },
+    modalBody: {
+        fontSize: FontSizes.body,
+        fontFamily: Fonts.regular,
+        color: Colors.text,
+        textAlign: "center",
+        lineHeight: 22,
+    },
+    modalInstructions: {
+        fontSize: FontSizes.body,
+        fontFamily: Fonts.regular,
+        color: Colors.text,
+        textAlign: "center",
+        width: "100%",
+    },
+    deleteWord: {
+        fontFamily: Fonts.bold,
+        color: "#DC2626",
+    },
+    modalActions: {
+        flexDirection: "row",
+        gap: Spacing.sm,
+        width: "100%",
+        marginTop: Spacing.sm,
+    },
+    cancelButton: {
+        flex: 1,
+        paddingVertical: Spacing.sm,
+        alignItems: "center",
+        justifyContent: "center",
+        borderRadius: Layout.cardRadius,
+        borderWidth: 1,
+        borderColor: Colors.border,
+    },
+    cancelText: {
+        fontFamily: Fonts.bold,
+        fontSize: FontSizes.body,
+        color: Colors.text,
+    },
+    confirmDeleteButton: {
+        flex: 1,
+        backgroundColor: "#DC2626",
     },
 });

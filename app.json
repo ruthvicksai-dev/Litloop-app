@@ -29,12 +29,11 @@
       "permissions": [
         "POST_NOTIFICATIONS",
         "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION",
-        "FOREGROUND_SERVICE"
+        "ACCESS_FINE_LOCATION"
       ],
       "config": {
         "googleMaps": {
-          "apiKey": "AIzaSyDecgwCCo27qJ5jZaXR5SywcZ0rsTZm5QQ"
+          "apiKey": "$EXPO_PUBLIC_GOOGLE_MAPS_KEY"
         }
       }
     },

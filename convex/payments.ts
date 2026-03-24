@@ -98,6 +98,15 @@ export const submitUpiPayment = mutation({
         if (!args.utrNumber.trim()) throw new Error("UTR number is required.");
         if (!utrRegex.test(args.utrNumber.trim())) throw new Error("Invalid UTR number. Must be exactly 12 alphanumeric characters.");
 
+        // Anti-fraud: Ensure this UTR hasn't already been used for another rental
+        const existingWithSameUtr = await ctx.db
+            .query("rentals")
+            .withIndex("by_utrNumber", (q) => q.eq("utrNumber", args.utrNumber.trim()))
+            .first();
+        if (existingWithSameUtr && existingWithSameUtr._id !== args.rentalId) {
+            throw new Error("This UTR number has already been used for another payment. Please provide the correct transaction ID.");
+        }
+
         await ctx.db.patch(args.rentalId, {
             paymentMethod: "upi",
             paymentStatus: "verification_pending",

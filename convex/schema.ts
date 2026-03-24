@@ -181,6 +181,7 @@ export default defineSchema({
         .index("by_status", ["status"])
         .index("by_zone", ["zone"])
         .index("by_userId_status", ["userId", "status"])
+        .index("by_utrNumber", ["utrNumber"])
         .index("by_createdAt", ["createdAt"]),
 
     analytics_monthly: defineTable({

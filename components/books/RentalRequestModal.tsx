@@ -114,6 +114,25 @@ export default function RentalRequestModal({
             }
 
             console.log("[Location] Requesting permissions...");
+            // P5: Show rationale BEFORE the system prompt (required for Android)
+            const alreadyGranted = await Location.getForegroundPermissionsAsync();
+            if (alreadyGranted.status !== "granted" && !alreadyGranted.canAskAgain) {
+                showToast("Location permission is permanently denied. Enable it in Settings.", "error");
+                return;
+            }
+            if (alreadyGranted.status !== "granted") {
+                await new Promise<void>((resolve) => {
+                    const { Alert } = require("react-native");
+                    Alert.alert(
+                        "Location Access",
+                        "Lit Loop uses your location to fill in your delivery address automatically. Your location is only used for this purpose and is not stored without your consent.",
+                        [
+                            { text: "Not Now", style: "cancel", onPress: resolve },
+                            { text: "Allow", onPress: resolve },
+                        ]
+                    );
+                });
+            }
             let { status } = await Location.requestForegroundPermissionsAsync();
             if (status !== "granted") {
                 console.warn("[Location] Permission denied.");

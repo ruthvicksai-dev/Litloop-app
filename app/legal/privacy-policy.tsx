@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const LAST_UPDATED = "March 24, 2025";
+const LAST_UPDATED = "March 24, 2026";
 const CONTACT_EMAIL = "litloopbooks@gmail.com";
 const APP_NAME = "Lit Loop";
 const COMPANY = "Lit Loop";
@@ -89,7 +89,7 @@ export default function PrivacyPolicyScreen() {
                     <Bullet text="Account information: your name, email address, and phone number." />
                     <Bullet text="Profile and authentication: password (stored as a secure hash), or Google OAuth tokens if you sign in with Google." />
                     <Bullet text="Delivery information: your delivery address, including location coordinates when you choose home delivery." />
-                    <Bullet text="Payment information: UPI Transaction Reference (UTR) numbers and payment screenshots uploaded for verification. We do not store raw card or bank account numbers." />
+                    <Bullet text="Payment information: When you choose to pay via UPI, we collect the UPI Transaction Reference (UTR) number and an optional payment screenshot you upload. We generate a UPI QR code that encodes the exact rental amount and order ID — we do NOT collect, process, or store your bank account number, card details, UPI PIN, or any sensitive banking credentials. Cash payment selections are recorded but no financial data is collected." />
                     <Bullet text="Rental history: books you have rented, rental status, and dates." />
                     <Bullet text="Communications: messages you send us via email." />
 
@@ -130,8 +130,18 @@ export default function PrivacyPolicyScreen() {
 
                 <Section title="5. Data Retention">
                     <Para>
-                        We retain your account data for as long as your account is active. Rental records are retained for a minimum of 2 years for compliance purposes. You may request deletion of your personal data by contacting us.
+                        We retain your account data for as long as your account is active. Rental records are retained for a minimum of 2 years for compliance purposes. You may request deletion of your personal data by contacting us or using the Delete Account feature in the app.
                     </Para>
+                </Section>
+
+                <Section title="5a. UPI Payment Data Handling">
+                    <Para>When you pay using UPI QR:</Para>
+                    <Bullet text="We generate a UPI QR code that encodes only: our UPI ID, the rental amount, and your order ID." />
+                    <Bullet text="You complete the transaction in your own UPI app (e.g. GPay, PhonePe, Paytm). We never see your UPI PIN or bank credentials." />
+                    <Bullet text="You voluntarily share the UTR (transaction reference ID) so we can verify the payment. This is a reference number only, not banking data." />
+                    <Bullet text="Optional screenshots you upload are stored securely and used only for payment dispute resolution." />
+                    <Bullet text="We do NOT auto-confirm UPI payments. All payments are manually verified by our team." />
+                    <Bullet text="UPI payments are collected through our registered UPI ID and are for physical book rental services only — not for digital goods or in-app credits." />
                 </Section>
 
                 <Section title="6. Data Security">

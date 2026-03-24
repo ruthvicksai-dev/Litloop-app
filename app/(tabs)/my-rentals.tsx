@@ -21,8 +21,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function MyRentalsScreen() {
-    const { user, userId, isLoading } = useAuth();
-    const rentals = useQuery(api.rentals.getUserRentals, userId ? { userId } : "skip");
+    const { user, userId, accessToken, isLoading } = useAuth();
+    const rentals = useQuery(
+        api.rentals.getUserRentals,
+        userId && accessToken ? { userId, accessToken } : "skip"
+    );
     const router = useRouter();
     const { fadeAnim, slideAnim } = useFadeSlideIn();
 

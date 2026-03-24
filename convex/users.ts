@@ -55,3 +55,73 @@ export const updateUser = mutation({
         return true;
     },
 });
+
+// ─── Delete Account (MANDATORY: Google Play Store policy) ─────────────────────
+
+export const deleteAccount = mutation({
+    args: {
+        accessToken: v.string(),
+        confirmText: v.string(), // Must equal "DELETE" to confirm
+    },
+    handler: async (ctx, args) => {
+        const user = await getAuthenticatedUser(ctx, args.accessToken);
+        const userId = user._id;
+
+        if (args.confirmText !== "DELETE") {
+            throw new Error("Please type DELETE to confirm account deletion.");
+        }
+
+        // 1. Revoke all active sessions first
+        const sessions = await ctx.db
+            .query("sessions")
+            .withIndex("by_userId_active", (q) => q.eq("userId", userId).eq("isRevoked", false))
+            .collect();
+        for (const session of sessions) {
+            await ctx.db.patch(session._id, { isRevoked: true });
+        }
+
+        // 2. Remove push tokens (user is already fetched — use getAuthenticatedUser result)
+        if ((user as any).pushToken) {
+            await ctx.db.patch(userId, { pushToken: undefined });
+        }
+
+        // Cache metadata for audit log before deletion
+        const auditEmail = (user as any).email as string | undefined;
+        const auditName = (user as any).name as string | undefined;
+
+        // 3. Delete favorites & read-later
+        const favorites = await ctx.db
+            .query("favorites")
+            .withIndex("by_userId", (q) => q.eq("userId", userId))
+            .collect();
+        for (const fav of favorites) await ctx.db.delete(fav._id);
+
+        const readLater = await ctx.db
+            .query("read_later")
+            .withIndex("by_userId", (q) => q.eq("userId", userId))
+            .collect();
+        for (const rl of readLater) await ctx.db.delete(rl._id);
+
+        // 4. Delete user notifications
+        const notifications = await ctx.db
+            .query("user_notifications")
+            .withIndex("by_userId", (q) => q.eq("userId", userId))
+            .collect();
+        for (const n of notifications) await ctx.db.delete(n._id);
+
+        // 5. Audit log before deletion
+        await ctx.db.insert("audit_logs", {
+            action: "account_deleted",
+            actorId: userId,
+            targetId: userId,
+            targetType: "user",
+            metadata: JSON.stringify({ email: auditEmail, name: auditName }),
+            timestamp: Date.now(),
+        });
+
+        // 6. Delete the user document
+        await ctx.db.delete(userId);
+
+        return { success: true };
+    },
+});

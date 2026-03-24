@@ -12,6 +12,7 @@ import type * as analytics from "../analytics.js";
 import type * as auth from "../auth.js";
 import type * as books from "../books.js";
 import type * as favorites from "../favorites.js";
+import type * as lib_auditLog from "../lib/auditLog.js";
 import type * as lib_authHelpers from "../lib/authHelpers.js";
 import type * as lib_google from "../lib/google.js";
 import type * as lib_jwt from "../lib/jwt.js";
@@ -34,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   books: typeof books;
   favorites: typeof favorites;
+  "lib/auditLog": typeof lib_auditLog;
   "lib/authHelpers": typeof lib_authHelpers;
   "lib/google": typeof lib_google;
   "lib/jwt": typeof lib_jwt;
