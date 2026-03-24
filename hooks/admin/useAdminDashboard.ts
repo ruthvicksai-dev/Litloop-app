@@ -2,9 +2,9 @@ import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { formatMonthLabel, getCurrentMonthKey, getRevenueMetricsForMonth } from "@/utils/adminRevenueAnalytics";
 import { useMutation, useQuery } from "convex/react";
 import { useMemo, useState } from "react";
-import { formatMonthLabel, getCurrentMonthKey, getRevenueMetricsForMonth } from "@/utils/adminRevenueAnalytics";
 
 const STATUS_FILTERS = [
     "all",
@@ -18,58 +18,64 @@ const STATUS_FILTERS = [
 ] as const;
 
 export function useAdminDashboard() {
-    const rentals = useQuery(api.rentals.getAllRentals, {
-        paginationOpts: {
-            cursor: null,
-            numItems: 50, // admin can load more
-        },
-    });
+    const { showToast } = useToast();
+    const { signOut, accessToken } = useAuth();
+    const rentals = useQuery(
+        api.rentals.getAllRentals,
+        accessToken
+            ? {
+                accessToken,
+                paginationOpts: {
+                    cursor: null,
+                    numItems: 50, // admin can load more
+                },
+            }
+            : "skip"
+    );
     const markDelivered = useMutation(api.rentals.markDelivered);
     const markReturned = useMutation(api.rentals.markReturned);
-    const { showToast } = useToast();
-    const { signOut } = useAuth();
     const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>("all");
 
-const stats = useMemo(() => {
-    const rentalList = rentals?.page ?? [];
+    const stats = useMemo(() => {
+        const rentalList = rentals?.page ?? [];
 
-    return {
-        total: rentalList.length,
-        active: rentalList.filter((rental) =>
-            ["requested", "delivery_scheduled", "delivered"].includes(rental.status)
-        ).length,
-        pending: rentalList.filter((rental) =>
-            ["pickup_scheduled", "payment_pending"].includes(rental.status)
-        ).length,
-        completed: rentalList.filter((rental) =>
-            ["paid", "returned"].includes(rental.status)
-        ).length,
-    };
-}, [rentals]);
+        return {
+            total: rentalList.length,
+            active: rentalList.filter((rental) =>
+                ["requested", "delivery_scheduled", "delivered"].includes(rental.status)
+            ).length,
+            pending: rentalList.filter((rental) =>
+                ["pickup_scheduled", "payment_pending"].includes(rental.status)
+            ).length,
+            completed: rentalList.filter((rental) =>
+                ["paid", "returned"].includes(rental.status)
+            ).length,
+        };
+    }, [rentals]);
 
     const revenue = useMemo(() => {
-    const rentalList = rentals?.page ?? [];
+        const rentalList = rentals?.page ?? [];
 
-    const currentMonthKey = getCurrentMonthKey();
-    const currentMonthMetrics = getRevenueMetricsForMonth(
-        rentalList,
-        currentMonthKey
-    );
+        const currentMonthKey = getCurrentMonthKey();
+        const currentMonthMetrics = getRevenueMetricsForMonth(
+            rentalList,
+            currentMonthKey
+        );
 
-    return {
-        monthlyRevenue: currentMonthMetrics.revenue,
-        monthlyOrders: currentMonthMetrics.totalOrders,
-        currentMonthLabel: formatMonthLabel(currentMonthKey),
-    };
-}, [rentals]);
+        return {
+            monthlyRevenue: currentMonthMetrics.revenue,
+            monthlyOrders: currentMonthMetrics.totalOrders,
+            currentMonthLabel: formatMonthLabel(currentMonthKey),
+        };
+    }, [rentals]);
 
     const filteredRentals = useMemo(() => {
-    const rentalList = rentals?.page ?? [];
+        const rentalList = rentals?.page ?? [];
 
-    return statusFilter === "all"
-        ? rentalList
-        : rentalList.filter((rental) => rental.status === statusFilter);
-}, [rentals, statusFilter]);
+        return statusFilter === "all"
+            ? rentalList
+            : rentalList.filter((rental) => rental.status === statusFilter);
+    }, [rentals, statusFilter]);
 
     const groupedByZone = useMemo(() => {
         const groups: Record<string, typeof filteredRentals> = {};
@@ -87,7 +93,8 @@ const stats = useMemo(() => {
 
     const handleMarkDelivered = async (rentalId: string) => {
         try {
-            await markDelivered({ rentalId: rentalId as Id<"rentals"> });
+            if (!accessToken) throw new Error("Unauthenticated");
+            await markDelivered({ accessToken, rentalId: rentalId as Id<"rentals"> });
             showToast("Marked as delivered.", "success");
         } catch (error: unknown) {
             const message =
@@ -98,7 +105,8 @@ const stats = useMemo(() => {
 
     const handleMarkReturned = async (rentalId: string) => {
         try {
-            await markReturned({ rentalId: rentalId as Id<"rentals"> });
+            if (!accessToken) throw new Error("Unauthenticated");
+            await markReturned({ accessToken, rentalId: rentalId as Id<"rentals"> });
             showToast("Marked as returned.", "success");
         } catch (error: unknown) {
             const message =

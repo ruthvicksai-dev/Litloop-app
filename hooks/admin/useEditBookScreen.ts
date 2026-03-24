@@ -1,8 +1,10 @@
 import { MAIN_GENRES } from "@/constants/mainGenres";
 import { SERIES_PAGINATION_OPTS } from "@/constants/pagination";
+import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { useBookCoverManager } from "@/hooks/books/useBookCoverManager";
 import { applyMetadataToBookForm, parseBookNumericFields } from "@/utils/adminBookForm";
 import { fetchBookMetadataExtended } from "@/utils/bookMetadataExtended";
 import { validateEnglishSafeDescription } from "@/utils/descriptionPolicy";
@@ -10,11 +12,11 @@ import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Alert } from "react-native";
-import { useBookCoverManager } from "@/hooks/books/useBookCoverManager";
 
 export function useEditBookScreen(bookId: string) {
     const router = useRouter();
     const { showToast } = useToast();
+    const { accessToken } = useAuth();
 
     const book = useQuery(api.books.get, { bookId: bookId as Id<"books"> });
     const updateBook = useMutation(api.books.update);
@@ -190,9 +192,10 @@ export function useEditBookScreen(bookId: string) {
             let coverImageIds: Id<"_storage">[] | undefined;
 
             if (newImagesSelected && coverUris.length > 0) {
+                if (!accessToken) throw new Error("Unauthenticated");
                 coverImageIds = await Promise.all(
                     coverUris.map(async (uri) => {
-                        const uploadUrl = await generateUploadUrl();
+                        const uploadUrl = await generateUploadUrl({ accessToken });
                         const response = await fetch(uri);
                         const blob = await response.blob();
                         const uploadResult = await fetch(uploadUrl, {
@@ -207,6 +210,7 @@ export function useEditBookScreen(bookId: string) {
             }
 
             const payload: any = {
+                accessToken,
                 bookId: bookId as Id<"books">,
                 title,
                 author,
@@ -256,7 +260,8 @@ export function useEditBookScreen(bookId: string) {
                     onPress: async () => {
                         setDeleting(true);
                         try {
-                            await removeBook({ bookId: bookId as Id<"books"> });
+                            if (!accessToken) throw new Error("Unauthenticated");
+                            await removeBook({ accessToken, bookId: bookId as Id<"books"> });
                             showToast("Book deleted safely.", "success");
                             router.replace("/(admin)/books");
                         } catch (error: unknown) {

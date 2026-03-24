@@ -3,6 +3,7 @@ import Button from "@/components/ui/Button";
 import ConfirmActionModal from "@/components/ui/ConfirmActionModal";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors } from "@/constants/theme";
+import { useAuth } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { triggerHaptic } from "@/utils/haptics";
@@ -26,7 +27,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function AdminRentalDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const router = useRouter();
-    const rental = useQuery(api.rentals.getRental, { rentalId: id as Id<"rentals"> });
+    const { accessToken } = useAuth();
+    const rental = useQuery(api.rentals.getRental, accessToken ? { accessToken, rentalId: id as Id<"rentals"> } : "skip");
     const markDelivered = useMutation(api.rentals.markDelivered);
     const markReturned = useMutation(api.rentals.markReturned);
 
@@ -36,7 +38,7 @@ export default function AdminRentalDetailScreen() {
         visible: boolean;
         title: string;
         message: string;
-        action: () => Promise<void>;
+        action: () => Promise<any>;
     }>({
         visible: false,
         title: "",
@@ -69,7 +71,7 @@ export default function AdminRentalDetailScreen() {
 
     const coverUri = rental.coverUrl || rental.coverUrls?.[0] || null;
 
-    const handleAction = async (title: string, message: string, action: () => Promise<void>) => {
+    const handleAction = async (title: string, message: string, action: () => Promise<any>) => {
         triggerHaptic("medium");
         setActionModal({
             visible: true,
@@ -445,8 +447,8 @@ export default function AdminRentalDetailScreen() {
                                 "Mark Delivered?",
                                 "Are you sure you have delivered this book to the customer?",
                                 () => {
-                                    markDelivered({ rentalId: rental._id });
-                                    return Promise.resolve();
+                                    if (!accessToken) return Promise.reject(new Error("Unauthenticated"));
+                                    return markDelivered({ accessToken, rentalId: rental._id });
                                 }
                             )}
                             variant="primary"
@@ -466,8 +468,8 @@ export default function AdminRentalDetailScreen() {
                                 "Mark Returned?",
                                 "Confirm that the book has been received back in good condition and payment is verified.",
                                 () => {
-                                    markReturned({ rentalId: rental._id });
-                                    return Promise.resolve();
+                                    if (!accessToken) return Promise.reject(new Error("Unauthenticated"));
+                                    return markReturned({ accessToken, rentalId: rental._id });
                                 }
                             )}
                             variant="primary"

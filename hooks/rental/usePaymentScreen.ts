@@ -1,3 +1,4 @@
+import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -7,9 +8,11 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 
 export function usePaymentScreen(rentalId: string) {
-    const rental = useQuery(api.rentals.getRental, {
-        rentalId: rentalId as Id<"rentals">,
-    });
+    const { accessToken } = useAuth();
+    const rental = useQuery(
+        api.rentals.getRental,
+        accessToken ? { accessToken, rentalId: rentalId as Id<"rentals"> } : "skip"
+    );
     const { showToast } = useToast();
     const router = useRouter();
 
@@ -47,7 +50,8 @@ export function usePaymentScreen(rentalId: string) {
 
         setUploading(true);
         try {
-            const uploadUrl = await generateUploadUrl();
+            if (!accessToken) throw new Error("Unauthenticated");
+            const uploadUrl = await generateUploadUrl({ accessToken });
             const response = await fetch(screenshot);
             const blob = await response.blob();
             const uploadResult = await fetch(uploadUrl, {
@@ -58,6 +62,7 @@ export function usePaymentScreen(rentalId: string) {
             const { storageId } = await uploadResult.json();
 
             await submitUpiPayment({
+                accessToken,
                 rentalId: rentalId as Id<"rentals">,
                 utrNumber,
                 paymentScreenshot: storageId,
@@ -79,7 +84,9 @@ export function usePaymentScreen(rentalId: string) {
     const handleCashPayment = async () => {
         setUploading(true);
         try {
+            if (!accessToken) throw new Error("Unauthenticated");
             await selectCashPayment({
+                accessToken,
                 rentalId: rentalId as Id<"rentals">,
             });
             showToast("Cash on pickup selected. Pay on pickup day.", "success");

@@ -1,3 +1,4 @@
+import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -9,9 +10,11 @@ import { useMemo, useState } from "react";
 const TIME_PATTERN = /^(0?[1-9]|1[0-2]):[0-5]\d (AM|PM)$/;
 
 export function useScheduleReturnScreen(rentalId: string) {
-    const rental = useQuery(api.rentals.getRental, {
-        rentalId: rentalId as Id<"rentals">,
-    });
+    const { accessToken } = useAuth();
+    const rental = useQuery(
+        api.rentals.getRental,
+        accessToken ? { accessToken, rentalId: rentalId as Id<"rentals"> } : "skip"
+    );
     const { showToast } = useToast();
     const router = useRouter();
     const schedulePickup = useMutation(api.rentals.schedulePickup);
@@ -107,7 +110,9 @@ export function useScheduleReturnScreen(rentalId: string) {
 
         setLoading(true);
         try {
+            if (!accessToken) throw new Error("Unauthenticated");
             await schedulePickup({
+                accessToken,
                 rentalId: rentalId as Id<"rentals">,
                 pickupDate,
                 pickupTime,

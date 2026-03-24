@@ -1,3 +1,4 @@
+import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -10,9 +11,11 @@ const TIME_PATTERN = /^(0?[1-9]|1[0-2]):[0-5]\d (AM|PM)$/;
 export function useScheduleDeliveryScreen(rentalId: string) {
     const router = useRouter();
     const { showToast } = useToast();
-    const rental = useQuery(api.rentals.getRental, {
-        rentalId: rentalId as Id<"rentals">,
-    });
+    const { accessToken } = useAuth();
+    const rental = useQuery(
+        api.rentals.getRental,
+        accessToken ? { accessToken, rentalId: rentalId as Id<"rentals"> } : "skip"
+    );
 
     const [deliveryDate, setDeliveryDate] = useState("");
     const [deliveryTime, setDeliveryTime] = useState("");
@@ -38,7 +41,9 @@ export function useScheduleDeliveryScreen(rentalId: string) {
 
         try {
             setLoading(true);
+            if (!accessToken) throw new Error("Unauthenticated");
             await scheduleMutation({
+                accessToken,
                 rentalId: rentalId as Id<"rentals">,
                 deliveryDate,
                 deliveryTime,

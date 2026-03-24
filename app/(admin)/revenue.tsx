@@ -3,9 +3,10 @@ import AdminDonutChart from "@/components/admin/AdminDonutChart";
 import AdminStackedBarChart from "@/components/admin/AdminStackedBarChart";
 import BookLoader from "@/components/ui/BookLoader";
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Spacing } from "@/constants/theme";
-import { api } from "@/convex/_generated/api";
 import { RENTALS_PAGINATION_OPTS } from "@/constants/pagination";
+import { Colors, Spacing } from "@/constants/theme";
+import { useAuth } from "@/context/AuthContext";
+import { api } from "@/convex/_generated/api";
 import {
     formatMonthLabel,
     getCurrentMonthKey,
@@ -26,9 +27,16 @@ const formatCurrency = (value: number) =>
 
 export default function AdminRevenueScreen() {
     const router = useRouter();
-    const rentalsQuery = useQuery(api.rentals.getAllRentals, {
-        paginationOpts: RENTALS_PAGINATION_OPTS,
-    });
+    const { accessToken } = useAuth();
+    const rentalsQuery = useQuery(
+        api.rentals.getAllRentals,
+        accessToken
+            ? {
+                accessToken,
+                paginationOpts: RENTALS_PAGINATION_OPTS,
+            }
+            : "skip"
+    );
     const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthKey());
     const [refreshing, setRefreshing] = useState(false);
     const rentals = useMemo(() => rentalsQuery?.page ?? [], [rentalsQuery]);

@@ -1,18 +1,20 @@
 import { MAIN_GENRES } from "@/constants/mainGenres";
 import { SERIES_PAGINATION_OPTS } from "@/constants/pagination";
+import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { useBookCoverManager } from "@/hooks/books/useBookCoverManager";
 import { applyMetadataToBookForm, parseBookNumericFields } from "@/utils/adminBookForm";
 import { fetchBookMetadataExtended } from "@/utils/bookMetadataExtended";
 import { validateEnglishSafeDescription } from "@/utils/descriptionPolicy";
 import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
-import { useBookCoverManager } from "@/hooks/books/useBookCoverManager";
 
 export function useAddBookScreen() {
     const { showToast } = useToast();
+    const { accessToken } = useAuth();
     const router = useRouter();
     const addBook = useMutation(api.books.add);
     const generateUploadUrl = useMutation(api.books.generateUploadUrl);
@@ -151,9 +153,11 @@ export function useAddBookScreen() {
 
             let uploadedCoverImages: Id<"_storage">[] = [];
 
+            if (!accessToken) throw new Error("Unauthenticated");
+
             if (coverManager.coverUris.length > 0) {
                 const uploadPromises = coverManager.coverUris.map(async (uri) => {
-                    const uploadUrl = await generateUploadUrl();
+                    const uploadUrl = await generateUploadUrl({ accessToken });
                     const response = await fetch(uri);
                     const blob = await response.blob();
                     const uploadResult = await fetch(uploadUrl, {
@@ -169,6 +173,7 @@ export function useAddBookScreen() {
             }
 
             await addBook({
+                accessToken,
                 title,
                 author,
                 description,

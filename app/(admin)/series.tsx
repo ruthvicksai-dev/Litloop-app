@@ -1,8 +1,9 @@
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Spacing } from "@/constants/theme";
 import { SERIES_PAGINATION_OPTS } from "@/constants/pagination";
+import { Colors, Spacing } from "@/constants/theme";
+import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -38,6 +39,7 @@ type SeriesItem = {
 export default function SeriesManagementScreen() {
     const router = useRouter();
     const { showToast } = useToast();
+    const { accessToken } = useAuth();
     const seriesQuery = useQuery(api.series.list, {
         paginationOpts: SERIES_PAGINATION_OPTS,
     });
@@ -103,7 +105,8 @@ export default function SeriesManagementScreen() {
             let coverImageId: Id<"_storage"> | undefined = editingSeries?.coverImage;
 
             if (coverUri && !coverUri.startsWith("http")) {
-                const uploadUrl = await generateUploadUrl();
+                if (!accessToken) throw new Error("Unauthenticated");
+                const uploadUrl = await generateUploadUrl({ accessToken });
                 const response = await fetch(coverUri);
                 const blob = await response.blob();
                 const uploadResult = await fetch(uploadUrl, {
@@ -122,8 +125,11 @@ export default function SeriesManagementScreen() {
                 return;
             }
 
+            if (!accessToken) throw new Error("Unauthenticated");
+
             if (editingSeries) {
                 await updateSeries({
+                    accessToken,
                     seriesId: editingSeries._id,
                     name,
                     description,
@@ -132,6 +138,7 @@ export default function SeriesManagementScreen() {
                 showToast("Series updated successfully!", "success");
             } else {
                 await addSeries({
+                    accessToken,
                     name,
                     description,
                     coverImage: coverImageId,
@@ -149,7 +156,8 @@ export default function SeriesManagementScreen() {
 
     const handleDelete = async (id: Id<"book_series">) => {
         try {
-            await removeSeries({ seriesId: id });
+            if (!accessToken) throw new Error("Unauthenticated");
+            await removeSeries({ accessToken, seriesId: id });
             showToast("Series deleted.", "success");
         } catch (error: unknown) {
             const message = error instanceof Error ? error.message : "Failed to delete series.";

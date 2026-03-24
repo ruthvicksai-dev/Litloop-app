@@ -11,7 +11,7 @@ export function useRequestRentalScreen(bookId: string) {
     const book = useQuery(api.books.get, {
         bookId: bookId as Id<"books">,
     });
-    const { userId } = useAuth();
+    const { accessToken } = useAuth();
     const { showToast } = useToast();
     const router = useRouter();
     const requestRental = useMutation(api.rentals.requestRental);
@@ -63,8 +63,9 @@ export function useRequestRentalScreen(bookId: string) {
 
         setLoading(true);
         try {
+            if (!accessToken) throw new Error("Unauthenticated");
             await requestRental({
-                userId: userId as Id<"users">,
+                accessToken,
                 bookId: bookId as Id<"books">,
                 zone,
                 deliveryLocation: {

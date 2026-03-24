@@ -1,3 +1,4 @@
+import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -7,16 +8,22 @@ import { useRouter } from "expo-router";
 export function useVerifyPaymentScreen(rentalId?: string) {
     const { showToast } = useToast();
     const router = useRouter();
+    const { accessToken } = useAuth();
     const verifyPayment = useMutation(api.payments.verifyPayment);
-    const pendingPayments = useQuery(api.payments.getPendingPayments);
+    const pendingPayments = useQuery(
+        api.payments.getPendingPayments,
+        accessToken ? { accessToken } : "skip"
+    );
     const singleRental = useQuery(
         api.rentals.getRental,
-        rentalId ? { rentalId: rentalId as Id<"rentals"> } : "skip"
+        accessToken && rentalId ? { accessToken, rentalId: rentalId as Id<"rentals"> } : "skip"
     );
 
     const handleVerify = async (targetRentalId: string, approved: boolean) => {
         try {
+            if (!accessToken) throw new Error("Unauthenticated");
             await verifyPayment({
+                accessToken,
                 rentalId: targetRentalId as Id<"rentals">,
                 approved,
             });

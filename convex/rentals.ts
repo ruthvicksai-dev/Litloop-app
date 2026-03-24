@@ -180,8 +180,8 @@ export const scheduleDelivery = mutation({
         // M6: Validate date and time format
         if (!/^\d{4}-\d{2}-\d{2}$/.test(args.deliveryDate))
             throw new Error("Invalid delivery date format. Use YYYY-MM-DD.");
-        if (!/^\d{2}:\d{2}$/.test(args.deliveryTime))
-            throw new Error("Invalid delivery time format. Use HH:MM.");
+        if (!/^\d{2}:\d{2}$/.test(args.deliveryTime) && !/^(0?[1-9]|1[0-2]):[0-5]\d[ ]?(AM|PM|am|pm)$/.test(args.deliveryTime))
+            throw new Error("Invalid delivery time format. Use HH:MM or HH:MM AM/PM.");
 
         await ctx.db.patch(args.rentalId, {
             deliveryDate: args.deliveryDate,
@@ -260,6 +260,10 @@ export const schedulePickup = mutation({
 
         if (!args.pickupDate) throw new Error("Pickup date is required.");
         if (!args.pickupTime) throw new Error("Pickup time is required.");
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(args.pickupDate))
+            throw new Error("Invalid pickup date format. Use YYYY-MM-DD.");
+        if (!/^\d{2}:\d{2}$/.test(args.pickupTime) && !/^(0?[1-9]|1[0-2]):[0-5]\d[ ]?(AM|PM|am|pm)$/.test(args.pickupTime))
+            throw new Error("Invalid pickup time format. Use HH:MM or HH:MM AM/PM.");
         if (!Number.isInteger(args.userRating) || args.userRating < 1 || args.userRating > 5) {
             throw new Error("Please provide a rating between 1 and 5 stars.");
         }
