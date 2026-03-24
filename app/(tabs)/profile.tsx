@@ -1,5 +1,5 @@
-import { ProfileUserCard } from "@/components/profile/ProfileUserCard";
 import { GuestView } from "@/components/profile/GuestProfileView";
+import { ProfileUserCard } from "@/components/profile/ProfileUserCard";
 import { BookCardSkeleton } from "@/components/ui/BookCardSkeleton";
 import ConfirmActionModal from "@/components/ui/ConfirmActionModal";
 import DiscoverSectionRow from "@/components/ui/DiscoverSectionRow";
@@ -295,6 +295,34 @@ export default function ProfileScreen() {
                             </View>
                         )}
                     </Animated.View>
+
+                    {/* Legal Section */}
+                    <View style={styles.legalSection}>
+                        <Text style={styles.legalSectionTitle} allowFontScaling={false}>Legal</Text>
+                        <TouchableOpacity
+                            style={styles.legalRow}
+                            onPress={() => {
+                                triggerHaptic("light");
+                                router.push("/legal/privacy-policy" as any);
+                            }}
+                        >
+                            <Ionicons name="shield-checkmark-outline" size={18} color={Colors.primary} />
+                            <Text style={styles.legalRowText} allowFontScaling={false}>Privacy Policy</Text>
+                            <Ionicons name="chevron-forward" size={16} color={Colors.textLight} style={{ marginLeft: "auto" }} />
+                        </TouchableOpacity>
+                        <View style={styles.legalDivider} />
+                        <TouchableOpacity
+                            style={styles.legalRow}
+                            onPress={() => {
+                                triggerHaptic("light");
+                                router.push("/legal/terms-of-service" as any);
+                            }}
+                        >
+                            <Ionicons name="document-text-outline" size={18} color={Colors.primary} />
+                            <Text style={styles.legalRowText} allowFontScaling={false}>Terms of Service</Text>
+                            <Ionicons name="chevron-forward" size={16} color={Colors.textLight} style={{ marginLeft: "auto" }} />
+                        </TouchableOpacity>
+                    </View>
                 </ScrollView>
             </SafeAreaView>
 
@@ -386,6 +414,43 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         borderWidth: 1,
         borderColor: Colors.border + "40",
+    },
+    legalSection: {
+        marginHorizontal: 20,
+        marginTop: Spacing.xl,
+        marginBottom: Spacing.lg,
+        backgroundColor: Colors.white,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: Colors.border + "40",
+        overflow: "hidden",
+    },
+    legalSectionTitle: {
+        fontSize: FontSizes.caption,
+        fontFamily: Fonts.bold,
+        color: Colors.textSecondary,
+        letterSpacing: 0.8,
+        textTransform: "uppercase",
+        paddingHorizontal: 16,
+        paddingTop: 14,
+        paddingBottom: 6,
+    },
+    legalRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+        gap: 12,
+    },
+    legalRowText: {
+        fontSize: FontSizes.body,
+        fontFamily: Fonts.medium,
+        color: Colors.text,
+    },
+    legalDivider: {
+        height: 1,
+        marginHorizontal: 16,
+        backgroundColor: Colors.border + "60",
     },
     center: {
         flex: 1,

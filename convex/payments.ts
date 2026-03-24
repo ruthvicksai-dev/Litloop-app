@@ -2,6 +2,8 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
 import { recordPaymentCompleted, recordUserActivity } from "./analytics";
+import { insertAuditLog } from "./lib/auditLog";
+import { assertAdmin, getAuthenticatedUser } from "./lib/authHelpers";
 import { assertRateLimit, buildRateLimitKey } from "./lib/rateLimit";
 
 const PAYMENT_RATE_LIMITS = {
@@ -55,12 +57,27 @@ export const submitUpiPayment = mutation({
         paymentScreenshot: v.id("_storage"),
         ipAddress: v.optional(v.string()),
         deviceInfo: v.optional(v.string()),
+        accessToken: v.string(),
     },
     handler: async (ctx, args) => {
+        const caller = await getAuthenticatedUser(ctx, args.accessToken);
         const rental = await ctx.db.get(args.rentalId);
         if (!rental) throw new Error("Rental not found.");
+
+        if (rental.userId !== caller._id && caller.role !== "admin") {
+            throw new Error("Unauthorized");
+        }
+
         if (rental.status !== "pickup_scheduled")
             throw new Error("Pickup must be scheduled before payment.");
+
+        // C2: Idempotency guard — prevent duplicate payment submissions
+        if (rental.paymentStatus === "verification_pending") {
+            throw new Error("A payment submission is already pending verification.");
+        }
+        if (rental.paymentStatus === "paid") {
+            throw new Error("This rental has already been paid.");
+        }
 
         // Global IP rate limit
         if (args.ipAddress) {
@@ -76,7 +93,10 @@ export const submitUpiPayment = mutation({
         );
         assertRateLimit(submitPaymentKey, PAYMENT_RATE_LIMITS.submitUpiPayment);
 
+        // M4: Validate UTR number format (12 alphanumeric chars)
+        const utrRegex = /^[A-Za-z0-9]{12}$/;
         if (!args.utrNumber.trim()) throw new Error("UTR number is required.");
+        if (!utrRegex.test(args.utrNumber.trim())) throw new Error("Invalid UTR number. Must be exactly 12 alphanumeric characters.");
 
         await ctx.db.patch(args.rentalId, {
             paymentMethod: "upi",
@@ -103,12 +123,27 @@ export const selectCashPayment = mutation({
         rentalId: v.id("rentals"),
         ipAddress: v.optional(v.string()),
         deviceInfo: v.optional(v.string()),
+        accessToken: v.string(),
     },
     handler: async (ctx, args) => {
+        const caller = await getAuthenticatedUser(ctx, args.accessToken);
         const rental = await ctx.db.get(args.rentalId);
         if (!rental) throw new Error("Rental not found.");
+
+        if (rental.userId !== caller._id && caller.role !== "admin") {
+            throw new Error("Unauthorized");
+        }
+
         if (rental.status !== "pickup_scheduled")
             throw new Error("Pickup must be scheduled before payment.");
+
+        // C2: Idempotency guard — prevent duplicate payment submissions
+        if (rental.paymentStatus === "cash_pending") {
+            throw new Error("A cash payment is already registered for this rental.");
+        }
+        if (rental.paymentStatus === "paid") {
+            throw new Error("This rental has already been paid.");
+        }
 
         // Global IP rate limit
         if (args.ipAddress) {
@@ -146,8 +181,10 @@ export const verifyPayment = mutation({
     args: {
         rentalId: v.id("rentals"),
         approved: v.boolean(),
+        accessToken: v.string(),
     },
     handler: async (ctx, args) => {
+        const admin = await assertAdmin(ctx, args.accessToken);
         const rental = await ctx.db.get(args.rentalId);
         if (!rental) throw new Error("Rental not found.");
 
@@ -175,10 +212,22 @@ export const verifyPayment = mutation({
                 genres,
                 timestamp: Date.now(),
             });
+
+            // H5: Audit log — payment approved
+            await insertAuditLog(ctx, "payment_approved", admin._id, args.rentalId, "rental", {
+                amount,
+                method: rental.paymentMethod,
+                utrNumber: rental.utrNumber,
+            });
         } else {
             await ctx.db.patch(args.rentalId, {
                 paymentStatus: "rejected",
                 status: "pickup_scheduled", // Roll back to allow resubmission
+            });
+
+            // H5: Audit log — payment rejected
+            await insertAuditLog(ctx, "payment_rejected", admin._id, args.rentalId, "rental", {
+                method: rental.paymentMethod,
             });
         }
 
@@ -187,15 +236,17 @@ export const verifyPayment = mutation({
 });
 
 export const generateUploadUrl = mutation({
-    args: {},
-    handler: async (ctx) => {
+    args: { accessToken: v.string() },
+    handler: async (ctx, args) => {
+        await getAuthenticatedUser(ctx, args.accessToken);
         return await ctx.storage.generateUploadUrl();
     },
 });
 
 export const getPendingPayments = query({
-    args: {},
-    handler: async (ctx) => {
+    args: { accessToken: v.string() },
+    handler: async (ctx, args) => {
+        await assertAdmin(ctx, args.accessToken);
         const rentals = await ctx.db
             .query("rentals")
             .withIndex("by_status", (q) => q.eq("status", "payment_pending"))

@@ -2,6 +2,7 @@ import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
+import { assertAdmin } from "./lib/authHelpers";
 
 const MAIN_GENRES = [
     "Action",
@@ -390,8 +391,10 @@ export const add = mutation({
         coverImage: v.optional(v.id("_storage")),
         coverImages: v.optional(v.array(v.id("_storage"))),
         totalCopies: v.number(),
+        accessToken: v.string(),
     },
     handler: async (ctx, args) => {
+        await assertAdmin(ctx, args.accessToken);
         const title = args.title.trim();
         const author = args.author.trim();
         const description = args.description.trim();
@@ -495,8 +498,10 @@ export const update = mutation({
         coverImage: v.optional(v.id("_storage")),
         coverImages: v.optional(v.array(v.id("_storage"))),
         totalCopies: v.optional(v.number()),
+        accessToken: v.string(),
     },
     handler: async (ctx, args) => {
+        await assertAdmin(ctx, args.accessToken);
         const book = await ctx.db.get(args.bookId);
         if (!book) throw new Error("Book not found.");
 
@@ -642,27 +647,25 @@ export const update = mutation({
 });
 
 export const generateUploadUrl = mutation({
-    args: {},
-    handler: async (ctx) => {
+    args: { accessToken: v.string() },
+    handler: async (ctx, args) => {
+        await assertAdmin(ctx, args.accessToken);
         return await ctx.storage.generateUploadUrl();
     },
 });
 
 export const remove = mutation({
-    args: { bookId: v.id("books") },
+    args: { bookId: v.id("books"), accessToken: v.string() },
     handler: async (ctx, args) => {
+        await assertAdmin(ctx, args.accessToken);
         const book = await ctx.db.get(args.bookId);
         if (!book) throw new Error("Book not found.");
 
         // Check for active rentals
         const activeRentals = await ctx.db
             .query("rentals")
-            .filter((q) =>
-                q.and(
-                    q.eq(q.field("bookId"), args.bookId),
-                    q.neq(q.field("status"), "returned")
-                )
-            )
+            .withIndex("by_bookId", (q) => q.eq("bookId", args.bookId))
+            .filter((q) => q.neq(q.field("status"), "returned"))
             .first();
         if (activeRentals) {
             throw new Error("Cannot remove a book with active rentals.");

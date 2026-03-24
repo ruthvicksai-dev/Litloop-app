@@ -3,6 +3,7 @@ import { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import { recordUserRegistered } from "./analytics";
 import {
+    assertAdmin,
     getAccessTokenSecret,
     getRefreshTokenSecret,
     getUserIdFromAccessToken,
@@ -135,13 +136,22 @@ export const signUp = mutation({
     },
     handler: async (ctx, args) => {
         if (!args.name.trim()) throw new Error("Name is required.");
+        if (args.name.trim().length > 100) throw new Error("Name is too long (max 100 characters).");
         if (!args.email.trim()) throw new Error("Email is required.");
+        if (args.email.trim().length > 254) throw new Error("Email is too long.");
         if (!args.phone.trim()) throw new Error("Phone number is required.");
-        if (args.password.length < 6)
-            throw new Error("Password must be at least 6 characters.");
+        // M1: Minimum password length increased to 8 (OWASP recommendation)
+        if (args.password.length < 8)
+            throw new Error("Password must be at least 8 characters.");
+        if (args.password.length > 128)
+            throw new Error("Password is too long (max 128 characters).");
 
         const normalizedEmail = args.email.toLowerCase().trim();
         const normalizedPhone = normalizePhone(args.phone.trim());
+
+        // M3: Email format validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(normalizedEmail)) throw new Error("Invalid email address format.");
 
         // Global IP rate limit
         if (args.ipAddress) {
@@ -541,7 +551,7 @@ export const signOut = mutation({
             // Revoking by SID is primary
             await ctx.db.patch(sid, { isRevoked: true });
         } catch {
-            // Fallback: If token is invalid/expired, try revoking by hash
+            // C4: Fallback by hash only — no full table scan allowed
             try {
                 const refreshTokenHash = await sha256(args.refreshToken);
                 const session = await ctx.db
@@ -551,21 +561,8 @@ export const signOut = mutation({
 
                 if (session) {
                     await ctx.db.patch(session._id, { isRevoked: true });
-                    return;
                 }
-
-                const legacySessions = await ctx.db.query("sessions").collect();
-
-                const matchingSession = legacySessions.find(
-                    (current) => getSessionRefreshTokenHash(current) === refreshTokenHash
-                );
-
-                if (matchingSession) {
-                    await ctx.db.patch(matchingSession._id, {
-                        isRevoked: true,
-                        refreshTokenHash,
-                    });
-                }
+                // If not found via index, silently succeed — sign-out is best-effort
             } catch {
                 // Ignore all errors during sign-out
             }
@@ -574,8 +571,10 @@ export const signOut = mutation({
 });
 
 export const backfillLegacySessions = mutation({
-    args: {},
-    handler: async (ctx) => {
+    args: { accessToken: v.string() },
+    handler: async (ctx, args) => {
+        // C3: Protect admin-only migration endpoint
+        await assertAdmin(ctx, args.accessToken);
         const sessions = await ctx.db.query("sessions").collect();
         let updated = 0;
 
@@ -602,8 +601,10 @@ export const backfillLegacySessions = mutation({
 });
 
 export const backfillUsers = mutation({
-    args: {},
-    handler: async (ctx) => {
+    args: { accessToken: v.string() },
+    handler: async (ctx, args) => {
+        // C3: Protect admin-only migration endpoint
+        await assertAdmin(ctx, args.accessToken);
         const users = await ctx.db.query("users").collect();
         let updated = 0;
 
@@ -641,8 +642,9 @@ export const changePassword = mutation({
             throw new Error("Current password is required.");
         }
 
-        if (args.newPassword.length < 6) {
-            throw new Error("New password must be at least 6 characters.");
+        // M1: Minimum password length increased to 8
+        if (args.newPassword.length < 8) {
+            throw new Error("New password must be at least 8 characters.");
         }
 
         const changePasswordKey = buildRateLimitKey("auth", "changePassword", userId);
@@ -670,6 +672,15 @@ export const changePassword = mutation({
         await ctx.db.patch(userId, {
             passwordHash: newPasswordHash,
         });
+
+        // H6: Revoke all sessions after password change to invalidate stolen sessions
+        const activeSessions = await ctx.db
+            .query("sessions")
+            .withIndex("by_userId_active", (q) => q.eq("userId", userId).eq("isRevoked", false))
+            .collect();
+        for (const s of activeSessions) {
+            await ctx.db.patch(s._id, { isRevoked: true });
+        }
 
         clearRateLimit(changePasswordKey);
         return true;

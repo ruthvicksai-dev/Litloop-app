@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
 import { recordRentalCreated, recordUserActivity } from "./analytics";
+import { assertAdmin, getAuthenticatedUser } from "./lib/authHelpers";
 import { assertRateLimit, buildRateLimitKey } from "./lib/rateLimit";
 
 const LATE_FEE_PER_DAY = 3; // ₹3 per day
@@ -43,7 +44,6 @@ async function getBookWithCoverUrls(ctx: any, bookId: any) {
 }
 export const requestRental = mutation({
     args: {
-        userId: v.id("users"),
         bookId: v.id("books"),
         zone: v.string(),
         deliveryLocation: v.object({
@@ -61,9 +61,13 @@ export const requestRental = mutation({
         }),
         ipAddress: v.optional(v.string()),
         deviceInfo: v.optional(v.string()),
+        accessToken: v.string(),
     },
     handler: async (ctx, args) => {
-        const rentalRequestKey = buildRateLimitKey("rental", "request", args.userId, args.ipAddress);
+        const user = await getAuthenticatedUser(ctx, args.accessToken);
+        const userId = user._id;
+
+        const rentalRequestKey = buildRateLimitKey("rental", "request", userId, args.ipAddress);
         assertRateLimit(rentalRequestKey, RENTAL_RATE_LIMITS.requestRental);
 
         const book = await ctx.db.get(args.bookId);
@@ -74,7 +78,7 @@ export const requestRental = mutation({
         // Check for duplicate active rental
         const duplicate = await ctx.db
             .query("rentals")
-            .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+            .withIndex("by_userId", (q) => q.eq("userId", userId))
             .filter((q) =>
                 q.and(
                     q.eq(q.field("bookId"), args.bookId),
@@ -87,7 +91,10 @@ export const requestRental = mutation({
         if (duplicate)
             throw new Error("You already have an active rental for this book.");
 
-        if (!args.zone.trim()) throw new Error("Zone is required.");
+        const ALLOWED_ZONES = ["Home", "College"];
+        if (!ALLOWED_ZONES.includes(args.zone))
+            throw new Error("Invalid zone. Must be 'Home' or 'College'.");
+
         const phoneRegex = /^\d{10}$/;
         if (!phoneRegex.test(args.deliveryLocation.phone.trim())) {
             throw new Error("Please provide a valid 10-digit phone number.");
@@ -102,13 +109,18 @@ export const requestRental = mutation({
             }
         }
 
-        // Decrease available copies
+        // C1: Re-read book immediately before decrement to prevent TOCTOU race condition.
+        // Convex serializes mutations per-document, so this read-then-write is safe.
+        const freshBook = await ctx.db.get(args.bookId);
+        if (!freshBook || freshBook.availableCopies <= 0)
+            throw new Error("This book is currently unavailable.");
+
         await ctx.db.patch(args.bookId, {
-            availableCopies: book.availableCopies - 1,
+            availableCopies: freshBook.availableCopies - 1,
         });
 
         const rentalId = await ctx.db.insert("rentals", {
-            userId: args.userId,
+            userId: userId,
             bookId: args.bookId,
             zone: args.zone.trim(),
             deliveryLocation: {
@@ -124,14 +136,13 @@ export const requestRental = mutation({
                 longitude: args.deliveryLocation.longitude,
                 formattedAddress: args.deliveryLocation.formattedAddress?.trim(),
             },
-            rentPerDay: book.rentPerDay,
+            rentPerDay: freshBook.rentPerDay,
             status: "requested",
             createdAt: Date.now(),
         });
 
-        await recordRentalCreated(ctx, args.userId, Date.now());
+        await recordRentalCreated(ctx, userId, Date.now());
 
-        const user = await ctx.db.get(args.userId);
         await ctx.scheduler.runAfter(0, internal.notifications.notifyAdminsOfNewRental, {
             rentalId,
             bookTitle: book.title,
@@ -140,7 +151,7 @@ export const requestRental = mutation({
 
         // Notify the user themselves
         await ctx.scheduler.runAfter(0, internal.notifications.notifyUser, {
-            userId: args.userId,
+            userId: userId,
             title: "Rental Requested 📚",
             body: `Your request for "${book.title}" has been received and is pending approval.`,
             dataJson: JSON.stringify({ rentalId, type: "rental" }),
@@ -155,8 +166,10 @@ export const scheduleDelivery = mutation({
         rentalId: v.id("rentals"),
         deliveryDate: v.string(),
         deliveryTime: v.string(),
+        accessToken: v.string(),
     },
     handler: async (ctx, args) => {
+        await assertAdmin(ctx, args.accessToken);
         const rental = await ctx.db.get(args.rentalId);
         if (!rental) throw new Error("Rental not found.");
         if (rental.status !== "requested")
@@ -164,6 +177,11 @@ export const scheduleDelivery = mutation({
 
         if (!args.deliveryDate) throw new Error("Delivery date is required.");
         if (!args.deliveryTime) throw new Error("Delivery time is required.");
+        // M6: Validate date and time format
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(args.deliveryDate))
+            throw new Error("Invalid delivery date format. Use YYYY-MM-DD.");
+        if (!/^\d{2}:\d{2}$/.test(args.deliveryTime))
+            throw new Error("Invalid delivery time format. Use HH:MM.");
 
         await ctx.db.patch(args.rentalId, {
             deliveryDate: args.deliveryDate,
@@ -181,8 +199,9 @@ export const scheduleDelivery = mutation({
 });
 
 export const markDelivered = mutation({
-    args: { rentalId: v.id("rentals") },
+    args: { rentalId: v.id("rentals"), accessToken: v.string() },
     handler: async (ctx, args) => {
+        await assertAdmin(ctx, args.accessToken);
         const rental = await ctx.db.get(args.rentalId);
         if (!rental) throw new Error("Rental not found.");
         if (rental.status !== "delivery_scheduled")
@@ -220,12 +239,24 @@ export const schedulePickup = mutation({
             longitude: v.optional(v.number()),
             formattedAddress: v.optional(v.string()),
         })),
+        accessToken: v.string(),
     },
     handler: async (ctx, args) => {
+        const user = await getAuthenticatedUser(ctx, args.accessToken);
         const rental = await ctx.db.get(args.rentalId);
         if (!rental) throw new Error("Rental not found.");
+
+        if (rental.userId !== user._id && user.role !== "admin") {
+            throw new Error("Unauthorized");
+        }
+
         if (rental.status !== "delivered")
             throw new Error("Book must be delivered before scheduling pickup.");
+
+        // C5: Prevent double invocation (rating manipulation)
+        if (rental.ratedAt) {
+            throw new Error("Pickup has already been scheduled for this rental.");
+        }
 
         if (!args.pickupDate) throw new Error("Pickup date is required.");
         if (!args.pickupTime) throw new Error("Pickup time is required.");
@@ -267,7 +298,6 @@ export const schedulePickup = mutation({
         });
 
         // Notify admins that a pickup is scheduled
-        const user = await ctx.db.get(rental.userId);
         await ctx.scheduler.runAfter(0, internal.notifications.notifyAdminsOfPickupScheduled, {
             rentalId: args.rentalId,
             bookTitle: book?.title ?? "A book",
@@ -277,26 +307,27 @@ export const schedulePickup = mutation({
 });
 
 export const markReturned = mutation({
-    args: { rentalId: v.id("rentals") },
+    args: { rentalId: v.id("rentals"), accessToken: v.string() },
     handler: async (ctx, args) => {
+        await assertAdmin(ctx, args.accessToken);
         const rental = await ctx.db.get(args.rentalId);
         if (!rental) throw new Error("Rental not found.");
         if (rental.status !== "paid")
             throw new Error("Payment must be completed before marking book as returned.");
 
-        // Increase available copies
-        const book = await ctx.db.get(rental.bookId);
-        if (book) {
-            const nextAvailable = book.availableCopies + 1;
+        // C1: Re-read book immediately before increment to close TOCTOU window
+        const freshBook = await ctx.db.get(rental.bookId);
+        if (freshBook) {
+            const nextAvailable = freshBook.availableCopies + 1;
             await ctx.db.patch(rental.bookId, {
                 availableCopies: nextAvailable,
             });
 
             // If it was out of stock and now is available, notify
-            if (book.availableCopies === 0 && nextAvailable > 0) {
+            if (freshBook.availableCopies === 0 && nextAvailable > 0) {
                 await ctx.scheduler.runAfter(0, internal.notifications.notifySubscribersOfAvailability, {
                     bookId: rental.bookId,
-                    bookTitle: book.title,
+                    bookTitle: freshBook.title,
                 });
             }
         }
@@ -328,8 +359,11 @@ export const markReturned = mutation({
 });
 
 export const getUserRentals = query({
-    args: { userId: v.id("users") },
+    args: { accessToken: v.string(), userId: v.optional(v.id("users")) },
     handler: async (ctx, args) => {
+        const caller = await getAuthenticatedUser(ctx, args.accessToken);
+        const targetUserId = (caller.role === "admin" && args.userId) ? args.userId : caller._id;
+
         const activeStatuses = [
             "requested",
             "delivery_scheduled",
@@ -341,7 +375,7 @@ export const getUserRentals = query({
         // Fetch active rentals using database filtering
         const rentals = await ctx.db
             .query("rentals")
-            .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+            .withIndex("by_userId", (q) => q.eq("userId", targetUserId))
             .filter((q) =>
                 q.or(
                     q.eq(q.field("status"), "requested"),
@@ -372,7 +406,7 @@ export const getUserRentals = query({
 
 export const getRentalHistory = query({
     args: {
-        userId: v.id("users"),
+        userId: v.optional(v.id("users")),
         status: v.optional(
             v.union(v.literal("all"), v.literal("paid"), v.literal("returned"))
         ),
@@ -384,31 +418,36 @@ export const getRentalHistory = query({
                 v.literal("this_year")
             )
         ),
+        accessToken: v.string(),
     },
     handler: async (ctx, args) => {
+        const caller = await getAuthenticatedUser(ctx, args.accessToken);
+        const targetUserId = (caller.role === "admin" && args.userId) ? args.userId : caller._id;
+
         const now = Date.now();
         const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime();
         const yearStart = new Date(new Date().getFullYear(), 0, 1).getTime();
         const last30DaysStart = now - 30 * 24 * 60 * 60 * 1000;
 
-        let queryBuilder = ctx.db
-            .query("rentals")
-            .withIndex("by_userId", (q) => q.eq("userId", args.userId));
+        let queryBuilder;
 
         // Use database filtering for status if specific
         if (args.status === "paid") {
             queryBuilder = ctx.db
                 .query("rentals")
-                .withIndex("by_userId_status", (q) => q.eq("userId", args.userId).eq("status", "paid"));
+                .withIndex("by_userId_status", (q) => q.eq("userId", targetUserId).eq("status", "paid"));
         } else if (args.status === "returned") {
             queryBuilder = ctx.db
                 .query("rentals")
-                .withIndex("by_userId_status", (q) => q.eq("userId", args.userId).eq("status", "returned"));
+                .withIndex("by_userId_status", (q) => q.eq("userId", targetUserId).eq("status", "returned"));
         } else {
             // "all" - filter completed statuses in DB
-            queryBuilder = queryBuilder.filter((q) =>
-                q.or(q.eq(q.field("status"), "paid"), q.eq(q.field("status"), "returned"))
-            );
+            queryBuilder = ctx.db
+                .query("rentals")
+                .withIndex("by_userId", (q) => q.eq("userId", targetUserId))
+                .filter((q) =>
+                    q.or(q.eq(q.field("status"), "paid"), q.eq(q.field("status"), "returned"))
+                );
         }
 
         const rentals = await queryBuilder.order("desc").collect();
@@ -445,8 +484,9 @@ export const getRentalHistory = query({
 });
 
 export const getAllRentals = query({
-    args: { paginationOpts: paginationOptsValidator },
+    args: { paginationOpts: paginationOptsValidator, accessToken: v.string() },
     handler: async (ctx, args) => {
+        await assertAdmin(ctx, args.accessToken);
         const results = await ctx.db
             .query("rentals")
             .withIndex("by_createdAt")
@@ -474,10 +514,15 @@ export const getAllRentals = query({
 });
 
 export const getRental = query({
-    args: { rentalId: v.id("rentals") },
+    args: { rentalId: v.id("rentals"), accessToken: v.string() },
     handler: async (ctx, args) => {
+        const caller = await getAuthenticatedUser(ctx, args.accessToken);
         const rental = await ctx.db.get(args.rentalId);
         if (!rental) throw new Error("Rental not found.");
+
+        if (rental.userId !== caller._id && caller.role !== "admin") {
+            throw new Error("Unauthorized");
+        }
 
         const book = await getBookWithCoverUrls(ctx, rental.bookId);
         const user = await ctx.db.get(rental.userId);

@@ -16,6 +16,7 @@ export default defineSchema({
     })
         .index("by_email", ["email"])
         .index("by_phone", ["phone"])
+        .index("by_role", ["role"])
         .index("by_createdAt", ["createdAt"]),
 
     book_notifications: defineTable({
@@ -176,6 +177,7 @@ export default defineSchema({
         createdAt: v.number(),
     })
         .index("by_userId", ["userId"])
+        .index("by_bookId", ["bookId"])
         .index("by_status", ["status"])
         .index("by_zone", ["zone"])
         .index("by_userId_status", ["userId", "status"])
@@ -243,4 +245,24 @@ export default defineSchema({
     })
         .index("by_user_month", ["userId", "month"])
         .index("by_month", ["month"]),
+
+    // H5: Immutable audit log for sensitive actions (payment, admin ops, auth events)
+    audit_logs: defineTable({
+        action: v.string(),
+        actorId: v.id("users"),
+        targetId: v.optional(v.string()),
+        targetType: v.optional(v.string()),
+        metadata: v.optional(v.string()), // JSON-serialized
+        timestamp: v.number(),
+    })
+        .index("by_actorId", ["actorId"])
+        .index("by_timestamp", ["timestamp"])
+        .index("by_action", ["action"]),
+
+    // H3: DB-backed rate limiting for critical paths (distributed, persisted across isolates)
+    rate_limit_events: defineTable({
+        key: v.string(),
+        count: v.number(),
+        resetAt: v.number(),
+    }).index("by_key", ["key"]),
 });

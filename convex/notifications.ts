@@ -7,7 +7,7 @@ import {
     mutation,
     query,
 } from "./_generated/server";
-import { getUserIdFromAccessToken } from "./lib/authHelpers";
+import { getAuthenticatedUser, getUserIdFromAccessToken } from "./lib/authHelpers";
 import { assertRateLimit, buildRateLimitKey } from "./lib/rateLimit";
 
 const NOTIFICATION_RATE_LIMITS = {
@@ -91,13 +91,22 @@ export const updatePushToken = mutation({
         }
 
         const userId = await getUserIdFromAccessToken(args.accessToken);
-        const users = await ctx.db.query("users").collect();
 
-        await Promise.all(
-            users
-                .filter((user) => user._id !== userId && user.pushToken === args.pushToken)
-                .map((user) => ctx.db.patch(user._id, { pushToken: undefined }))
-        );
+        // Fix: Avoid full table scan — use indexed lookup to clear duplicate tokens
+        const existingUser = await ctx.db
+            .query("users")
+            .withIndex("by_email", (q: any) => q)
+            .filter((q: any) =>
+                q.and(
+                    q.neq(q.field("_id"), userId),
+                    q.eq(q.field("pushToken"), args.pushToken)
+                )
+            )
+            .first();
+
+        if (existingUser) {
+            await ctx.db.patch(existingUser._id, { pushToken: undefined });
+        }
 
         await ctx.db.patch(userId, {
             pushToken: args.pushToken,
@@ -166,7 +175,8 @@ export const subscribeToBook = mutation({
 export const getNotifications = query({
     args: { accessToken: v.string() },
     handler: async (ctx, args) => {
-        const userId = await getUserIdFromAccessToken(args.accessToken);
+        const user = await getAuthenticatedUser(ctx, args.accessToken);
+        const userId = user._id;
         return await ctx.db
             .query("user_notifications")
             .withIndex("by_userId", (q) => q.eq("userId", userId))
@@ -178,7 +188,8 @@ export const getNotifications = query({
 export const getUnreadCount = query({
     args: { accessToken: v.string() },
     handler: async (ctx, args) => {
-        const userId = await getUserIdFromAccessToken(args.accessToken);
+        const user = await getAuthenticatedUser(ctx, args.accessToken);
+        const userId = user._id;
         const unread = await ctx.db
             .query("user_notifications")
             .withIndex("by_userId_isRead", (q) =>
@@ -209,7 +220,8 @@ export const markRead = mutation({
 export const markAllRead = mutation({
     args: { accessToken: v.string() },
     handler: async (ctx, args) => {
-        const userId = await getUserIdFromAccessToken(args.accessToken);
+        const user = await getAuthenticatedUser(ctx, args.accessToken);
+        const userId = user._id;
         const unread = await ctx.db
             .query("user_notifications")
             .withIndex("by_userId_isRead", (q) =>

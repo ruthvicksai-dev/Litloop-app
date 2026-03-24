@@ -94,6 +94,8 @@ function AppGate({ fontsLoaded }: { fontsLoaded: boolean }) {
           <Stack.Screen name="section-books" />
           <Stack.Screen name="profile/edit" />
           <Stack.Screen name="rental" />
+          <Stack.Screen name="legal/privacy-policy" />
+          <Stack.Screen name="legal/terms-of-service" />
         </Stack>
       )}
     </>

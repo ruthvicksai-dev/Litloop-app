@@ -40,6 +40,37 @@ export async function getUserIdFromAccessToken(
     return payload.sub as Id<"users">;
 }
 
+/**
+ * Verifies an access token and returns the full user document.
+ * Throws if token is invalid or user doesn't exist.
+ */
+export async function getAuthenticatedUser(
+    ctx: { db: any },
+    accessToken: string
+) {
+    const userId = await getUserIdFromAccessToken(accessToken);
+    const user = await ctx.db.get(userId);
+    if (!user) {
+        throw new Error("User not found.");
+    }
+    return user;
+}
+
+/**
+ * Verifies that the user associated with the access token has an 'admin' role.
+ * Throws if not authenticated or not an admin.
+ */
+export async function assertAdmin(
+    ctx: { db: any },
+    accessToken: string
+) {
+    const user = await getAuthenticatedUser(ctx, accessToken);
+    if (user.role !== "admin") {
+        throw new Error("Unauthorized: Admin access required.");
+    }
+    return user;
+}
+
 // ─── Password Hashing (PBKDF2 with salt) ────────────────────────────────────
 
 /**
@@ -130,8 +161,15 @@ export async function verifyPassword(
             .map((b) => b.toString(16).padStart(2, "0"))
             .join("");
 
-        // Constant-time comparison
-        return inputHashHex === storedHashHex;
+        // H2: Timing-safe comparison — prevents timing-based password oracle attacks
+        const inputBuf = new Uint8Array(derivedBits);
+        const storedBuf = new Uint8Array(
+            (storedHashHex.match(/.{2}/g) ?? []).map((h) => parseInt(h, 16))
+        );
+        if (inputBuf.length !== storedBuf.length) return false;
+        let diff = 0;
+        for (let i = 0; i < inputBuf.length; i++) diff |= inputBuf[i] ^ storedBuf[i];
+        return diff === 0;
     } else {
         // --- Legacy SHA-256 path (no salt) ---
         const hashBuffer = await crypto.subtle.digest("SHA-256", encoder.encode(plaintext));

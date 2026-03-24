@@ -1,6 +1,7 @@
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { assertAdmin } from "./lib/authHelpers";
 
 export async function mapSeriesForClient(ctx: any, series: any) {
     const coverUrl = await ctx.storage.getUrl(series.coverImage);
@@ -48,8 +49,10 @@ export const add = mutation({
         name: v.string(),
         coverImage: v.id("_storage"),
         description: v.optional(v.string()),
+        accessToken: v.string(),
     },
     handler: async (ctx, args) => {
+        await assertAdmin(ctx, args.accessToken);
         const seriesId = await ctx.db.insert("book_series", {
             name: args.name.trim(),
             coverImage: args.coverImage,
@@ -66,8 +69,10 @@ export const update = mutation({
         name: v.optional(v.string()),
         coverImage: v.optional(v.id("_storage")),
         description: v.optional(v.string()),
+        accessToken: v.string(),
     },
     handler: async (ctx, args) => {
+        await assertAdmin(ctx, args.accessToken);
         const current = await ctx.db.get(args.seriesId);
         if (!current) throw new Error("Series not found");
 
@@ -85,8 +90,9 @@ export const update = mutation({
 });
 
 export const remove = mutation({
-    args: { seriesId: v.id("book_series") },
+    args: { seriesId: v.id("book_series"), accessToken: v.string() },
     handler: async (ctx, args) => {
+        await assertAdmin(ctx, args.accessToken);
         const series = await ctx.db.get(args.seriesId);
         if (!series) throw new Error("Series not found");
 
