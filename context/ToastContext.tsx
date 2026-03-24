@@ -1,6 +1,6 @@
 import { FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
-import React, { createContext, ReactNode, useCallback, useContext, useState } from "react";
+import React, { createContext, ReactNode, useCallback, useContext, useRef, useState } from "react";
 import { Animated, Dimensions, StyleSheet, Text } from "react-native";
 
 type ToastType = "success" | "error" | "info";
@@ -28,39 +28,77 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     const [type, setType] = useState<ToastType>("info");
     const [opacity] = useState(new Animated.Value(0));
     const [translateY] = useState(new Animated.Value(50));
+    const timerRef = useRef<any>(null);
+    const isVisibleRef = useRef(false);
 
     const showToast = useCallback(
         (msg: string, toastType: ToastType = "info") => {
-            setMessage(msg);
-            setType(toastType);
+            // Cancel any pending auto-hide timer
+            if (timerRef.current) {
+                clearTimeout(timerRef.current);
+                timerRef.current = null;
+            }
 
-            Animated.parallel([
-                Animated.timing(opacity, {
-                    toValue: 1,
-                    duration: 300,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(translateY, {
-                    toValue: 0,
-                    duration: 300,
-                    useNativeDriver: true,
-                }),
-            ]).start();
+            const startShowing = () => {
+                setMessage(msg);
+                setType(toastType);
+                isVisibleRef.current = true;
 
-            setTimeout(() => {
+                // Important: Reset values first
+                opacity.setValue(0);
+                translateY.setValue(15);
+
+                // Give React one or two frames to render the message text before fading in.
+                // This prevents "blank toast" and "previous text" flickers.
+                setTimeout(() => {
+                    Animated.parallel([
+                        Animated.timing(opacity, {
+                            toValue: 1,
+                            duration: 200, // Snappier
+                            useNativeDriver: true,
+                        }),
+                        Animated.timing(translateY, {
+                            toValue: 0,
+                            duration: 200, // Snappier
+                            useNativeDriver: true,
+                        }),
+                    ]).start();
+                }, 32); // ~2 frames at 60fps
+
+                timerRef.current = setTimeout(() => {
+                    hide();
+                }, 3000);
+            };
+
+            const hide = (callback?: () => void) => {
+                opacity.stopAnimation();
+                translateY.stopAnimation();
+
                 Animated.parallel([
                     Animated.timing(opacity, {
                         toValue: 0,
-                        duration: 300,
+                        duration: 150, // Snappier
                         useNativeDriver: true,
                     }),
                     Animated.timing(translateY, {
-                        toValue: 50,
-                        duration: 300,
+                        toValue: 15, // Subtle
+                        duration: 150, // Snappier
                         useNativeDriver: true,
                     }),
-                ]).start();
-            }, 3000);
+                ]).start(() => {
+                    isVisibleRef.current = false;
+                    if (callback) {
+                        callback();
+                    }
+                });
+            };
+
+            if (isVisibleRef.current) {
+                // If already visible, hide current first, then show new
+                hide(startShowing);
+            } else {
+                startShowing();
+            }
         },
         [opacity, translateY]
     );
