@@ -1,8 +1,7 @@
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
-import { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
-import { assertAdmin, getAuthenticatedUser, getUserIdFromAccessToken } from "./lib/authHelpers";
+import { assertAdmin, getAuthenticatedUser } from "./lib/authHelpers";
 
 export const getUser = query({
     args: { accessToken: v.string(), userId: v.id("users") },
@@ -33,12 +32,8 @@ export const updateUser = mutation({
         phone: v.string(),
     },
     handler: async (ctx, args) => {
-        let userId: Id<"users">;
-        try {
-            userId = await getUserIdFromAccessToken(args.accessToken);
-        } catch {
-            throw new Error("Unauthenticated");
-        }
+        // H2: Use getAuthenticatedUser so revoked sessions are rejected
+        const user = await getAuthenticatedUser(ctx, args.accessToken);
 
         // Validate
         if (!args.name.trim()) throw new Error("Name cannot be empty.");
@@ -47,7 +42,7 @@ export const updateUser = mutation({
             throw new Error("Please provide a valid 10-digit phone number.");
         }
 
-        await ctx.db.patch(userId, {
+        await ctx.db.patch(user._id, {
             name: args.name.trim(),
             phone: args.phone.trim(),
         });

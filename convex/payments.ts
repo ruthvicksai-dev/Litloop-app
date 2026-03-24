@@ -1,9 +1,11 @@
+import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
 import { recordPaymentCompleted, recordUserActivity } from "./analytics";
 import { insertAuditLog } from "./lib/auditLog";
 import { assertAdmin, getAuthenticatedUser } from "./lib/authHelpers";
+import { getBookWithCoverUrls } from "./lib/bookHelpers";
 import { assertRateLimit, buildRateLimitKey } from "./lib/rateLimit";
 
 const PAYMENT_RATE_LIMITS = {
@@ -23,32 +25,6 @@ const PAYMENT_RATE_LIMITS = {
         message: "Too many payment requests from this IP. Please try again later.",
     },
 } as const;
-
-async function getBookWithCoverUrls(ctx: any, bookId: any) {
-    const book = await ctx.db.get(bookId);
-    if (!book) return null;
-
-    let coverUrl: string | null = null;
-    const coverUrls: string[] = [];
-
-    if (book.coverImages && book.coverImages.length > 0) {
-        for (const imageId of book.coverImages) {
-            const url = await ctx.storage.getUrl(imageId);
-            if (url) coverUrls.push(url);
-        }
-        if (coverUrls.length > 0) coverUrl = coverUrls[0];
-    } else if (book.coverImage) {
-        coverUrl = await ctx.storage.getUrl(book.coverImage);
-        if (coverUrl) coverUrls.push(coverUrl);
-    }
-
-    return {
-        title: book.title,
-        author: book.author,
-        coverUrl,
-        coverUrls,
-    };
-}
 
 export const submitUpiPayment = mutation({
     args: {
@@ -71,7 +47,6 @@ export const submitUpiPayment = mutation({
         if (rental.status !== "pickup_scheduled")
             throw new Error("Pickup must be scheduled before payment.");
 
-        // C2: Idempotency guard — prevent duplicate payment submissions
         if (rental.paymentStatus === "verification_pending") {
             throw new Error("A payment submission is already pending verification.");
         }
@@ -79,10 +54,10 @@ export const submitUpiPayment = mutation({
             throw new Error("This rental has already been paid.");
         }
 
-        // Global IP rate limit
+        // H1: DB-backed rate limiting
         if (args.ipAddress) {
             const globalKey = buildRateLimitKey("payment", "global", args.ipAddress);
-            assertRateLimit(globalKey, PAYMENT_RATE_LIMITS.global);
+            await assertRateLimit(ctx, globalKey, PAYMENT_RATE_LIMITS.global);
         }
 
         const submitPaymentKey = buildRateLimitKey(
@@ -91,14 +66,12 @@ export const submitUpiPayment = mutation({
             rental.userId,
             args.ipAddress
         );
-        assertRateLimit(submitPaymentKey, PAYMENT_RATE_LIMITS.submitUpiPayment);
+        await assertRateLimit(ctx, submitPaymentKey, PAYMENT_RATE_LIMITS.submitUpiPayment);
 
-        // M4: Validate UTR number format (12 alphanumeric chars)
         const utrRegex = /^[A-Za-z0-9]{12}$/;
         if (!args.utrNumber.trim()) throw new Error("UTR number is required.");
         if (!utrRegex.test(args.utrNumber.trim())) throw new Error("Invalid UTR number. Must be exactly 12 alphanumeric characters.");
 
-        // Anti-fraud: Ensure this UTR hasn't already been used for another rental
         const existingWithSameUtr = await ctx.db
             .query("rentals")
             .withIndex("by_utrNumber", (q) => q.eq("utrNumber", args.utrNumber.trim()))
@@ -146,7 +119,6 @@ export const selectCashPayment = mutation({
         if (rental.status !== "pickup_scheduled")
             throw new Error("Pickup must be scheduled before payment.");
 
-        // C2: Idempotency guard — prevent duplicate payment submissions
         if (rental.paymentStatus === "cash_pending") {
             throw new Error("A cash payment is already registered for this rental.");
         }
@@ -154,10 +126,10 @@ export const selectCashPayment = mutation({
             throw new Error("This rental has already been paid.");
         }
 
-        // Global IP rate limit
+        // H1: DB-backed rate limiting
         if (args.ipAddress) {
             const globalKey = buildRateLimitKey("payment", "global", args.ipAddress);
-            assertRateLimit(globalKey, PAYMENT_RATE_LIMITS.global);
+            await assertRateLimit(ctx, globalKey, PAYMENT_RATE_LIMITS.global);
         }
 
         const selectCashKey = buildRateLimitKey(
@@ -166,7 +138,7 @@ export const selectCashPayment = mutation({
             rental.userId,
             args.ipAddress
         );
-        assertRateLimit(selectCashKey, PAYMENT_RATE_LIMITS.selectCashPayment);
+        await assertRateLimit(ctx, selectCashKey, PAYMENT_RATE_LIMITS.selectCashPayment);
 
         await ctx.db.patch(args.rentalId, {
             paymentMethod: "cash",
@@ -204,8 +176,9 @@ export const verifyPayment = mutation({
             throw new Error("Payment is not pending verification.");
         }
 
+        const book = await ctx.db.get(rental.bookId);
+
         if (args.approved) {
-            const book = await ctx.db.get(rental.bookId);
             const genres = book?.genres ?? [];
             const amount = (rental.totalRent ?? 0) + (rental.lateFee ?? 0);
 
@@ -222,11 +195,18 @@ export const verifyPayment = mutation({
                 timestamp: Date.now(),
             });
 
-            // H5: Audit log — payment approved
             await insertAuditLog(ctx, "payment_approved", admin._id, args.rentalId, "rental", {
                 amount,
                 method: rental.paymentMethod,
                 utrNumber: rental.utrNumber,
+            });
+
+            // Notify user of payment approval
+            await ctx.scheduler.runAfter(0, internal.notifications.notifyUser, {
+                userId: rental.userId,
+                title: "Payment Approved ✅",
+                body: `Your payment for "${book?.title ?? "your book"}" has been confirmed. Please hand over the book at the scheduled pickup.`,
+                dataJson: JSON.stringify({ rentalId: args.rentalId, type: "rental" }),
             });
         } else {
             await ctx.db.patch(args.rentalId, {
@@ -234,9 +214,16 @@ export const verifyPayment = mutation({
                 status: "pickup_scheduled", // Roll back to allow resubmission
             });
 
-            // H5: Audit log — payment rejected
             await insertAuditLog(ctx, "payment_rejected", admin._id, args.rentalId, "rental", {
                 method: rental.paymentMethod,
+            });
+
+            // H4: Notify user of payment rejection so they can resubmit
+            await ctx.scheduler.runAfter(0, internal.notifications.notifyUser, {
+                userId: rental.userId,
+                title: "Payment Rejected ❌",
+                body: `Your ${rental.paymentMethod?.toUpperCase() ?? "payment"} for "${book?.title ?? "your book"}" was rejected. Please verify your details and resubmit within the payment window.`,
+                dataJson: JSON.stringify({ rentalId: args.rentalId, type: "rental" }),
             });
         }
 
@@ -252,17 +239,24 @@ export const generateUploadUrl = mutation({
     },
 });
 
+/**
+ * M1 FIX: Added pagination so the admin payment list doesn't load unboundedly.
+ */
 export const getPendingPayments = query({
-    args: { accessToken: v.string() },
+    args: {
+        paginationOpts: paginationOptsValidator,
+        accessToken: v.string(),
+    },
     handler: async (ctx, args) => {
         await assertAdmin(ctx, args.accessToken);
-        const rentals = await ctx.db
+        const results = await ctx.db
             .query("rentals")
             .withIndex("by_status", (q) => q.eq("status", "payment_pending"))
-            .collect();
+            .order("desc")
+            .paginate(args.paginationOpts);
 
         const rentalsWithDetails = await Promise.all(
-            rentals.map(async (rental) => {
+            results.page.map(async (rental) => {
                 const book = await getBookWithCoverUrls(ctx, rental.bookId);
                 const user = await ctx.db.get(rental.userId);
                 let screenshotUrl: string | null = null;
@@ -282,6 +276,6 @@ export const getPendingPayments = query({
             })
         );
 
-        return rentalsWithDetails;
+        return { ...results, page: rentalsWithDetails };
     },
 });

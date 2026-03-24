@@ -142,7 +142,6 @@ export const signUp = mutation({
         if (args.email.trim().length > 254) throw new Error("Email is too long.");
         if (!args.phone.trim()) throw new Error("Phone number is required.");
         if (!args.acceptedTerms) throw new Error("You must accept the Privacy Policy and Terms of Service.");
-        // M1: Minimum password length increased to 8 (OWASP recommendation)
         if (args.password.length < 8)
             throw new Error("Password must be at least 8 characters.");
         if (args.password.length > 128)
@@ -151,27 +150,25 @@ export const signUp = mutation({
         const normalizedEmail = args.email.toLowerCase().trim();
         const normalizedPhone = normalizePhone(args.phone.trim());
 
-        // M3: Email format validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(normalizedEmail)) throw new Error("Invalid email address format.");
 
-        // Global IP rate limit
+        // H1: DB-backed rate limiting — global IP guard
         if (args.ipAddress) {
             const globalKey = buildRateLimitKey("auth", "global", args.ipAddress);
-            assertRateLimit(globalKey, AUTH_RATE_LIMITS.global);
+            await assertRateLimit(ctx, globalKey, AUTH_RATE_LIMITS.global);
         }
 
         const signUpEmailKey = buildRateLimitKey("auth", "signUp", "email", normalizedEmail, args.ipAddress);
         const signUpPhoneKey = buildRateLimitKey("auth", "signUp", "phone", normalizedPhone, args.ipAddress);
 
-        assertRateLimit(signUpEmailKey, AUTH_RATE_LIMITS.signUp);
-        assertRateLimit(signUpPhoneKey, AUTH_RATE_LIMITS.signUp);
+        await assertRateLimit(ctx, signUpEmailKey, AUTH_RATE_LIMITS.signUp);
+        await assertRateLimit(ctx, signUpPhoneKey, AUTH_RATE_LIMITS.signUp);
 
         if (normalizedPhone.length < 10) {
             throw new Error("Please enter a valid phone number.");
         }
 
-        // Check if email already exists
         const existingEmail = await ctx.db
             .query("users")
             .withIndex("by_email", (q) => q.eq("email", normalizedEmail))
@@ -181,7 +178,6 @@ export const signUp = mutation({
             throw new Error("User is already registered. Please sign in.");
         }
 
-        // Check if phone number already exists
         const existingPhone = await ctx.db
             .query("users")
             .withIndex("by_phone", (q) => q.eq("phone", normalizedPhone))
@@ -209,8 +205,8 @@ export const signUp = mutation({
         await recordUserRegistered(ctx, userId, Date.now());
 
         const { accessToken, refreshToken } = await createSessionTokens(ctx, userId, args.deviceInfo, args.ipAddress);
-        clearRateLimit(signUpEmailKey);
-        clearRateLimit(signUpPhoneKey);
+        await clearRateLimit(ctx, signUpEmailKey);
+        await clearRateLimit(ctx, signUpPhoneKey);
         return { userId, accessToken, refreshToken };
     },
 });
@@ -229,15 +225,14 @@ export const signIn = mutation({
         if (!args.password) throw new Error("Password is required.");
         const normalizedEmail = args.email.toLowerCase().trim();
 
-        // Global IP rate limit
+        // H1: DB-backed rate limiting
         if (args.ipAddress) {
             const globalKey = buildRateLimitKey("auth", "global", args.ipAddress);
-            assertRateLimit(globalKey, AUTH_RATE_LIMITS.global);
+            await assertRateLimit(ctx, globalKey, AUTH_RATE_LIMITS.global);
         }
 
         const signInKey = buildRateLimitKey("auth", "signIn", normalizedEmail, args.ipAddress);
-
-        assertRateLimit(signInKey, AUTH_RATE_LIMITS.signIn);
+        await assertRateLimit(ctx, signInKey, AUTH_RATE_LIMITS.signIn);
 
         const user = await ctx.db
             .query("users")
@@ -267,12 +262,12 @@ export const signIn = mutation({
 
         const { accessToken, refreshToken } = await createSessionTokens(ctx, user._id, args.deviceInfo, args.ipAddress);
         await ctx.db.patch(user._id, { lastLoginProvider: "local" });
-        clearRateLimit(signInKey);
+        await clearRateLimit(ctx, signInKey);
         return { userId: user._id, role: user.role, accessToken, refreshToken };
     },
 });
 
-// ─── Google Sign In (Rate Limiting) ──────────────────────────────────────────
+// ─── Google Sign In ──────────────────────────────────────────────────────────
 
 export const googleSignIn = mutation({
     args: {
@@ -286,20 +281,18 @@ export const googleSignIn = mutation({
             throw new Error("GOOGLE_CLIENT_ID environment variable is not set.");
         }
 
-        // 1. Verify Google ID token (Normalizes email & name internally)
         const payload = await verifyGoogleIdToken(args.idToken, clientId);
-        const normalizedEmail = payload.email; // Already lowercased and trimmed by verifyGoogleIdToken
+        const normalizedEmail = payload.email;
 
-        // Global IP rate limit
+        // H1: DB-backed rate limiting
         if (args.ipAddress) {
             const globalKey = buildRateLimitKey("auth", "global", args.ipAddress);
-            assertRateLimit(globalKey, AUTH_RATE_LIMITS.global);
+            await assertRateLimit(ctx, globalKey, AUTH_RATE_LIMITS.global);
         }
 
         const googleSignInKey = buildRateLimitKey("auth", "googleSignIn", normalizedEmail, args.ipAddress);
-        assertRateLimit(googleSignInKey, AUTH_RATE_LIMITS.googleSignIn);
+        await assertRateLimit(ctx, googleSignInKey, AUTH_RATE_LIMITS.googleSignIn);
 
-        // 3. Find existing user by email
         const existingUser = await ctx.db
             .query("users")
             .withIndex("by_email", (q) => q.eq("email", normalizedEmail))
@@ -311,20 +304,17 @@ export const googleSignIn = mutation({
             userId = existingUser._id;
             const updates: any = { lastLoginProvider: "google" };
 
-            // 4. Link account if "google" provider is missing (Ensure uniqueness)
             const providers = existingUser.providers ?? ["local"];
             if (!providers.includes("google")) {
                 updates.providers = [...new Set([...providers, "google"])];
             }
 
-            // 5. Update avatar only if missing
             if (!existingUser.avatarUrl && payload.picture) {
                 updates.avatarUrl = payload.picture;
             }
 
             await ctx.db.patch(userId, updates);
         } else {
-            // 6. Create new user for Google login
             userId = await ctx.db.insert("users", {
                 name: payload.name,
                 email: normalizedEmail,
@@ -337,11 +327,10 @@ export const googleSignIn = mutation({
             await recordUserRegistered(ctx, userId, Date.now());
         }
 
-        // 7. Issue custom JWT session tokens
         const { accessToken, refreshToken } = await createSessionTokens(ctx, userId, args.deviceInfo, args.ipAddress);
         const user = (await ctx.db.get(userId))!;
 
-        clearRateLimit(googleSignInKey);
+        await clearRateLimit(ctx, googleSignInKey);
         return { userId, role: user.role, accessToken, refreshToken };
     },
 });
@@ -378,7 +367,6 @@ export const getSession = query({
                 role: user.role,
             };
         } catch {
-            // Token expired or invalid
             return null;
         }
     },
@@ -391,7 +379,6 @@ export const refreshSession = mutation({
     handler: async (ctx, args) => {
         const secret = getRefreshTokenSecret();
 
-        // 1. Verify the refresh token JWT
         let payload;
         try {
             payload = await verifyToken(args.refreshToken, secret);
@@ -412,11 +399,9 @@ export const refreshSession = mutation({
             throw new Error("Session invalid. Please sign in again.");
         }
 
-        // 2. Refresh Token Hash Verification (Ensures the raw token matches)
         const incomingHash = await sha256(args.refreshToken);
         const storedHash = getSessionRefreshTokenHash(session);
         if (!storedHash || storedHash !== incomingHash) {
-            // If sid matches but hash doesn't, this is highly suspicious
             console.error("[Auth] Security Alert: Sid-Hash mismatch for session", { sid });
             throw new Error("Invalid session data.");
         }
@@ -428,8 +413,6 @@ export const refreshSession = mutation({
 
         const userId = payload.sub as Id<"users">;
 
-        // 3. A revoked session can be a normal stale retry after rotation or sign-out.
-        // Treat it as an expired session instead of locking out the whole account.
         if (isSessionRevoked(session)) {
             if (session.replacedBySessionId) {
                 console.warn("[Auth] Stale refresh retry after rotation", {
@@ -440,11 +423,9 @@ export const refreshSession = mutation({
             } else {
                 console.warn("[Auth] Refresh token used for a revoked session", { userId, sid });
             }
-
             throw new Error("Session expired. Please sign in again.");
         }
 
-        // 4. Strict Rotation Chain: Issue new session linked to the old one
         const { accessToken, refreshToken, sessionId: newSid } = await createSessionTokens(
             ctx,
             userId,
@@ -452,7 +433,6 @@ export const refreshSession = mutation({
             session.ipAddress
         );
 
-        // Mark current session as revoked AND store the link
         await ctx.db.patch(sid, {
             isRevoked: true,
             replacedBySessionId: newSid,
@@ -480,7 +460,6 @@ export const getUserSessions = query({
             .order("desc")
             .collect();
 
-        // Return non-sensitive data
         return sessions.map((s: any) => ({
             _id: s._id,
             deviceInfo: s.deviceInfo || "Unknown Device",
@@ -532,7 +511,6 @@ export const revokeAllSessions = mutation({
             .collect();
 
         for (const s of activeSessions) {
-            // If exceptCurrent is true, skip the session associated with this token
             if (args.exceptCurrent && s._id === currentSid) {
                 continue;
             }
@@ -551,11 +529,8 @@ export const signOut = mutation({
             const secret = getRefreshTokenSecret();
             const payload = await verifyToken(args.refreshToken, secret);
             const sid = payload.sid as Id<"sessions">;
-
-            // Revoking by SID is primary
             await ctx.db.patch(sid, { isRevoked: true });
         } catch {
-            // C4: Fallback by hash only — no full table scan allowed
             try {
                 const refreshTokenHash = await sha256(args.refreshToken);
                 const session = await ctx.db
@@ -566,7 +541,6 @@ export const signOut = mutation({
                 if (session) {
                     await ctx.db.patch(session._id, { isRevoked: true });
                 }
-                // If not found via index, silently succeed — sign-out is best-effort
             } catch {
                 // Ignore all errors during sign-out
             }
@@ -577,7 +551,6 @@ export const signOut = mutation({
 export const backfillLegacySessions = mutation({
     args: { accessToken: v.string() },
     handler: async (ctx, args) => {
-        // C3: Protect admin-only migration endpoint
         await assertAdmin(ctx, args.accessToken);
         const sessions = await ctx.db.query("sessions").collect();
         let updated = 0;
@@ -607,7 +580,6 @@ export const backfillLegacySessions = mutation({
 export const backfillUsers = mutation({
     args: { accessToken: v.string() },
     handler: async (ctx, args) => {
-        // C3: Protect admin-only migration endpoint
         await assertAdmin(ctx, args.accessToken);
         const users = await ctx.db.query("users").collect();
         let updated = 0;
@@ -617,7 +589,6 @@ export const backfillUsers = mutation({
                 continue;
             }
 
-            // Assume local if providers is missing (migration from legacy system)
             await ctx.db.patch(user._id, {
                 providers: ["local"],
             });
@@ -646,13 +617,12 @@ export const changePassword = mutation({
             throw new Error("Current password is required.");
         }
 
-        // M1: Minimum password length increased to 8
         if (args.newPassword.length < 8) {
             throw new Error("New password must be at least 8 characters.");
         }
 
         const changePasswordKey = buildRateLimitKey("auth", "changePassword", userId);
-        assertRateLimit(changePasswordKey, AUTH_RATE_LIMITS.changePassword);
+        await assertRateLimit(ctx, changePasswordKey, AUTH_RATE_LIMITS.changePassword);
 
         const user = await ctx.db.get(userId);
         if (!user) {
@@ -677,7 +647,7 @@ export const changePassword = mutation({
             passwordHash: newPasswordHash,
         });
 
-        // H6: Revoke all sessions after password change to invalidate stolen sessions
+        // H6: Revoke all sessions after password change
         const activeSessions = await ctx.db
             .query("sessions")
             .withIndex("by_userId_active", (q) => q.eq("userId", userId).eq("isRevoked", false))
@@ -686,7 +656,7 @@ export const changePassword = mutation({
             await ctx.db.patch(s._id, { isRevoked: true });
         }
 
-        clearRateLimit(changePasswordKey);
+        await clearRateLimit(ctx, changePasswordKey);
         return true;
     },
 });

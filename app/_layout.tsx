@@ -5,8 +5,10 @@ import { Colors } from "@/constants/theme";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { NetworkProvider } from "@/context/NetworkContext";
 import { ToastProvider } from "@/context/ToastContext";
+import { api } from "@/convex/_generated/api";
 import { useNotifications } from "@/hooks/useNotifications";
-import { ConvexProvider, ConvexReactClient } from "convex/react";
+import { ConvexProvider, ConvexReactClient, useMutation } from "convex/react";
+import Constants from "expo-constants";
 import { useFonts } from "expo-font";
 import * as Notifications from "expo-notifications";
 import { Stack } from "expo-router";
@@ -62,8 +64,25 @@ function AppGate({ fontsLoaded }: { fontsLoaded: boolean }) {
   const { shouldShow, onAllow, onDecline } = useNotificationRationale();
   const showNotificationRationale = shouldShow && !!userId && !showSplash;
 
+  const updatePushToken = useMutation(api.notifications.updatePushToken);
+
   const requestSystemNotificationPermission = async () => {
-    await Notifications.requestPermissionsAsync();
+    const { status } = await Notifications.requestPermissionsAsync();
+    if (status !== "granted" || !accessToken) return;
+
+    // Immediately register the push token after the user grants permission.
+    // useNotifications won't re-run mid-session, so we do it here directly.
+    try {
+      const projectId =
+        Constants.expoConfig?.extra?.eas?.projectId ??
+        Constants.easConfig?.projectId;
+      if (projectId) {
+        const { data: pushToken } = await Notifications.getExpoPushTokenAsync({ projectId });
+        await updatePushToken({ accessToken, pushToken });
+      }
+    } catch (e) {
+      console.warn("[Notifications] Failed to register push token post-permission:", e);
+    }
   };
 
   const handleSplashComplete = () => {
@@ -128,8 +147,8 @@ export default function RootLayout() {
     "Lato-LightItalic": require("../assets/fonts/Lato/Lato-LightItalic.ttf"),
     "Lato-Regular": require("../assets/fonts/Lato/Lato-Regular.ttf"),
     "Lato-Italic": require("../assets/fonts/Lato/Lato-Italic.ttf"),
-    "Lato-Medium": require("../assets/fonts/Lato/Lato-Regular.ttf"),
-    "Lato-MediumItalic": require("../assets/fonts/Lato/Lato-Italic.ttf"),
+    "Lato-Medium": require("../assets/fonts/Lato/Lato-Bold.ttf"),
+    "Lato-MediumItalic": require("../assets/fonts/Lato/Lato-BoldItalic.ttf"),
     "Lato-Bold": require("../assets/fonts/Lato/Lato-Bold.ttf"),
     "Lato-BoldItalic": require("../assets/fonts/Lato/Lato-BoldItalic.ttf"),
   });

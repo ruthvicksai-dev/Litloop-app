@@ -27,7 +27,7 @@ const TYPE_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
 };
 
 export default function AdminNotificationsScreen() {
-    const { accessToken, user, isLoading } = useAuth();
+    const { accessToken, isLoading } = useAuth();
     const router = useRouter();
 
     const notifications = useQuery(

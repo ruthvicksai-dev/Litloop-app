@@ -81,7 +81,7 @@ export default function TermsOfServiceScreen() {
                 </Text>
 
                 <Para>
-                    Please read these Terms of Service ("Terms") carefully before using the {APP_NAME} app. By creating an account or renting a book, you agree to be bound by these Terms.
+                    Please read these Terms of Service ({'"'}Terms{'"'}) carefully before using the {APP_NAME} app. By creating an account or renting a book, you agree to be bound by these Terms.
                 </Para>
 
                 <Section title="1. Acceptance of Terms">
@@ -166,7 +166,7 @@ export default function TermsOfServiceScreen() {
 
                 <Section title="10. Disclaimer of Warranties">
                     <Para>
-                        The service is provided "as is" and "as available" without warranties of any kind. We do not guarantee that the app will be uninterrupted, error-free, or free from viruses. We are not responsible for any damage to your device resulting from your use of the app.
+                        The service is provided {'"'}as is{'"'} and {'"'}as available{'"'} without warranties of any kind. We do not guarantee that the app will be uninterrupted, error-free, or free from viruses. We are not responsible for any damage to your device resulting from your use of the app.
                     </Para>
                 </Section>
 

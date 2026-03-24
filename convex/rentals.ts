@@ -4,6 +4,7 @@ import { internal } from "./_generated/api";
 import { internalMutation, mutation, query } from "./_generated/server";
 import { recordRentalCreated, recordUserActivity } from "./analytics";
 import { assertAdmin, getAuthenticatedUser } from "./lib/authHelpers";
+import { getBookWithCoverUrls } from "./lib/bookHelpers";
 import { assertRateLimit, buildRateLimitKey } from "./lib/rateLimit";
 
 const LATE_FEE_PER_DAY = 3; // ₹3 per day
@@ -22,26 +23,30 @@ function daysBetween(dateStr1: string, dateStr2: string): number {
     return Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
 }
 
-async function getBookWithCoverUrls(ctx: any, bookId: any) {
-    const book = await ctx.db.get(bookId);
-    if (!book) return null;
+/**
+ * H6 helper: Safely compute a new running average rating after removing one vote.
+ * Guards against division by zero, NaN, and -Infinity.
+ */
+function safeRatingRollback(
+    currentRating: number | undefined,
+    currentCount: number | undefined,
+    removedRating: number
+): { rating: number; ratingCount: number } {
+    const safeCurrentRating = typeof currentRating === "number" && Number.isFinite(currentRating) ? currentRating : 0;
+    const safeCurrentCount = typeof currentCount === "number" && Number.isFinite(currentCount) ? currentCount : 0;
+    const nextCount = Math.max(0, safeCurrentCount - 1);
 
-    let coverUrl: string | null = null;
-    const coverUrls: string[] = [];
-
-    if (book.coverImages && book.coverImages.length > 0) {
-        for (const imageId of book.coverImages) {
-            const url = await ctx.storage.getUrl(imageId);
-            if (url) coverUrls.push(url);
-        }
-        if (coverUrls.length > 0) coverUrl = coverUrls[0];
-    } else if (book.coverImage) {
-        coverUrl = await ctx.storage.getUrl(book.coverImage);
-        if (coverUrl) coverUrls.push(coverUrl);
+    if (nextCount === 0) {
+        return { rating: 0, ratingCount: 0 };
     }
 
-    return { ...book, coverUrl, coverUrls };
+    const nextRating = ((safeCurrentRating * safeCurrentCount) - removedRating) / nextCount;
+    return {
+        rating: Number.isFinite(nextRating) ? Math.max(0, nextRating) : 0,
+        ratingCount: nextCount,
+    };
 }
+
 export const requestRental = mutation({
     args: {
         bookId: v.id("books"),
@@ -67,15 +72,15 @@ export const requestRental = mutation({
         const user = await getAuthenticatedUser(ctx, args.accessToken);
         const userId = user._id;
 
+        // H1: DB-backed rate limit
         const rentalRequestKey = buildRateLimitKey("rental", "request", userId, args.ipAddress);
-        assertRateLimit(rentalRequestKey, RENTAL_RATE_LIMITS.requestRental);
+        await assertRateLimit(ctx, rentalRequestKey, RENTAL_RATE_LIMITS.requestRental);
 
         const book = await ctx.db.get(args.bookId);
         if (!book) throw new Error("Book not found.");
         if (book.availableCopies <= 0)
             throw new Error("This book is currently unavailable.");
 
-        // Check for duplicate active rental
         const duplicate = await ctx.db
             .query("rentals")
             .withIndex("by_userId", (q) => q.eq("userId", userId))
@@ -110,7 +115,6 @@ export const requestRental = mutation({
         }
 
         // C1: Re-read book immediately before decrement to prevent TOCTOU race condition.
-        // Convex serializes mutations per-document, so this read-then-write is safe.
         const freshBook = await ctx.db.get(args.bookId);
         if (!freshBook || freshBook.availableCopies <= 0)
             throw new Error("This book is currently unavailable.");
@@ -149,7 +153,6 @@ export const requestRental = mutation({
             userName: user?.name ?? "A user",
         });
 
-        // Notify the user themselves
         await ctx.scheduler.runAfter(0, internal.notifications.notifyUser, {
             userId: userId,
             title: "Rental Requested 📚",
@@ -178,11 +181,9 @@ export const scheduleDelivery = mutation({
         if (!args.deliveryDate) throw new Error("Delivery date is required.");
         if (!args.deliveryTime) throw new Error("Delivery time is required.");
 
-        // Validation logic
         const now = new Date();
         const todayStr = now.toISOString().split('T')[0];
 
-        // 5-day limit
         const maxDate = new Date();
         maxDate.setDate(now.getDate() + 5);
         const maxDateStr = maxDate.toISOString().split('T')[0];
@@ -190,7 +191,6 @@ export const scheduleDelivery = mutation({
         if (args.deliveryDate < todayStr) throw new Error("Cannot schedule delivery in the past.");
         if (args.deliveryDate > maxDateStr) throw new Error("Cannot schedule delivery more than 5 days in advance.");
 
-        // 6 AM - 10 PM validation
         const timeMatch = args.deliveryTime.match(/^(\d{1,2}):(\d{2})\s?(AM|PM|am|pm)$/i);
         if (!timeMatch) throw new Error("Invalid delivery time format.");
 
@@ -204,7 +204,6 @@ export const scheduleDelivery = mutation({
             throw new Error("Delivery is only available between 6:00 AM and 10:00 PM.");
         }
 
-        // 1-hour buffer if today
         if (args.deliveryDate === todayStr) {
             const currentHour = now.getHours();
             const currentMin = now.getMinutes();
@@ -219,10 +218,11 @@ export const scheduleDelivery = mutation({
             status: "delivery_scheduled",
         });
 
+        const book = await ctx.db.get(rental.bookId);
         await ctx.scheduler.runAfter(0, internal.notifications.notifyUser, {
             userId: rental.userId,
             title: "Delivery Scheduled 🚚",
-            body: `Your delivery for "${(await ctx.db.get(rental.bookId))?.title}" is scheduled for ${args.deliveryDate}.`,
+            body: `Your delivery for "${book?.title ?? "your book"}" is scheduled for ${args.deliveryDate}.`,
             dataJson: JSON.stringify({ rentalId: args.rentalId, type: "rental" }),
         });
     },
@@ -241,10 +241,11 @@ export const markDelivered = mutation({
             status: "delivered",
         });
 
+        const book = await ctx.db.get(rental.bookId);
         await ctx.scheduler.runAfter(0, internal.notifications.notifyUser, {
             userId: rental.userId,
             title: "Book Delivered! 📖",
-            body: `"${(await ctx.db.get(rental.bookId))?.title}" has been delivered. Enjoy your read!`,
+            body: `"${book?.title ?? "Your book"}" has been delivered. Enjoy your read!`,
             dataJson: JSON.stringify({ rentalId: args.rentalId, type: "rental" }),
         });
     },
@@ -283,7 +284,6 @@ export const schedulePickup = mutation({
         if (rental.status !== "delivered")
             throw new Error("Book must be delivered before scheduling pickup.");
 
-        // C5: Prevent double invocation (rating manipulation)
         if (rental.ratedAt) {
             throw new Error("Pickup has already been scheduled for this rental.");
         }
@@ -300,7 +300,6 @@ export const schedulePickup = mutation({
         if (args.pickupDate < todayStr) throw new Error("Cannot schedule pickup in the past.");
         if (args.pickupDate > maxDateStr) throw new Error("Cannot schedule pickup more than 5 days in advance.");
 
-        // 6 AM - 10 PM validation
         const timeMatch = args.pickupTime.match(/^(\d{1,2}):(\d{2})\s?(AM|PM|am|pm)$/i);
         if (!timeMatch) throw new Error("Invalid pickup time format.");
 
@@ -314,7 +313,6 @@ export const schedulePickup = mutation({
             throw new Error("Pickup is only available between 6:00 AM and 10:00 PM.");
         }
 
-        // 1-hour buffer if today
         if (args.pickupDate === todayStr) {
             const currentHour = now.getHours();
             const currentMin = now.getMinutes();
@@ -326,7 +324,6 @@ export const schedulePickup = mutation({
         if (!rental.deliveryDate || !rental.deliveryTime)
             throw new Error("Delivery date/time missing for rent calculation.");
 
-        // Validate pickup is after delivery
         if (args.pickupDate < rental.deliveryDate) {
             throw new Error("Pickup date must be on or after delivery date.");
         }
@@ -382,6 +379,14 @@ export const schedulePickup = mutation({
             userName: user?.name ?? "A user",
         });
 
+        // M6: Pre-expiry warning — notify user 10 min before auto-cancel (at 50 min mark)
+        await ctx.scheduler.runAfter(50 * 60 * 1000, internal.notifications.notifyUser, {
+            userId: rental.userId,
+            title: "⏰ Payment Reminder",
+            body: `Your pickup payment for "${book.title}" expires in 10 minutes. Please complete your payment now to keep the pickup slot.`,
+            dataJson: JSON.stringify({ rentalId: args.rentalId, type: "rental" }),
+        });
+
         // Auto-cancel if payment isn't completed within 1 hour
         await ctx.scheduler.runAfter(60 * 60 * 1000, internal.rentals.autoCancelPickup, {
             rentalId: args.rentalId,
@@ -406,20 +411,16 @@ export const cancelPickup = mutation({
         if (rental.status !== "pickup_scheduled")
             throw new Error("Rental must be 'pickup_scheduled' to cancel pickup.");
 
+        // H6: Safe rating rollback — guards against NaN and -Infinity
         if (rental.userRating) {
             const book = await ctx.db.get(rental.bookId);
             if (book) {
-                const currentCount = typeof book.ratingCount === "number" ? book.ratingCount : 0;
-                const nextCount = Math.max(0, currentCount - 1);
-                let nextRating = 0;
-                if (nextCount > 0) {
-                    nextRating = ((book.rating! * currentCount) - rental.userRating) / nextCount;
-                }
-
-                await ctx.db.patch(rental.bookId, {
-                    rating: nextRating,
-                    ratingCount: nextCount,
-                });
+                const { rating, ratingCount } = safeRatingRollback(
+                    book.rating,
+                    book.ratingCount,
+                    rental.userRating
+                );
+                await ctx.db.patch(rental.bookId, { rating, ratingCount });
             }
         }
 
@@ -433,6 +434,15 @@ export const cancelPickup = mutation({
             paymentStatus: undefined,
             paymentExpiresAt: undefined,
             status: "delivered",
+        });
+
+        // M5: Notify user about cancellation
+        const book = await ctx.db.get(rental.bookId);
+        await ctx.scheduler.runAfter(0, internal.notifications.notifyUser, {
+            userId: rental.userId,
+            title: "Pickup Cancelled",
+            body: `Your pickup for "${book?.title ?? "your book"}" has been cancelled. You can reschedule at any time.`,
+            dataJson: JSON.stringify({ rentalId: args.rentalId, type: "rental" }),
         });
     },
 });
@@ -443,19 +453,16 @@ export const autoCancelPickup = internalMutation({
         const rental = await ctx.db.get(args.rentalId);
         if (!rental || rental.status !== "pickup_scheduled") return;
 
+        // H6: Safe rating rollback
         if (rental.userRating) {
             const book = await ctx.db.get(rental.bookId);
             if (book) {
-                const currentCount = typeof book.ratingCount === "number" ? book.ratingCount : 0;
-                const nextCount = Math.max(0, currentCount - 1);
-                let nextRating = 0;
-                if (nextCount > 0) {
-                    nextRating = ((book.rating! * currentCount) - rental.userRating) / nextCount;
-                }
-                await ctx.db.patch(rental.bookId, {
-                    rating: nextRating,
-                    ratingCount: nextCount,
-                });
+                const { rating, ratingCount } = safeRatingRollback(
+                    book.rating,
+                    book.ratingCount,
+                    rental.userRating
+                );
+                await ctx.db.patch(rental.bookId, { rating, ratingCount });
             }
         }
 
@@ -471,10 +478,11 @@ export const autoCancelPickup = internalMutation({
             status: "delivered",
         });
 
+        const book = await ctx.db.get(rental.bookId);
         await ctx.scheduler.runAfter(0, internal.notifications.notifyUser, {
             userId: rental.userId,
             title: "Pickup Auto-Cancelled ⏳",
-            body: `Your scheduled pickup for "${(await ctx.db.get(rental.bookId))?.title}" was cancelled due to incomplete payment. Your rental timer has resumed.`,
+            body: `Your scheduled pickup for "${book?.title ?? "your book"}" was cancelled due to incomplete payment. Your rental timer has resumed.`,
             dataJson: JSON.stringify({ rentalId: args.rentalId, type: "rental" }),
         });
     },
@@ -489,7 +497,6 @@ export const markReturned = mutation({
         if (rental.status !== "paid")
             throw new Error("Payment must be completed before marking book as returned.");
 
-        // C1: Re-read book immediately before increment to close TOCTOU window
         const freshBook = await ctx.db.get(rental.bookId);
         if (freshBook) {
             const nextAvailable = freshBook.availableCopies + 1;
@@ -497,7 +504,6 @@ export const markReturned = mutation({
                 availableCopies: nextAvailable,
             });
 
-            // If it was out of stock and now is available, notify
             if (freshBook.availableCopies === 0 && nextAvailable > 0) {
                 await ctx.scheduler.runAfter(0, internal.notifications.notifySubscribersOfAvailability, {
                     bookId: rental.bookId,
@@ -506,7 +512,6 @@ export const markReturned = mutation({
             }
         }
 
-        // Calculate potential late fee
         let lateFee = 0;
         if (rental.pickupDate) {
             const today = new Date().toISOString().split("T")[0];
@@ -521,10 +526,11 @@ export const markReturned = mutation({
             lateFee: lateFee > 0 ? lateFee : undefined,
         });
 
+        const book = await ctx.db.get(rental.bookId);
         await ctx.scheduler.runAfter(0, internal.notifications.notifyUser, {
             userId: rental.userId,
             title: "Return Success ✅",
-            body: `Your return for "${(await ctx.db.get(rental.bookId))?.title}" has been processed.`,
+            body: `Your return for "${book?.title ?? "your book"}" has been processed.`,
             dataJson: JSON.stringify({ rentalId: args.rentalId, type: "rental" }),
         });
 
@@ -538,15 +544,6 @@ export const getUserRentals = query({
         const caller = await getAuthenticatedUser(ctx, args.accessToken);
         const targetUserId = (caller.role === "admin" && args.userId) ? args.userId : caller._id;
 
-        const activeStatuses = [
-            "requested",
-            "delivery_scheduled",
-            "delivered",
-            "pickup_scheduled",
-            "payment_pending",
-        ];
-
-        // Fetch active rentals using database filtering
         const rentals = await ctx.db
             .query("rentals")
             .withIndex("by_userId", (q) => q.eq("userId", targetUserId))
@@ -561,7 +558,6 @@ export const getUserRentals = query({
             )
             .collect();
 
-        // Attach book info
         const rentalsWithBooks = await Promise.all(
             rentals.map(async (rental) => {
                 const book = await getBookWithCoverUrls(ctx, rental.bookId);
@@ -578,6 +574,10 @@ export const getUserRentals = query({
     },
 });
 
+/**
+ * L1 FIX: Timeframe filtering now uses DB-side createdAt range instead of
+ * fetching all records and filtering in JavaScript.
+ */
 export const getRentalHistory = query({
     args: {
         userId: v.optional(v.id("users")),
@@ -598,51 +598,46 @@ export const getRentalHistory = query({
         const caller = await getAuthenticatedUser(ctx, args.accessToken);
         const targetUserId = (caller.role === "admin" && args.userId) ? args.userId : caller._id;
 
+        // L1: Compute the createdAt lower bound in JS, pass to DB filter
         const now = Date.now();
-        const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime();
-        const yearStart = new Date(new Date().getFullYear(), 0, 1).getTime();
-        const last30DaysStart = now - 30 * 24 * 60 * 60 * 1000;
+        let createdAtMin: number | undefined;
+        if (args.timeframe === "last_30_days") {
+            createdAtMin = now - 30 * 24 * 60 * 60 * 1000;
+        } else if (args.timeframe === "this_month") {
+            const d = new Date();
+            createdAtMin = new Date(d.getFullYear(), d.getMonth(), 1).getTime();
+        } else if (args.timeframe === "this_year") {
+            createdAtMin = new Date(new Date().getFullYear(), 0, 1).getTime();
+        }
 
-        let queryBuilder;
+        let queryBuilder: any;
 
-        // Use database filtering for status if specific
         if (args.status === "paid") {
             queryBuilder = ctx.db
                 .query("rentals")
-                .withIndex("by_userId_status", (q) => q.eq("userId", targetUserId).eq("status", "paid"));
+                .withIndex("by_userId_status", (q: any) => q.eq("userId", targetUserId).eq("status", "paid"));
         } else if (args.status === "returned") {
             queryBuilder = ctx.db
                 .query("rentals")
-                .withIndex("by_userId_status", (q) => q.eq("userId", targetUserId).eq("status", "returned"));
+                .withIndex("by_userId_status", (q: any) => q.eq("userId", targetUserId).eq("status", "returned"));
         } else {
-            // "all" - filter completed statuses in DB
             queryBuilder = ctx.db
                 .query("rentals")
-                .withIndex("by_userId", (q) => q.eq("userId", targetUserId))
-                .filter((q) =>
+                .withIndex("by_userId", (q: any) => q.eq("userId", targetUserId))
+                .filter((q: any) =>
                     q.or(q.eq(q.field("status"), "paid"), q.eq(q.field("status"), "returned"))
                 );
         }
 
+        // L1: Apply createdAt lower bound directly in DB filter
+        if (createdAtMin !== undefined) {
+            queryBuilder = queryBuilder.filter((q: any) => q.gte(q.field("createdAt"), createdAtMin));
+        }
+
         const rentals = await queryBuilder.order("desc").collect();
 
-        const completed = rentals
-            .filter((r) => {
-                switch (args.timeframe) {
-                    case "last_30_days":
-                        return r.createdAt >= last30DaysStart;
-                    case "this_month":
-                        return r.createdAt >= monthStart;
-                    case "this_year":
-                        return r.createdAt >= yearStart;
-                    case "all":
-                    default:
-                        return true;
-                }
-            });
-
         const rentalsWithBooks = await Promise.all(
-            completed.map(async (rental) => {
+            rentals.map(async (rental: any) => {
                 const book = await getBookWithCoverUrls(ctx, rental.bookId);
                 return {
                     ...rental,

@@ -2,17 +2,14 @@ import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import { mapBookForClient } from "./books";
-import { getUserIdFromAccessToken } from "./lib/authHelpers";
+import { getAuthenticatedUser, getUserIdFromAccessToken } from "./lib/authHelpers";
 
 export const toggleFavorite = mutation({
     args: { accessToken: v.string(), bookId: v.id("books") },
     handler: async (ctx, args) => {
-        let userId: Id<"users">;
-        try {
-            userId = await getUserIdFromAccessToken(args.accessToken);
-        } catch {
-            throw new Error("Unauthenticated");
-        }
+        // H2: Use getAuthenticatedUser so revoked sessions are rejected
+        const user = await getAuthenticatedUser(ctx, args.accessToken);
+        const userId = user._id;
 
         // Check if favorite exists
         const existing = await ctx.db

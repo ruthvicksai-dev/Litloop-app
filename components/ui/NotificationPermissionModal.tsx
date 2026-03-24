@@ -13,6 +13,7 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, scale, Spacing } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import * as Notifications from "expo-notifications";
 import * as SecureStore from "expo-secure-store";
 import { useEffect, useState } from "react";
 import {
@@ -31,7 +32,19 @@ export function useNotificationRationale() {
     useEffect(() => {
         (async () => {
             const alreadyShown = await SecureStore.getItemAsync(NOTIFICATION_RATIONALE_KEY);
+
             if (!alreadyShown) {
+                setShouldShow(true);
+                return;
+            }
+
+            // Self-healing: the flag may have been written by old code that fired
+            // the system dialog directly (without showing the custom modal first).
+            // If permission is still "undetermined", the user hasn't actually
+            // responded to the modal yet — reset the flag and show the modal.
+            const { status } = await Notifications.getPermissionsAsync();
+            if (status === "undetermined") {
+                await SecureStore.deleteItemAsync(NOTIFICATION_RATIONALE_KEY);
                 setShouldShow(true);
             }
         })();
@@ -86,7 +99,7 @@ export function NotificationPermissionModal({
                         <FeatureRow icon="book-outline" text="Book availability alerts" />
                     </View>
                     <Text style={styles.disclaimer}>
-                        You can change this anytime in your phone's Settings.
+                        You can change this anytime in your phone{`'`}s Settings.
                     </Text>
                     <TouchableOpacity
                         style={styles.allowButton}

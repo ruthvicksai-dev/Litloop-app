@@ -1,5 +1,5 @@
-import { GuestView } from "@/components/profile/GuestProfileView";
 import { NotificationItem } from "@/components/notifications/NotificationItem";
+import { GuestView } from "@/components/profile/GuestProfileView";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Fonts, FontSizes } from "@/constants/fonts";
@@ -43,20 +43,33 @@ export default function NotificationsScreen() {
 
     const handlePress = async (item: any) => {
         if (!item.isRead) {
-            if (!accessToken) {
-                return;
-            }
+            if (!accessToken) return;
             await markReadMutation({
                 accessToken,
                 notificationId: item._id as Id<"user_notifications">,
             });
         }
+
         if (item.dataJson) {
-            const data = JSON.parse(item.dataJson);
+            // H5 FIX: Wrap JSON.parse in try/catch — malformed dataJson no longer crashes the screen
+            let data: Record<string, string> | null = null;
+            try {
+                data = JSON.parse(item.dataJson);
+            } catch {
+                // Silently ignore parse failures — just don't navigate
+                return;
+            }
+
+            if (!data) return;
+
             if (data.type === "rental") {
                 if (isAdmin && data.rentalId) {
                     router.push(`/(admin)/rental/${data.rentalId}` as any);
+                } else if (data.rentalId) {
+                    // M4 FIX: Deep-link users to the specific rental screen, not just the list
+                    router.push(`/rental/${data.rentalId}` as any);
                 } else {
+                    // Fallback: no rentalId in data
                     router.push("/(tabs)/my-rentals" as any);
                 }
             } else if (data.type === "book" && data.bookId) {

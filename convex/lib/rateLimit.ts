@@ -4,88 +4,86 @@ type RateLimitOptions = {
     message: string;
 };
 
-type RateLimitBucket = {
-    count: number;
-    resetAt: number;
-};
-
 /**
- * Rate limiting state. In a Convex environment, this Map lives in the memory
- * of the V8 isolate. While isolates are reused across requests, they are not
- * persistent forever and are not shared across different regions or scaling units.
+ * DB-backed distributed rate limiter using the `rate_limit_events` table.
  *
- * For a production-ready, globally consistent distributed rate limiter,
- * replace this Map with a call to an external service like Upstash Redis
- * using `fetch` or a dedicated library.
+ * H1 FIX: Replaces the previous in-memory Map implementation which was
+ * non-persistent (reset on Convex cold-start) and non-distributed (not
+ * shared across isolate instances or regions).
+ *
+ * Each rate limit bucket is a single row in `rate_limit_events`, keyed by
+ * a composite string. The row is upserted atomically within the Convex
+ * mutation context, which serializes writes per document — ensuring
+ * correctness without external locking.
+ *
+ * Usage: `await assertRateLimit(ctx, key, options)` — all callers must await.
  */
-const RATE_LIMIT_BUCKETS = new Map<string, RateLimitBucket>();
-const MAX_BUCKETS = 10000; // Increased for composite keys
 
-/**
- * Prunes expired or excess buckets to maintain memory safety.
- */
-function maintenance(now: number) {
-    // 1. Prune expired
-    for (const [key, bucket] of RATE_LIMIT_BUCKETS.entries()) {
-        if (bucket.resetAt <= now) {
-            RATE_LIMIT_BUCKETS.delete(key);
-        }
-    }
-
-    // 2. If still too many, prune the ones that expire soonest
-    if (RATE_LIMIT_BUCKETS.size > MAX_BUCKETS) {
-        const sortedEntries = [...RATE_LIMIT_BUCKETS.entries()].sort(
-            (a, b) => a[1].resetAt - b[1].resetAt
-        );
-
-        const toDelete = RATE_LIMIT_BUCKETS.size - MAX_BUCKETS;
-        for (let i = 0; i < toDelete; i++) {
-            RATE_LIMIT_BUCKETS.delete(sortedEntries[i][0]);
-        }
-    }
-}
-
-/**
- * Builds a composite rate limit key from multiple identifying parts.
- * Example: buildRateLimitKey("auth", "signIn", email, ipAddress)
- * Handles undefined/null parts by filtering them out.
- */
-export function buildRateLimitKey(scope: string, action: string, ...identifiers: Array<string | number | undefined | null>) {
+export function buildRateLimitKey(
+    scope: string,
+    action: string,
+    ...identifiers: Array<string | number | undefined | null>
+) {
     const parts = identifiers
         .filter((part): part is string | number => part !== undefined && part !== null && String(part).trim() !== "")
-        .map(part => String(part));
+        .map((part) => String(part));
 
     return [scope, action, ...parts].join(":");
 }
 
 /**
  * Asserts that the rate limit for a given key has not been exceeded.
- * Throws an error if the limit is reached.
+ * Reads/writes the `rate_limit_events` table atomically.
+ * Throws a user-friendly error if the limit is exceeded.
  */
-export function assertRateLimit(key: string, options: RateLimitOptions) {
+export async function assertRateLimit(
+    ctx: { db: any },
+    key: string,
+    options: RateLimitOptions
+) {
     const now = Date.now();
-    maintenance(now);
 
-    const bucket = RATE_LIMIT_BUCKETS.get(key);
+    const existing = await ctx.db
+        .query("rate_limit_events")
+        .withIndex("by_key", (q: any) => q.eq("key", key))
+        .first();
 
-    // If no bucket or it expired, start a new one
-    if (!bucket || bucket.resetAt <= now) {
-        RATE_LIMIT_BUCKETS.set(key, {
-            count: 1,
-            resetAt: now + options.windowMs,
-        });
+    if (!existing || existing.resetAt <= now) {
+        // No bucket or expired — start a fresh window
+        if (existing) {
+            await ctx.db.patch(existing._id, {
+                count: 1,
+                resetAt: now + options.windowMs,
+            });
+        } else {
+            await ctx.db.insert("rate_limit_events", {
+                key,
+                count: 1,
+                resetAt: now + options.windowMs,
+            });
+        }
         return;
     }
 
-    // If limit reached, throw
-    if (bucket.count >= options.limit) {
+    // Active window — check limit
+    if (existing.count >= options.limit) {
         throw new Error(options.message);
     }
 
-    // Increment count
-    bucket.count += 1;
+    // Increment count within current window
+    await ctx.db.patch(existing._id, { count: existing.count + 1 });
 }
 
-export function clearRateLimit(key: string) {
-    RATE_LIMIT_BUCKETS.delete(key);
+/**
+ * Clears the rate limit bucket for a key (e.g., on successful auth).
+ */
+export async function clearRateLimit(ctx: { db: any }, key: string) {
+    const existing = await ctx.db
+        .query("rate_limit_events")
+        .withIndex("by_key", (q: any) => q.eq("key", key))
+        .first();
+
+    if (existing) {
+        await ctx.db.delete(existing._id);
+    }
 }

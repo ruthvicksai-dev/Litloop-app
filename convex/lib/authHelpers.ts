@@ -42,13 +42,31 @@ export async function getUserIdFromAccessToken(
 
 /**
  * Verifies an access token and returns the full user document.
- * Throws if token is invalid or user doesn't exist.
+ *
+ * H2 FIX: Also verifies that the session (identified by `sid` in the JWT)
+ * exists in the DB, is not revoked, and has not expired.
+ * This closes the revocation gap where a signed-out user could still
+ * call mutations with an unexpired access token.
  */
 export async function getAuthenticatedUser(
     ctx: { db: any },
     accessToken: string
 ) {
-    const userId = await getUserIdFromAccessToken(accessToken);
+    const secret = getAccessTokenSecret();
+    const payload = await verifyToken(accessToken, secret);
+
+    if (payload.type !== "access") {
+        throw new Error("Invalid token type.");
+    }
+
+    // H2: Verify the session is still active in the DB
+    const sid = payload.sid as Id<"sessions">;
+    const session = await ctx.db.get(sid);
+    if (!session || session.isRevoked === true || session.expiresAt < Date.now()) {
+        throw new Error("Session has been revoked or expired. Please sign in again.");
+    }
+
+    const userId = payload.sub as Id<"users">;
     const user = await ctx.db.get(userId);
     if (!user) {
         throw new Error("User not found.");
@@ -156,10 +174,6 @@ export async function verifyPassword(
             keyMaterial,
             256
         );
-
-        const inputHashHex = Array.from(new Uint8Array(derivedBits))
-            .map((b) => b.toString(16).padStart(2, "0"))
-            .join("");
 
         // H2: Timing-safe comparison — prevents timing-based password oracle attacks
         const inputBuf = new Uint8Array(derivedBits);

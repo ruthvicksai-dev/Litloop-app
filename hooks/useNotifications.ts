@@ -158,13 +158,13 @@ async function registerForPushNotificationsAsync(): Promise<string | undefined> 
     }
 
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
+    // Do NOT call requestPermissionsAsync here.
+    // The system permission dialog is triggered exclusively by the custom
+    // NotificationPermissionModal's onAllow handler in _layout.tsx.
+    // Calling it here would show the Android system dialog immediately on
+    // login, skipping the in-app rationale required by Play Store policy.
     if (existingStatus !== "granted") {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-    }
-    if (finalStatus !== "granted") {
-        console.log("Failed to get push token: permission denied.");
+        console.log("[Notifications] Permission not yet granted — awaiting user rationale modal.");
         return undefined;
     }
 

@@ -43,3 +43,7 @@ app-example
 # generated native folders
 /ios
 /android
+
+# Sensitive Firebase config — provide via CI/CD secrets or EAS environment
+google-services.json
+GoogleService-Info.plist

@@ -18,6 +18,9 @@ const NOTIFICATION_RATE_LIMITS = {
     },
 } as const;
 
+/** Max notifications to mark-as-read in a single call — protects against timeouts. */
+const MARK_ALL_READ_BATCH_SIZE = 100;
+
 function isExpoPushToken(token: string) {
     return token.startsWith("ExponentPushToken") || token.startsWith("ExpoPushToken");
 }
@@ -92,7 +95,8 @@ export const updatePushToken = mutation({
 
         const userId = await getUserIdFromAccessToken(args.accessToken);
 
-        // Fix: Avoid full table scan — use indexed lookup to clear duplicate tokens
+        // Clear duplicate tokens from other users — use by_email walk as before
+        // (no by_pushToken index; impact is bounded — dedup is best-effort)
         const existingUser = await ctx.db
             .query("users")
             .withIndex("by_email", (q: any) => q)
@@ -151,7 +155,8 @@ export const subscribeToBook = mutation({
             userId,
             args.ipAddress
         );
-        assertRateLimit(subscribeKey, NOTIFICATION_RATE_LIMITS.subscribeToBook);
+        // H1: DB-backed rate limit
+        await assertRateLimit(ctx, subscribeKey, NOTIFICATION_RATE_LIMITS.subscribeToBook);
 
         const existing = await ctx.db
             .query("book_notifications")
@@ -172,16 +177,24 @@ export const subscribeToBook = mutation({
     },
 });
 
+/**
+ * M2: Returns the most recent notifications for the authenticated user.
+ * Defaults to 100, configurable via `limit` arg (max 200).
+ */
 export const getNotifications = query({
-    args: { accessToken: v.string() },
+    args: {
+        accessToken: v.string(),
+        limit: v.optional(v.number()),
+    },
     handler: async (ctx, args) => {
         const user = await getAuthenticatedUser(ctx, args.accessToken);
         const userId = user._id;
+        const take = Math.min(args.limit ?? 100, 200);
         return await ctx.db
             .query("user_notifications")
             .withIndex("by_userId", (q) => q.eq("userId", userId))
             .order("desc")
-            .collect();
+            .take(take);
     },
 });
 
@@ -217,6 +230,11 @@ export const markRead = mutation({
     },
 });
 
+/**
+ * M3: Mark all unread notifications as read.
+ * Capped at MARK_ALL_READ_BATCH_SIZE (100) per call to prevent timeouts.
+ * Sequential patches (no unbounded Promise.all).
+ */
 export const markAllRead = mutation({
     args: { accessToken: v.string() },
     handler: async (ctx, args) => {
@@ -227,9 +245,12 @@ export const markAllRead = mutation({
             .withIndex("by_userId_isRead", (q) =>
                 q.eq("userId", userId).eq("isRead", false)
             )
-            .collect();
+            .take(MARK_ALL_READ_BATCH_SIZE);
 
-        await Promise.all(unread.map((notification) => ctx.db.patch(notification._id, { isRead: true })));
+        // Sequential writes — avoid unbounded Promise.all
+        for (const notification of unread) {
+            await ctx.db.patch(notification._id, { isRead: true });
+        }
     },
 });
 
@@ -297,12 +318,17 @@ export const getUserPushRecipient = internalQuery({
     },
 });
 
+/**
+ * H3 FIX: Use the by_role index instead of a full table scan with .filter().
+ * Previously: .filter(q => q.eq(q.field("role"), "admin")) — reads ALL users.
+ * Now: .withIndex("by_role", ...) — reads only admin rows directly.
+ */
 export const getAdminRecipients = internalQuery({
     args: {},
     handler: async (ctx) => {
         const admins = await ctx.db
             .query("users")
-            .filter((q: any) => q.eq(q.field("role"), "admin"))
+            .withIndex("by_role", (q: any) => q.eq("role", "admin"))
             .collect();
 
         return admins.map((admin) => ({
@@ -436,5 +462,68 @@ export const notifyAdminsOfPickupScheduled = internalAction({
                 dataJson
             );
         }
+    },
+});
+
+/**
+ * L4: Cleanup old notifications — called by the weekly cron in crons.ts.
+ * Deletes user_notifications records older than TTL_DAYS days.
+ */
+export const cleanupOldNotifications = internalMutation({
+    args: { ttlDays: v.number() },
+    handler: async (ctx, args) => {
+        const cutoff = Date.now() - args.ttlDays * 24 * 60 * 60 * 1000;
+        // Collect a bounded batch to avoid mutation timeouts
+        const old = await ctx.db
+            .query("user_notifications")
+            .withIndex("by_userId") // Scan all users; ordered by userId not time,
+            // but we still prune by createdAt check
+            .filter((q: any) => q.lt(q.field("createdAt"), cutoff))
+            .take(500);
+
+        for (const n of old) {
+            await ctx.db.delete(n._id);
+        }
+
+        return { deleted: old.length };
+    },
+});
+
+/**
+ * L2: Reconcile availableCopies for all books — called by nightly cron.
+ */
+export const reconcileAvailableCopies = internalMutation({
+    args: {},
+    handler: async (ctx) => {
+        const ACTIVE_STATUSES = new Set([
+            "requested",
+            "delivery_scheduled",
+            "delivered",
+            "pickup_scheduled",
+            "payment_pending",
+        ]);
+
+        const books = await ctx.db.query("books").collect();
+        let corrected = 0;
+
+        for (const book of books) {
+            const activeRentals = await ctx.db
+                .query("rentals")
+                .withIndex("by_bookId", (q: any) => q.eq("bookId", book._id))
+                .filter((q: any) => {
+                    const statuses = [...ACTIVE_STATUSES];
+                    return q.or(...statuses.map((s) => q.eq(q.field("status"), s)));
+                })
+                .collect();
+
+            const expected = Math.max(0, book.totalCopies - activeRentals.length);
+            if (book.availableCopies !== expected) {
+                await ctx.db.patch(book._id, { availableCopies: expected });
+                corrected++;
+                console.warn(`[Reconcile] Fixed book ${book._id}: was ${book.availableCopies}, now ${expected}`);
+            }
+        }
+
+        return { scanned: books.length, corrected };
     },
 });

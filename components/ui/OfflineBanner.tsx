@@ -27,7 +27,7 @@ export function OfflineBanner({ type = "banner" }: OfflineBannerProps) {
                 useNativeDriver: true,
             }).start();
         }
-    }, [isOnline]);
+    }, [isOnline, slideAnim]);
 
     if (type === "fullscreen") {
         if (isOnline) return null;

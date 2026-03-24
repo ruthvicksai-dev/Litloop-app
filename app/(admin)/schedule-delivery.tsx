@@ -50,7 +50,7 @@ export default function ScheduleDeliveryScreen() {
         if (availableDates.length > 0 && !deliveryDate) {
             setDeliveryDate(formatDateString(availableDates[0]));
         }
-    }, [availableDates]);
+    }, [availableDates, deliveryDate, setDeliveryDate]);
 
     React.useEffect(() => {
         if (availableTimeSlots.length > 0 && !deliveryTime) {
@@ -58,7 +58,7 @@ export default function ScheduleDeliveryScreen() {
         } else if (availableTimeSlots.length > 0 && deliveryTime && !availableTimeSlots.includes(deliveryTime)) {
             setDeliveryTime(availableTimeSlots[0]);
         }
-    }, [availableTimeSlots]);
+    }, [availableTimeSlots, deliveryTime, setDeliveryTime]);
 
     const onRefresh = React.useCallback(() => {
         setRefreshing(true);

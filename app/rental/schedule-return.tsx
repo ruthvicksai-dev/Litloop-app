@@ -106,7 +106,7 @@ export default function ScheduleReturnScreen() {
         if (availableDates.length > 0 && !pickupDate) {
             setPickupDate(formatDateString(availableDates[0]));
         }
-    }, [availableDates]);
+    }, [availableDates, pickupDate, setPickupDate]);
 
     React.useEffect(() => {
         if (availableTimeSlots.length > 0 && !pickupTime) {
@@ -114,7 +114,7 @@ export default function ScheduleReturnScreen() {
         } else if (availableTimeSlots.length > 0 && pickupTime && !availableTimeSlots.includes(pickupTime)) {
             setPickupTime(availableTimeSlots[0]);
         }
-    }, [availableTimeSlots]);
+    }, [availableTimeSlots, pickupTime, setPickupTime]);
 
     if (rental === undefined) {
         return (
