@@ -1,10 +1,11 @@
 import BookLoader from "@/components/ui/BookLoader";
 import Button from "@/components/ui/Button";
-import DatePickerField from "@/components/ui/DatePickerField";
-import TimePickerField from "@/components/ui/TimePickerField";
+import SlotDatePicker from "@/components/ui/SlotDatePicker";
+import SlotTimePicker from "@/components/ui/SlotTimePicker";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useScheduleDeliveryScreen } from "@/hooks";
+import { formatDateString, getValidDates, getValidTimeSlots } from "@/utils/timeSlots";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
@@ -32,10 +33,32 @@ export default function ScheduleDeliveryScreen() {
         handleSchedule,
     } = useScheduleDeliveryScreen(rentalId);
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const maxDeliveryDate = new Date(today);
-    maxDeliveryDate.setDate(today.getDate() + 9);
+    const availableDates = React.useMemo(() => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return getValidDates(today, 5);
+    }, []);
+
+    const availableTimeSlots = React.useMemo(() => {
+        if (!deliveryDate) return [];
+        const isToday = deliveryDate === formatDateString(new Date());
+        return getValidTimeSlots(isToday);
+    }, [deliveryDate]);
+
+    // Auto-select first date and time slot
+    React.useEffect(() => {
+        if (availableDates.length > 0 && !deliveryDate) {
+            setDeliveryDate(formatDateString(availableDates[0]));
+        }
+    }, [availableDates]);
+
+    React.useEffect(() => {
+        if (availableTimeSlots.length > 0 && !deliveryTime) {
+            setDeliveryTime(availableTimeSlots[0]);
+        } else if (availableTimeSlots.length > 0 && deliveryTime && !availableTimeSlots.includes(deliveryTime)) {
+            setDeliveryTime(availableTimeSlots[0]);
+        }
+    }, [availableTimeSlots]);
 
     const onRefresh = React.useCallback(() => {
         setRefreshing(true);
@@ -77,53 +100,52 @@ export default function ScheduleDeliveryScreen() {
                     </View>
                 </View>
 
-<View style={styles.infoCard}>
-    <Text style={styles.infoTitle}>{rental.book?.title}</Text>
+                <View style={styles.infoCard}>
+                    <Text style={styles.infoTitle}>{rental.book?.title}</Text>
 
-    {/* User name */}
-    <View style={styles.infoLine}>
-        <Ionicons name="person-outline" size={14} color={Colors.textSecondary} />
-        <Text style={styles.infoSub}>{rental.user?.name}</Text>
-    </View>
+                    {/* User name */}
+                    <View style={styles.infoLine}>
+                        <Ionicons name="person-outline" size={14} color={Colors.textSecondary} />
+                        <Text style={styles.infoSub}>{rental.user?.name}</Text>
+                    </View>
 
-    {/* Phone */}
-    <View style={styles.infoLine}>
-        <Ionicons name="call-outline" size={14} color={Colors.textSecondary} />
-        <Text style={styles.infoSub}>{rental.user?.phone}</Text>
-    </View>
+                    {/* Phone */}
+                    <View style={styles.infoLine}>
+                        <Ionicons name="call-outline" size={14} color={Colors.textSecondary} />
+                        <Text style={styles.infoSub}>{rental.user?.phone}</Text>
+                    </View>
 
-    {/* Location */}
-    <View style={styles.infoLine}>
-        <Ionicons name="location-outline" size={14} color={Colors.textSecondary} />
-        <Text style={styles.infoSub}>
-            {rental.zone} {rental.deliveryLocation?.area}, {rental.deliveryLocation?.city}
-        </Text>
-    </View>
+                    {/* Location */}
+                    <View style={styles.infoLine}>
+                        <Ionicons name="location-outline" size={14} color={Colors.textSecondary} />
+                        <Text style={styles.infoSub}>
+                            {rental.zone} {rental.deliveryLocation?.area}, {rental.deliveryLocation?.city}
+                        </Text>
+                    </View>
 
-    {/* Landmark */}
-    {rental.deliveryLocation?.landmark ? (
-        <View style={styles.infoLine}>
-            <Ionicons name="navigate-outline" size={14} color={Colors.textSecondary} />
-            <Text style={styles.infoSub}>
-                {rental.deliveryLocation.landmark}
-            </Text>
-        </View>
-    ) : null}
-</View>
+                    {/* Landmark */}
+                    {rental.deliveryLocation?.landmark ? (
+                        <View style={styles.infoLine}>
+                            <Ionicons name="navigate-outline" size={14} color={Colors.textSecondary} />
+                            <Text style={styles.infoSub}>
+                                {rental.deliveryLocation.landmark}
+                            </Text>
+                        </View>
+                    ) : null}
+                </View>
 
-                <DatePickerField
+                <SlotDatePicker
                     label="Delivery Date"
-                    placeholder="Select delivery date"
-                    value={deliveryDate}
-                    minimumDate={today}
-                    maximumDate={maxDeliveryDate}
-                    onChange={setDeliveryDate}
+                    dates={availableDates}
+                    selectedDate={deliveryDate}
+                    onSelect={setDeliveryDate}
                 />
-                <TimePickerField
+                <SlotTimePicker
                     label="Delivery Time"
-                    placeholder="Select delivery time"
-                    value={deliveryTime}
-                    onChange={setDeliveryTime}
+                    slots={availableTimeSlots}
+                    selectedTime={deliveryTime}
+                    onSelect={setDeliveryTime}
+                    emptyMessage="No slots available for this date. Please select another date."
                 />
 
                 <Button

@@ -1,13 +1,14 @@
 import BookLoader from "@/components/ui/BookLoader";
 import Button from "@/components/ui/Button";
-import DatePickerField from "@/components/ui/DatePickerField";
 import InputField from "@/components/ui/InputField";
 import MapLocationPicker from "@/components/ui/MapLocationPicker";
-import TimePickerField from "@/components/ui/TimePickerField";
+import SlotDatePicker from "@/components/ui/SlotDatePicker";
+import SlotTimePicker from "@/components/ui/SlotTimePicker";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useToast } from "@/context/ToastContext";
 import { useScheduleReturnScreen } from "@/hooks";
+import { formatDateString, getValidDates, getValidTimeSlots } from "@/utils/timeSlots";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -81,29 +82,39 @@ export default function ScheduleReturnScreen() {
         }
     };
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const maxPickupDate = new Date(today);
-    maxPickupDate.setDate(today.getDate() + 9);
+    const availableDates = React.useMemo(() => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const start = rental?.deliveryDate
+            ? new Date(Math.max(today.getTime(), new Date(rental.deliveryDate).getTime() + 24 * 60 * 60 * 1000))
+            : today;
+        return getValidDates(start, 5);
+    }, [rental?.deliveryDate]);
 
-    const minimumPickupDate = rental?.deliveryDate
-        ? new Date(
-            Math.max(
-                new Date(`${rental.deliveryDate}T00:00:00`).getTime() +
-                24 * 60 * 60 * 1000,
-                new Date(
-                    today.getFullYear(),
-                    today.getMonth(),
-                    today.getDate()
-                ).getTime()
-            )
-        )
-        : today;
+    const availableTimeSlots = React.useMemo(() => {
+        if (!pickupDate) return [];
+        const isToday = pickupDate === formatDateString(new Date());
+        let minTime: string | undefined = undefined;
+        if (pickupDate === rental?.deliveryDate && rental?.deliveryTime) {
+            minTime = rental.deliveryTime;
+        }
+        return getValidTimeSlots(isToday, minTime);
+    }, [pickupDate, rental?.deliveryDate, rental?.deliveryTime]);
 
-    const pickupMaximumDate =
-        minimumPickupDate.getTime() <= maxPickupDate.getTime()
-            ? maxPickupDate
-            : minimumPickupDate;
+    // Auto-select first date and time slot
+    React.useEffect(() => {
+        if (availableDates.length > 0 && !pickupDate) {
+            setPickupDate(formatDateString(availableDates[0]));
+        }
+    }, [availableDates]);
+
+    React.useEffect(() => {
+        if (availableTimeSlots.length > 0 && !pickupTime) {
+            setPickupTime(availableTimeSlots[0]);
+        } else if (availableTimeSlots.length > 0 && pickupTime && !availableTimeSlots.includes(pickupTime)) {
+            setPickupTime(availableTimeSlots[0]);
+        }
+    }, [availableTimeSlots]);
 
     if (rental === undefined) {
         return (
@@ -149,19 +160,19 @@ export default function ScheduleReturnScreen() {
                             </View>
                         ) : null}
 
-                        <DatePickerField
+                        <SlotDatePicker
                             label="Pickup Date"
-                            placeholder="Select pickup date"
-                            value={pickupDate}
-                            minimumDate={minimumPickupDate}
-                            maximumDate={pickupMaximumDate}
-                            onChange={setPickupDate}
+                            dates={availableDates}
+                            selectedDate={pickupDate}
+                            onSelect={setPickupDate}
                         />
-                        <TimePickerField
+
+                        <SlotTimePicker
                             label="Pickup Time"
-                            placeholder="Select pickup time"
-                            value={pickupTime}
-                            onChange={setPickupTime}
+                            slots={availableTimeSlots}
+                            selectedTime={pickupTime}
+                            onSelect={setPickupTime}
+                            emptyMessage="No slots available for this date. Please select another date."
                         />
 
                         <View style={styles.sectionDivider}>

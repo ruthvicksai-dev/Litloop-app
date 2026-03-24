@@ -1,7 +1,7 @@
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
-import { mutation, query } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 import { recordRentalCreated, recordUserActivity } from "./analytics";
 import { assertAdmin, getAuthenticatedUser } from "./lib/authHelpers";
 import { assertRateLimit, buildRateLimitKey } from "./lib/rateLimit";
@@ -177,11 +177,41 @@ export const scheduleDelivery = mutation({
 
         if (!args.deliveryDate) throw new Error("Delivery date is required.");
         if (!args.deliveryTime) throw new Error("Delivery time is required.");
-        // M6: Validate date and time format
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(args.deliveryDate))
-            throw new Error("Invalid delivery date format. Use YYYY-MM-DD.");
-        if (!/^\d{2}:\d{2}$/.test(args.deliveryTime) && !/^(0?[1-9]|1[0-2]):[0-5]\d[ ]?(AM|PM|am|pm)$/.test(args.deliveryTime))
-            throw new Error("Invalid delivery time format. Use HH:MM or HH:MM AM/PM.");
+
+        // Validation logic
+        const now = new Date();
+        const todayStr = now.toISOString().split('T')[0];
+
+        // 5-day limit
+        const maxDate = new Date();
+        maxDate.setDate(now.getDate() + 5);
+        const maxDateStr = maxDate.toISOString().split('T')[0];
+
+        if (args.deliveryDate < todayStr) throw new Error("Cannot schedule delivery in the past.");
+        if (args.deliveryDate > maxDateStr) throw new Error("Cannot schedule delivery more than 5 days in advance.");
+
+        // 6 AM - 10 PM validation
+        const timeMatch = args.deliveryTime.match(/^(\d{1,2}):(\d{2})\s?(AM|PM|am|pm)$/i);
+        if (!timeMatch) throw new Error("Invalid delivery time format.");
+
+        let hour = parseInt(timeMatch[1], 10);
+        const min = parseInt(timeMatch[2], 10);
+        const ampm = timeMatch[3].toUpperCase();
+        if (ampm === "PM" && hour < 12) hour += 12;
+        if (ampm === "AM" && hour === 12) hour = 0;
+
+        if (hour < 6 || hour > 22 || (hour === 22 && min > 0)) {
+            throw new Error("Delivery is only available between 6:00 AM and 10:00 PM.");
+        }
+
+        // 1-hour buffer if today
+        if (args.deliveryDate === todayStr) {
+            const currentHour = now.getHours();
+            const currentMin = now.getMinutes();
+            if (hour * 60 + min < currentHour * 60 + currentMin + 60) {
+                throw new Error("Delivery must be scheduled at least 1 hour in advance.");
+            }
+        }
 
         await ctx.db.patch(args.rentalId, {
             deliveryDate: args.deliveryDate,
@@ -260,20 +290,61 @@ export const schedulePickup = mutation({
 
         if (!args.pickupDate) throw new Error("Pickup date is required.");
         if (!args.pickupTime) throw new Error("Pickup time is required.");
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(args.pickupDate))
-            throw new Error("Invalid pickup date format. Use YYYY-MM-DD.");
-        if (!/^\d{2}:\d{2}$/.test(args.pickupTime) && !/^(0?[1-9]|1[0-2]):[0-5]\d[ ]?(AM|PM|am|pm)$/.test(args.pickupTime))
-            throw new Error("Invalid pickup time format. Use HH:MM or HH:MM AM/PM.");
-        if (!Number.isInteger(args.userRating) || args.userRating < 1 || args.userRating > 5) {
-            throw new Error("Please provide a rating between 1 and 5 stars.");
+
+        const now = new Date();
+        const todayStr = now.toISOString().split('T')[0];
+        const maxDate = new Date();
+        maxDate.setDate(now.getDate() + 5);
+        const maxDateStr = maxDate.toISOString().split('T')[0];
+
+        if (args.pickupDate < todayStr) throw new Error("Cannot schedule pickup in the past.");
+        if (args.pickupDate > maxDateStr) throw new Error("Cannot schedule pickup more than 5 days in advance.");
+
+        // 6 AM - 10 PM validation
+        const timeMatch = args.pickupTime.match(/^(\d{1,2}):(\d{2})\s?(AM|PM|am|pm)$/i);
+        if (!timeMatch) throw new Error("Invalid pickup time format.");
+
+        let hour = parseInt(timeMatch[1], 10);
+        const min = parseInt(timeMatch[2], 10);
+        const ampm = timeMatch[3].toUpperCase();
+        if (ampm === "PM" && hour < 12) hour += 12;
+        if (ampm === "AM" && hour === 12) hour = 0;
+
+        if (hour < 6 || hour > 22 || (hour === 22 && min > 0)) {
+            throw new Error("Pickup is only available between 6:00 AM and 10:00 PM.");
         }
 
-        if (!rental.deliveryDate)
-            throw new Error("Delivery date missing for rent calculation.");
+        // 1-hour buffer if today
+        if (args.pickupDate === todayStr) {
+            const currentHour = now.getHours();
+            const currentMin = now.getMinutes();
+            if (hour * 60 + min < currentHour * 60 + currentMin + 60) {
+                throw new Error("Pickup must be scheduled at least 1 hour in advance.");
+            }
+        }
 
-        // Validate pickup date is after delivery date
-        if (new Date(args.pickupDate) <= new Date(rental.deliveryDate))
-            throw new Error("Pickup date must be after delivery date.");
+        if (!rental.deliveryDate || !rental.deliveryTime)
+            throw new Error("Delivery date/time missing for rent calculation.");
+
+        // Validate pickup is after delivery
+        if (args.pickupDate < rental.deliveryDate) {
+            throw new Error("Pickup date must be on or after delivery date.");
+        }
+
+        if (args.pickupDate === rental.deliveryDate) {
+            const delTimeMatch = rental.deliveryTime.match(/^(\d{1,2}):(\d{2})\s?(AM|PM|am|pm)$/i);
+            if (delTimeMatch) {
+                let delHour = parseInt(delTimeMatch[1], 10);
+                const delMin = parseInt(delTimeMatch[2], 10);
+                const delAmpm = delTimeMatch[3].toUpperCase();
+                if (delAmpm === "PM" && delHour < 12) delHour += 12;
+                if (delAmpm === "AM" && delHour === 12) delHour = 0;
+
+                if (hour * 60 + min < delHour * 60 + delMin) {
+                    throw new Error("Pickup time must be after delivery time.");
+                }
+            }
+        }
 
         const days = daysBetween(rental.deliveryDate, args.pickupDate);
         const totalRent = rental.rentPerDay * days;
@@ -291,6 +362,7 @@ export const schedulePickup = mutation({
             ratingCount: nextCount,
         });
 
+        const expiresAt = Date.now() + 60 * 60 * 1000;
         await ctx.db.patch(args.rentalId, {
             pickupDate: args.pickupDate,
             pickupTime: args.pickupTime,
@@ -299,6 +371,8 @@ export const schedulePickup = mutation({
             userRating: args.userRating,
             ratedAt: Date.now(),
             status: "pickup_scheduled",
+            paymentStatus: "pending",
+            paymentExpiresAt: expiresAt,
         });
 
         // Notify admins that a pickup is scheduled
@@ -306,6 +380,102 @@ export const schedulePickup = mutation({
             rentalId: args.rentalId,
             bookTitle: book?.title ?? "A book",
             userName: user?.name ?? "A user",
+        });
+
+        // Auto-cancel if payment isn't completed within 1 hour
+        await ctx.scheduler.runAfter(60 * 60 * 1000, internal.rentals.autoCancelPickup, {
+            rentalId: args.rentalId,
+        });
+    },
+});
+
+export const cancelPickup = mutation({
+    args: {
+        rentalId: v.id("rentals"),
+        accessToken: v.string(),
+    },
+    handler: async (ctx, args) => {
+        const user = await getAuthenticatedUser(ctx, args.accessToken);
+        const rental = await ctx.db.get(args.rentalId);
+        if (!rental) throw new Error("Rental not found.");
+
+        if (rental.userId !== user._id && user.role !== "admin") {
+            throw new Error("Unauthorized");
+        }
+
+        if (rental.status !== "pickup_scheduled")
+            throw new Error("Rental must be 'pickup_scheduled' to cancel pickup.");
+
+        if (rental.userRating) {
+            const book = await ctx.db.get(rental.bookId);
+            if (book) {
+                const currentCount = typeof book.ratingCount === "number" ? book.ratingCount : 0;
+                const nextCount = Math.max(0, currentCount - 1);
+                let nextRating = 0;
+                if (nextCount > 0) {
+                    nextRating = ((book.rating! * currentCount) - rental.userRating) / nextCount;
+                }
+
+                await ctx.db.patch(rental.bookId, {
+                    rating: nextRating,
+                    ratingCount: nextCount,
+                });
+            }
+        }
+
+        await ctx.db.patch(args.rentalId, {
+            pickupDate: undefined,
+            pickupTime: undefined,
+            pickupLocation: undefined,
+            totalRent: undefined,
+            userRating: undefined,
+            ratedAt: undefined,
+            paymentStatus: undefined,
+            paymentExpiresAt: undefined,
+            status: "delivered",
+        });
+    },
+});
+
+export const autoCancelPickup = internalMutation({
+    args: { rentalId: v.id("rentals") },
+    handler: async (ctx, args) => {
+        const rental = await ctx.db.get(args.rentalId);
+        if (!rental || rental.status !== "pickup_scheduled") return;
+
+        if (rental.userRating) {
+            const book = await ctx.db.get(rental.bookId);
+            if (book) {
+                const currentCount = typeof book.ratingCount === "number" ? book.ratingCount : 0;
+                const nextCount = Math.max(0, currentCount - 1);
+                let nextRating = 0;
+                if (nextCount > 0) {
+                    nextRating = ((book.rating! * currentCount) - rental.userRating) / nextCount;
+                }
+                await ctx.db.patch(rental.bookId, {
+                    rating: nextRating,
+                    ratingCount: nextCount,
+                });
+            }
+        }
+
+        await ctx.db.patch(args.rentalId, {
+            pickupDate: undefined,
+            pickupTime: undefined,
+            pickupLocation: undefined,
+            totalRent: undefined,
+            userRating: undefined,
+            ratedAt: undefined,
+            paymentStatus: undefined,
+            paymentExpiresAt: undefined,
+            status: "delivered",
+        });
+
+        await ctx.scheduler.runAfter(0, internal.notifications.notifyUser, {
+            userId: rental.userId,
+            title: "Pickup Auto-Cancelled ⏳",
+            body: `Your scheduled pickup for "${(await ctx.db.get(rental.bookId))?.title}" was cancelled due to incomplete payment. Your rental timer has resumed.`,
+            dataJson: JSON.stringify({ rentalId: args.rentalId, type: "rental" }),
         });
     },
 });

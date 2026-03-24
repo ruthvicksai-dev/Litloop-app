@@ -1,12 +1,15 @@
 import BookLoader from "@/components/ui/BookLoader";
 import Button from "@/components/ui/Button";
+import ConfirmActionModal from "@/components/ui/ConfirmActionModal";
 import InputField from "@/components/ui/InputField";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, scale, Spacing } from "@/constants/theme";
+import { useToast } from "@/context/ToastContext";
 import { usePaymentScreen } from "@/hooks";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
     Image,
     KeyboardAvoidingView,
@@ -24,7 +27,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 // ─── UPI Config ─────────────────────────────────────────────────────────────
 // Replace YOUR_UPI_ID@upi with the actual UPI ID for receiving payments.
 const UPI_ID = process.env.EXPO_PUBLIC_UPI_ID ?? "YOUR_UPI_ID@upi";
-const PAYEE_NAME = "LitLoop";
+const PAYEE_NAME = "Lit Loop";
 
 function buildUpiUri(amount: number, orderId: string): string {
     const params = new URLSearchParams({
@@ -51,7 +54,69 @@ export default function PaymentScreen() {
         pickImage,
         handleUpiPayment,
         handleCashPayment,
+        canceling,
+        handleCancelPickup,
     } = usePaymentScreen(rentalId);
+
+    const { isOnline } = useNetworkStatus();
+    const { showToast } = useToast();
+
+    const [isCancelModalVisible, setCancelModalVisible] = useState(false);
+    const [timeLeft, setTimeLeft] = useState<string | null>(null);
+    const [isExpired, setIsExpired] = useState(false);
+
+    useEffect(() => {
+        if (!rental?.paymentExpiresAt) return;
+
+        const updateTimer = () => {
+            const now = Date.now();
+            const diff = rental.paymentExpiresAt! - now;
+
+            if (diff <= 0) {
+                setIsExpired(true);
+                setTimeLeft("Expired");
+                return false;
+            } else {
+                const minutes = Math.floor(diff / 60000);
+                const seconds = Math.floor((diff % 60000) / 1000);
+                setTimeLeft(`${minutes}:${seconds.toString().padStart(2, "0")}`);
+                return true;
+            }
+        };
+
+        if (updateTimer()) {
+            const interval = setInterval(() => {
+                if (!updateTimer()) {
+                    clearInterval(interval);
+                }
+            }, 1000);
+            return () => clearInterval(interval);
+        }
+    }, [rental?.paymentExpiresAt]);
+
+    const onSubmitUpiPayment = () => {
+        if (!isOnline) {
+            showToast("Internet is required to submit payment.", "error");
+            return;
+        }
+        handleUpiPayment();
+    };
+
+    const onSubmitCashPayment = () => {
+        if (!isOnline) {
+            showToast("Internet is required to submit payment.", "error");
+            return;
+        }
+        handleCashPayment();
+    };
+
+    const onCancelPickupPress = () => {
+        if (!isOnline) {
+            showToast("Internet is required to cancel pickup.", "error");
+            return;
+        }
+        setCancelModalVisible(true);
+    };
 
     if (!rental) {
         return (
@@ -93,6 +158,32 @@ export default function PaymentScreen() {
                         <Text style={styles.amountLabel}>Total Amount</Text>
                         <Text style={styles.amountValue}>₹ {rental.totalRent || 0}</Text>
                     </View>
+
+                    {timeLeft ? (
+                        <View style={[styles.timerContainer, isExpired && styles.timerExpired]}>
+                            <Ionicons name="time-outline" size={20} color={isExpired ? Colors.error : Colors.warning} />
+                            <Text style={[styles.timerText, isExpired && styles.timerTextExpired]}>
+                                {isExpired ? "Payment time expired" : `Time left to pay: ${timeLeft}`}
+                            </Text>
+                        </View>
+                    ) : null}
+
+                    <View style={styles.noteContainer}>
+                        <Ionicons name="information-circle-outline" size={16} color={Colors.textSecondary} />
+                        <Text style={styles.noteText}>
+                            Note: Please complete your payment within 1 hour of scheduling. If not completed, your pickup will be automatically cancelled.
+                        </Text>
+                    </View>
+
+                    <Button
+                        title="Cancel Pickup & Resume Timer"
+                        onPress={onCancelPickupPress}
+                        variant="outline"
+                        style={{ marginHorizontal: Spacing.md, marginBottom: Spacing.md, borderColor: Colors.error }}
+                        textStyle={{ color: Colors.error }}
+                        loading={canceling}
+                        disabled={!isOnline || isExpired}
+                    />
 
                     <Text style={styles.sectionTitle}>Choose Payment Method</Text>
                     <View style={styles.methodRow}>
@@ -227,8 +318,9 @@ export default function PaymentScreen() {
 
                             <Button
                                 title="Submit Payment"
-                                onPress={handleUpiPayment}
+                                onPress={onSubmitUpiPayment}
                                 loading={uploading}
+                                disabled={!isOnline || isExpired}
                                 style={{ marginTop: Spacing.md }}
                             />
                         </View>
@@ -255,14 +347,30 @@ export default function PaymentScreen() {
 
                             <Button
                                 title="Confirm Cash Payment"
-                                onPress={handleCashPayment}
+                                onPress={onSubmitCashPayment}
                                 loading={uploading}
-                                style={{ marginTop: Spacing.md }}
+                                disabled={!isOnline || isExpired}
+                                style={{ marginTop: Spacing.md, backgroundColor: "#10B981" }}
                             />
                         </View>
                     ) : null}
                 </ScrollView>
             </KeyboardAvoidingView>
+
+            <ConfirmActionModal
+                visible={isCancelModalVisible}
+                title="Cancel Pickup?"
+                message="Are you sure you want to cancel the scheduled pickup? Your rental timer will resume."
+                confirmLabel="Yes, Cancel"
+                cancelLabel="No"
+                tone="danger"
+                loading={canceling}
+                onConfirm={() => {
+                    setCancelModalVisible(false);
+                    handleCancelPickup();
+                }}
+                onCancel={() => setCancelModalVisible(false)}
+            />
         </SafeAreaView>
     );
 }
@@ -311,6 +419,41 @@ const styles = StyleSheet.create({
         color: Colors.textSecondary,
         marginTop: 2,
         fontFamily: Fonts.regular,
+    },
+    timerContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: Colors.warning + "1A",
+        padding: Spacing.sm,
+        marginHorizontal: Spacing.md,
+        borderRadius: 8,
+        marginBottom: Spacing.md,
+        gap: Spacing.xs,
+    },
+    timerExpired: {
+        backgroundColor: Colors.error + "1A",
+    },
+    timerText: {
+        fontSize: FontSizes.body,
+        fontFamily: Fonts.medium,
+        color: Colors.warning,
+    },
+    timerTextExpired: {
+        color: Colors.error,
+    },
+    noteContainer: {
+        flexDirection: "row",
+        paddingHorizontal: Spacing.md,
+        marginBottom: Spacing.md,
+        gap: Spacing.xs,
+    },
+    noteText: {
+        flex: 1,
+        fontSize: FontSizes.small,
+        color: Colors.textSecondary,
+        fontFamily: Fonts.regular,
+        lineHeight: 18,
     },
     amountCard: {
         backgroundColor: Colors.primary,

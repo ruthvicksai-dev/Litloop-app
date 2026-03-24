@@ -1,7 +1,9 @@
 import AppSplash from "@/components/ui/AppSplash";
 import { NotificationPermissionModal, useNotificationRationale } from "@/components/ui/NotificationPermissionModal";
+import { OfflineBanner } from "@/components/ui/OfflineBanner";
 import { Colors } from "@/constants/theme";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { NetworkProvider } from "@/context/NetworkContext";
 import { ToastProvider } from "@/context/ToastContext";
 import { useNotifications } from "@/hooks/useNotifications";
 import { ConvexProvider, ConvexReactClient } from "convex/react";
@@ -140,11 +142,14 @@ export default function RootLayout() {
 
   return (
     <ConvexProvider client={convex}>
-      <AuthProvider>
-        <ToastProvider>
-          <AppGate fontsLoaded={fontsLoaded} />
-        </ToastProvider>
-      </AuthProvider>
+      <NetworkProvider>
+        <AuthProvider>
+          <ToastProvider>
+            <OfflineBanner />
+            <AppGate fontsLoaded={fontsLoaded} />
+          </ToastProvider>
+        </AuthProvider>
+      </NetworkProvider>
     </ConvexProvider>
   );
 }

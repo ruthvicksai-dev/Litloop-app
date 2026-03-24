@@ -40,7 +40,8 @@ interface AuthContextType {
         name: string,
         email: string,
         phone: string,
-        password: string
+        password: string,
+        acceptedTerms: boolean
     ) => Promise<void>;
     signInWithGoogle: (idToken: string) => Promise<void>;
     signOut: () => Promise<void>;
@@ -278,13 +279,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             name: string,
             email: string,
             phone: string,
-            password: string
+            password: string,
+            acceptedTerms: boolean
         ) => {
             const result = await signUpMutation({
                 name,
                 email,
                 phone,
                 password,
+                acceptedTerms,
             });
             await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, result.accessToken);
             await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, result.refreshToken);

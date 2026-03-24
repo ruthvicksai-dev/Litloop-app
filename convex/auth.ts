@@ -131,6 +131,7 @@ export const signUp = mutation({
         email: v.string(),
         phone: v.string(),
         password: v.string(),
+        acceptedTerms: v.boolean(),
         deviceInfo: v.optional(v.string()),
         ipAddress: v.optional(v.string()),
     },
@@ -140,6 +141,7 @@ export const signUp = mutation({
         if (!args.email.trim()) throw new Error("Email is required.");
         if (args.email.trim().length > 254) throw new Error("Email is too long.");
         if (!args.phone.trim()) throw new Error("Phone number is required.");
+        if (!args.acceptedTerms) throw new Error("You must accept the Privacy Policy and Terms of Service.");
         // M1: Minimum password length increased to 8 (OWASP recommendation)
         if (args.password.length < 8)
             throw new Error("Password must be at least 8 characters.");
@@ -199,6 +201,8 @@ export const signUp = mutation({
             providers: ["local"],
             lastLoginProvider: "local",
             role: "user",
+            acceptedTerms: true,
+            acceptedAt: Date.now(),
             createdAt: Date.now(),
         });
 

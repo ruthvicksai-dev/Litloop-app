@@ -12,6 +12,8 @@ export default defineSchema({
         lastLoginProvider: v.optional(v.union(v.literal("local"), v.literal("google"))),
         role: v.union(v.literal("user"), v.literal("admin")),
         pushToken: v.optional(v.string()),
+        acceptedTerms: v.optional(v.boolean()),
+        acceptedAt: v.optional(v.number()),
         createdAt: v.number(),
     })
         .index("by_email", ["email"])
@@ -155,9 +157,12 @@ export default defineSchema({
                 v.literal("verification_pending"),
                 v.literal("cash_pending"),
                 v.literal("paid"),
-                v.literal("rejected")
+                v.literal("rejected"),
+                v.literal("expired"),
+                v.literal("cancelled")
             )
         ),
+        paymentExpiresAt: v.optional(v.number()),
         utrNumber: v.optional(v.string()),
         paymentScreenshot: v.optional(v.id("_storage")),
         lateFee: v.optional(v.number()),

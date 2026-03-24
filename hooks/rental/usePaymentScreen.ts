@@ -19,10 +19,12 @@ export function usePaymentScreen(rentalId: string) {
     const submitUpiPayment = useMutation(api.payments.submitUpiPayment);
     const selectCashPayment = useMutation(api.payments.selectCashPayment);
     const generateUploadUrl = useMutation(api.payments.generateUploadUrl);
+    const cancelPickupMutation = useMutation(api.rentals.cancelPickup);
 
     const [utrNumber, setUtrNumber] = useState("");
     const [screenshot, setScreenshot] = useState<string | null>(null);
     const [uploading, setUploading] = useState(false);
+    const [canceling, setCanceling] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState<"upi" | "cash" | null>(
         null
     );
@@ -102,6 +104,24 @@ export function usePaymentScreen(rentalId: string) {
         }
     };
 
+    const handleCancelPickup = async () => {
+        setCanceling(true);
+        try {
+            if (!accessToken) throw new Error("Unauthenticated");
+            await cancelPickupMutation({
+                accessToken,
+                rentalId: rentalId as Id<"rentals">,
+            });
+            showToast("Pickup cancelled. You can continue reading!", "success");
+            router.replace("/(tabs)/my-rentals");
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Failed to cancel pickup.";
+            showToast(message, "error");
+        } finally {
+            setCanceling(false);
+        }
+    };
+
     return {
         rental,
         utrNumber,
@@ -113,5 +133,7 @@ export function usePaymentScreen(rentalId: string) {
         pickImage,
         handleUpiPayment,
         handleCashPayment,
+        canceling,
+        handleCancelPickup,
     };
 }

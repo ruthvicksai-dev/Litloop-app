@@ -9,6 +9,7 @@ export function useSignUpScreen() {
     const [phone, setPhone] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [agreedToTerms, setAgreedToTerms] = useState(false);
     const [loading, setLoading] = useState(false);
     const { signUp, user } = useAuth();
     const { showToast } = useToast();
@@ -35,10 +36,14 @@ export function useSignUpScreen() {
             showToast("Passwords do not match.", "error");
             return;
         }
+        if (!agreedToTerms) {
+            showToast("Please agree to the Privacy Policy and Terms of Service to continue", "error");
+            return;
+        }
 
         setLoading(true);
         try {
-            await signUp(name, email, normalizePhoneNumber(phone), password);
+            await signUp(name, email, normalizePhoneNumber(phone), password, agreedToTerms);
             showToast("Account created successfully!", "success");
         } catch (error: unknown) {
             const message =
@@ -60,6 +65,8 @@ export function useSignUpScreen() {
         setPassword,
         confirmPassword,
         setConfirmPassword,
+        agreedToTerms,
+        setAgreedToTerms,
         loading,
         user,
         handleSignUp,

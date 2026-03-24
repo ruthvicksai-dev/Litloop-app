@@ -2,6 +2,7 @@ import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
+import { insertAuditLog } from "./lib/auditLog";
 import { assertAdmin } from "./lib/authHelpers";
 
 const MAIN_GENRES = [
@@ -394,7 +395,7 @@ export const add = mutation({
         accessToken: v.string(),
     },
     handler: async (ctx, args) => {
-        await assertAdmin(ctx, args.accessToken);
+        const admin = await assertAdmin(ctx, args.accessToken);
         const title = args.title.trim();
         const author = args.author.trim();
         const description = args.description.trim();
@@ -469,6 +470,8 @@ export const add = mutation({
             createdAt: Date.now(),
         });
 
+        await insertAuditLog(ctx, "book_added", admin._id, bookId, "book", { title });
+
         return bookId;
     },
 });
@@ -501,7 +504,7 @@ export const update = mutation({
         accessToken: v.string(),
     },
     handler: async (ctx, args) => {
-        await assertAdmin(ctx, args.accessToken);
+        const admin = await assertAdmin(ctx, args.accessToken);
         const book = await ctx.db.get(args.bookId);
         if (!book) throw new Error("Book not found.");
 
@@ -643,6 +646,10 @@ export const update = mutation({
         }
 
         await ctx.db.patch(args.bookId, updates);
+
+        await insertAuditLog(ctx, "book_updated", admin._id, args.bookId, "book", {
+            title: args.title ?? book.title
+        });
     },
 });
 
@@ -657,7 +664,7 @@ export const generateUploadUrl = mutation({
 export const remove = mutation({
     args: { bookId: v.id("books"), accessToken: v.string() },
     handler: async (ctx, args) => {
-        await assertAdmin(ctx, args.accessToken);
+        const admin = await assertAdmin(ctx, args.accessToken);
         const book = await ctx.db.get(args.bookId);
         if (!book) throw new Error("Book not found.");
 
@@ -667,8 +674,8 @@ export const remove = mutation({
             .withIndex("by_bookId", (q) => q.eq("bookId", args.bookId))
             .filter((q) => q.neq(q.field("status"), "returned"))
             .first();
-        if (activeRentals) {
-            throw new Error("Cannot remove a book with active rentals.");
+        if (activeRentals) { // Changed from activeRentals.length > 0 to activeRentals
+            throw new Error("Cannot remove book with active rentals."); // Changed error message
         }
 
         // Delete the legacy cover image from storage if it exists
@@ -777,8 +784,9 @@ export const getNewlyAddedBooks = query({
 });
 
 export const backfillSearchFields = mutation({
-    args: {},
-    handler: async (ctx) => {
+    args: { accessToken: v.string() },
+    handler: async (ctx, args) => {
+        const admin = await assertAdmin(ctx, args.accessToken);
         const books = await ctx.db.query("books").collect();
         let updated = 0;
 
@@ -827,6 +835,8 @@ export const backfillSearchFields = mutation({
             });
             updated += 1;
         }
+
+        await insertAuditLog(ctx, "books_search_backfilled", admin._id, undefined, undefined, { updated, scanned: books.length });
 
         return { scanned: books.length, updated };
     },

@@ -2,8 +2,12 @@ import AuthFooter from "@/components/auth/AuthFooter";
 import AuthHeader from "@/components/auth/AuthHeader";
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
-import { Colors, Layout, Spacing, scale } from "@/constants/theme";
+import { Fonts, FontSizes } from "@/constants/fonts";
+import { Colors, Layout, scale, Spacing } from "@/constants/theme";
+import { useToast } from "@/context/ToastContext";
 import { useAuthRedirect, useFadeSlideScaleIn, useSignUpScreen } from "@/hooks";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
@@ -12,10 +16,10 @@ import {
     ScrollView,
     StyleSheet,
     Text,
+    TouchableOpacity,
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Fonts, FontSizes } from "@/constants/fonts";
 
 export default function SignUpScreen() {
     const router = useRouter();
@@ -37,8 +41,21 @@ export default function SignUpScreen() {
         setConfirmPassword,
         loading,
         user,
+        agreedToTerms,
+        setAgreedToTerms,
         handleSignUp,
     } = useSignUpScreen();
+
+    const { isOnline } = useNetworkStatus();
+    const { showToast } = useToast();
+
+    const onSignUpPress = () => {
+        if (!isOnline) {
+            showToast("Internet connection is required to sign up.", "error");
+            return;
+        }
+        handleSignUp();
+    };
 
     useAuthRedirect(user);
 
@@ -104,10 +121,39 @@ export default function SignUpScreen() {
                             secureTextEntry
                         />
 
+                        <TouchableOpacity
+                            style={styles.checkboxContainer}
+                            onPress={() => setAgreedToTerms(!agreedToTerms)}
+                            activeOpacity={0.7}
+                        >
+                            <Ionicons
+                                name={agreedToTerms ? "checkbox" : "square-outline"}
+                                size={22}
+                                color={agreedToTerms ? Colors.primary : Colors.textSecondary}
+                            />
+                            <Text style={styles.checkboxLabel}>
+                                I agree to the{" "}
+                                <Text
+                                    style={styles.linkText}
+                                    onPress={() => router.push("/legal/privacy-policy")}
+                                >
+                                    Privacy Policy
+                                </Text>{" "}
+                                and{" "}
+                                <Text
+                                    style={styles.linkText}
+                                    onPress={() => router.push("/legal/terms-of-service")}
+                                >
+                                    Terms of Service
+                                </Text>
+                            </Text>
+                        </TouchableOpacity>
+
                         <Button
                             title="Sign Up"
-                            onPress={handleSignUp}
+                            onPress={onSignUpPress}
                             loading={loading}
+                            disabled={!isOnline}
                             style={{ marginTop: Spacing.md }}
                         />
                     </View>
@@ -161,5 +207,25 @@ const styles = StyleSheet.create({
         textAlign: "center",
         marginBottom: Spacing.md,
         fontFamily: Fonts.regular,
+    },
+    checkboxContainer: {
+        flexDirection: "row",
+        alignItems: "flex-start",
+        marginTop: Spacing.sm,
+        marginBottom: Spacing.md,
+        paddingHorizontal: Spacing.xs,
+        gap: Spacing.sm,
+    },
+    checkboxLabel: {
+        flex: 1,
+        fontSize: FontSizes.small,
+        color: Colors.textSecondary,
+        fontFamily: Fonts.regular,
+        lineHeight: 20,
+    },
+    linkText: {
+        color: Colors.primary,
+        fontFamily: Fonts.medium,
+        textDecorationLine: "underline",
     },
 });

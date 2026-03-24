@@ -1,12 +1,14 @@
 import AuthFooter from "@/components/auth/AuthFooter";
 import AuthHeader from "@/components/auth/AuthHeader";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
-import { isGoogleSignInEnabled } from "@/constants/features";
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
+import { isGoogleSignInEnabled } from "@/constants/features";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, scale, Spacing } from "@/constants/theme";
+import { useToast } from "@/context/ToastContext";
 import { useAuthRedirect, useFadeSlideScaleIn, useSignInScreen } from "@/hooks";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
@@ -35,6 +37,17 @@ export default function SignInScreen() {
         user,
         handleSignIn,
     } = useSignInScreen();
+
+    const { isOnline } = useNetworkStatus();
+    const { showToast } = useToast();
+
+    const onSignInPress = () => {
+        if (!isOnline) {
+            showToast("Internet connection is required to sign in.", "error");
+            return;
+        }
+        handleSignIn();
+    };
 
     useAuthRedirect(user);
 
@@ -82,10 +95,28 @@ export default function SignInScreen() {
 
                         <Button
                             title="Sign In"
-                            onPress={handleSignIn}
+                            onPress={onSignInPress}
                             loading={loading}
-                            style={{ marginTop: Spacing.md }}
+                            disabled={!isOnline}
+                            style={{ marginVertical: Spacing.sm }}
                         />
+
+                        <Text style={styles.termsText}>
+                            By continuing, you agree to our{" "}
+                            <Text
+                                style={styles.linkText}
+                                onPress={() => router.push("/legal/privacy-policy")}
+                            >
+                                Privacy Policy
+                            </Text>{" "}
+                            and{" "}
+                            <Text
+                                style={styles.linkText}
+                                onPress={() => router.push("/legal/terms-of-service")}
+                            >
+                                Terms of Service
+                            </Text>
+                        </Text>
 
                         {isGoogleSignInEnabled ? (
                             <>
@@ -168,5 +199,19 @@ const styles = StyleSheet.create({
         color: Colors.textSecondary,
         fontSize: FontSizes.caption,
         fontFamily: Fonts.medium,
+    },
+    termsText: {
+        fontSize: FontSizes.caption,
+        color: Colors.textSecondary,
+        fontFamily: Fonts.regular,
+        textAlign: "center",
+        lineHeight: 18,
+        marginTop: Spacing.xs,
+        marginBottom: Spacing.sm,
+    },
+    linkText: {
+        color: Colors.primary,
+        fontFamily: Fonts.medium,
+        textDecorationLine: "underline",
     },
 });
