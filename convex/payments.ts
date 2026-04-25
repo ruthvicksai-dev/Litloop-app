@@ -68,9 +68,24 @@ export const submitUpiPayment = mutation({
         );
         await assertRateLimit(ctx, submitPaymentKey, PAYMENT_RATE_LIMITS.submitUpiPayment);
 
-        const utrRegex = /^[A-Za-z0-9]{12}$/;
         if (!args.utrNumber.trim()) throw new Error("UTR number is required.");
-        if (!utrRegex.test(args.utrNumber.trim())) throw new Error("Invalid UTR number. Must be exactly 12 alphanumeric characters.");
+        // M4 FIX: Accept 12–22 chars — covers UPI txn IDs (12) and NEFT/IMPS UTR (up to 22)
+        const utrRegex = /^[A-Za-z0-9]{12,22}$/;
+        if (!utrRegex.test(args.utrNumber.trim())) {
+            throw new Error("Invalid UTR/transaction ID. Must be 12–22 alphanumeric characters.");
+        }
+
+        // C3 FIX: Validate MIME type of the uploaded screenshot before accepting it
+        const fileMetadata = await ctx.storage.getMetadata(args.paymentScreenshot);
+        if (!fileMetadata) {
+            throw new Error("Uploaded file not found. Please try again.");
+        }
+        const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+        if (!ALLOWED_IMAGE_TYPES.includes(fileMetadata.contentType ?? "")) {
+            throw new Error(
+                "Invalid file type. Payment screenshot must be a JPEG, PNG, or WebP image."
+            );
+        }
 
         const existingWithSameUtr = await ctx.db
             .query("rentals")

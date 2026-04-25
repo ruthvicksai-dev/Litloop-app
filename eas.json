@@ -9,10 +9,25 @@
       "distribution": "internal"
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "GOOGLE_SERVICES_JSON": "@GOOGLE_SERVICES_JSON"
+      }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_CONVEX_URL": "$EXPO_PUBLIC_CONVEX_URL",
+        "EXPO_PUBLIC_CONVEX_SITE_URL": "$EXPO_PUBLIC_CONVEX_SITE_URL",
+        "GOOGLE_SERVICES_JSON": "@GOOGLE_SERVICES_JSON",
+        "EXPO_PUBLIC_GOOGLE_SIGNIN_ENABLED": "$EXPO_PUBLIC_GOOGLE_SIGNIN_ENABLED",
+        "EXPO_PUBLIC_GOOGLE_CLIENT_ID_ANDROID": "$EXPO_PUBLIC_GOOGLE_CLIENT_ID_ANDROID",
+        "EXPO_PUBLIC_GOOGLE_CLIENT_ID_IOS": "$EXPO_PUBLIC_GOOGLE_CLIENT_ID_IOS",
+        "EXPO_PUBLIC_GOOGLE_CLIENT_ID_WEB": "$EXPO_PUBLIC_GOOGLE_CLIENT_ID_WEB",
+        "EXPO_PUBLIC_GOOGLE_MAPS_KEY": "$EXPO_PUBLIC_GOOGLE_MAPS_KEY",
+        "EXPO_PUBLIC_UPI_ID": "$EXPO_PUBLIC_UPI_ID",
+        "EXPO_PUBLIC_OWNER": "$EXPO_PUBLIC_OWNER"
+      }
     }
   },
   "submit": {

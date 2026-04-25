@@ -1,6 +1,7 @@
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
+import * as Device from "expo-device";
 import * as SecureStore from "expo-secure-store";
 import React, {
     createContext,
@@ -21,6 +22,7 @@ interface User {
     phone?: string;
     avatarUrl?: string;
     role: "user" | "admin";
+    pushToken?: string;
 }
 
 type PendingToast = {
@@ -101,6 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             phone: sessionUser.phone,
             avatarUrl: sessionUser.avatarUrl,
             role: sessionUser.role,
+            pushToken: sessionUser.pushToken,
         } as User)
         : null;
 
@@ -264,7 +267,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const signIn = useCallback(
         async (email: string, password: string) => {
-            const result = await signInMutation({ email, password });
+            // L5 FIX: Pass deviceInfo so sessions show meaningful device names
+            const deviceInfo = `${Device.modelName ?? "Unknown Device"} (${Device.osName ?? ""} ${Device.osVersion ?? ""})`;
+            const result = await signInMutation({ email, password, deviceInfo });
             await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, result.accessToken);
             await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, result.refreshToken);
             setAccessToken(result.accessToken);
@@ -282,12 +287,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             password: string,
             acceptedTerms: boolean
         ) => {
+            // L5 FIX: Pass deviceInfo so sessions show meaningful device names
+            const deviceInfo = `${Device.modelName ?? "Unknown Device"} (${Device.osName ?? ""} ${Device.osVersion ?? ""})`;
             const result = await signUpMutation({
                 name,
                 email,
                 phone,
                 password,
                 acceptedTerms,
+                deviceInfo,
             });
             await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, result.accessToken);
             await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, result.refreshToken);
@@ -299,7 +307,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const signInWithGoogle = useCallback(
         async (idToken: string) => {
-            const result = await googleSignInMutation({ idToken });
+            // L5 FIX: Pass deviceInfo so sessions show meaningful device names
+            const deviceInfo = `${Device.modelName ?? "Unknown Device"} (${Device.osName ?? ""} ${Device.osVersion ?? ""})`;
+            const result = await googleSignInMutation({ idToken, deviceInfo });
             await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, result.accessToken);
             await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, result.refreshToken);
             setAccessToken(result.accessToken);

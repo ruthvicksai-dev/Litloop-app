@@ -365,6 +365,7 @@ export const getSession = query({
                 phone: user.phone,
                 avatarUrl: user.avatarUrl,
                 role: user.role,
+                pushToken: user.pushToken,
             };
         } catch {
             return null;

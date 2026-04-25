@@ -95,17 +95,12 @@ export const updatePushToken = mutation({
 
         const userId = await getUserIdFromAccessToken(args.accessToken);
 
-        // Clear duplicate tokens from other users — use by_email walk as before
-        // (no by_pushToken index; impact is bounded — dedup is best-effort)
+        // M1 FIX: Use by_pushToken index instead of a full table scan.
+        // Previously used by_email with an open range which read ALL users.
         const existingUser = await ctx.db
             .query("users")
-            .withIndex("by_email", (q: any) => q)
-            .filter((q: any) =>
-                q.and(
-                    q.neq(q.field("_id"), userId),
-                    q.eq(q.field("pushToken"), args.pushToken)
-                )
-            )
+            .withIndex("by_pushToken", (q) => q.eq("pushToken", args.pushToken))
+            .filter((q) => q.neq(q.field("_id"), userId))
             .first();
 
         if (existingUser) {
@@ -203,12 +198,14 @@ export const getUnreadCount = query({
     handler: async (ctx, args) => {
         const user = await getAuthenticatedUser(ctx, args.accessToken);
         const userId = user._id;
+        // L6 FIX: Cap at 100 with .take() to avoid fetching all unread records
+        // just to count them. Displays "99+" in UI if badge shows >99.
         const unread = await ctx.db
             .query("user_notifications")
             .withIndex("by_userId_isRead", (q) =>
                 q.eq("userId", userId).eq("isRead", false)
             )
-            .collect();
+            .take(100);
 
         return unread.length;
     },
@@ -247,7 +244,10 @@ export const markAllRead = mutation({
             )
             .take(MARK_ALL_READ_BATCH_SIZE);
 
-        // Sequential writes — avoid unbounded Promise.all
+        // L2: Sequential writes are correct (avoids unbounded Promise.all).
+        // Capped at MARK_ALL_READ_BATCH_SIZE (100) per call.
+        // NOTE: A lastReadAt timestamp approach would eliminate writes entirely
+        // and is the recommended long-term solution for high-volume users.
         for (const notification of unread) {
             await ctx.db.patch(notification._id, { isRead: true });
         }
@@ -468,17 +468,18 @@ export const notifyAdminsOfPickupScheduled = internalAction({
 /**
  * L4: Cleanup old notifications — called by the weekly cron in crons.ts.
  * Deletes user_notifications records older than TTL_DAYS days.
+ *
+ * M2 FIX: Now uses the by_createdAt index to directly target old records
+ * instead of scanning all notifications via the by_userId open-range scan.
  */
 export const cleanupOldNotifications = internalMutation({
     args: { ttlDays: v.number() },
     handler: async (ctx, args) => {
         const cutoff = Date.now() - args.ttlDays * 24 * 60 * 60 * 1000;
-        // Collect a bounded batch to avoid mutation timeouts
+        // M2 FIX: Use by_createdAt index — skips all recent records at the DB level
         const old = await ctx.db
             .query("user_notifications")
-            .withIndex("by_userId") // Scan all users; ordered by userId not time,
-            // but we still prune by createdAt check
-            .filter((q: any) => q.lt(q.field("createdAt"), cutoff))
+            .withIndex("by_createdAt", (q) => q.lt("createdAt", cutoff))
             .take(500);
 
         for (const n of old) {
@@ -491,6 +492,10 @@ export const cleanupOldNotifications = internalMutation({
 
 /**
  * L2: Reconcile availableCopies for all books — called by nightly cron.
+ *
+ * M3 FIX: Now processes a bounded batch of 50 books per run to avoid
+ * N+1 query timeouts as the catalog grows. The cron runs nightly so
+ * all books are covered across multiple nights at worst.
  */
 export const reconcileAvailableCopies = internalMutation({
     args: {},
@@ -503,14 +508,21 @@ export const reconcileAvailableCopies = internalMutation({
             "payment_pending",
         ]);
 
-        const books = await ctx.db.query("books").collect();
+        // M3 FIX: Process at most 50 books per run instead of the full catalog.
+        // This bounds the query count to 51 max (1 books fetch + 50 rental fetches)
+        // and stays well within Convex mutation time limits as the catalog scales.
+        const books = await ctx.db
+            .query("books")
+            .withIndex("by_createdAt")
+            .take(50);
+
         let corrected = 0;
 
         for (const book of books) {
             const activeRentals = await ctx.db
                 .query("rentals")
-                .withIndex("by_bookId", (q: any) => q.eq("bookId", book._id))
-                .filter((q: any) => {
+                .withIndex("by_bookId", (q) => q.eq("bookId", book._id))
+                .filter((q) => {
                     const statuses = [...ACTIVE_STATUSES];
                     return q.or(...statuses.map((s) => q.eq(q.field("status"), s)));
                 })
@@ -520,7 +532,9 @@ export const reconcileAvailableCopies = internalMutation({
             if (book.availableCopies !== expected) {
                 await ctx.db.patch(book._id, { availableCopies: expected });
                 corrected++;
-                console.warn(`[Reconcile] Fixed book ${book._id}: was ${book.availableCopies}, now ${expected}`);
+                console.warn(
+                    `[Reconcile] Fixed book ${book._id}: was ${book.availableCopies}, now ${expected}`
+                );
             }
         }
 

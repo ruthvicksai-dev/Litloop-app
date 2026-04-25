@@ -30,16 +30,21 @@ const shouldSuppressConvexLog = (args: unknown[]) => {
   );
 };
 
+// L4 FIX: Suppress verbose Convex logs in production builds.
+// console.error is still active in production for critical failures.
+const isProd = process.env.NODE_ENV === "production";
+const noop = () => { };
+
 const convexLogger = {
-  log: (...args: unknown[]) => console.log(...args),
-  warn: (...args: unknown[]) => console.warn(...args),
+  log: isProd ? noop : (...args: unknown[]) => console.log(...args),
+  warn: isProd ? noop : (...args: unknown[]) => console.warn(...args),
   error: (...args: unknown[]) => {
     if (shouldSuppressConvexLog(args)) {
       return;
     }
     console.error(...args);
   },
-  logVerbose: (...args: unknown[]) => console.log(...args),
+  logVerbose: isProd ? noop : (...args: unknown[]) => console.log(...args),
 };
 
 const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!, {
@@ -147,8 +152,11 @@ export default function RootLayout() {
     "Lato-LightItalic": require("../assets/fonts/Lato/Lato-LightItalic.ttf"),
     "Lato-Regular": require("../assets/fonts/Lato/Lato-Regular.ttf"),
     "Lato-Italic": require("../assets/fonts/Lato/Lato-Italic.ttf"),
-    "Lato-Medium": require("../assets/fonts/Lato/Lato-Bold.ttf"),
-    "Lato-MediumItalic": require("../assets/fonts/Lato/Lato-BoldItalic.ttf"),
+    // L1 FIX: Lato has no "Medium" weight. Map Lato-Medium to Regular (400)
+    // so components using Fonts.medium render at the correct weight,
+    // not incorrectly at Bold (700).
+    "Lato-Medium": require("../assets/fonts/Lato/Lato-Regular.ttf"),
+    "Lato-MediumItalic": require("../assets/fonts/Lato/Lato-Italic.ttf"),
     "Lato-Bold": require("../assets/fonts/Lato/Lato-Bold.ttf"),
     "Lato-BoldItalic": require("../assets/fonts/Lato/Lato-BoldItalic.ttf"),
   });

@@ -19,6 +19,7 @@ export default defineSchema({
         .index("by_email", ["email"])
         .index("by_phone", ["phone"])
         .index("by_role", ["role"])
+        .index("by_pushToken", ["pushToken"])
         .index("by_createdAt", ["createdAt"]),
 
     book_notifications: defineTable({
@@ -39,7 +40,8 @@ export default defineSchema({
         createdAt: v.number(),
     })
         .index("by_userId", ["userId"])
-        .index("by_userId_isRead", ["userId", "isRead"]),
+        .index("by_userId_isRead", ["userId", "isRead"])
+        .index("by_createdAt", ["createdAt"]),
 
     sessions: defineTable({
         userId: v.id("users"),

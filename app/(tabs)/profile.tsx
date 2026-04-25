@@ -14,7 +14,9 @@ import { api } from "@/convex/_generated/api";
 import { useFadeSlideScaleIn, useProfileTabs } from "@/hooks";
 import { triggerHaptic } from "@/utils/haptics";
 import { Ionicons } from "@expo/vector-icons";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
+import Constants from "expo-constants";
+import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -23,6 +25,7 @@ import {
     RefreshControl,
     ScrollView,
     StyleSheet,
+    Switch,
     Text,
     TouchableOpacity,
     View,
@@ -44,6 +47,37 @@ export default function ProfileScreen() {
     const { fadeAnim, slideAnim, scaleAnim } = useFadeSlideScaleIn();
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
+
+    const updatePushToken = useMutation(api.notifications.updatePushToken);
+    const clearPushToken = useMutation(api.notifications.clearPushToken);
+
+    const handleTogglePush = async (value: boolean) => {
+        if (!accessToken) return;
+
+        triggerHaptic("light");
+        if (value) {
+            const { status } = await Notifications.requestPermissionsAsync();
+            if (status !== "granted") {
+                showToast("Push notification permissions denied by system.", "error");
+                return;
+            }
+            try {
+                const projectId = Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
+                if (!projectId) return;
+                const { data: pushToken } = await Notifications.getExpoPushTokenAsync({ projectId });
+                await updatePushToken({ accessToken, pushToken });
+                showToast("Push notifications enabled.", "success");
+            } catch (e) {
+                console.warn("[Profile] Failed to get push token", e);
+                showToast("Failed to enable push notifications.", "error");
+            }
+        } else {
+            if (user?.pushToken) {
+                await clearPushToken({ accessToken, pushToken: user.pushToken });
+                showToast("Push notifications disabled.", "info");
+            }
+        }
+    };
 
     const {
         activeTab,
@@ -295,6 +329,23 @@ export default function ProfileScreen() {
                             </View>
                         )}
                     </Animated.View>
+
+                    {/* Settings Section */}
+                    <View style={styles.legalSection}>
+                        <Text style={styles.legalSectionTitle} allowFontScaling={false}>Settings</Text>
+                        <View style={styles.legalRow}>
+                            <Ionicons name="notifications-outline" size={18} color={Colors.primary} />
+                            <Text style={styles.legalRowText} allowFontScaling={false}>Push Notifications</Text>
+                            <View style={{ marginLeft: "auto" }}>
+                                <Switch
+                                    value={!!user?.pushToken}
+                                    onValueChange={handleTogglePush}
+                                    trackColor={{ false: Colors.border, true: Colors.primary }}
+                                    thumbColor={Colors.white}
+                                />
+                            </View>
+                        </View>
+                    </View>
 
                     {/* Legal Section */}
                     <View style={styles.legalSection}>
