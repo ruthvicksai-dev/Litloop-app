@@ -3,14 +3,13 @@ import { Colors, Spacing } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
-import { Animated, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Animated, StyleSheet, Text, View } from "react-native";
 
 type ProfileUserCardProps = {
     user: any;
     isAdmin: boolean;
     favoriteCount: number;
     readLaterCount: number;
-    onEditProfile: () => void;
     fadeAnim: Animated.Value;
     slideAnim: Animated.Value;
     scaleAnim: Animated.Value;
@@ -21,7 +20,6 @@ export function ProfileUserCard({
     isAdmin,
     favoriteCount,
     readLaterCount,
-    onEditProfile,
     fadeAnim,
     slideAnim,
     scaleAnim,
@@ -94,16 +92,6 @@ export function ProfileUserCard({
                         Read Later
                     </Text>
                 </View>
-                <View style={styles.statDivider} />
-                <TouchableOpacity
-                    style={styles.editProfileBtn}
-                    onPress={onEditProfile}
-                >
-                    <Ionicons name="pencil" size={18} color={Colors.primary} />
-                    <Text style={styles.editProfileText} allowFontScaling={false}>
-                        Edit
-                    </Text>
-                </TouchableOpacity>
             </View>
         </Animated.View>
     );
@@ -202,18 +190,5 @@ const styles = StyleSheet.create({
         fontFamily: Fonts.medium,
         color: Colors.textSecondary,
         marginTop: 2,
-    },
-    editProfileBtn: {
-        flex: 1,
-        paddingVertical: Spacing.md,
-        alignItems: "center",
-        justifyContent: "center",
-        flexDirection: "row",
-        gap: 6,
-    },
-    editProfileText: {
-        fontSize: FontSizes.body,
-        fontFamily: Fonts.bold,
-        color: Colors.primary,
     },
 });

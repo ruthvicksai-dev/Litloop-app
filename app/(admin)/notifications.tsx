@@ -8,6 +8,8 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery } from "convex/react";
+import Constants from "expo-constants";
+import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
@@ -36,8 +38,25 @@ export default function AdminNotificationsScreen() {
     );
     const markReadMutation = useMutation(api.notifications.markRead);
     const markAllReadMutation = useMutation(api.notifications.markAllRead);
+    const updatePushToken = useMutation(api.notifications.updatePushToken);
 
+    const { user } = useAuth();
     const unreadCount = notifications?.filter((n) => !n.isRead).length ?? 0;
+
+    const handleEnablePush = async () => {
+        if (!accessToken) return;
+        const { status } = await Notifications.requestPermissionsAsync();
+        if (status === "granted") {
+            try {
+                const projectId = Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
+                if (!projectId) return;
+                const { data: pushToken } = await Notifications.getExpoPushTokenAsync({ projectId });
+                await updatePushToken({ accessToken, pushToken });
+            } catch (e) {
+                console.warn("[AdminNotifications] Failed to get push token", e);
+            }
+        }
+    };
 
     const handlePress = async (item: any) => {
         if (!item.isRead) {
@@ -100,6 +119,21 @@ export default function AdminNotificationsScreen() {
                     </TouchableOpacity>
                 )}
             </View>
+
+            {user && !user.pushToken && (
+                <View style={[styles.pushPromptContainer, { marginTop: 15 }]}>
+                    <View style={styles.pushPromptContent}>
+                        <Ionicons name="notifications-off-outline" size={24} color={Colors.warning} />
+                        <View style={styles.pushPromptTextContainer}>
+                            <Text style={styles.pushPromptTitle}>Admin Push Disabled</Text>
+                            <Text style={styles.pushPromptSubtitle}>Turn on push to get instant alerts for new rentals and payments.</Text>
+                        </View>
+                    </View>
+                    <TouchableOpacity style={styles.pushPromptButton} onPress={handleEnablePush}>
+                        <Text style={styles.pushPromptButtonText}>Enable</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
 
             <FlatList
                 data={notifications}
@@ -187,5 +221,46 @@ const styles = StyleSheet.create({
         height: StyleSheet.hairlineWidth,
         backgroundColor: Colors.border,
         marginLeft: Layout.screenPaddingWide + 40 + Spacing.md,
+    },
+    pushPromptContainer: {
+        marginHorizontal: Layout.screenPaddingWide,
+        marginBottom: Spacing.sm,
+        padding: Spacing.md,
+        backgroundColor: `${Colors.warning}15`,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: `${Colors.warning}40`,
+        flexDirection: "column",
+        gap: Spacing.sm,
+    },
+    pushPromptContent: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: Spacing.sm,
+    },
+    pushPromptTextContainer: {
+        flex: 1,
+    },
+    pushPromptTitle: {
+        fontSize: FontSizes.body,
+        fontFamily: Fonts.bold,
+        color: Colors.text,
+    },
+    pushPromptSubtitle: {
+        fontSize: FontSizes.caption,
+        fontFamily: Fonts.regular,
+        color: Colors.textSecondary,
+        marginTop: 2,
+    },
+    pushPromptButton: {
+        backgroundColor: Colors.warning,
+        paddingVertical: 10,
+        borderRadius: 12,
+        alignItems: "center",
+    },
+    pushPromptButtonText: {
+        color: Colors.white,
+        fontFamily: Fonts.bold,
+        fontSize: FontSizes.body,
     },
 });

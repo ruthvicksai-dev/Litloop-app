@@ -1,7 +1,6 @@
 import { GuestView } from "@/components/profile/GuestProfileView";
 import { ProfileUserCard } from "@/components/profile/ProfileUserCard";
 import { BookCardSkeleton } from "@/components/ui/BookCardSkeleton";
-import ConfirmActionModal from "@/components/ui/ConfirmActionModal";
 import DiscoverSectionRow from "@/components/ui/DiscoverSectionRow";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SegmentedControl, SegmentOption } from "@/components/ui/SegmentedControl";
@@ -14,9 +13,7 @@ import { api } from "@/convex/_generated/api";
 import { useFadeSlideScaleIn, useProfileTabs } from "@/hooks";
 import { triggerHaptic } from "@/utils/haptics";
 import { Ionicons } from "@expo/vector-icons";
-import { useMutation, useQuery } from "convex/react";
-import Constants from "expo-constants";
-import * as Notifications from "expo-notifications";
+import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -25,7 +22,6 @@ import {
     RefreshControl,
     ScrollView,
     StyleSheet,
-    Switch,
     Text,
     TouchableOpacity,
     View,
@@ -45,42 +41,11 @@ export default function ProfileScreen() {
     const { showToast } = useToast();
     const router = useRouter();
     const { fadeAnim, slideAnim, scaleAnim } = useFadeSlideScaleIn();
-    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
-
-    const updatePushToken = useMutation(api.notifications.updatePushToken);
-    const clearPushToken = useMutation(api.notifications.clearPushToken);
-
-    const handleTogglePush = async (value: boolean) => {
-        if (!accessToken) return;
-
-        triggerHaptic("light");
-        if (value) {
-            const { status } = await Notifications.requestPermissionsAsync();
-            if (status !== "granted") {
-                showToast("Push notification permissions denied by system.", "error");
-                return;
-            }
-            try {
-                const projectId = Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
-                if (!projectId) return;
-                const { data: pushToken } = await Notifications.getExpoPushTokenAsync({ projectId });
-                await updatePushToken({ accessToken, pushToken });
-                showToast("Push notifications enabled.", "success");
-            } catch (e) {
-                console.warn("[Profile] Failed to get push token", e);
-                showToast("Failed to enable push notifications.", "error");
-            }
-        } else {
-            if (user?.pushToken) {
-                await clearPushToken({ accessToken, pushToken: user.pushToken });
-                showToast("Push notifications disabled.", "info");
-            }
-        }
-    };
 
     const {
         activeTab,
+
         handleTabChange,
         slideAnimDist,
         listOpacity,
@@ -91,11 +56,6 @@ export default function ProfileScreen() {
         triggerHaptic("light");
         setTimeout(() => setRefreshing(false), 800);
     }, []);
-
-    const handleSignOut = async () => {
-        await signOut();
-        showToast("Signed out successfully.", "info");
-    };
 
     const favoriteBooks =
         useQuery(
@@ -174,10 +134,10 @@ export default function ProfileScreen() {
                             style={styles.settingsBtn}
                             onPress={() => {
                                 triggerHaptic("medium");
-                                setShowLogoutConfirm(true);
+                                router.push("/profile/settings");
                             }}
                         >
-                            <Ionicons name="log-out-outline" size={24} color={Colors.text} />
+                            <Ionicons name="settings-outline" size={24} color={Colors.text} />
                         </TouchableOpacity>
                     </View>
 
@@ -186,7 +146,6 @@ export default function ProfileScreen() {
                         isAdmin={true}
                         favoriteCount={0}
                         readLaterCount={0}
-                        onEditProfile={() => router.push("/profile/edit")}
                         fadeAnim={fadeAnim}
                         slideAnim={slideAnim}
                         scaleAnim={scaleAnim}
@@ -209,20 +168,6 @@ export default function ProfileScreen() {
                         </TouchableOpacity>
                     </View>
                 </ScrollView>
-
-                <ConfirmActionModal
-                    visible={showLogoutConfirm}
-                    title="Sign Out"
-                    message="Are you sure you want to securely log out of the admin account?"
-                    confirmLabel="Log Out"
-                    cancelLabel="Cancel"
-                    tone="danger"
-                    onCancel={() => setShowLogoutConfirm(false)}
-                    onConfirm={async () => {
-                        setShowLogoutConfirm(false);
-                        await handleSignOut();
-                    }}
-                />
             </SafeAreaView>
         );
     }
@@ -255,10 +200,10 @@ export default function ProfileScreen() {
                             style={styles.settingsBtn}
                             onPress={() => {
                                 triggerHaptic("medium");
-                                setShowLogoutConfirm(true);
+                                router.push("/profile/settings");
                             }}
                         >
-                            <Ionicons name="log-out-outline" size={24} color={Colors.text} />
+                            <Ionicons name="settings-outline" size={24} color={Colors.text} />
                         </TouchableOpacity>
                     </Animated.View>
 
@@ -268,7 +213,6 @@ export default function ProfileScreen() {
                         isAdmin={isAdmin ?? false}
                         favoriteCount={favoriteCount ?? 0}
                         readLaterCount={readLaterCount ?? 0}
-                        onEditProfile={() => router.push("/profile/edit")}
                         fadeAnim={fadeAnim}
                         slideAnim={slideAnim}
                         scaleAnim={scaleAnim}
@@ -329,67 +273,8 @@ export default function ProfileScreen() {
                             </View>
                         )}
                     </Animated.View>
-
-                    {/* Settings Section */}
-                    <View style={styles.legalSection}>
-                        <Text style={styles.legalSectionTitle} allowFontScaling={false}>Settings</Text>
-                        <View style={styles.legalRow}>
-                            <Ionicons name="notifications-outline" size={18} color={Colors.primary} />
-                            <Text style={styles.legalRowText} allowFontScaling={false}>Push Notifications</Text>
-                            <View style={{ marginLeft: "auto" }}>
-                                <Switch
-                                    value={!!user?.pushToken}
-                                    onValueChange={handleTogglePush}
-                                    trackColor={{ false: Colors.border, true: Colors.primary }}
-                                    thumbColor={Colors.white}
-                                />
-                            </View>
-                        </View>
-                    </View>
-
-                    {/* Legal Section */}
-                    <View style={styles.legalSection}>
-                        <Text style={styles.legalSectionTitle} allowFontScaling={false}>Legal</Text>
-                        <TouchableOpacity
-                            style={styles.legalRow}
-                            onPress={() => {
-                                triggerHaptic("light");
-                                router.push("/legal/privacy-policy" as any);
-                            }}
-                        >
-                            <Ionicons name="shield-checkmark-outline" size={18} color={Colors.primary} />
-                            <Text style={styles.legalRowText} allowFontScaling={false}>Privacy Policy</Text>
-                            <Ionicons name="chevron-forward" size={16} color={Colors.textLight} style={{ marginLeft: "auto" }} />
-                        </TouchableOpacity>
-                        <View style={styles.legalDivider} />
-                        <TouchableOpacity
-                            style={styles.legalRow}
-                            onPress={() => {
-                                triggerHaptic("light");
-                                router.push("/legal/terms-of-service" as any);
-                            }}
-                        >
-                            <Ionicons name="document-text-outline" size={18} color={Colors.primary} />
-                            <Text style={styles.legalRowText} allowFontScaling={false}>Terms of Service</Text>
-                            <Ionicons name="chevron-forward" size={16} color={Colors.textLight} style={{ marginLeft: "auto" }} />
-                        </TouchableOpacity>
-                    </View>
                 </ScrollView>
             </SafeAreaView>
-
-            <ConfirmActionModal
-                visible={showLogoutConfirm}
-                title="Sign Out"
-                message="Are you sure you want to securely log out of your account?"
-                confirmLabel="Log Out"
-                cancelLabel="Cancel"
-                tone="danger"
-                onCancel={() => setShowLogoutConfirm(false)}
-                onConfirm={async () => {
-                    setShowLogoutConfirm(false);
-                    await handleSignOut();
-                }}
-            />
         </View>
     );
 }
@@ -424,15 +309,8 @@ const styles = StyleSheet.create({
     settingsBtn: {
         width: 44,
         height: 44,
-        borderRadius: 22,
-        backgroundColor: Colors.white,
         alignItems: "center",
         justifyContent: "center",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
     },
     adminLink: {
         borderRadius: 16,
@@ -465,43 +343,6 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         borderWidth: 1,
         borderColor: Colors.border + "40",
-    },
-    legalSection: {
-        marginHorizontal: 20,
-        marginTop: Spacing.xl,
-        marginBottom: Spacing.lg,
-        backgroundColor: Colors.white,
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: Colors.border + "40",
-        overflow: "hidden",
-    },
-    legalSectionTitle: {
-        fontSize: FontSizes.caption,
-        fontFamily: Fonts.bold,
-        color: Colors.textSecondary,
-        letterSpacing: 0.8,
-        textTransform: "uppercase",
-        paddingHorizontal: 16,
-        paddingTop: 14,
-        paddingBottom: 6,
-    },
-    legalRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        paddingHorizontal: 16,
-        paddingVertical: 14,
-        gap: 12,
-    },
-    legalRowText: {
-        fontSize: FontSizes.body,
-        fontFamily: Fonts.medium,
-        color: Colors.text,
-    },
-    legalDivider: {
-        height: 1,
-        marginHorizontal: 16,
-        backgroundColor: Colors.border + "60",
     },
     center: {
         flex: 1,
