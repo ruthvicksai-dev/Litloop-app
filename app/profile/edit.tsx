@@ -1,5 +1,6 @@
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
+import PasswordRequirements from "@/components/ui/PasswordRequirements";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, scale, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
@@ -219,6 +220,7 @@ export default function EditProfileScreen() {
                             onChangeText={setNewPassword}
                             secureTextEntry
                         />
+                        <PasswordRequirements password={newPassword} />
                         <InputField
                             label="Confirm New Password"
                             placeholder="Confirm new password"

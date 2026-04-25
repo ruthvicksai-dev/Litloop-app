@@ -3,6 +3,7 @@ import AuthHeader from "@/components/auth/AuthHeader";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
+import LoadingOverlay from "@/components/ui/LoadingOverlay";
 import { isGoogleSignInEnabled } from "@/constants/features";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, scale, Spacing } from "@/constants/theme";
@@ -17,6 +18,7 @@ import {
     ScrollView,
     StyleSheet,
     Text,
+    TouchableOpacity,
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -93,6 +95,13 @@ export default function SignInScreen() {
                             secureTextEntry
                         />
 
+                        <TouchableOpacity
+                            onPress={() => router.push("/(auth)/forgot-password")}
+                            style={{ alignSelf: "flex-end", marginTop: Spacing.xs }}
+                        >
+                            <Text style={styles.linkText}>Forgot Password?</Text>
+                        </TouchableOpacity>
+
                         <Button
                             title="Sign In"
                             onPress={onSignInPress}
@@ -141,6 +150,8 @@ export default function SignInScreen() {
                     />
                 </ScrollView>
             </KeyboardAvoidingView>
+
+            <LoadingOverlay visible={loading} />
         </SafeAreaView>
     );
 }

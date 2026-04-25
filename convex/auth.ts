@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import { recordUserRegistered } from "./analytics";
@@ -125,7 +126,7 @@ async function createSessionTokens(
 
 // ─── Sign Up ─────────────────────────────────────────────────────────────────
 
-export const signUp = mutation({
+export const sendSignupOTP = mutation({
     args: {
         name: v.string(),
         email: v.string(),
@@ -136,63 +137,137 @@ export const signUp = mutation({
         ipAddress: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
+        // Strict Regex Validation
         if (!args.name.trim()) throw new Error("Name is required.");
-        if (args.name.trim().length > 100) throw new Error("Name is too long (max 100 characters).");
+        if (!/^[a-zA-Z\s\-']{2,100}$/.test(args.name.trim())) {
+            throw new Error("Name can only contain letters, spaces, hyphens, and apostrophes (2-100 characters).");
+        }
+
         if (!args.email.trim()) throw new Error("Email is required.");
-        if (args.email.trim().length > 254) throw new Error("Email is too long.");
+        const normalizedEmail = args.email.toLowerCase().trim();
+        const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-]+$/;
+        if (!emailRegex.test(normalizedEmail)) throw new Error("Invalid email address format.");
+
         if (!args.phone.trim()) throw new Error("Phone number is required.");
+        const normalizedPhone = normalizePhone(args.phone.trim());
+        if (!/^\d{10,15}$/.test(normalizedPhone)) {
+            throw new Error("Phone number must contain between 10 and 15 digits.");
+        }
+
         if (!args.acceptedTerms) throw new Error("You must accept the Privacy Policy and Terms of Service.");
         if (args.password.length < 8)
             throw new Error("Password must be at least 8 characters.");
         if (args.password.length > 128)
             throw new Error("Password is too long (max 128 characters).");
 
-        const normalizedEmail = args.email.toLowerCase().trim();
-        const normalizedPhone = normalizePhone(args.phone.trim());
-
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(normalizedEmail)) throw new Error("Invalid email address format.");
-
-        // H1: DB-backed rate limiting — global IP guard
+        // IP Rate Limit Check
         if (args.ipAddress) {
             const globalKey = buildRateLimitKey("auth", "global", args.ipAddress);
             await assertRateLimit(ctx, globalKey, AUTH_RATE_LIMITS.global);
         }
 
-        const signUpEmailKey = buildRateLimitKey("auth", "signUp", "email", normalizedEmail, args.ipAddress);
-        const signUpPhoneKey = buildRateLimitKey("auth", "signUp", "phone", normalizedPhone, args.ipAddress);
+        const otpRequestKey = buildRateLimitKey("auth", "otpRequest", normalizedEmail, args.ipAddress);
+        await assertRateLimit(ctx, otpRequestKey, { limit: 3, windowMs: 15 * 60 * 1000, message: "Too many OTP requests. Please wait." });
 
-        await assertRateLimit(ctx, signUpEmailKey, AUTH_RATE_LIMITS.signUp);
-        await assertRateLimit(ctx, signUpPhoneKey, AUTH_RATE_LIMITS.signUp);
-
-        if (normalizedPhone.length < 10) {
-            throw new Error("Please enter a valid phone number.");
-        }
-
+        // Ensure user does not already exist
         const existingEmail = await ctx.db
             .query("users")
             .withIndex("by_email", (q) => q.eq("email", normalizedEmail))
             .first();
-
-        if (existingEmail) {
-            throw new Error("User is already registered. Please sign in.");
-        }
+        if (existingEmail) throw new Error("User is already registered. Please sign in.");
 
         const existingPhone = await ctx.db
             .query("users")
             .withIndex("by_phone", (q) => q.eq("phone", normalizedPhone))
             .first();
+        if (existingPhone) throw new Error("User is already registered. Please sign in.");
 
-        if (existingPhone) {
-            throw new Error("User is already registered. Please sign in.");
+        // Clear any previous unverified OTP requests for this email to prevent abuse
+        const previousRequests = await ctx.db
+            .query("otp_requests")
+            .withIndex("by_email", (q) => q.eq("email", normalizedEmail))
+            .collect();
+
+        for (const req of previousRequests) {
+            await ctx.db.delete(req._id);
         }
 
-        const passwordHash = await hashPassword(args.password);
+        // Generate 6 Digit OTP securely
+        const isDevMode = process.env.USE_DEV_OTP === "true";
+        const otpString = isDevMode ? "123456" : Math.floor(100000 + Math.random() * 900000).toString();
+        const otpCodeHash = await sha256(otpString);
+
+        // Store request in db
+        await ctx.db.insert("otp_requests", {
+            email: normalizedEmail,
+            otpCodeHash,
+            signupData: JSON.stringify({
+                name: args.name.trim(),
+                phone: normalizedPhone,
+                password: args.password,
+                deviceInfo: args.deviceInfo,
+                ipAddress: args.ipAddress,
+            }),
+            expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
+            isVerified: false,
+            createdAt: Date.now(),
+        });
+
+        // Skip email in dev mode
+        if (!isDevMode) {
+            await ctx.scheduler.runAfter(0, internal.email.sendOTP, {
+                email: normalizedEmail,
+                otpProvider: "resend",
+                otpString,
+            });
+        } else {
+            console.log(`[DEV OTP] Signup code for ${normalizedEmail}: ${otpString}`);
+        }
+
+        return { status: "otp_sent", email: normalizedEmail };
+    },
+});
+
+export const verifySignupOTP = mutation({
+    args: {
+        email: v.string(),
+        otpCode: v.string(),
+    },
+    handler: async (ctx, args) => {
+        const normalizedEmail = args.email.toLowerCase().trim();
+
+        const verifyOtpKey = buildRateLimitKey("auth", "verifyOtp", normalizedEmail);
+        await assertRateLimit(ctx, verifyOtpKey, { limit: 10, windowMs: 15 * 60 * 1000, message: "Too many verification attempts." });
+
+        const request = await ctx.db
+            .query("otp_requests")
+            .withIndex("by_email", (q) => q.eq("email", normalizedEmail))
+            .first();
+
+        if (!request) {
+            throw new Error("No active signup session found. Please try registering again.");
+        }
+
+        if (request.expiresAt < Date.now()) {
+            await ctx.db.delete(request._id);
+            throw new Error("Verification code has expired. Please sign up again.");
+        }
+
+        const incomingOtpHash = await sha256(args.otpCode);
+        if (incomingOtpHash !== request.otpCodeHash) {
+            throw new Error("Invalid verification code.");
+        }
+
+        // Complete the signup process
+        if (!request.signupData) throw new Error("Registration data lost.");
+        const signupData = JSON.parse(request.signupData);
+
+        const passwordHash = await hashPassword(signupData.password);
 
         const userId = await ctx.db.insert("users", {
-            name: args.name.trim(),
+            name: signupData.name,
             email: normalizedEmail,
-            phone: normalizedPhone,
+            phone: signupData.phone,
             passwordHash,
             providers: ["local"],
             lastLoginProvider: "local",
@@ -204,10 +279,143 @@ export const signUp = mutation({
 
         await recordUserRegistered(ctx, userId, Date.now());
 
-        const { accessToken, refreshToken } = await createSessionTokens(ctx, userId, args.deviceInfo, args.ipAddress);
-        await clearRateLimit(ctx, signUpEmailKey);
-        await clearRateLimit(ctx, signUpPhoneKey);
+        const { accessToken, refreshToken } = await createSessionTokens(ctx, userId, signupData.deviceInfo, signupData.ipAddress);
+
+        // Clean up OTP request explicitly after success
+        await ctx.db.delete(request._id);
+        await clearRateLimit(ctx, verifyOtpKey);
+
         return { userId, accessToken, refreshToken };
+    },
+});
+
+// ─── Forgot Password ────────────────────────────────────────────────────────
+
+export const sendPasswordResetOTP = mutation({
+    args: {
+        email: v.string(),
+    },
+    handler: async (ctx, args) => {
+        if (!args.email.trim()) throw new Error("Email is required.");
+        const normalizedEmail = args.email.toLowerCase().trim();
+
+        const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-]+$/;
+        if (!emailRegex.test(normalizedEmail)) throw new Error("Invalid email address format.");
+
+        const otpRequestKey = buildRateLimitKey("auth", "passwordReset", normalizedEmail);
+        await assertRateLimit(ctx, otpRequestKey, { limit: 3, windowMs: 15 * 60 * 1000, message: "Too many reset requests. Please wait." });
+
+        // Check if the user exists
+        const user = await ctx.db
+            .query("users")
+            .withIndex("by_email", (q) => q.eq("email", normalizedEmail))
+            .first();
+
+        if (!user) {
+            // Don't reveal whether the email exists — silently succeed
+            return { status: "otp_sent", email: normalizedEmail };
+        }
+
+        if (!user.passwordHash) {
+            throw new Error("This account uses Google sign-in. Password reset is not available.");
+        }
+
+        // Clear old reset OTPs for this email
+        const previousRequests = await ctx.db
+            .query("otp_requests")
+            .withIndex("by_email", (q) => q.eq("email", normalizedEmail))
+            .collect();
+        for (const req of previousRequests) {
+            await ctx.db.delete(req._id);
+        }
+
+        const isDevMode = process.env.USE_DEV_OTP === "true";
+        const otpString = isDevMode ? "123456" : Math.floor(100000 + Math.random() * 900000).toString();
+        const otpCodeHash = await sha256(otpString);
+
+        await ctx.db.insert("otp_requests", {
+            email: normalizedEmail,
+            otpCodeHash,
+            expiresAt: Date.now() + 10 * 60 * 1000,
+            isVerified: false,
+            createdAt: Date.now(),
+        });
+
+        if (!isDevMode) {
+            await ctx.scheduler.runAfter(0, internal.email.sendOTP, {
+                email: normalizedEmail,
+                otpProvider: "resend",
+                otpString,
+                purpose: "password_reset",
+            });
+        } else {
+            console.log(`[DEV OTP] Password reset code for ${normalizedEmail}: ${otpString}`);
+        }
+
+        return { status: "otp_sent", email: normalizedEmail };
+    },
+});
+
+export const resetPasswordWithOTP = mutation({
+    args: {
+        email: v.string(),
+        otpCode: v.string(),
+        newPassword: v.string(),
+    },
+    handler: async (ctx, args) => {
+        const normalizedEmail = args.email.toLowerCase().trim();
+
+        if (args.newPassword.length < 8)
+            throw new Error("Password must be at least 8 characters.");
+        if (args.newPassword.length > 128)
+            throw new Error("Password is too long (max 128 characters).");
+
+        const verifyKey = buildRateLimitKey("auth", "verifyResetOtp", normalizedEmail);
+        await assertRateLimit(ctx, verifyKey, { limit: 10, windowMs: 15 * 60 * 1000, message: "Too many verification attempts." });
+
+        const request = await ctx.db
+            .query("otp_requests")
+            .withIndex("by_email", (q) => q.eq("email", normalizedEmail))
+            .first();
+
+        if (!request) {
+            throw new Error("No active reset session found. Please request a new code.");
+        }
+
+        if (request.expiresAt < Date.now()) {
+            await ctx.db.delete(request._id);
+            throw new Error("Verification code has expired. Please request a new one.");
+        }
+
+        const incomingOtpHash = await sha256(args.otpCode);
+        if (incomingOtpHash !== request.otpCodeHash) {
+            throw new Error("Invalid verification code.");
+        }
+
+        const user = await ctx.db
+            .query("users")
+            .withIndex("by_email", (q) => q.eq("email", normalizedEmail))
+            .first();
+
+        if (!user) throw new Error("User not found.");
+
+        const newPasswordHash = await hashPassword(args.newPassword);
+        await ctx.db.patch(user._id, { passwordHash: newPasswordHash });
+
+        // Revoke all active sessions for security
+        const activeSessions = await ctx.db
+            .query("sessions")
+            .withIndex("by_userId_active", (q) => q.eq("userId", user._id).eq("isRevoked", false))
+            .collect();
+        for (const s of activeSessions) {
+            await ctx.db.patch(s._id, { isRevoked: true });
+        }
+
+        // Clean up
+        await ctx.db.delete(request._id);
+        await clearRateLimit(ctx, verifyKey);
+
+        return { status: "password_reset" };
     },
 });
 

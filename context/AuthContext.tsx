@@ -38,13 +38,14 @@ interface AuthContextType {
     isRefreshing: boolean;
     isAdmin: boolean;
     signIn: (email: string, password: string) => Promise<void>;
-    signUp: (
+    sendOtp: (
         name: string,
         email: string,
         phone: string,
         password: string,
         acceptedTerms: boolean
     ) => Promise<void>;
+    verifyOtp: (email: string, otpCode: string) => Promise<void>;
     signInWithGoogle: (idToken: string) => Promise<void>;
     signOut: () => Promise<void>;
     consumePendingAuthToast: () => PendingToast | null;
@@ -58,7 +59,8 @@ const AuthContext = createContext<AuthContextType>({
     isRefreshing: false,
     isAdmin: false,
     signIn: async () => { },
-    signUp: async () => { },
+    sendOtp: async () => { },
+    verifyOtp: async () => { },
     signInWithGoogle: async () => { },
     signOut: async () => { },
     consumePendingAuthToast: () => null,
@@ -84,7 +86,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const signOutInProgressRef = useRef(false);
 
     const signInMutation = useMutation(api.auth.signIn);
-    const signUpMutation = useMutation(api.auth.signUp);
+    const sendSignupOTPMutation = useMutation(api.auth.sendSignupOTP);
+    const verifySignupOTPMutation = useMutation(api.auth.verifySignupOTP);
     const refreshSessionMutation = useMutation(api.auth.refreshSession);
     const signOutMutation = useMutation(api.auth.signOut);
     const googleSignInMutation = useMutation(api.auth.googleSignIn);
@@ -279,7 +282,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         [signInMutation, scheduleRefresh]
     );
 
-    const signUp = useCallback(
+    const sendOtp = useCallback(
         async (
             name: string,
             email: string,
@@ -287,9 +290,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             password: string,
             acceptedTerms: boolean
         ) => {
-            // L5 FIX: Pass deviceInfo so sessions show meaningful device names
             const deviceInfo = `${Device.modelName ?? "Unknown Device"} (${Device.osName ?? ""} ${Device.osVersion ?? ""})`;
-            const result = await signUpMutation({
+            await sendSignupOTPMutation({
                 name,
                 email,
                 phone,
@@ -297,12 +299,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 acceptedTerms,
                 deviceInfo,
             });
+            // We do not set session tokens yet; we wait for verifyOtp
+        },
+        [sendSignupOTPMutation]
+    );
+
+    const verifyOtp = useCallback(
+        async (email: string, otpCode: string) => {
+            const result = await verifySignupOTPMutation({ email, otpCode });
             await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, result.accessToken);
             await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, result.refreshToken);
             setAccessToken(result.accessToken);
             scheduleRefresh(result.accessToken);
         },
-        [signUpMutation, scheduleRefresh]
+        [verifySignupOTPMutation, scheduleRefresh]
     );
 
     const signInWithGoogle = useCallback(
@@ -323,14 +333,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signOutInProgressRef.current = true;
         try {
             const storedRefresh = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
+
+            // L6 FIX: Clear local session first so active Convex queries instantly skip
+            // and unmount before the server officially revokes the session.
+            await clearLocalSession();
+
             if (storedRefresh) {
                 await signOutMutation({ refreshToken: storedRefresh });
             }
         } catch {
             // Ignore backend errors on sign-out
         } finally {
-            await clearLocalSession();
-            signOutInProgressRef.current = false;
+            // Failsafe in case clearLocalSession was skipped due to error, though unlikely
+            if (signOutInProgressRef.current) {
+                await clearLocalSession();
+                signOutInProgressRef.current = false;
+            }
         }
     }, [clearLocalSession, signOutMutation]);
 
@@ -354,7 +372,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 isRefreshing,
                 isAdmin: user?.role === "admin",
                 signIn,
-                signUp,
+                sendOtp,
+                verifyOtp,
                 signInWithGoogle,
                 signOut,
                 consumePendingAuthToast,

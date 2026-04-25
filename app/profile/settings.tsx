@@ -1,4 +1,5 @@
 import ConfirmActionModal from "@/components/ui/ConfirmActionModal";
+import LoadingOverlay from "@/components/ui/LoadingOverlay";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
@@ -9,7 +10,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useMutation } from "convex/react";
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
-import { useRouter } from "expo-router";
+import { router as globalRouter, useRouter } from "expo-router";
 import React, { useState } from "react";
 import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -19,6 +20,7 @@ export default function SettingsScreen() {
     const { user, accessToken, signOut } = useAuth();
     const { showToast } = useToast();
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+    const [isSigningOut, setIsSigningOut] = useState(false);
 
     const updatePushToken = useMutation(api.notifications.updatePushToken);
     const clearPushToken = useMutation(api.notifications.clearPushToken);
@@ -51,10 +53,29 @@ export default function SettingsScreen() {
         }
     };
 
+    // Reactively head to sign-in when the user is successfully cleared from context.
+    React.useEffect(() => {
+        // If the user logs out from the settings screen, we should 
+        // forcibly route them to the sign-in page, per request.
+        if (user === null && accessToken === null) {
+            // Dismiss all back to root layout before navigating, to clear auth scope logic gracefully.
+            if (globalRouter.canDismiss()) {
+                globalRouter.dismissAll();
+            }
+            globalRouter.replace("/(auth)/sign-in");
+        }
+    }, [user, accessToken]);
+
     const handleSignOut = async () => {
+        // Close modal first and synchronously await the sign out
+        setShowLogoutConfirm(false);
+        setIsSigningOut(true);
         await signOut();
+        // Since we are unmounting or changing state reactively via the
+        // layout's index listener or settings's useEffect, we don't necessarily need to turn it false here 
+        // if the component unmounts instantly, but it prevents flicker.
+        setIsSigningOut(false);
         showToast("Signed out successfully.", "info");
-        router.replace("/(auth)/sign-in");
     };
 
     return (
@@ -167,6 +188,8 @@ export default function SettingsScreen() {
                     await handleSignOut();
                 }}
             />
+
+            <LoadingOverlay visible={isSigningOut} />
         </SafeAreaView>
     );
 }

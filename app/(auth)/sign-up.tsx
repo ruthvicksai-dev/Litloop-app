@@ -2,6 +2,7 @@ import AuthFooter from "@/components/auth/AuthFooter";
 import AuthHeader from "@/components/auth/AuthHeader";
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
+import PasswordRequirements from "@/components/ui/PasswordRequirements";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, scale, Spacing } from "@/constants/theme";
 import { useToast } from "@/context/ToastContext";
@@ -29,6 +30,8 @@ export default function SignUpScreen() {
         duration: 600,
     });
     const {
+        step,
+        setStep,
         name,
         setName,
         email,
@@ -39,11 +42,14 @@ export default function SignUpScreen() {
         setPassword,
         confirmPassword,
         setConfirmPassword,
-        loading,
-        user,
         agreedToTerms,
         setAgreedToTerms,
-        handleSignUp,
+        otpCode,
+        setOtpCode,
+        loading,
+        user,
+        handleSendOtp,
+        handleVerifyOtp,
     } = useSignUpScreen();
 
     const { isOnline } = useNetworkStatus();
@@ -54,7 +60,11 @@ export default function SignUpScreen() {
             showToast("Internet connection is required to sign up.", "error");
             return;
         }
-        handleSignUp();
+        if (step === "details") {
+            handleSendOtp();
+        } else {
+            handleVerifyOtp();
+        }
     };
 
     useAuthRedirect(user);
@@ -85,77 +95,113 @@ export default function SignUpScreen() {
                     </Text>
 
                     <View style={styles.form}>
-                        <InputField
-                            label="Full Name"
-                            placeholder="Enter your full name"
-                            value={name}
-                            onChangeText={setName}
-                        />
-                        <InputField
-                            label="Email"
-                            placeholder="Enter your email"
-                            value={email}
-                            onChangeText={setEmail}
-                            keyboardType="email-address"
-                            autoCapitalize="none"
-                        />
-                        <InputField
-                            label="Phone Number"
-                            placeholder="Enter your phone number"
-                            value={phone}
-                            onChangeText={setPhone}
-                            keyboardType="phone-pad"
-                        />
-                        <InputField
-                            label="Password"
-                            placeholder="Enter your password"
-                            value={password}
-                            onChangeText={setPassword}
-                            secureTextEntry
-                        />
-                        <InputField
-                            label="Confirm Password"
-                            placeholder="Confirm your password"
-                            value={confirmPassword}
-                            onChangeText={setConfirmPassword}
-                            secureTextEntry
-                        />
+                        {step === "details" ? (
+                            <>
+                                <InputField
+                                    label="Full Name"
+                                    placeholder="Enter your full name"
+                                    value={name}
+                                    onChangeText={setName}
+                                />
+                                <InputField
+                                    label="Email"
+                                    placeholder="Enter your email"
+                                    value={email}
+                                    onChangeText={setEmail}
+                                    keyboardType="email-address"
+                                    autoCapitalize="none"
+                                />
+                                <InputField
+                                    label="Phone Number"
+                                    placeholder="Enter your phone number"
+                                    value={phone}
+                                    onChangeText={setPhone}
+                                    keyboardType="phone-pad"
+                                />
+                                <InputField
+                                    label="Password"
+                                    placeholder="Enter your password"
+                                    value={password}
+                                    onChangeText={setPassword}
+                                    secureTextEntry
+                                />
+                                <PasswordRequirements password={password} />
+                                <InputField
+                                    label="Confirm Password"
+                                    placeholder="Confirm your password"
+                                    value={confirmPassword}
+                                    onChangeText={setConfirmPassword}
+                                    secureTextEntry
+                                />
 
-                        <TouchableOpacity
-                            style={styles.checkboxContainer}
-                            onPress={() => setAgreedToTerms(!agreedToTerms)}
-                            activeOpacity={0.7}
-                        >
-                            <Ionicons
-                                name={agreedToTerms ? "checkbox" : "square-outline"}
-                                size={22}
-                                color={agreedToTerms ? Colors.primary : Colors.textSecondary}
-                            />
-                            <Text style={styles.checkboxLabel}>
-                                I agree to the{" "}
-                                <Text
-                                    style={styles.linkText}
-                                    onPress={() => router.push("/legal/privacy-policy")}
+                                <TouchableOpacity
+                                    style={styles.checkboxContainer}
+                                    onPress={() => setAgreedToTerms(!agreedToTerms)}
+                                    activeOpacity={0.7}
                                 >
-                                    Privacy Policy
-                                </Text>{" "}
-                                and{" "}
-                                <Text
-                                    style={styles.linkText}
-                                    onPress={() => router.push("/legal/terms-of-service")}
-                                >
-                                    Terms of Service
+                                    <Ionicons
+                                        name={agreedToTerms ? "checkbox" : "square-outline"}
+                                        size={22}
+                                        color={agreedToTerms ? Colors.primary : Colors.textSecondary}
+                                    />
+                                    <Text style={styles.checkboxLabel}>
+                                        I agree to the{" "}
+                                        <Text
+                                            style={styles.linkText}
+                                            onPress={() => router.push("/legal/privacy-policy")}
+                                        >
+                                            Privacy Policy
+                                        </Text>{" "}
+                                        and{" "}
+                                        <Text
+                                            style={styles.linkText}
+                                            onPress={() => router.push("/legal/terms-of-service")}
+                                        >
+                                            Terms of Service
+                                        </Text>
+                                    </Text>
+                                </TouchableOpacity>
+
+                                <Button
+                                    title="Send OTP"
+                                    onPress={onSignUpPress}
+                                    loading={loading}
+                                    disabled={!isOnline}
+                                    style={{ marginTop: Spacing.md }}
+                                />
+                            </>
+                        ) : (
+                            <>
+                                <Text style={[styles.formHint, { color: Colors.text }]}>
+                                    Please enter the 6-digit code we sent to your email address:
                                 </Text>
-                            </Text>
-                        </TouchableOpacity>
-
-                        <Button
-                            title="Sign Up"
-                            onPress={onSignUpPress}
-                            loading={loading}
-                            disabled={!isOnline}
-                            style={{ marginTop: Spacing.md }}
-                        />
+                                <Text style={[styles.formHint, { color: Colors.primary, marginBottom: Spacing.lg, fontWeight: "600" }]}>
+                                    {email}
+                                </Text>
+                                <InputField
+                                    label="Verification Code"
+                                    placeholder="Enter 6-digit code"
+                                    value={otpCode}
+                                    onChangeText={(text) => setOtpCode(text.replace(/[^0-9]/g, "").slice(0, 6))}
+                                    keyboardType="number-pad"
+                                />
+                                <Button
+                                    title="Verify & Create Account"
+                                    onPress={onSignUpPress}
+                                    loading={loading}
+                                    disabled={!isOnline || otpCode.length !== 6}
+                                    style={{ marginTop: Spacing.md }}
+                                />
+                                <TouchableOpacity
+                                    style={{ alignItems: "center", marginTop: Spacing.lg }}
+                                    onPress={() => setStep("details")}
+                                >
+                                    <Text style={{ color: Colors.textSecondary, fontFamily: Fonts.medium }}>
+                                        Cancel and edit details
+                                    </Text>
+                                </TouchableOpacity>
+                            </>
+                        )}
                     </View>
 
                     <AuthFooter

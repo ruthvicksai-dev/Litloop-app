@@ -58,6 +58,16 @@ export default defineSchema({
         .index("by_refreshTokenHash", ["refreshTokenHash"])
         .index("by_userId_active", ["userId", "isRevoked"]),
 
+    // OTP Email Verification Requests
+    otp_requests: defineTable({
+        email: v.string(),
+        otpCodeHash: v.string(), // Server-hashed 6-digit OTP
+        signupData: v.optional(v.string()), // JSON string of registration payload
+        expiresAt: v.number(),
+        isVerified: v.boolean(),
+        createdAt: v.number(), // Timestamp for cleanup
+    }).index("by_email", ["email"]),
+
     book_series: defineTable({
         name: v.string(),
         coverImage: v.id("_storage"),
