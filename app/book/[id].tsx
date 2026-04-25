@@ -1,4 +1,5 @@
 import BookImageCarousel from "@/components/books/BookImageCarousel";
+import BookReviews from "@/components/books/BookReviews";
 import RentalRequestModal from "@/components/books/RentalRequestModal";
 import BookLoader from "@/components/ui/BookLoader";
 import Button from "@/components/ui/Button";
@@ -282,6 +283,8 @@ export default function BookDetailsScreen() {
                             />
                         </TouchableOpacity>
                     </View>
+
+                    <BookReviews bookId={id} />
 
                     {relatedBooks && relatedBooks.length > 0 ? (
                         <View style={styles.relatedSection}>

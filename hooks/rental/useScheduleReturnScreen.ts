@@ -22,6 +22,7 @@ export function useScheduleReturnScreen(rentalId: string) {
     const [pickupDate, setPickupDate] = useState("");
     const [pickupTime, setPickupTime] = useState("");
     const [userRating, setUserRating] = useState(0);
+    const [reviewText, setReviewText] = useState("");
     const [loading, setLoading] = useState(false);
 
     // Pickup Address States
@@ -117,6 +118,7 @@ export function useScheduleReturnScreen(rentalId: string) {
                 pickupDate,
                 pickupTime,
                 userRating,
+                reviewText: reviewText.trim() || undefined,
                 pickupLocation,
             });
             showToast("Pickup scheduled! Proceed to payment.", "success");
@@ -140,6 +142,8 @@ export function useScheduleReturnScreen(rentalId: string) {
         setPickupTime,
         userRating,
         setUserRating,
+        reviewText,
+        setReviewText,
         loading,
         estimatedDays,
         estimatedRent,

@@ -19,6 +19,7 @@ import {
     ScrollView,
     StyleSheet,
     Text,
+    TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
@@ -36,6 +37,8 @@ export default function ScheduleReturnScreen() {
         setPickupTime,
         userRating,
         setUserRating,
+        reviewText,
+        setReviewText,
         loading,
         estimatedDays,
         estimatedRent,
@@ -305,6 +308,20 @@ export default function ScheduleReturnScreen() {
                                     </TouchableOpacity>
                                 ))}
                             </View>
+                            <TextInput
+                                style={styles.reviewInput}
+                                placeholder="Share your experience with this book (optional)"
+                                placeholderTextColor={Colors.textLight}
+                                value={reviewText}
+                                onChangeText={setReviewText}
+                                multiline
+                                numberOfLines={3}
+                                maxLength={500}
+                                textAlignVertical="top"
+                            />
+                            {reviewText.length > 0 && (
+                                <Text style={styles.charCount}>{reviewText.length}/500</Text>
+                            )}
                         </View>
 
                         {estimatedDays > 0 ? (
@@ -585,5 +602,24 @@ const styles = StyleSheet.create({
         fontSize: FontSizes.small,
         fontFamily: Fonts.medium,
         color: Colors.primary,
+    },
+    reviewInput: {
+        marginTop: Spacing.sm,
+        borderWidth: 1,
+        borderColor: Colors.border,
+        borderRadius: 8,
+        padding: Spacing.sm,
+        fontSize: FontSizes.body,
+        fontFamily: Fonts.regular,
+        color: Colors.text,
+        minHeight: 80,
+        backgroundColor: Colors.background,
+    },
+    charCount: {
+        fontSize: FontSizes.caption,
+        color: Colors.textLight,
+        textAlign: "right",
+        marginTop: 2,
+        fontFamily: Fonts.regular,
     },
 });

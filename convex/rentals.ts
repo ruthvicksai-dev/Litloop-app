@@ -257,6 +257,7 @@ export const schedulePickup = mutation({
         pickupDate: v.string(),
         pickupTime: v.string(),
         userRating: v.number(),
+        reviewText: v.optional(v.string()),
         pickupLocation: v.optional(v.object({
             phone: v.string(),
             landmark: v.optional(v.string()),
@@ -357,6 +358,16 @@ export const schedulePickup = mutation({
         await ctx.db.patch(rental.bookId, {
             rating: nextRating,
             ratingCount: nextCount,
+        });
+
+        // Insert review record
+        await ctx.db.insert("reviews", {
+            bookId: rental.bookId,
+            userId: user._id,
+            rentalId: args.rentalId,
+            rating: args.userRating,
+            reviewText: args.reviewText?.trim() || undefined,
+            createdAt: Date.now(),
         });
 
         const expiresAt = Date.now() + 60 * 60 * 1000;

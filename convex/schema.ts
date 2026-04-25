@@ -68,6 +68,18 @@ export default defineSchema({
         createdAt: v.number(), // Timestamp for cleanup
     }).index("by_email", ["email"]),
 
+    reviews: defineTable({
+        bookId: v.id("books"),
+        userId: v.id("users"),
+        rentalId: v.id("rentals"),
+        rating: v.number(),
+        reviewText: v.optional(v.string()),
+        createdAt: v.number(),
+    })
+        .index("by_bookId", ["bookId"])
+        .index("by_userId_bookId", ["userId", "bookId"])
+        .index("by_rentalId", ["rentalId"]),
+
     book_series: defineTable({
         name: v.string(),
         coverImage: v.id("_storage"),
