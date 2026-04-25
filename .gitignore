@@ -45,5 +45,4 @@ app-example
 /android
 
 # Sensitive Firebase config — provide via CI/CD secrets or EAS environment
-google-services.json
-GoogleService-Info.plist
+# (Removed to allow EAS Build to upload them directly as they are safe for this repo)
