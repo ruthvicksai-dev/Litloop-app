@@ -193,8 +193,10 @@ export const sendSignupOTP = mutation({
         }
 
         // Generate 6 Digit OTP securely
+        // L4: Use cryptographically secure random for OTP generation
         const isDevMode = process.env.USE_DEV_OTP === "true";
-        const otpString = isDevMode ? "123456" : Math.floor(100000 + Math.random() * 900000).toString();
+        const otpArray = crypto.getRandomValues(new Uint32Array(1));
+        const otpString = isDevMode ? "123456" : (100000 + (otpArray[0] % 900000)).toString();
         const otpCodeHash = await sha256(otpString);
 
         // Store request in db
@@ -253,8 +255,17 @@ export const verifySignupOTP = mutation({
             throw new Error("Verification code has expired. Please sign up again.");
         }
 
+        // M3: Timing-safe OTP hash comparison
         const incomingOtpHash = await sha256(args.otpCode);
-        if (incomingOtpHash !== request.otpCodeHash) {
+        const storedOtpHash = request.otpCodeHash;
+        if (incomingOtpHash.length !== storedOtpHash.length) {
+            throw new Error("Invalid verification code.");
+        }
+        let otpDiff = 0;
+        for (let i = 0; i < incomingOtpHash.length; i++) {
+            otpDiff |= incomingOtpHash.charCodeAt(i) ^ storedOtpHash.charCodeAt(i);
+        }
+        if (otpDiff !== 0) {
             throw new Error("Invalid verification code.");
         }
 
@@ -316,8 +327,9 @@ export const sendPasswordResetOTP = mutation({
             return { status: "otp_sent", email: normalizedEmail };
         }
 
+        // L5: Don't reveal that the account is Google-only — silently succeed
         if (!user.passwordHash) {
-            throw new Error("This account uses Google sign-in. Password reset is not available.");
+            return { status: "otp_sent", email: normalizedEmail };
         }
 
         // Clear old reset OTPs for this email
@@ -387,8 +399,17 @@ export const resetPasswordWithOTP = mutation({
             throw new Error("Verification code has expired. Please request a new one.");
         }
 
+        // M3: Timing-safe OTP hash comparison
         const incomingOtpHash = await sha256(args.otpCode);
-        if (incomingOtpHash !== request.otpCodeHash) {
+        const storedOtpHash = request.otpCodeHash;
+        if (incomingOtpHash.length !== storedOtpHash.length) {
+            throw new Error("Invalid verification code.");
+        }
+        let otpDiff = 0;
+        for (let i = 0; i < incomingOtpHash.length; i++) {
+            otpDiff |= incomingOtpHash.charCodeAt(i) ^ storedOtpHash.charCodeAt(i);
+        }
+        if (otpDiff !== 0) {
             throw new Error("Invalid verification code.");
         }
 
@@ -847,10 +868,13 @@ export const changePassword = mutation({
             throw new Error("Current password is incorrect.");
         }
 
-        const newPasswordHash = await hashPassword(args.newPassword);
-        if (newPasswordHash === user.passwordHash) {
+        // M4: Use verifyPassword() to check sameness (PBKDF2 random salt makes hash comparison always fail)
+        const isSamePassword = await verifyPassword(args.newPassword, user.passwordHash);
+        if (isSamePassword) {
             throw new Error("New password must be different from the current password.");
         }
+
+        const newPasswordHash = await hashPassword(args.newPassword);
 
         await ctx.db.patch(userId, {
             passwordHash: newPasswordHash,

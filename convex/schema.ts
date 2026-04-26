@@ -259,6 +259,7 @@ export default defineSchema({
         .index("by_bookId", ["bookId"])
         .index("by_user_book", ["userId", "bookId"]),
 
+
     read_later: defineTable({
         userId: v.id("users"),
         bookId: v.id("books"),

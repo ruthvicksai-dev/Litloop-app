@@ -23,15 +23,19 @@ export const toggleReadLater = mutation({
             // Remove from read later
             await ctx.db.delete(existing._id);
             return false;
-        } else {
-            // Add to read later
-            await ctx.db.insert("read_later", {
-                userId,
-                bookId: args.bookId,
-                createdAt: Date.now(),
-            });
-            return true;
         }
+
+        // M2: Validate book exists before adding to read later
+        const book = await ctx.db.get(args.bookId);
+        if (!book) throw new Error("Book not found.");
+
+        // Add to read later
+        await ctx.db.insert("read_later", {
+            userId,
+            bookId: args.bookId,
+            createdAt: Date.now(),
+        });
+        return true;
     },
 });
 
@@ -45,10 +49,11 @@ export const getUserReadLaterIds = query({
             return [];
         }
 
+        // L2: Capped to prevent unbounded reads
         const readLaterItems = await ctx.db
             .query("read_later")
             .withIndex("by_userId", (q) => q.eq("userId", userId))
-            .collect();
+            .take(200);
 
         return readLaterItems.map(item => item.bookId);
     },
@@ -64,11 +69,12 @@ export const getUserReadLaterBooks = query({
             return [];
         }
 
+        // L2: Capped to prevent unbounded reads
         const readLaterItems = await ctx.db
             .query("read_later")
             .withIndex("by_userId", (q) => q.eq("userId", userId))
             .order("desc") // newest first
-            .collect();
+            .take(100);
 
         // Fetch each book and map it
         const books = [];
@@ -93,10 +99,11 @@ export const getUserReadLaterCount = query({
             return 0;
         }
 
+        // L3: Capped to prevent unbounded reads
         const readLaterItems = await ctx.db
             .query("read_later")
             .withIndex("by_userId", (q) => q.eq("userId", userId))
-            .collect();
+            .take(200);
 
         return readLaterItems.length;
     },

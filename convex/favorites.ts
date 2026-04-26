@@ -23,15 +23,19 @@ export const toggleFavorite = mutation({
             // Un-favorite
             await ctx.db.delete(existing._id);
             return false;
-        } else {
-            // Favorite
-            await ctx.db.insert("favorites", {
-                userId,
-                bookId: args.bookId,
-                createdAt: Date.now(),
-            });
-            return true;
         }
+
+        // M2: Validate book exists before adding to favorites
+        const book = await ctx.db.get(args.bookId);
+        if (!book) throw new Error("Book not found.");
+
+        // Favorite
+        await ctx.db.insert("favorites", {
+            userId,
+            bookId: args.bookId,
+            createdAt: Date.now(),
+        });
+        return true;
     },
 });
 
@@ -45,10 +49,11 @@ export const getUserFavoriteIds = query({
             return [];
         }
 
+        // L2: Capped to prevent unbounded reads
         const favorites = await ctx.db
             .query("favorites")
             .withIndex("by_userId", (q) => q.eq("userId", userId))
-            .collect();
+            .take(200);
 
         return favorites.map(f => f.bookId);
     },
@@ -64,11 +69,12 @@ export const getUserFavoriteBooks = query({
             return [];
         }
 
+        // L2: Capped to prevent unbounded reads
         const favorites = await ctx.db
             .query("favorites")
             .withIndex("by_userId", (q) => q.eq("userId", userId))
             .order("desc") // newest favorites first
-            .collect();
+            .take(100);
 
         // Fetch each book and map it
         const books = [];
@@ -93,10 +99,11 @@ export const getUserFavoriteCount = query({
             return 0;
         }
 
+        // L3: Capped to prevent unbounded reads
         const favorites = await ctx.db
             .query("favorites")
             .withIndex("by_userId", (q) => q.eq("userId", userId))
-            .collect();
+            .take(200);
 
         return favorites.length;
     },

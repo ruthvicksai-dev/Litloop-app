@@ -6,10 +6,11 @@ export const getBookReviews = query({
         bookId: v.id("books"),
     },
     handler: async (ctx, args) => {
+        // L1: Capped at 50 to prevent unbounded reads for popular books
         const reviews = await ctx.db
             .query("reviews")
             .withIndex("by_bookId", (q) => q.eq("bookId", args.bookId))
-            .collect();
+            .take(50);
 
         // Sort newest first
         reviews.sort((a, b) => b.createdAt - a.createdAt);

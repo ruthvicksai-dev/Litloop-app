@@ -360,6 +360,15 @@ export const schedulePickup = mutation({
             ratingCount: nextCount,
         });
 
+        // C3: Prevent duplicate review on rapid double-tap
+        const existingReview = await ctx.db
+            .query("reviews")
+            .withIndex("by_rentalId", (q) => q.eq("rentalId", args.rentalId))
+            .first();
+        if (existingReview) {
+            throw new Error("A review has already been submitted for this rental.");
+        }
+
         // Insert review record
         await ctx.db.insert("reviews", {
             bookId: rental.bookId,

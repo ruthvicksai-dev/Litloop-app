@@ -66,6 +66,21 @@ export const deleteAccount = mutation({
             throw new Error("Please type DELETE to confirm account deletion.");
         }
 
+        // C1: Block deletion if user has active rentals to prevent orphaned records
+        const activeRental = await ctx.db
+            .query("rentals")
+            .withIndex("by_userId", (q) => q.eq("userId", userId))
+            .filter((q) =>
+                q.and(
+                    q.neq(q.field("status"), "returned"),
+                    q.neq(q.field("status"), "paid")
+                )
+            )
+            .first();
+        if (activeRental) {
+            throw new Error("Cannot delete account with active rentals. Please return all books first.");
+        }
+
         // 1. Revoke all active sessions first
         const sessions = await ctx.db
             .query("sessions")
@@ -84,24 +99,24 @@ export const deleteAccount = mutation({
         const auditEmail = (user as any).email as string | undefined;
         const auditName = (user as any).name as string | undefined;
 
-        // 3. Delete favorites & read-later
+        // 3. Delete favorites & read-later (L6: batched to prevent timeout)
         const favorites = await ctx.db
             .query("favorites")
             .withIndex("by_userId", (q) => q.eq("userId", userId))
-            .collect();
+            .take(500);
         for (const fav of favorites) await ctx.db.delete(fav._id);
 
         const readLater = await ctx.db
             .query("read_later")
             .withIndex("by_userId", (q) => q.eq("userId", userId))
-            .collect();
+            .take(500);
         for (const rl of readLater) await ctx.db.delete(rl._id);
 
-        // 4. Delete user notifications
+        // 4. Delete user notifications (L6: batched to prevent timeout)
         const notifications = await ctx.db
             .query("user_notifications")
             .withIndex("by_userId", (q) => q.eq("userId", userId))
-            .collect();
+            .take(500);
         for (const n of notifications) await ctx.db.delete(n._id);
 
         // 5. Audit log before deletion

@@ -191,11 +191,21 @@ export const verifyPayment = mutation({
             throw new Error("Payment is not pending verification.");
         }
 
-        const book = await ctx.db.get(rental.bookId);
+        // C2: Re-read to guard against concurrent approval by two admins
+        const freshRental = await ctx.db.get(args.rentalId);
+        if (
+            !freshRental ||
+            (freshRental.paymentStatus !== "verification_pending" &&
+                freshRental.paymentStatus !== "cash_pending")
+        ) {
+            throw new Error("Payment has already been processed.");
+        }
+
+        const book = await ctx.db.get(freshRental.bookId);
 
         if (args.approved) {
             const genres = book?.genres ?? [];
-            const amount = (rental.totalRent ?? 0) + (rental.lateFee ?? 0);
+            const amount = (freshRental.totalRent ?? 0) + (freshRental.lateFee ?? 0);
 
             await ctx.db.patch(args.rentalId, {
                 paymentStatus: "paid",

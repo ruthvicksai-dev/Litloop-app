@@ -191,6 +191,12 @@ export async function verifyPassword(
             .map((b) => b.toString(16).padStart(2, "0"))
             .join("");
 
-        return legacyHash === stored;
+        // M1: Timing-safe comparison for legacy path
+        if (legacyHash.length !== stored.length) return false;
+        let diff = 0;
+        for (let i = 0; i < legacyHash.length; i++) {
+            diff |= legacyHash.charCodeAt(i) ^ stored.charCodeAt(i);
+        }
+        return diff === 0;
     }
 }
