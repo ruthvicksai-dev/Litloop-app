@@ -47,8 +47,11 @@ export default function ScheduleDeliveryScreen() {
 
     // Auto-select first date and time slot
     React.useEffect(() => {
-        if (availableDates.length > 0 && !deliveryDate) {
-            setDeliveryDate(formatDateString(availableDates[0]));
+        if (availableDates.length > 0) {
+            const isValidSetDate = availableDates.some(d => formatDateString(d) === deliveryDate);
+            if (!deliveryDate || !isValidSetDate) {
+                setDeliveryDate(formatDateString(availableDates[0]));
+            }
         }
     }, [availableDates, deliveryDate, setDeliveryDate]);
 

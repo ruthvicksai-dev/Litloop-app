@@ -86,11 +86,15 @@ export default function ScheduleReturnScreen() {
     };
 
     const availableDates = React.useMemo(() => {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const start = rental?.deliveryDate
-            ? new Date(Math.max(today.getTime(), new Date(rental.deliveryDate).getTime() + 24 * 60 * 60 * 1000))
-            : today;
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(0, 0, 0, 0);
+
+        const nextDayAfterDelivery = rental?.deliveryDate
+            ? new Date(new Date(rental.deliveryDate).getTime() + 24 * 60 * 60 * 1000)
+            : tomorrow;
+
+        const start = new Date(Math.max(tomorrow.getTime(), nextDayAfterDelivery.getTime()));
         return getValidDates(start, 5);
     }, [rental?.deliveryDate]);
 
@@ -106,8 +110,11 @@ export default function ScheduleReturnScreen() {
 
     // Auto-select first date and time slot
     React.useEffect(() => {
-        if (availableDates.length > 0 && !pickupDate) {
-            setPickupDate(formatDateString(availableDates[0]));
+        if (availableDates.length > 0) {
+            const isValidSetDate = availableDates.some(d => formatDateString(d) === pickupDate);
+            if (!pickupDate || !isValidSetDate) {
+                setPickupDate(formatDateString(availableDates[0]));
+            }
         }
     }, [availableDates, pickupDate, setPickupDate]);
 

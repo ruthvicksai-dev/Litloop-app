@@ -7,6 +7,28 @@ import { assertAdmin, getAuthenticatedUser } from "./lib/authHelpers";
 import { getBookWithCoverUrls } from "./lib/bookHelpers";
 import { assertRateLimit, buildRateLimitKey } from "./lib/rateLimit";
 
+const VALID_SLOTS: Record<string, number> = {
+    "Morning (9 AM - 12 PM)": 9,
+    "Midday (12 PM - 3 PM)": 12,
+    "Afternoon (3 PM - 6 PM)": 15,
+    "Evening (6 PM - 9 PM)": 18,
+};
+
+function getSlotStartHour(timeStr: string): number | null {
+    if (timeStr in VALID_SLOTS) return VALID_SLOTS[timeStr];
+
+    // Legacy support for older HH:MM AM/PM format
+    const match = timeStr.match(/^(\d{1,2}):(\d{2})\s?(AM|PM|am|pm)$/i);
+    if (match) {
+        let hour = parseInt(match[1], 10);
+        const ampm = match[3].toUpperCase();
+        if (ampm === "PM" && hour < 12) hour += 12;
+        if (ampm === "AM" && hour === 12) hour = 0;
+        return hour;
+    }
+    return null;
+}
+
 const LATE_FEE_PER_DAY = 3; // ₹3 per day
 const RENTAL_RATE_LIMITS = {
     requestRental: {
@@ -191,23 +213,14 @@ export const scheduleDelivery = mutation({
         if (args.deliveryDate < todayStr) throw new Error("Cannot schedule delivery in the past.");
         if (args.deliveryDate > maxDateStr) throw new Error("Cannot schedule delivery more than 5 days in advance.");
 
-        const timeMatch = args.deliveryTime.match(/^(\d{1,2}):(\d{2})\s?(AM|PM|am|pm)$/i);
-        if (!timeMatch) throw new Error("Invalid delivery time format.");
-
-        let hour = parseInt(timeMatch[1], 10);
-        const min = parseInt(timeMatch[2], 10);
-        const ampm = timeMatch[3].toUpperCase();
-        if (ampm === "PM" && hour < 12) hour += 12;
-        if (ampm === "AM" && hour === 12) hour = 0;
-
-        if (hour < 6 || hour > 22 || (hour === 22 && min > 0)) {
-            throw new Error("Delivery is only available between 6:00 AM and 10:00 PM.");
+        const slotStartHour = VALID_SLOTS[args.deliveryTime];
+        if (slotStartHour === undefined) {
+            throw new Error("Invalid delivery time slot.");
         }
 
         if (args.deliveryDate === todayStr) {
             const currentHour = now.getHours();
-            const currentMin = now.getMinutes();
-            if (hour * 60 + min < currentHour * 60 + currentMin + 60) {
+            if (slotStartHour < currentHour + 1) {
                 throw new Error("Delivery must be scheduled at least 1 hour in advance.");
             }
         }
@@ -298,50 +311,19 @@ export const schedulePickup = mutation({
         maxDate.setDate(now.getDate() + 5);
         const maxDateStr = maxDate.toISOString().split('T')[0];
 
-        if (args.pickupDate < todayStr) throw new Error("Cannot schedule pickup in the past.");
+        if (args.pickupDate <= todayStr) throw new Error("Cannot schedule pickup for today. Please provide at least 1 day notice.");
         if (args.pickupDate > maxDateStr) throw new Error("Cannot schedule pickup more than 5 days in advance.");
 
-        const timeMatch = args.pickupTime.match(/^(\d{1,2}):(\d{2})\s?(AM|PM|am|pm)$/i);
-        if (!timeMatch) throw new Error("Invalid pickup time format.");
-
-        let hour = parseInt(timeMatch[1], 10);
-        const min = parseInt(timeMatch[2], 10);
-        const ampm = timeMatch[3].toUpperCase();
-        if (ampm === "PM" && hour < 12) hour += 12;
-        if (ampm === "AM" && hour === 12) hour = 0;
-
-        if (hour < 6 || hour > 22 || (hour === 22 && min > 0)) {
-            throw new Error("Pickup is only available between 6:00 AM and 10:00 PM.");
-        }
-
-        if (args.pickupDate === todayStr) {
-            const currentHour = now.getHours();
-            const currentMin = now.getMinutes();
-            if (hour * 60 + min < currentHour * 60 + currentMin + 60) {
-                throw new Error("Pickup must be scheduled at least 1 hour in advance.");
-            }
+        const slotStartHour = VALID_SLOTS[args.pickupTime];
+        if (slotStartHour === undefined) {
+            throw new Error("Invalid pickup time slot.");
         }
 
         if (!rental.deliveryDate || !rental.deliveryTime)
             throw new Error("Delivery date/time missing for rent calculation.");
 
-        if (args.pickupDate < rental.deliveryDate) {
-            throw new Error("Pickup date must be on or after delivery date.");
-        }
-
-        if (args.pickupDate === rental.deliveryDate) {
-            const delTimeMatch = rental.deliveryTime.match(/^(\d{1,2}):(\d{2})\s?(AM|PM|am|pm)$/i);
-            if (delTimeMatch) {
-                let delHour = parseInt(delTimeMatch[1], 10);
-                const delMin = parseInt(delTimeMatch[2], 10);
-                const delAmpm = delTimeMatch[3].toUpperCase();
-                if (delAmpm === "PM" && delHour < 12) delHour += 12;
-                if (delAmpm === "AM" && delHour === 12) delHour = 0;
-
-                if (hour * 60 + min < delHour * 60 + delMin) {
-                    throw new Error("Pickup time must be after delivery time.");
-                }
-            }
+        if (args.pickupDate <= rental.deliveryDate) {
+            throw new Error("Pickup date must be strictly after the delivery date.");
         }
 
         const days = daysBetween(rental.deliveryDate, args.pickupDate);

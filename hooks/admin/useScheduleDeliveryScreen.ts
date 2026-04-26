@@ -2,11 +2,10 @@ import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { TIME_SLOTS } from "@/utils/timeSlots";
 import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-
-const TIME_PATTERN = /^(0?[1-9]|1[0-2]):[0-5]\d (AM|PM)$/;
 
 export function useScheduleDeliveryScreen(rentalId: string) {
     const router = useRouter();
@@ -34,7 +33,7 @@ export function useScheduleDeliveryScreen(rentalId: string) {
             return;
         }
 
-        if (!TIME_PATTERN.test(deliveryTime)) {
+        if (!TIME_SLOTS.some((s) => s.label === deliveryTime)) {
             showToast("Please select a valid time.", "error");
             return;
         }

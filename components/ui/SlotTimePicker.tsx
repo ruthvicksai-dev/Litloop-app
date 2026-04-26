@@ -64,14 +64,14 @@ const styles = StyleSheet.create({
     chip: {
         borderWidth: 1,
         borderColor: Colors.border,
-        borderRadius: 8,
-        paddingVertical: 10,
+        borderRadius: 10,
+        paddingVertical: 12,
         paddingHorizontal: Spacing.md,
         backgroundColor: Colors.white,
         alignItems: "center",
         justifyContent: "center",
         flexGrow: 1,
-        minWidth: "22%",
+        width: "48%",
     },
     chipSelected: {
         backgroundColor: Colors.primary,
