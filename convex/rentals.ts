@@ -555,6 +555,8 @@ export const getUserRentals = query({
         const caller = await getAuthenticatedUser(ctx, args.accessToken);
         const targetUserId = (caller.role === "admin" && args.userId) ? args.userId : caller._id;
 
+        // Capped at 25 — a user won't realistically have more than 25 active rentals.
+        // Prevents unbounded reads that waste function call budget.
         const rentals = await ctx.db
             .query("rentals")
             .withIndex("by_userId", (q) => q.eq("userId", targetUserId))
@@ -567,7 +569,7 @@ export const getUserRentals = query({
                     q.eq(q.field("status"), "payment_pending")
                 )
             )
-            .collect();
+            .take(25);
 
         const rentalsWithBooks = await Promise.all(
             rentals.map(async (rental) => {
@@ -645,7 +647,9 @@ export const getRentalHistory = query({
             queryBuilder = queryBuilder.filter((q: any) => q.gte(q.field("createdAt"), createdAtMin));
         }
 
-        const rentals = await queryBuilder.order("desc").collect();
+        // Capped at 50 to bound reads per query. Users with extensive history
+        // will see the most recent 50 entries.
+        const rentals = await queryBuilder.order("desc").take(50);
 
         const rentalsWithBooks = await Promise.all(
             rentals.map(async (rental: any) => {

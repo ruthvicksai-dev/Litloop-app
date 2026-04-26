@@ -1,7 +1,7 @@
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
-import { mutation, query } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 import { insertAuditLog } from "./lib/auditLog";
 import { assertAdmin } from "./lib/authHelpers";
 
@@ -242,10 +242,20 @@ export const get = query({
 export const incrementBookViews = mutation({
     args: { bookId: v.id("books") },
     handler: async (ctx, args) => {
+        // Schedule the actual write asynchronously to avoid triggering
+        // cascading real-time re-evaluations on all book subscriptions.
+        await ctx.scheduler.runAfter(0, internal.books.internalIncrementBookViews, {
+            bookId: args.bookId,
+        });
+        return true;
+    },
+});
+
+export const internalIncrementBookViews = internalMutation({
+    args: { bookId: v.id("books") },
+    handler: async (ctx, args) => {
         const book = await ctx.db.get(args.bookId);
-        if (!book) {
-            throw new Error("Book not found.");
-        }
+        if (!book) return;
 
         const nextBookViews = normalizeNonNegativeInt(book.bookViews, 0) + 1;
 
@@ -257,8 +267,6 @@ export const incrementBookViews = mutation({
                 bookViews: nextBookViews,
             }),
         });
-
-        return true;
     },
 });
 
@@ -780,6 +788,83 @@ export const getNewlyAddedBooks = query({
             .order("desc")
             .take(10);
         return Promise.all(books.map((book) => mapBookForClient(ctx, book)));
+    },
+});
+
+/**
+ * Consolidated discover query — replaces 6 individual subscriptions with 1.
+ * Reduces per-user WebSocket subscriptions from ~8 to ~3-4.
+ */
+export const getDiscoverData = query({
+    args: {},
+    handler: async (ctx) => {
+        // Top Picks — by rating desc
+        const topPicksRaw = await ctx.db
+            .query("books")
+            .withIndex("by_rating")
+            .order("desc")
+            .take(10);
+
+        // Top 10 — curated list
+        const top10Raw = await ctx.db
+            .query("books")
+            .withIndex("by_isTop10", (q) => q.eq("isTop10", true))
+            .take(10);
+        const top10Sorted = top10Raw
+            .filter((b) => typeof b.top10Position === "number")
+            .sort((a, b) => (a.top10Position ?? 99) - (b.top10Position ?? 99));
+
+        // Trending — by ranking score desc
+        const trendingRaw = await ctx.db
+            .query("books")
+            .withIndex("by_rankingScore")
+            .order("desc")
+            .take(10);
+
+        // Famous — flagged books
+        const famousRaw = await ctx.db
+            .query("books")
+            .withIndex("by_isFamous", (q) => q.eq("isFamous", true))
+            .order("desc")
+            .take(10);
+
+        // Newly Added — latest by creation
+        const newlyAddedRaw = await ctx.db
+            .query("books")
+            .withIndex("by_createdAt")
+            .order("desc")
+            .take(10);
+
+        // Series — series with their books
+        const seriesRaw = await ctx.db.query("book_series").order("desc").take(15);
+        const seriesWithBooks = await Promise.all(seriesRaw.map(async (s) => {
+            const books = await ctx.db
+                .query("books")
+                .withIndex("by_seriesId", (q) => q.eq("seriesId", s._id))
+                .take(10);
+            const coverUrl = await ctx.storage.getUrl(s.coverImage);
+            const mappedBooks = await Promise.all(books.map((b) => mapBookForClient(ctx, b)));
+            return { ...s, coverUrl, books: mappedBooks };
+        }));
+
+        // Map all simple sections in parallel
+        const [topPicks, top10Books, trendingBooks, famousBooks, newlyAddedBooks] =
+            await Promise.all([
+                Promise.all(topPicksRaw.map((b) => mapBookForClient(ctx, b))),
+                Promise.all(top10Sorted.map((b) => mapBookForClient(ctx, b))),
+                Promise.all(trendingRaw.map((b) => mapBookForClient(ctx, b))),
+                Promise.all(famousRaw.map((b) => mapBookForClient(ctx, b))),
+                Promise.all(newlyAddedRaw.map((b) => mapBookForClient(ctx, b))),
+            ]);
+
+        return {
+            topPicks,
+            top10Books,
+            trendingBooks,
+            famousBooks,
+            newlyAddedBooks,
+            seriesBooks: seriesWithBooks.filter((s) => s.books.length > 0),
+        };
     },
 });
 

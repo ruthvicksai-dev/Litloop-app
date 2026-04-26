@@ -198,14 +198,14 @@ export const getUnreadCount = query({
     handler: async (ctx, args) => {
         const user = await getAuthenticatedUser(ctx, args.accessToken);
         const userId = user._id;
-        // L6 FIX: Cap at 100 with .take() to avoid fetching all unread records
-        // just to count them. Displays "99+" in UI if badge shows >99.
+        // Capped at 20 — reduces document reads by 80% compared to previous cap of 100.
+        // UI can show "20+" for users with many unread notifications.
         const unread = await ctx.db
             .query("user_notifications")
             .withIndex("by_userId_isRead", (q) =>
                 q.eq("userId", userId).eq("isRead", false)
             )
-            .take(100);
+            .take(20);
 
         return unread.length;
     },
