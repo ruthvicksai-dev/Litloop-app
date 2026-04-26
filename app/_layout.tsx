@@ -172,7 +172,7 @@ export default function RootLayout() {
       <NetworkProvider>
         <AuthProvider>
           <ToastProvider>
-            <OfflineBanner />
+            <OfflineBanner type="fullscreen" />
             <AppGate fontsLoaded={fontsLoaded} />
           </ToastProvider>
         </AuthProvider>
