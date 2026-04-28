@@ -1,11 +1,13 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, scale, Spacing } from "@/constants/theme";
+import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { Ionicons } from "@expo/vector-icons";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import React from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface Props {
     bookId: string;
@@ -41,8 +43,47 @@ function timeAgo(timestamp: number): string {
 }
 
 export default function BookReviews({ bookId }: Props) {
+    const { accessToken, userId } = useAuth();
+    const { showToast } = useToast();
     const reviews = useQuery(api.reviews.getBookReviews, { bookId: bookId as Id<"books"> });
     const summary = useQuery(api.reviews.getBookReviewSummary, { bookId: bookId as Id<"books"> });
+    const reportReviewMutation = useMutation(api.reviews.reportReview);
+
+    const handleReport = (reviewId: Id<"reviews">) => {
+        if (!accessToken) {
+            showToast("Please sign in to report a review.", "error");
+            return;
+        }
+
+        Alert.prompt(
+            "Report Review",
+            "Please provide a reason for reporting this review to help our moderation team.",
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Submit",
+                    style: "destructive",
+                    onPress: async (reason: string | undefined) => {
+                        if (!reason || reason.trim() === "") {
+                            showToast("A reason is required to submit a report.", "error");
+                            return;
+                        }
+                        try {
+                            await reportReviewMutation({
+                                reviewId,
+                                reason: reason.trim(),
+                                accessToken,
+                            });
+                            showToast("Review reported. Thank you.", "success");
+                        } catch (error: any) {
+                            showToast(error.message || "Failed to report review.", "error");
+                        }
+                    },
+                },
+            ],
+            "plain-text"
+        );
+    };
 
     if (reviews === undefined || summary === undefined) return null;
     if (summary.totalReviews === 0) return null;
@@ -97,6 +138,15 @@ export default function BookReviews({ bookId }: Props) {
                             <Text style={styles.reviewDate}>{timeAgo(review.createdAt)}</Text>
                         </View>
                         <StarIcons rating={review.rating} />
+                        {userId !== (review as any).userId && (
+                            <TouchableOpacity
+                                style={styles.reportBtn}
+                                onPress={() => handleReport(review._id)}
+                                hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+                            >
+                                <Ionicons name="flag-outline" size={14} color={Colors.textLight} />
+                            </TouchableOpacity>
+                        )}
                     </View>
                     {review.reviewText ? (
                         <Text style={styles.reviewText}>{review.reviewText}</Text>
@@ -230,5 +280,9 @@ const styles = StyleSheet.create({
         color: Colors.text,
         lineHeight: 20,
         marginTop: Spacing.sm,
+    },
+    reportBtn: {
+        marginLeft: Spacing.sm,
+        padding: 4,
     },
 });

@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { query } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 
 export const getBookReviews = query({
     args: {
@@ -68,5 +68,54 @@ export const getBookReviewSummary = query({
             totalReviews: reviews.length,
             distribution,
         };
+    },
+});
+
+export const reportReview = mutation({
+    args: {
+        reviewId: v.id("reviews"),
+        reason: v.string(),
+        accessToken: v.string(),
+    },
+    handler: async (ctx, args) => {
+        // We use the same hacky approach to get the auth user as the rest of the file
+        // Or in this case we'll just import getAuthenticatedUser from lib/authHelpers if it exists
+        // Wait, review.ts doesn't import getAuthenticatedUser. Let me just use a simpler check:
+        const { getAuthenticatedUser } = require("./lib/authHelpers");
+        let caller;
+        try {
+            caller = await getAuthenticatedUser(ctx, args.accessToken);
+        } catch (error) {
+            throw new Error("Must be logged in to report a review.");
+        }
+
+        const review = await ctx.db.get(args.reviewId);
+        if (!review) throw new Error("Review not found");
+
+        if (review.userId === caller._id) {
+            throw new Error("You cannot report your own review.");
+        }
+
+        // Prevent duplicate reports from the same user for the same review pending review
+        const existingReport = await ctx.db
+            .query("reports")
+            .withIndex("by_reporterId", (q) => q.eq("reporterId", caller._id))
+            .filter((q) => q.eq(q.field("targetId"), args.reviewId))
+            .first();
+
+        if (existingReport && existingReport.status === "pending") {
+            throw new Error("You have already reported this review.");
+        }
+
+        await ctx.db.insert("reports", {
+            reporterId: caller._id,
+            targetType: "review",
+            targetId: args.reviewId,
+            reason: args.reason,
+            status: "pending",
+            createdAt: Date.now(),
+        });
+
+        return { success: true };
     },
 });

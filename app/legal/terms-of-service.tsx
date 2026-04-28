@@ -1,3 +1,4 @@
+import { Bullet, Para, Section } from "@/components/legal/LayoutHelpers";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
@@ -17,40 +18,7 @@ const CONTACT_EMAIL = "litloopbooks@gmail.com";
 const APP_NAME = "Lit Loop";
 const COMPANY = "Lit Loop";
 
-interface SectionProps {
-    title: string;
-    children: React.ReactNode;
-}
 
-function Section({ title, children }: SectionProps) {
-    return (
-        <View style={styles.section}>
-            <Text style={styles.sectionTitle} allowFontScaling={false}>
-                {title}
-            </Text>
-            {children}
-        </View>
-    );
-}
-
-function Para({ children }: { children: React.ReactNode }) {
-    return (
-        <Text style={styles.para} allowFontScaling={false}>
-            {children}
-        </Text>
-    );
-}
-
-function Bullet({ text }: { text: string }) {
-    return (
-        <View style={styles.bulletRow}>
-            <View style={styles.bulletDot} />
-            <Text style={styles.bulletText} allowFontScaling={false}>
-                {text}
-            </Text>
-        </View>
-    );
-}
 
 export default function TermsOfServiceScreen() {
     const router = useRouter();

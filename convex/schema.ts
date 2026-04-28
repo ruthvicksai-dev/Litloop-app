@@ -277,6 +277,19 @@ export default defineSchema({
         .index("by_user_month", ["userId", "month"])
         .index("by_month", ["month"]),
 
+    // User-generated content reporting (Google Play policy requirement)
+    reports: defineTable({
+        reporterId: v.id("users"),
+        targetType: v.literal("review"),
+        targetId: v.id("reviews"),
+        reason: v.string(),
+        status: v.union(v.literal("pending"), v.literal("reviewed"), v.literal("dismissed")),
+        createdAt: v.number(),
+    })
+        .index("by_reporterId", ["reporterId"])
+        .index("by_targetId", ["targetId"])
+        .index("by_status", ["status"]),
+
     // H5: Immutable audit log for sensitive actions (payment, admin ops, auth events)
     audit_logs: defineTable({
         action: v.string(),

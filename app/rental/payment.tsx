@@ -7,6 +7,7 @@ import { Colors, scale, Spacing } from "@/constants/theme";
 import { useToast } from "@/context/ToastContext";
 import { usePaymentScreen } from "@/hooks";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import { buildUpiUri, UPI_ID } from "@/utils/payment";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -23,22 +24,6 @@ import {
 } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-// ─── UPI Config ─────────────────────────────────────────────────────────────
-// Replace YOUR_UPI_ID@upi with the actual UPI ID for receiving payments.
-const UPI_ID = process.env.EXPO_PUBLIC_UPI_ID ?? "YOUR_UPI_ID@upi";
-const PAYEE_NAME = "Lit Loop";
-
-function buildUpiUri(amount: number, orderId: string): string {
-    const params = new URLSearchParams({
-        pa: UPI_ID,
-        pn: PAYEE_NAME,
-        am: amount.toFixed(2),
-        tn: `LitLoop-${orderId}`,
-        cu: "INR",
-    });
-    return `upi://pay?${params.toString()}`;
-}
 
 export default function PaymentScreen() {
     const { rentalId } = useLocalSearchParams<{ rentalId: string }>();
