@@ -81,16 +81,17 @@ export default function AdminRevenueScreen() {
                 }
             >
                 <View style={styles.header}>
-                    <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                        <Ionicons name="arrow-back" size={24} color={Colors.primary} />
-                    </TouchableOpacity>
-                    <View style={styles.headerText}>
-                        <Text style={styles.title}>Revenue Analytics</Text>
-                        <Text style={styles.subtitle}>
-                            {activeMonthOption?.fullLabel ?? formatMonthLabel(activeMonth)}
-                        </Text>
+                    <View style={styles.headerLeft}>
+                        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+                            <Ionicons name="chevron-back" size={24} color={Colors.text} />
+                        </TouchableOpacity>
+                        <Text style={styles.headerTitle} allowFontScaling={false}>Revenue Analytics</Text>
+                        <View style={styles.headerSpacer} />
                     </View>
                 </View>
+                <Text style={styles.screenSubtitle}>
+                    {activeMonthOption?.fullLabel ?? formatMonthLabel(activeMonth)}
+                </Text>
 
                 <ScrollView
                     horizontal
@@ -202,29 +203,40 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: "row",
         alignItems: "center",
-        gap: Spacing.md,
+        justifyContent: "space-between",
         paddingHorizontal: 20,
         paddingTop: Spacing.sm,
         paddingBottom: Spacing.md,
     },
-    backBtn: {
-        alignSelf: "flex-start",
-        padding: 4,
-        marginLeft: -4,
-    },
-    headerText: {
+    headerLeft: {
         flex: 1,
+        flexDirection: "row",
+        alignItems: "center",
     },
-    title: {
-        fontSize: FontSizes.hero,
-        fontFamily: Fonts.bold,
+    backBtn: {
+        width: 40,
+        height: 40,
+        alignItems: "center",
+        justifyContent: "center",
+        marginLeft: -25,
+    },
+    headerTitle: {
+        flex: 1,
+        fontSize: FontSizes.title,
         color: Colors.text,
+        textAlign: "center",
+        fontFamily: Fonts.bold,
     },
-    subtitle: {
+    headerSpacer: {
+        width: 40,
+        marginRight: -25,
+    },
+    screenSubtitle: {
         fontSize: FontSizes.body,
         fontFamily: Fonts.regular,
         color: Colors.textSecondary,
-        marginTop: 2,
+        paddingHorizontal: 20,
+        marginBottom: Spacing.md,
     },
     monthScroll: {
         flexGrow: 0,

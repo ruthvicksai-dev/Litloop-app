@@ -17,7 +17,7 @@ export default function AdminDashboardHeader({
 }: AdminDashboardHeaderProps) {
     return (
         <View style={styles.header}>
-            <View>
+            <View style={styles.headerTextWrap}>
                 <Text style={styles.headerGreeting}>Admin Panel</Text>
                 <Text style={styles.title}>Dashboard</Text>
             </View>
@@ -47,13 +47,16 @@ const styles = StyleSheet.create({
         paddingTop: Spacing.sm,
         paddingBottom: Spacing.sm,
     },
+    headerTextWrap: {
+        marginLeft: 6,
+    },
     headerGreeting: {
         fontSize: FontSizes.small,
         color: Colors.textSecondary,
         fontFamily: Fonts.medium,
     },
     title: {
-        fontSize: FontSizes.hero,
+        fontSize: FontSizes.heading,
         color: Colors.text,
         fontFamily: Fonts.bold,
     },
@@ -64,39 +67,31 @@ const styles = StyleSheet.create({
         flexShrink: 0,
     },
     iconBtn: {
-        backgroundColor: Colors.white,
         width: 40,
         aspectRatio: 1,
-        borderRadius: 10,
+        borderRadius: 12,
+        backgroundColor: Colors.primaryLight,
         justifyContent: "center",
         alignItems: "center",
-        borderWidth: 1.5,
-        borderColor: Colors.border,
         position: "relative",
     },
     badge: {
         position: "absolute",
-        top: 7,
-        right: 8,
+        top: 6,
+        right: 6,
         width: 9,
         height: 9,
         borderRadius: 4.5,
         backgroundColor: Colors.error,
         borderWidth: 1.5,
-        borderColor: Colors.white,
+        borderColor: Colors.primaryLight,
     },
     logoutBtn: {
         width: 40,
         aspectRatio: 1,
-        borderRadius: 10,
-        borderWidth: 1.5,
-        borderColor: Colors.border,
+        borderRadius: 12,
+        backgroundColor: Colors.background,
         justifyContent: "center",
         alignItems: "center",
-    },
-    logoutText: {
-        color: Colors.textSecondary,
-        fontSize: FontSizes.small,
-        fontFamily: Fonts.medium,
     },
 });

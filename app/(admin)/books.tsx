@@ -1,13 +1,17 @@
 import SearchInput from "@/components/shared/SearchInput";
 import BookCard from "@/components/ui/cards/BookCard";
+import ConfirmActionModal from "@/components/ui/feedback/ConfirmActionModal";
 import BookLoader from "@/components/ui/feedback/BookLoader";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useAdminBooksScreen, useFadeSlideIn } from "@/hooks";
+import { useAuth } from "@/context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
+import { useMutation } from "convex/react";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
+    Alert,
     Animated,
     FlatList,
     RefreshControl,
@@ -17,12 +21,35 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { api } from "@/convex/_generated/api";
 
 export default function AdminBooksScreen() {
     const router = useRouter();
+    const { accessToken } = useAuth();
+    const removeBook = useMutation(api.books.remove);
     const [refreshing, setRefreshing] = React.useState(false);
+    const [deleteTarget, setDeleteTarget] = React.useState<{ id: string; title: string } | null>(null);
+    const [deleting, setDeleting] = React.useState(false);
     const { books, search, setSearch, genreSections } = useAdminBooksScreen();
     const { fadeAnim, slideAnim } = useFadeSlideIn({ slideFrom: 20, duration: 400 });
+
+    const handleDeleteBook = (bookId: string, bookTitle: string) => {
+        setDeleteTarget({ id: bookId, title: bookTitle });
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteTarget) return;
+        try {
+            setDeleting(true);
+            if (!accessToken) throw new Error("Unauthenticated");
+            await removeBook({ accessToken, bookId: deleteTarget.id as any });
+            setDeleteTarget(null);
+        } catch (error: any) {
+            Alert.alert("Error", error.message ?? "Failed to delete book.");
+        } finally {
+            setDeleting(false);
+        }
+    };
 
     const onRefresh = React.useCallback(() => {
         setRefreshing(true);
@@ -46,7 +73,7 @@ export default function AdminBooksScreen() {
                 ]}
             >
                 <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                    <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+                    <Ionicons name="chevron-back" size={24} color={Colors.primary} />
                 </TouchableOpacity>
                 <Text style={styles.title}>Manage Books</Text>
                 <TouchableOpacity
@@ -113,13 +140,15 @@ export default function AdminBooksScreen() {
                                     coverUrl={book.coverUrl}
                                     coverUrls={book.coverUrls}
                                     style={styles.genreCard}
-                                    viewDetailsLabel="Manage Book"
-                                    showRequestButton={false}
+                                    viewDetailsLabel="Manage"
+                                    requestLabel="Delete"
+                                    showRequestButton={true}
+                                    isRequestDestructive={true}
                                     onViewDetails={() =>
                                         router.push(`/(admin)/edit-book?bookId=${book._id}`)
                                     }
                                     onRequestBook={() =>
-                                        router.push(`/(admin)/edit-book?bookId=${book._id}`)
+                                        handleDeleteBook(book._id, book.title)
                                     }
                                 />
                             )}
@@ -137,6 +166,19 @@ export default function AdminBooksScreen() {
                         <Text style={styles.emptyText}>No books found</Text>
                     </View>
                 }
+            />
+
+            <ConfirmActionModal
+                visible={deleteTarget !== null}
+                title="Delete Book"
+                message={`Are you sure you want to delete "${deleteTarget?.title}"? This action cannot be undone.`}
+                confirmLabel="Delete"
+                cancelLabel="Cancel"
+                icon="trash-outline"
+                tone="danger"
+                loading={deleting}
+                onConfirm={confirmDelete}
+                onCancel={() => setDeleteTarget(null)}
             />
         </SafeAreaView>
     );
@@ -165,8 +207,9 @@ const styles = StyleSheet.create({
     back: { fontSize: FontSizes.subtitle, color: Colors.primary, fontFamily: Fonts.medium },
     title: {
         flex: 1,
-        fontSize: FontSizes.heading,
+        fontSize: FontSizes.title,
         color: Colors.text,
+        textAlign: 'center',
         fontFamily: Fonts.bold,
     },
     addBtn: {
@@ -180,8 +223,8 @@ const styles = StyleSheet.create({
     },
     addBtnText: { color: Colors.white, fontFamily: Fonts.bold, fontSize: FontSizes.small },
     searchBox: {
-        marginHorizontal: 20,
-        marginBottom: Spacing.sm,
+        marginHorizontal: 25,
+        marginBottom: Spacing.lg,
     },
     searchInputContainer: {
         borderWidth: 1.5,
@@ -200,7 +243,7 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.lg,
     },
     sectionTitle: {
-        paddingHorizontal: 20,
+        paddingHorizontal: 25,
         marginBottom: Spacing.sm,
         fontSize: FontSizes.titleLarge,
         color: Colors.text,

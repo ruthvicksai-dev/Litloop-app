@@ -86,7 +86,10 @@ export default function AdminDashboardStats({
                         <Text style={styles.revenueMetricValue}>{revenue.monthlyOrders}</Text>
                     </View>
                 </View>
-                <Text style={styles.revenueLink}>View revenue analytics</Text>
+                <View style={styles.revenueLinkRow}>
+                    <Text style={styles.revenueLink}>View revenue analytics</Text>
+                    <Ionicons name="chevron-forward" size={14} color={Colors.primary} />
+                </View>
             </TouchableOpacity>
             {items.map((item) => (
                 <View
@@ -181,6 +184,11 @@ const styles = StyleSheet.create({
         fontSize: FontSizes.small,
         fontFamily: Fonts.medium,
         color: Colors.primary,
+    },
+    revenueLinkRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 4,
         marginTop: 10,
     },
     statCard: {

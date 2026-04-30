@@ -27,6 +27,7 @@ interface BookCardProps {
     viewDetailsLabel?: string;
     requestLabel?: string;
     showRequestButton?: boolean;
+    isRequestDestructive?: boolean;
     top10Position?: number;
 }
 
@@ -43,6 +44,7 @@ export default function BookCard({
     viewDetailsLabel = "View Details",
     requestLabel = "Request Book",
     showRequestButton = true,
+    isRequestDestructive = false,
     top10Position,
 }: BookCardProps) {
     const scale = useRef(new Animated.Value(1)).current;
@@ -126,10 +128,11 @@ export default function BookCard({
                         <TouchableOpacity
                             style={[
                                 styles.requestBtn,
-                                availableCopies === 0 && styles.disabledBtn,
+                                isRequestDestructive && styles.destructiveBtn,
+                                availableCopies === 0 && !isRequestDestructive && styles.disabledBtn,
                             ]}
                             onPress={onRequestBook}
-                            disabled={availableCopies === 0}
+                            disabled={availableCopies === 0 && !isRequestDestructive}
                         >
                             <Text style={styles.requestBtnText}>{requestLabel}</Text>
                         </TouchableOpacity>
@@ -265,5 +268,8 @@ const styles = StyleSheet.create({
     },
     disabledBtn: {
         opacity: 0.4,
+    },
+    destructiveBtn: {
+        backgroundColor: Colors.error,
     },
 });

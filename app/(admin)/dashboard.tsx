@@ -93,7 +93,7 @@ export default function AdminDashboard() {
                             }}
                         />
 
-                        <View style={styles.quickActions}>
+                        <View style={styles.quickActionsScroll}>
                             <TouchableOpacity
                                 style={styles.quickAction}
                                 onPress={() => {
@@ -101,8 +101,8 @@ export default function AdminDashboard() {
                                     router.push("/(admin)/verify-payment");
                                 }}
                             >
-                                <Ionicons name="card" size={20} color={Colors.primary} />
-                                <Text style={styles.quickActionText}>Verify Payments</Text>
+                                <Ionicons name="card" size={18} color={Colors.primary} />
+                                <Text style={styles.quickActionText}>Payments</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.quickAction}
@@ -111,8 +111,18 @@ export default function AdminDashboard() {
                                     router.push("/(admin)/books");
                                 }}
                             >
-                                <Ionicons name="book" size={20} color={Colors.primary} />
-                                <Text style={styles.quickActionText}>View Books</Text>
+                                <Ionicons name="book" size={18} color={Colors.primary} />
+                                <Text style={styles.quickActionText}>Books</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.quickAction}
+                                onPress={() => {
+                                    triggerHaptic("light");
+                                    router.push("/(admin)/add-book");
+                                }}
+                            >
+                                <Ionicons name="add-circle" size={18} color={Colors.primary} />
+                                <Text style={styles.quickActionText}>Add Book</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.quickAction}
@@ -121,8 +131,8 @@ export default function AdminDashboard() {
                                     router.push("/(admin)/series" as any);
                                 }}
                             >
-                                <Ionicons name="layers" size={20} color={Colors.primary} />
-                                <Text style={styles.quickActionText}>Manage Series</Text>
+                                <Ionicons name="layers" size={18} color={Colors.primary} />
+                                <Text style={styles.quickActionText}>Series</Text>
                             </TouchableOpacity>
                         </View>
 
@@ -205,36 +215,32 @@ const styles = StyleSheet.create({
         alignItems: "center",
         backgroundColor: Colors.background,
     },
-    quickActions: {
+    quickActionsScroll: {
         flexDirection: "row",
         paddingHorizontal: 20,
         gap: 10,
         marginBottom: Spacing.md,
-        flexWrap: "wrap",
     },
     quickAction: {
         flex: 1,
-        minWidth: 160,
         backgroundColor: Colors.white,
         borderRadius: 14,
         paddingVertical: 14,
-        paddingHorizontal: 14,
-        flexDirection: "row",
+        paddingHorizontal: 12,
         alignItems: "center",
-        gap: 10,
+        justifyContent: "center",
+        gap: 6,
         shadowColor: Colors.shadow,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.06,
         shadowRadius: 6,
         elevation: 2,
     },
-    quickActionIcon: {
-        fontSize: FontSizes.titleLarge,
-    },
     quickActionText: {
-        fontSize: FontSizes.small,
+        fontSize: FontSizes.tiny,
         fontFamily: Fonts.bold,
         color: Colors.text,
+        textAlign: "center",
     },
     sectionHeader: {
         flexDirection: "row",

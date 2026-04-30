@@ -23,7 +23,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const TYPE_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
-    rental: "cube-outline",
+    rental: "book-outline",
     book: "book-outline",
     general: "notifications-outline",
 };
@@ -100,25 +100,25 @@ export default function AdminNotificationsScreen() {
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
                 <View style={styles.headerLeft}>
-                    <TouchableOpacity
-                        onPress={() => router.back()}
-                        style={styles.backBtn}
-                    >
+                    <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
                         <Ionicons name="chevron-back" size={24} color={Colors.text} />
                     </TouchableOpacity>
-                    <View>
-                        <Text style={styles.title}>Admin Alerts</Text>
-                        <Text style={styles.subtitle}>
-                            {unreadCount > 0 ? `${unreadCount} new requests` : "All cleared"}
-                        </Text>
-                    </View>
+                    <Text style={styles.headerTitle} allowFontScaling={false}>
+                        Admin Alerts
+                    </Text>
+                    <View style={styles.headerSpacer} />
                 </View>
-                {unreadCount > 0 && (
-                    <TouchableOpacity onPress={handleMarkAllRead} style={styles.markAllBtn}>
-                        <Text style={styles.markAllText}>Clear All</Text>
-                    </TouchableOpacity>
-                )}
             </View>
+            <View style={styles.summaryRow}>
+                   <Text style={styles.summaryText}>
+                       {unreadCount > 0 ? `${unreadCount} unread` : "All caught up!"}
+                   </Text>
+                   {unreadCount > 0 && (
+                       <TouchableOpacity onPress={handleMarkAllRead} style={styles.markAllBtn}>
+                           <Text style={styles.markAllText}>Mark all read</Text>
+                       </TouchableOpacity>
+                   )}
+               </View>
 
             {user && !user.pushToken && (
                 <View style={[styles.pushPromptContainer, { marginTop: 15 }]}>
@@ -177,25 +177,37 @@ const styles = StyleSheet.create({
         paddingBottom: Spacing.md,
     },
     headerLeft: {
+        flex: 1,
         flexDirection: "row",
         alignItems: "center",
-        gap: 12,
     },
     backBtn: {
         width: 40,
         height: 40,
-        borderRadius: 20,
-        backgroundColor: Colors.white,
-        justifyContent: "center",
         alignItems: "center",
+        justifyContent: "center",
+        marginLeft: -25,
     },
-    title: {
-        fontSize: FontSizes.heading,
+    headerTitle: {
+        flex: 1,
+        fontSize: FontSizes.title,
         color: Colors.text,
+        textAlign: "center",
         fontFamily: Fonts.bold,
     },
-    subtitle: {
-        marginTop: 2,
+    headerSpacer: {
+        width: 40,
+        marginRight: -25,
+    },
+    summaryRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: Spacing.md,
+        paddingHorizontal: Layout.screenPaddingWide,
+        paddingBottom: Spacing.md,
+    },
+    summaryText: {
         fontSize: FontSizes.body,
         color: Colors.textSecondary,
         fontFamily: Fonts.regular,

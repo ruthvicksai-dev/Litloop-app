@@ -59,14 +59,15 @@ export default function AdminAnalyticsDashboard() {
                 }
             >
                 <View style={styles.header}>
-                    <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                        <Ionicons name="arrow-back" size={24} color={Colors.primary} />
-                    </TouchableOpacity>
-                    <View style={styles.headerText}>
-                        <Text style={styles.title}>Analytics Dashboard</Text>
-                        <Text style={styles.subtitle}>Marketplace performance overview</Text>
+                    <View style={styles.headerLeft}>
+                        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+                            <Ionicons name="chevron-back" size={24} color={Colors.text} />
+                        </TouchableOpacity>
+                        <Text style={styles.headerTitle} allowFontScaling={false}>Analytics Dashboard</Text>
+                        <View style={styles.headerSpacer} />
                     </View>
                 </View>
+                <Text style={styles.screenSubtitle}>Marketplace performance overview</Text>
 
                 <ScrollView
                     horizontal
@@ -218,29 +219,40 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: "row",
         alignItems: "center",
-        gap: Spacing.md,
+        justifyContent: "space-between",
         paddingHorizontal: 20,
         paddingTop: Spacing.sm,
         paddingBottom: Spacing.md,
     },
-    backBtn: {
-        alignSelf: "flex-start",
-        padding: 4,
-        marginLeft: -4,
-    },
-    headerText: {
+    headerLeft: {
         flex: 1,
+        flexDirection: "row",
+        alignItems: "center",
     },
-    title: {
+    backBtn: {
+        width: 40,
+        height: 40,
+        alignItems: "center",
+        justifyContent: "center",
+        marginLeft: -25,
+    },
+    headerTitle: {
+        flex: 1,
         fontSize: FontSizes.title,
-        fontFamily: Fonts.bold,
         color: Colors.text,
+        textAlign: "center",
+        fontFamily: Fonts.bold,
     },
-    subtitle: {
+    headerSpacer: {
+        width: 40,
+        marginRight: -25,
+    },
+    screenSubtitle: {
         fontSize: FontSizes.body,
         fontFamily: Fonts.regular,
         color: Colors.textSecondary,
-        marginTop: 2,
+        paddingHorizontal: 20,
+        marginBottom: Spacing.md,
     },
     filterScroll: {
         flexGrow: 0,

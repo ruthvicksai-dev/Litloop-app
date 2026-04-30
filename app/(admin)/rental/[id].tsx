@@ -124,18 +124,22 @@ export default function AdminRentalDetailScreen() {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
-                <TouchableOpacity
-                    onPress={() => {
-                        triggerHaptic("light");
-                        router.back();
-                    }}
-                    style={styles.backBtn}
-                >
-                    <Ionicons name="arrow-back" size={24} color={Colors.primary} />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Order Details</Text>
-                <View style={styles.idBadge}>
-                    <Text style={styles.idText}>#{rental._id.slice(-6).toUpperCase()}</Text>
+                <View style={styles.headerLeft}>
+                    <TouchableOpacity
+                        onPress={() => {
+                            triggerHaptic("light");
+                            router.back();
+                        }}
+                        style={styles.backBtn}
+                    >
+                        <Ionicons name="chevron-back" size={24} color={Colors.text} />
+                    </TouchableOpacity>
+                    <Text style={styles.headerTitle} allowFontScaling={false}>Order Details</Text>
+                    <View style={styles.headerSpacer}>
+                        <View style={styles.idBadge}>
+                            <Text style={styles.idText} numberOfLines={1}>#{rental._id.slice(-6).toUpperCase()}</Text>
+                        </View>
+                    </View>
                 </View>
             </View>
 
@@ -505,21 +509,39 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: "row",
         alignItems: "center",
+        justifyContent: "space-between",
         paddingHorizontal: 20,
         paddingVertical: 15,
         backgroundColor: Colors.white,
         borderBottomWidth: 1,
         borderBottomColor: Colors.border,
     },
+    headerLeft: {
+        flex: 1,
+        flexDirection: "row",
+        alignItems: "center",
+    },
     backBtn: {
-        padding: 5,
+        width: 75,
+        height: 40,
+        alignItems: "flex-start",
+        justifyContent: "center",
+        paddingLeft: 25,
+        marginLeft: -25,
     },
     headerTitle: {
         flex: 1,
-        fontSize: FontSizes.subtitle,
-        fontFamily: Fonts.bold,
+        fontSize: FontSizes.title,
         color: Colors.text,
-        marginLeft: 10,
+        textAlign: "center",
+        fontFamily: Fonts.bold,
+    },
+    headerSpacer: {
+        width: 75,
+        alignItems: "flex-end",
+        justifyContent: "center",
+        paddingRight: 20,
+        marginRight: -20,
     },
     idBadge: {
         backgroundColor: Colors.background,

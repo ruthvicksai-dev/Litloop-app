@@ -13,6 +13,7 @@ type ConfirmActionModalProps = {
     cancelLabel?: string;
     onConfirm: () => void;
     onCancel: () => void;
+    icon?: keyof typeof Ionicons.glyphMap;
     tone?: "default" | "danger";
     loading?: boolean;
     stackActions?: boolean;
@@ -26,6 +27,7 @@ export default function ConfirmActionModal({
     cancelLabel = "Cancel",
     onConfirm,
     onCancel,
+    icon,
     tone = "default",
     loading = false,
     stackActions = false,
@@ -51,7 +53,7 @@ export default function ConfirmActionModal({
                         ]}
                     >
                         <Ionicons
-                            name={isDanger ? "log-out-outline" : "help-outline"}
+                            name={icon ?? (isDanger ? "warning-outline" : "help-outline")}
                             size={22}
                             color={isDanger ? Colors.error : Colors.primary}
                         />

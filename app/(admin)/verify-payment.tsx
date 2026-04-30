@@ -48,15 +48,16 @@ export default function VerifyPaymentScreen() {
     if (params.rentalId && !singleRental) {
         return (
             <SafeAreaView style={styles.container}>
-                <View style={styles.screenHeader}>
-                    <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                        <Ionicons name="arrow-back" size={22} color={Colors.primary} />
-                    </TouchableOpacity>
-                    <View style={styles.headerText}>
-                        <Text style={styles.title}>Verify Payment</Text>
-                        <Text style={styles.subtitle}>This payment request is no longer available.</Text>
+                <View style={styles.header}>
+                    <View style={styles.headerLeft}>
+                        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+                            <Ionicons name="chevron-back" size={24} color={Colors.text} />
+                        </TouchableOpacity>
+                        <Text style={styles.headerTitle} allowFontScaling={false}>Verify Payment</Text>
+                        <View style={styles.headerSpacer} />
                     </View>
                 </View>
+                <Text style={styles.screenSubtitle}>This payment request is no longer available.</Text>
                 <View style={styles.emptyState}>
                     <View style={styles.emptyIconWrap}>
                         <Ionicons name="receipt-outline" size={26} color={Colors.textLight} />
@@ -87,20 +88,21 @@ export default function VerifyPaymentScreen() {
                         />
                     }
                 >
-                    <View style={styles.screenHeader}>
-                        <TouchableOpacity
-                            onPress={() => router.back()}
-                            style={styles.backBtn}
-                            accessibilityRole="button"
-                            accessibilityLabel="Go back"
-                        >
-                            <Ionicons name="arrow-back" size={22} color={Colors.primary} />
-                        </TouchableOpacity>
-                        <View style={styles.headerText}>
-                            <Text style={styles.title}>Verify Payment</Text>
-                            <Text style={styles.subtitle}>Review the payment proof before approving.</Text>
+                    <View style={styles.header}>
+                        <View style={styles.headerLeft}>
+                            <TouchableOpacity
+                                onPress={() => router.back()}
+                                style={styles.backBtn}
+                                accessibilityRole="button"
+                                accessibilityLabel="Go back"
+                            >
+                                <Ionicons name="chevron-back" size={24} color={Colors.text} />
+                            </TouchableOpacity>
+                            <Text style={styles.headerTitle} allowFontScaling={false}>Verify Payment</Text>
+                            <View style={styles.headerSpacer} />
                         </View>
                     </View>
+                    <Text style={styles.screenSubtitle}>Review the payment proof before approving.</Text>
 
                     <LinearGradient
                         colors={["#FFFDFC", "#F6E6CF", "#F1D8BF"]}
@@ -328,17 +330,18 @@ export default function VerifyPaymentScreen() {
                 showsVerticalScrollIndicator={false}
                 ListHeaderComponent={
                     <View style={styles.listHeaderWrap}>
-                        <View style={styles.screenHeader}>
-                            <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                                <Ionicons name="arrow-back" size={22} color={Colors.primary} />
-                            </TouchableOpacity>
-                            <View style={styles.headerText}>
-                                <Text style={styles.title}>Pending Payments</Text>
-                                <Text style={styles.subtitle}>
-                                    Review incoming proofs and confirm them with confidence.
-                                </Text>
+                        <View style={styles.header}>
+                            <View style={styles.headerLeft}>
+                                <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+                                    <Ionicons name="chevron-back" size={24} color={Colors.text} />
+                                </TouchableOpacity>
+                                <Text style={styles.headerTitle} allowFontScaling={false}>Pending Payments</Text>
+                                <View style={styles.headerSpacer} />
                             </View>
                         </View>
+                        <Text style={styles.screenSubtitle}>
+                            Review incoming proofs and confirm them with confidence.
+                        </Text>
 
                         <LinearGradient
                             colors={["#FFFFFF", "#F7EAD8", "#F2DDC8"]}
@@ -425,32 +428,44 @@ const styles = StyleSheet.create({
         paddingTop: Spacing.lg,
         paddingBottom: Spacing.md,
     },
-    screenHeader: {
+    header: {
         flexDirection: "row",
-        alignItems: "flex-start",
-        gap: Spacing.md,
-        marginBottom: Spacing.lg,
+        alignItems: "center",
+        justifyContent: "space-between",
+        paddingHorizontal: Layout.screenPaddingWide,
+        paddingTop: Spacing.sm,
+        paddingBottom: Spacing.md,
+    },
+    headerLeft: {
+        flex: 1,
+        flexDirection: "row",
+        alignItems: "center",
     },
     backBtn: {
-        width: Layout.touchSize,
-        height: Layout.touchSize,
+        width: 40,
+        height: 40,
         alignItems: "center",
         justifyContent: "center",
+        marginLeft: -25,
     },
-    headerText: {
+    headerTitle: {
         flex: 1,
-        paddingTop: 3,
-    },
-    title: {
         fontSize: FontSizes.title,
         color: Colors.text,
+        textAlign: "center",
         fontFamily: Fonts.bold,
     },
-    subtitle: {
+    headerSpacer: {
+        width: 40,
+        marginRight: -25,
+    },
+    screenSubtitle: {
         fontSize: FontSizes.body,
         color: Colors.textSecondary,
         fontFamily: Fonts.regular,
-        marginTop: 4,
+        textAlign: "left",
+        paddingHorizontal: Layout.screenPaddingWide,
+        marginBottom: Spacing.lg,
         lineHeight: scale(20),
     },
     heroCard: {
