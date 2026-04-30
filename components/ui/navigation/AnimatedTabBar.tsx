@@ -107,10 +107,10 @@ export default function AnimatedTabBar({
             <View style={[styles.pillContainer, { paddingBottom: insets.bottom }]}>
                 {/* Massive SVG background sliding inside (keeps the fixed 65 height for the curve) */}
                 <AnimatedSvg width={SVG_WIDTH} height={TAB_BAR_HEIGHT} style={svgStyle}>
-                    <Path d={pathStr} fill={Colors.primaryLight} />
+                    <Path d={pathStr} fill={Colors.background} />
                 </AnimatedSvg>
                 {/* Fill the remainder of the safe area below the curve */}
-                <View style={{ flex: 1, backgroundColor: Colors.primaryLight }} />
+                <View style={{ flex: 1, backgroundColor: Colors.background }} />
             </View>
 
             {/* Floating Orange Badge - outside the overflow:hidden pill container! */}

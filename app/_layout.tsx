@@ -1,12 +1,15 @@
 import AppGate from "@/components/AppGate";
 import { OfflineBanner } from "@/components/ui/feedback/OfflineBanner";
+import { Colors } from "@/constants/theme";
 import { AuthProvider } from "@/context/AuthContext";
 import { NetworkProvider } from "@/context/NetworkContext";
 import { ToastProvider } from "@/context/ToastContext";
 import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
+import * as SystemUI from "expo-system-ui";
 import React, { useEffect } from "react";
+import { Platform, View } from "react-native";
 
 const shouldSuppressConvexLog = (args: unknown[]) => {
   const message = args
@@ -60,22 +63,42 @@ export default function RootLayout() {
     "Lato-BoldItalic": require("../assets/fonts/Lato/Lato-BoldItalic.ttf"),
   });
 
+  const customizeSystemUI = async () => {
+  try {
+    if (Platform.OS === "android") {
+      const Constants = require("expo-constants").default;
+      const isExpoGo = Constants?.executionEnvironment === "storeClient";
+
+      if (!isExpoGo) {
+        const NavigationBar = require("expo-navigation-bar");
+
+        await NavigationBar.setButtonStyleAsync("light");
+      }
+    }
+    await SystemUI.setBackgroundColorAsync(Colors.background);
+  } catch {}
+};
+
   useEffect(() => {
     if (fontsLoaded) {
       SplashScreen.hideAsync();
     }
+    customizeSystemUI();
   }, [fontsLoaded]);
 
+
   return (
-    <ConvexProvider client={convex}>
-      <NetworkProvider>
-        <AuthProvider>
-          <ToastProvider>
-            <OfflineBanner type="fullscreen" />
-            <AppGate fontsLoaded={fontsLoaded} />
-          </ToastProvider>
-        </AuthProvider>
-      </NetworkProvider>
-    </ConvexProvider>
+    <View style={{ flex: 1, backgroundColor: Colors.background }}>
+      <ConvexProvider client={convex}>
+        <NetworkProvider>
+          <AuthProvider>
+            <ToastProvider>
+              <OfflineBanner type="fullscreen" />
+              <AppGate fontsLoaded={fontsLoaded} />
+            </ToastProvider>
+          </AuthProvider>
+        </NetworkProvider>
+      </ConvexProvider>
+    </View>
   );
 }
