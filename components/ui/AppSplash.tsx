@@ -109,7 +109,7 @@ export default function AppSplash({ onAnimationComplete }: AppSplashProps) {
           ]}
         >
           <Text style={styles.title}>
-            <Text style={{ color: "orange" }}>Lit </Text>
+            <Text style={{ color: "orange" }}>Lit</Text>
             <Text style={{ color: "white" }}>Loop</Text>
           </Text>
           <Text style={styles.subtitle}>Read. Rent. Return.</Text>

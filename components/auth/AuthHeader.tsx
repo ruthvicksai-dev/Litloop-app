@@ -18,7 +18,22 @@ export default function AuthHeader({
     slideAnim,
     scaleAnim,
 }: AuthHeaderProps) {
-    const words = (title || "").split(" ");
+    const fullTitle = title || "";
+    const hasSpace = fullTitle.includes(" ");
+    let firstPart = "";
+    let secondPart = "";
+
+    if (hasSpace) {
+        const words = fullTitle.split(" ");
+        firstPart = words[0] || "";
+        secondPart = words[1] || "";
+    } else if (fullTitle === "LitLoop") {
+        firstPart = "Lit";
+        secondPart = "Loop";
+    } else {
+        firstPart = fullTitle;
+    }
+
     return (
         <Animated.View
             style={[
@@ -39,10 +54,10 @@ export default function AuthHeader({
             </Animated.View>
             <Text style={styles.title} allowFontScaling={false}>
                 <Text style={{ color: "orange" }} allowFontScaling={false}>
-                    {words[0] || ""}
+                    {firstPart}
                 </Text>
                 <Text style={{ color: Colors.primaryDark }} allowFontScaling={false}>
-                    {words[1] ? " " + words[1] : ""}
+                    {secondPart ? (hasSpace ? " " : "") + secondPart : ""}
                 </Text>
             </Text>
             <Text style={styles.subtitle} allowFontScaling={false}>

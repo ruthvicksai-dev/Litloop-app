@@ -67,7 +67,7 @@ export default function SignInScreen() {
                     bounces={false}
                 >
                     <AuthHeader
-                        title="Lit Loop"
+                        title="LitLoop"
                         subtitle="Sign in to your account"
                         fadeAnim={fadeAnim}
                         slideAnim={slideAnim}
