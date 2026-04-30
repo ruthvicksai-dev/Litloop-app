@@ -1,7 +1,7 @@
-import Button from "@/components/ui/Button";
-import ConfirmActionModal from "@/components/ui/ConfirmActionModal";
-import InputField from "@/components/ui/InputField";
-import LoadingOverlay from "@/components/ui/LoadingOverlay";
+import Button from "@/components/ui/core/Button";
+import ConfirmActionModal from "@/components/ui/feedback/ConfirmActionModal";
+import InputField from "@/components/ui/core/InputField";
+import LoadingOverlay from "@/components/ui/feedback/LoadingOverlay";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
@@ -337,6 +337,15 @@ export default function SettingsScreen() {
                         Sign Out
                     </Text>
                 </TouchableOpacity>
+
+                <View style={styles.footer}>
+                    <Text style={styles.footerText} allowFontScaling={false}>
+                        LitLoop v{Constants.expoConfig?.version ?? "1.0.1"}
+                    </Text>
+                    <Text style={styles.footerText} allowFontScaling={false}>
+                        © {new Date().getFullYear()} LitLoop. All rights reserved.
+                    </Text>
+                </View>
             </ScrollView>
 
             <ConfirmActionModal
@@ -611,5 +620,18 @@ const styles = StyleSheet.create({
     },
     confirmDeleteButton: {
         backgroundColor: Colors.error,
+    },
+    footer: {
+        marginTop: Spacing.xl,
+        marginBottom: Spacing.md,
+        alignItems: "center",
+        gap: 4,
+        opacity: 0.8,
+    },
+    footerText: {
+        fontSize: FontSizes.caption,
+        fontFamily: Fonts.medium,
+        color: Colors.textSecondary,
+        letterSpacing: 0.2,
     },
 });

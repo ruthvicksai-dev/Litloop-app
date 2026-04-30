@@ -74,11 +74,22 @@ export default defineSchema({
         rentalId: v.id("rentals"),
         rating: v.number(),
         reviewText: v.optional(v.string()),
+        helpfulCount: v.optional(v.number()),
+        unhelpfulCount: v.optional(v.number()),
         createdAt: v.number(),
     })
         .index("by_bookId", ["bookId"])
         .index("by_userId_bookId", ["userId", "bookId"])
         .index("by_rentalId", ["rentalId"]),
+
+    review_votes: defineTable({
+        userId: v.id("users"),
+        reviewId: v.id("reviews"),
+        voteType: v.union(v.literal("helpful"), v.literal("unhelpful")),
+        createdAt: v.number(),
+    })
+        .index("by_reviewId", ["reviewId"])
+        .index("by_user_review", ["userId", "reviewId"]),
 
     book_series: defineTable({
         name: v.string(),

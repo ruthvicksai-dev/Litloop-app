@@ -1,6 +1,6 @@
 import AppSplash from "@/components/ui/AppSplash";
-import ErrorBoundary from "@/components/ui/ErrorBoundary";
-import { NotificationPermissionModal, useNotificationRationale } from "@/components/ui/NotificationPermissionModal";
+import ErrorBoundary from "@/components/ui/feedback/ErrorBoundary";
+import { NotificationPermissionModal, useNotificationRationale } from "@/components/ui/feedback/NotificationPermissionModal";
 import { Colors } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";

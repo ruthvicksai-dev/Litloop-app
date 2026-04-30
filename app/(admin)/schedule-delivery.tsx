@@ -1,7 +1,7 @@
-import BookLoader from "@/components/ui/BookLoader";
-import Button from "@/components/ui/Button";
-import SlotDatePicker from "@/components/ui/SlotDatePicker";
-import SlotTimePicker from "@/components/ui/SlotTimePicker";
+import BookLoader from "@/components/ui/feedback/BookLoader";
+import Button from "@/components/ui/core/Button";
+import SlotDatePicker from "@/components/ui/pickers/SlotDatePicker";
+import SlotTimePicker from "@/components/ui/pickers/SlotTimePicker";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useScheduleDeliveryScreen } from "@/hooks";

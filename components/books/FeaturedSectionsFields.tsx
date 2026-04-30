@@ -1,4 +1,4 @@
-import InputField from "@/components/ui/InputField";
+import InputField from "@/components/ui/core/InputField";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { Id } from "@/convex/_generated/dataModel";

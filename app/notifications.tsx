@@ -1,7 +1,7 @@
 import { NotificationItem } from "@/components/notifications/NotificationItem";
 import { GuestView } from "@/components/profile/GuestProfileView";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { EmptyState } from "@/components/ui/feedback/EmptyState";
+import { Skeleton } from "@/components/ui/skeletons/Skeleton";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";

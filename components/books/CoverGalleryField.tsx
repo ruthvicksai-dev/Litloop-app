@@ -1,5 +1,5 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/core/Button";
 import { Colors, Spacing } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";

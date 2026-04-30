@@ -1,5 +1,5 @@
-import Button from "@/components/ui/Button";
-import InputField from "@/components/ui/InputField";
+import Button from "@/components/ui/core/Button";
+import InputField from "@/components/ui/core/InputField";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { SERIES_PAGINATION_OPTS } from "@/constants/pagination";
 import { Colors, Spacing } from "@/constants/theme";

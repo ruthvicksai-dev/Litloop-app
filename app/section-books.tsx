@@ -1,6 +1,6 @@
 import BookCard from "@/components/search/BookCard";
-import BookLoader from "@/components/ui/BookLoader";
-import { EmptyState } from "@/components/ui/EmptyState";
+import BookLoader from "@/components/ui/feedback/BookLoader";
+import { EmptyState } from "@/components/ui/feedback/EmptyState";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing } from "@/constants/theme";
 import { api } from "@/convex/_generated/api";

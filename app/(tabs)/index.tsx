@@ -1,6 +1,6 @@
-import DiscoverSectionRow from "@/components/ui/DiscoverSectionRow";
-import { HomeSkeleton } from "@/components/ui/HomeSkeleton";
-import SeriesSectionRow from "@/components/ui/SeriesSectionRow";
+import DiscoverSectionRow from "@/components/ui/cards/DiscoverSectionRow";
+import { HomeSkeleton } from "@/components/ui/skeletons/HomeSkeleton";
+import SeriesSectionRow from "@/components/ui/cards/SeriesSectionRow";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";

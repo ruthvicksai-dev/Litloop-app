@@ -1,4 +1,4 @@
-import InputField from "@/components/ui/InputField";
+import InputField from "@/components/ui/core/InputField";
 import React from "react";
 
 type BookMetadataFieldsProps = {

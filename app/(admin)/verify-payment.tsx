@@ -1,8 +1,11 @@
-import BookLoader from "@/components/ui/BookLoader";
-import Button from "@/components/ui/Button";
+import DetailRow from "@/components/admin/DetailRow";
+import SummaryStat from "@/components/admin/SummaryStat";
+import BookLoader from "@/components/ui/feedback/BookLoader";
+import Button from "@/components/ui/core/Button";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing, scale } from "@/constants/theme";
 import { useVerifyPaymentScreen } from "@/hooks";
+import { formatCurrency, getBookCoverUri } from "@/utils/format";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -19,98 +22,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-type DetailRowProps = {
-    icon: keyof typeof Ionicons.glyphMap;
-    label: string;
-    value?: string | number | null;
-    accent?: boolean;
-};
 
-function DetailRow({ icon, label, value, accent = false }: DetailRowProps) {
-    if (value === undefined || value === null || value === "") {
-        return null;
-    }
-
-    return (
-        <View style={styles.detailRow}>
-            <View style={[styles.detailIconWrap, accent && styles.detailIconWrapAccent]}>
-                <Ionicons
-                    name={icon}
-                    size={16}
-                    color={accent ? Colors.primary : Colors.textSecondary}
-                />
-            </View>
-            <View style={styles.detailTextWrap}>
-                <Text style={styles.detailLabel}>{label}</Text>
-                <Text style={[styles.detailValue, accent && styles.detailValueAccent]}>{value}</Text>
-            </View>
-        </View>
-    );
-}
-
-type SummaryStatProps = {
-    icon: keyof typeof Ionicons.glyphMap;
-    label: string;
-    value: string;
-};
-
-type BookWithOptionalCover = {
-    title?: string;
-    author?: string;
-    coverUrl?: string;
-    coverUrls?: string[];
-};
-
-type CoverCarrier = {
-    coverUrl?: string | null;
-    coverUrls?: string[];
-    book?: BookWithOptionalCover | null;
-};
-
-function SummaryStat({ icon, label, value }: SummaryStatProps) {
-    return (
-        <View style={styles.summaryStat}>
-            <View style={styles.summaryStatIcon}>
-                <Ionicons name={icon} size={12} color={Colors.primary} />
-            </View>
-            <View style={styles.summaryStatText}>
-                <Text
-                    style={styles.summaryStatValue}
-                    numberOfLines={1}
-                    adjustsFontSizeToFit
-                    minimumFontScale={0.9}
-                >
-                    {value}
-                </Text>
-                <Text
-                    style={styles.summaryStatLabel}
-                    numberOfLines={1}
-                    adjustsFontSizeToFit
-                    minimumFontScale={0.9}
-                >
-                    {label}
-                </Text>
-            </View>
-        </View>
-    );
-}
-
-const formatCurrency = (amount?: number | null) => `\u20B9${amount ?? 0}`;
-
-const getBookCoverUri = (value: unknown) => {
-    if (!value || typeof value !== "object") {
-        return null;
-    }
-
-    const candidate = value as CoverCarrier;
-    return (
-        candidate.book?.coverUrl ||
-        candidate.book?.coverUrls?.[0] ||
-        candidate.coverUrl ||
-        candidate.coverUrls?.[0] ||
-        null
-    );
-};
 
 export default function VerifyPaymentScreen() {
     const params = useLocalSearchParams<{ rentalId?: string }>();
@@ -639,43 +551,6 @@ const styles = StyleSheet.create({
         marginTop: Spacing.md,
         gap: Spacing.sm,
     },
-    detailRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: Spacing.sm,
-        paddingHorizontal: Spacing.md,
-        paddingVertical: Spacing.sm + 2,
-        backgroundColor: Colors.background,
-        borderRadius: Layout.borderRadius,
-    },
-    detailIconWrap: {
-        width: scale(34),
-        height: scale(34),
-        borderRadius: scale(12),
-        backgroundColor: Colors.white,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    detailIconWrapAccent: {
-        backgroundColor: `${Colors.primary}12`,
-    },
-    detailTextWrap: {
-        flex: 1,
-    },
-    detailLabel: {
-        fontSize: FontSizes.caption,
-        color: Colors.textSecondary,
-        fontFamily: Fonts.medium,
-        marginBottom: 2,
-    },
-    detailValue: {
-        fontSize: FontSizes.bodyLarge,
-        color: Colors.text,
-        fontFamily: Fonts.bold,
-    },
-    detailValueAccent: {
-        color: Colors.primary,
-    },
     proofCard: {
         backgroundColor: Colors.white,
         borderRadius: Layout.cardRadiusLarge,
@@ -790,45 +665,7 @@ const styles = StyleSheet.create({
         gap: Spacing.xs,
         marginTop: Spacing.md,
     },
-    summaryStat: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: Spacing.xs,
-        backgroundColor: "rgba(255,255,255,0.72)",
-        borderRadius: 999,
-        paddingVertical: Spacing.xs + 2,
-        paddingHorizontal: Spacing.sm,
-        flex: 1,
-        minWidth: 0,
-        minHeight: scale(46),
-    },
-    summaryStatIcon: {
-        width: Layout.badgeInset + scale(10),
-        height: Layout.badgeInset + scale(10),
-        borderRadius: 999,
-        backgroundColor: Colors.white,
-        alignItems: "center",
-        justifyContent: "center",
-        flexShrink: 0,
-    },
-    summaryStatText: {
-        flex: 1,
-        minWidth: 0,
-        justifyContent: "center",
-    },
-    summaryStatValue: {
-        fontSize: FontSizes.body,
-        color: Colors.text,
-        fontFamily: Fonts.bold,
-        lineHeight: scale(16),
-    },
-    summaryStatLabel: {
-        fontSize: FontSizes.tiny,
-        color: Colors.textSecondary,
-        fontFamily: Fonts.medium,
-        marginTop: 1,
-        lineHeight: scale(12),
-    },
+
     paymentCard: {
         backgroundColor: Colors.white,
         borderRadius: Layout.cardRadiusLarge,

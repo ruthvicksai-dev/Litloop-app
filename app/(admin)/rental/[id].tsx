@@ -1,6 +1,6 @@
-import BookLoader from "@/components/ui/BookLoader";
-import Button from "@/components/ui/Button";
-import ConfirmActionModal from "@/components/ui/ConfirmActionModal";
+import BookLoader from "@/components/ui/feedback/BookLoader";
+import Button from "@/components/ui/core/Button";
+import ConfirmActionModal from "@/components/ui/feedback/ConfirmActionModal";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";

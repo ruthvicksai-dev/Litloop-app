@@ -1,6 +1,6 @@
 import { GuestView } from "@/components/profile/GuestProfileView";
-import BookLoader from "@/components/ui/BookLoader";
-import RentalCard from "@/components/ui/RentalCard";
+import BookLoader from "@/components/ui/feedback/BookLoader";
+import RentalCard from "@/components/ui/cards/RentalCard";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";

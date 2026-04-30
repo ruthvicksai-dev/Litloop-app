@@ -4,7 +4,7 @@ import { timeAgo } from "@/utils/date";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { AnimatedPressable } from "../ui/AnimatedPressable";
+import { AnimatedPressable } from "../ui/core/AnimatedPressable";
 
 type NotificationItemProps = {
     item: any;

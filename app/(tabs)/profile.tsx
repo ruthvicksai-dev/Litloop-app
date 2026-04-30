@@ -1,10 +1,10 @@
 import { GuestView } from "@/components/profile/GuestProfileView";
 import { ProfileUserCard } from "@/components/profile/ProfileUserCard";
-import { BookCardSkeleton } from "@/components/ui/BookCardSkeleton";
-import DiscoverSectionRow from "@/components/ui/DiscoverSectionRow";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { SegmentedControl, SegmentOption } from "@/components/ui/SegmentedControl";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { BookCardSkeleton } from "@/components/ui/skeletons/BookCardSkeleton";
+import DiscoverSectionRow from "@/components/ui/cards/DiscoverSectionRow";
+import { EmptyState } from "@/components/ui/feedback/EmptyState";
+import { SegmentedControl, SegmentOption } from "@/components/ui/core/SegmentedControl";
+import { Skeleton } from "@/components/ui/skeletons/Skeleton";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";

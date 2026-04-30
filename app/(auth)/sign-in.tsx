@@ -1,9 +1,9 @@
 import AuthFooter from "@/components/auth/AuthFooter";
 import AuthHeader from "@/components/auth/AuthHeader";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
-import Button from "@/components/ui/Button";
-import InputField from "@/components/ui/InputField";
-import LoadingOverlay from "@/components/ui/LoadingOverlay";
+import Button from "@/components/ui/core/Button";
+import InputField from "@/components/ui/core/InputField";
+import LoadingOverlay from "@/components/ui/feedback/LoadingOverlay";
 import { isGoogleSignInEnabled } from "@/constants/features";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, scale, Spacing } from "@/constants/theme";

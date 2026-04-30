@@ -1,6 +1,6 @@
-import Button from "@/components/ui/Button";
-import InputField from "@/components/ui/InputField";
-import PasswordRequirements from "@/components/ui/PasswordRequirements";
+import Button from "@/components/ui/core/Button";
+import InputField from "@/components/ui/core/InputField";
+import PasswordRequirements from "@/components/ui/auth/PasswordRequirements";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, scale, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";

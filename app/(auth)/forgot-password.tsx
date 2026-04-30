@@ -1,8 +1,8 @@
-import Button from "@/components/ui/Button";
-import InputField from "@/components/ui/InputField";
-import LoadingOverlay from "@/components/ui/LoadingOverlay";
-import OtpCodeInput from "@/components/ui/OtpCodeInput";
-import PasswordRequirements from "@/components/ui/PasswordRequirements";
+import Button from "@/components/ui/core/Button";
+import InputField from "@/components/ui/core/InputField";
+import LoadingOverlay from "@/components/ui/feedback/LoadingOverlay";
+import OtpCodeInput from "@/components/ui/auth/OtpCodeInput";
+import PasswordRequirements from "@/components/ui/auth/PasswordRequirements";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, scale, Spacing } from "@/constants/theme";
 import { useToast } from "@/context/ToastContext";

@@ -1,6 +1,6 @@
 import SearchInput from "@/components/shared/SearchInput";
-import BookCard from "@/components/ui/BookCard";
-import BookLoader from "@/components/ui/BookLoader";
+import BookCard from "@/components/ui/cards/BookCard";
+import BookLoader from "@/components/ui/feedback/BookLoader";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useAdminBooksScreen, useFadeSlideIn } from "@/hooks";

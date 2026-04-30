@@ -1,7 +1,7 @@
 import AdminAnalyticsBars from "@/components/admin/AdminAnalyticsBars";
 import AdminDonutChart from "@/components/admin/AdminDonutChart";
 import AdminStackedBarChart from "@/components/admin/AdminStackedBarChart";
-import BookLoader from "@/components/ui/BookLoader";
+import BookLoader from "@/components/ui/feedback/BookLoader";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { RENTALS_PAGINATION_OPTS } from "@/constants/pagination";
 import { Colors, Spacing } from "@/constants/theme";
@@ -13,6 +13,7 @@ import {
     getMonthOptions,
     getRevenueMetricsForMonth,
 } from "@/utils/adminRevenueAnalytics";
+import { formatCurrency } from "@/utils/format";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";
@@ -20,10 +21,6 @@ import React, { useMemo, useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("en-IN", {
-        maximumFractionDigits: 0,
-    }).format(value);
 
 export default function AdminRevenueScreen() {
     const router = useRouter();

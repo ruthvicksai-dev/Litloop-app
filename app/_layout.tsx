@@ -1,5 +1,5 @@
 import AppGate from "@/components/AppGate";
-import { OfflineBanner } from "@/components/ui/OfflineBanner";
+import { OfflineBanner } from "@/components/ui/feedback/OfflineBanner";
 import { AuthProvider } from "@/context/AuthContext";
 import { NetworkProvider } from "@/context/NetworkContext";
 import { ToastProvider } from "@/context/ToastContext";

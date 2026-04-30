@@ -3,7 +3,7 @@ import AdminDonutChart from "@/components/admin/AdminDonutChart";
 import AdminLineChart from "@/components/admin/AdminLineChart";
 import StatCard from "@/components/admin/StatCard";
 import AdminVerticalBarChart from "@/components/admin/AdminVerticalBarChart";
-import BookLoader from "@/components/ui/BookLoader";
+import BookLoader from "@/components/ui/feedback/BookLoader";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { api } from "@/convex/_generated/api";

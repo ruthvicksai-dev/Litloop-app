@@ -1,5 +1,5 @@
-import Button from "@/components/ui/Button";
-import InputField from "@/components/ui/InputField";
+import Button from "@/components/ui/core/Button";
+import InputField from "@/components/ui/core/InputField";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing, ZONES } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";

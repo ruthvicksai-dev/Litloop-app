@@ -1,5 +1,5 @@
 import BookCard from "@/components/search/BookCard";
-import BookLoader from "@/components/ui/BookLoader";
+import BookLoader from "@/components/ui/feedback/BookLoader";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing, scale } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";

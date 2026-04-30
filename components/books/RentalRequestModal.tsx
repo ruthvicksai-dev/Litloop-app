@@ -1,8 +1,8 @@
 import RentalRequestForm from "@/components/rental/RentalRequestForm";
 import { GuestView } from "@/components/profile/GuestProfileView";
-import BookLoader from "@/components/ui/BookLoader";
-import ConfirmActionModal from "@/components/ui/ConfirmActionModal";
-import MapLocationPicker from "@/components/ui/MapLocationPicker";
+import BookLoader from "@/components/ui/feedback/BookLoader";
+import ConfirmActionModal from "@/components/ui/feedback/ConfirmActionModal";
+import MapLocationPicker from "@/components/ui/pickers/MapLocationPicker";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, FEATURE_FLAGS } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
