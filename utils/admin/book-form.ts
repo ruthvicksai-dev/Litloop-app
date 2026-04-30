@@ -1,4 +1,4 @@
-import type { BookMetadataExtended } from "@/utils/bookMetadataExtended";
+import type { BookMetadataExtended } from "../book/metadata";
 
 export type ParsedBookNumericFields = {
     rentPerDay: number;

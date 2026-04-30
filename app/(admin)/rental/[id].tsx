@@ -6,7 +6,7 @@ import { Colors } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { triggerHaptic } from "@/utils/haptics";
+import { triggerHaptic } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery } from "convex/react";
 import { useLocalSearchParams, useRouter } from "expo-router";

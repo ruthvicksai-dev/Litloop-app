@@ -1,7 +1,7 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, scale, Spacing } from "@/constants/theme";
 import { useFavorites, useReadLater } from "@/hooks";
-import { triggerHaptic } from "@/utils/haptics";
+import { triggerHaptic } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";

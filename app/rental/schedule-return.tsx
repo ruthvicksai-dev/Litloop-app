@@ -10,13 +10,15 @@ import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useToast } from "@/context/ToastContext";
 import { useScheduleReturnScreen } from "@/hooks";
-import { getReliableCurrentLocation } from "@/utils/currentLocation";
-import {
+import { 
+    getReliableCurrentLocation,
     ALLOWED_AREAS,
     resolveDeliveryAreaFromLocation,
     validateDeliveryAreaSelection,
-} from "@/utils/areaUtils";
-import { formatDateString, getValidDates, getValidTimeSlots } from "@/utils/timeSlots";
+    formatDateString,
+    getValidDates,
+    getValidTimeSlots 
+} from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useLocalSearchParams, useRouter } from "expo-router";

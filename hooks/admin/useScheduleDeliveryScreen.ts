@@ -2,7 +2,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { TIME_SLOTS } from "@/utils/timeSlots";
+import { TIME_SLOTS } from "@/utils";
 import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import { useState } from "react";

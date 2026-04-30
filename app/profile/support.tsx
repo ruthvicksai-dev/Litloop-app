@@ -1,7 +1,7 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing } from "@/constants/theme";
 import { useToast } from "@/context/ToastContext";
-import { triggerHaptic } from "@/utils/haptics";
+import { triggerHaptic } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";

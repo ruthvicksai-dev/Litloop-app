@@ -8,10 +8,9 @@ import { Skeleton } from "@/components/ui/skeletons/Skeleton";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
-import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { useFadeSlideScaleIn, useProfileTabs } from "@/hooks";
-import { triggerHaptic } from "@/utils/haptics";
+import { triggerHaptic } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";
@@ -37,8 +36,7 @@ const TAB_OPTIONS: SegmentOption[] = [
 
 
 export default function ProfileScreen() {
-    const { user, signOut, isAdmin, accessToken, isLoading } = useAuth();
-    const { showToast } = useToast();
+    const { user, isAdmin, accessToken, isLoading } = useAuth();
     const router = useRouter();
     const { fadeAnim, slideAnim, scaleAnim } = useFadeSlideScaleIn();
     const [refreshing, setRefreshing] = useState(false);

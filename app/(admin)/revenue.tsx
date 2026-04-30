@@ -12,8 +12,8 @@ import {
     getCurrentMonthKey,
     getMonthOptions,
     getRevenueMetricsForMonth,
-} from "@/utils/adminRevenueAnalytics";
-import { formatCurrency } from "@/utils/format";
+    formatCurrency,
+} from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";

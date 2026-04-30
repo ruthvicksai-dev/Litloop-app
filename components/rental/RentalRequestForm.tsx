@@ -18,7 +18,7 @@ import {
     View,
 } from "react-native";
 
-import { DELIVERY_AREA_GROUPS } from "@/utils/areaUtils";
+import { DELIVERY_AREA_GROUPS } from "@/utils";
 
 interface RentalRequestFormProps {
     fadeAnim: Animated.Value;

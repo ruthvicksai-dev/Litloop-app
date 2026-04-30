@@ -5,7 +5,7 @@ import Button from "@/components/ui/core/Button";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing, scale } from "@/constants/theme";
 import { useVerifyPaymentScreen } from "@/hooks";
-import { formatCurrency, getBookCoverUri } from "@/utils/format";
+import { formatCurrency, getBookCoverUri } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";

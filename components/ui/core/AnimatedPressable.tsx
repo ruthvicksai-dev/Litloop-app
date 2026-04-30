@@ -1,4 +1,4 @@
-import { triggerHaptic } from "@/utils/haptics";
+import { triggerHaptic } from "@/utils";
 import React, { useRef } from "react";
 import { Animated, GestureResponderEvent, Pressable, PressableProps, StyleProp, ViewStyle } from "react-native";
 

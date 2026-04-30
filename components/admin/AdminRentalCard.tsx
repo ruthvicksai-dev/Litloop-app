@@ -1,6 +1,6 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, RENTAL_STATUS_LABELS, scale, STATUS_COLORS } from "@/constants/theme";
-import { triggerHaptic } from "@/utils/haptics";
+import { triggerHaptic } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";

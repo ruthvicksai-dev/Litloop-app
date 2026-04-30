@@ -2,7 +2,7 @@ import Button from "@/components/ui/core/Button";
 import InputField from "@/components/ui/core/InputField";
 import PasswordRequirements from "@/components/ui/auth/PasswordRequirements";
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Layout, scale, Spacing } from "@/constants/theme";
+import { Colors, Layout, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";

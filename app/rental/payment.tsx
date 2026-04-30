@@ -7,7 +7,7 @@ import { Colors, scale, Spacing } from "@/constants/theme";
 import { useToast } from "@/context/ToastContext";
 import { usePaymentScreen } from "@/hooks";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
-import { buildUpiUri, UPI_ID } from "@/utils/payment";
+import { buildUpiUri, UPI_ID } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";

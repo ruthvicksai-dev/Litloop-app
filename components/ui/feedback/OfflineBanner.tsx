@@ -51,7 +51,7 @@ export function OfflineBanner({ type = "banner" }: OfflineBannerProps) {
         } else {
             fadeAnim.setValue(0);
         }
-    }, [isOnline, type]);
+    }, [isOnline, type, fadeAnim, pulseAnim]);
 
     // Slide animation for banner mode
     useEffect(() => {
@@ -106,7 +106,7 @@ export function OfflineBanner({ type = "banner" }: OfflineBannerProps) {
                         Oops! No Connection
                     </Text>
                     <Text style={styles.subtitle} allowFontScaling={false}>
-                        It seems you're offline. Please check your Wi-Fi or mobile network to continue browsing the library.
+                        It seems you&apos;re offline. Please check your Wi-Fi or mobile network to continue browsing the library.
                     </Text>
 
                     <TouchableOpacity

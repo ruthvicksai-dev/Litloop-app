@@ -5,7 +5,7 @@ import { Colors, Layout, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
-import { getPhoneValidationError, normalizePhoneNumber } from "@/utils/phone";
+import { getPhoneValidationError, normalizePhoneNumber } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation } from "convex/react";
 import { useRouter } from "expo-router";

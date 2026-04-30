@@ -8,7 +8,7 @@ import { Colors, Layout, scale, Spacing } from "@/constants/theme";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
-import { maskEmail } from "@/utils/mask";
+import { maskEmail } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation } from "convex/react";
 import { useRouter } from "expo-router";

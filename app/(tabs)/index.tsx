@@ -6,7 +6,7 @@ import { Colors, Layout, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";
 import { useDiscoverSections, useHomeEntrance } from "@/hooks";
-import { triggerHaptic } from "@/utils/haptics";
+import { triggerHaptic } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";

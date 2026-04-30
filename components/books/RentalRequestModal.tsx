@@ -8,11 +8,11 @@ import { Colors, FEATURE_FLAGS } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { useFadeSlideIn, useRequestRentalScreen } from "@/hooks";
-import { getReliableCurrentLocation } from "@/utils/currentLocation";
-import {
+import { 
+    getReliableCurrentLocation,
     resolveDeliveryAreaFromLocation,
     validateDeliveryAreaSelection,
-} from "@/utils/areaUtils";
+} from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import React, { useState } from "react";

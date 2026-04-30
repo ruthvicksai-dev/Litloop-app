@@ -1,6 +1,6 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
-import { formatDateString } from "@/utils/timeSlots";
+import { formatDateString } from "@/utils";
 import React from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 

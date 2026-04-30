@@ -1,48 +1,19 @@
 import { MAIN_GENRES } from "@/constants/mainGenres";
+import { sanitizeFetchedDescription } from "@/utils/book/display";
 
 const MAX_MAIN_GENRES = 3;
-
-type GoogleBooksItem = {
-    volumeInfo?: {
-        authors?: string[];
-        categories?: string[];
-        description?: string;
-        publishedDate?: string;
-        imageLinks?: {
-            extraLarge?: string;
-            large?: string;
-            medium?: string;
-            small?: string;
-            thumbnail?: string;
-            smallThumbnail?: string;
-        };
-        industryIdentifiers?: Array<{
-            type: string;
-            identifier: string;
-        }>;
-    };
-};
-
-type GoogleBooksResponse = {
-    items?: GoogleBooksItem[];
-};
-
-type OpenLibraryDoc = {
-    author_name?: string[];
-    first_sentence?: string | { value?: string } | Array<string | { value?: string }>;
-    isbn?: string[];
-    subject?: string[];
-};
-
-type OpenLibraryResponse = {
-    docs?: OpenLibraryDoc[];
-};
 
 export type BookMetadata = {
     author: string;
     description: string;
     genres: string[];
     publishedYear: string;
+};
+
+export type BookMetadataExtended = BookMetadata & {
+    publisher?: string;
+    pageCount?: number;
+    descriptionRejectedReason?: string;
 };
 
 const GENRE_LOOKUP = new Map(
@@ -85,14 +56,6 @@ const GENRE_ALIASES: Array<{ match: string; genre: string }> = [
     { match: "marketing", genre: "Business" },
     { match: "psychology", genre: "Psychology" },
 ];
-
-function toTitleCase(value: string) {
-    return value
-        .split(" ")
-        .filter(Boolean)
-        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-        .join(" ");
-}
 
 function cleanGenrePart(value: string) {
     return value
@@ -143,109 +106,76 @@ export function extractMainGenres(rawGenres: string[]) {
     return Array.from(normalized).slice(0, MAX_MAIN_GENRES);
 }
 
-function getGoogleBookInfo(data: GoogleBooksResponse) {
-    return data.items?.[0]?.volumeInfo;
-}
-
-function getOpenLibraryFirstSentence(
-    value?: OpenLibraryDoc["first_sentence"]
-) {
-    if (!value) {
-        return "";
-    }
-
-    if (typeof value === "string") {
-        return value;
-    }
-
-    if (Array.isArray(value)) {
-        const first = value[0];
-        if (!first) {
-            return "";
-        }
-        return typeof first === "string" ? first : first.value || "";
-    }
-
-    return value.value || "";
-}
-
 function getPublishedYear(value?: string) {
-    if (!value) {
-        return "";
-    }
-
+    if (!value) return "";
     const match = value.match(/\b\d{4}\b/);
     return match?.[0] || value;
 }
 
+// Internal Fetchers
 async function fetchGoogleBooks(title: string, author?: string) {
     const titleQuery = encodeURIComponent(title.trim());
-    const authorQuery = author?.trim()
-        ? `+inauthor:${encodeURIComponent(author.trim())}`
-        : "";
+    const authorQuery = author?.trim() ? `+inauthor:${encodeURIComponent(author.trim())}` : "";
     const response = await fetch(
         `https://www.googleapis.com/books/v1/volumes?q=intitle:${titleQuery}${authorQuery}`
     );
-
-    if (!response.ok) {
-        throw new Error("Google Books request failed.");
-    }
-
-    return (await response.json()) as GoogleBooksResponse;
+    if (!response.ok) throw new Error("Google Books request failed.");
+    return await response.json();
 }
 
-async function fetchOpenLibrary(title: string) {
-    const response = await fetch(
-        `https://openlibrary.org/search.json?title=${encodeURIComponent(title.trim())}`
-    );
-
-    if (!response.ok) {
-        throw new Error("OpenLibrary request failed.");
-    }
-
-    return (await response.json()) as OpenLibraryResponse;
+async function fetchOpenLibrary(title: string, author?: string) {
+    const titleQuery = `title=${encodeURIComponent(title.trim())}`;
+    const authorQuery = author?.trim() ? `&author=${encodeURIComponent(author.trim())}` : "";
+    const response = await fetch(`https://openlibrary.org/search.json?${titleQuery}${authorQuery}`);
+    if (!response.ok) throw new Error("OpenLibrary request failed.");
+    return await response.json();
 }
 
 export async function fetchBookMetadata(title: string, author?: string): Promise<BookMetadata> {
-    if (!title.trim()) {
-        throw new Error("Title is required to fetch book info.");
-    }
+    if (!title.trim()) throw new Error("Title is required.");
 
     const googleData = await fetchGoogleBooks(title, author);
-    const googleBookInfo = getGoogleBookInfo(googleData);
+    const googleBookInfo = googleData.items?.[0]?.volumeInfo;
 
-    const googleDescription = cleanDescriptionText(googleBookInfo?.description || "");
-    const googleGenres = extractMainGenres(googleBookInfo?.categories || []);
-    const googleAuthor = googleBookInfo?.authors?.[0]?.trim() || "";
+    const description = cleanDescriptionText(googleBookInfo?.description || "");
+    const genres = extractMainGenres(googleBookInfo?.categories || []);
+    const normalizedAuthor = googleBookInfo?.authors?.[0]?.trim() || "";
     const publishedYear = getPublishedYear(googleBookInfo?.publishedDate);
 
-    let description = googleDescription;
-    let genres = googleGenres;
-    let normalizedAuthor = googleAuthor;
-
     if (!description || genres.length === 0) {
-        const openLibraryData = await fetchOpenLibrary(title);
+        const openLibraryData = await fetchOpenLibrary(title, author);
         const openLibraryDoc = openLibraryData.docs?.[0];
 
-        if (!description) {
-            description = cleanDescriptionText(
-                getOpenLibraryFirstSentence(openLibraryDoc?.first_sentence)
-            );
-        }
-
-        if (genres.length === 0) {
-            genres = extractMainGenres(openLibraryDoc?.subject || []);
-        }
-
-        if (!normalizedAuthor) {
-            normalizedAuthor = openLibraryDoc?.author_name?.[0]?.trim() || "";
-        }
+        return {
+            author: normalizedAuthor || openLibraryDoc?.author_name?.[0]?.trim() || "",
+            description: description || cleanDescriptionText(openLibraryDoc?.first_sentence || ""),
+            genres: genres.length > 0 ? genres : extractMainGenres(openLibraryDoc?.subject || []),
+            publishedYear: publishedYear || String(openLibraryDoc?.first_publish_year || ""),
+        };
     }
 
+    return { author: normalizedAuthor, description, genres, publishedYear };
+}
+
+export async function fetchBookMetadataExtended(
+    title: string,
+    author?: string
+): Promise<BookMetadataExtended> {
+    const base = await fetchBookMetadata(title, author);
+    const safeDescriptionResult = sanitizeFetchedDescription(base.description);
+
+    // Fetch extra info from Google if needed (usually already there in the first call, but we keep the logic split for clarity)
+    const googleData = await fetchGoogleBooks(title, author);
+    const info = googleData.items?.[0]?.volumeInfo;
+
+    const publisher = info?.publisher?.trim() || "";
+    const pageCount = typeof info?.pageCount === "number" ? info.pageCount : undefined;
+
     return {
-        author: normalizedAuthor,
-        description,
-        genres,
-        publishedYear,
+        ...base,
+        description: safeDescriptionResult.description,
+        descriptionRejectedReason: safeDescriptionResult.rejectedReason,
+        publisher: publisher || undefined,
+        pageCount,
     };
 }

@@ -7,7 +7,7 @@ import { Colors, Layout, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
-import { triggerHaptic } from "@/utils/haptics";
+import { triggerHaptic } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation } from "convex/react";
 import Constants from "expo-constants";

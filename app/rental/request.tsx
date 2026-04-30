@@ -8,18 +8,17 @@ import { Colors } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { useFadeSlideIn, useRequestRentalScreen } from "@/hooks";
-import { getReliableCurrentLocation } from "@/utils/currentLocation";
+import { 
+    getReliableCurrentLocation,
+    resolveDeliveryAreaFromLocation,
+    validateDeliveryAreaSelection,
+} from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-import {
-    resolveDeliveryAreaFromLocation,
-    validateDeliveryAreaSelection,
-} from "@/utils/areaUtils";
 
 export default function RequestRentalScreen() {
     const { bookId } = useLocalSearchParams<{ bookId: string }>();

@@ -9,7 +9,7 @@ import { Colors, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";
 import { useAdminDashboard, useFadeSlideIn } from "@/hooks";
-import { triggerHaptic } from "@/utils/haptics";
+import { triggerHaptic } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";

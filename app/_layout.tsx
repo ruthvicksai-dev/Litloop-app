@@ -10,6 +10,7 @@ import * as SplashScreen from "expo-splash-screen";
 import * as SystemUI from "expo-system-ui";
 import React, { useEffect } from "react";
 import { Platform, View } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 const shouldSuppressConvexLog = (args: unknown[]) => {
   const message = args
@@ -66,10 +67,12 @@ export default function RootLayout() {
   const customizeSystemUI = async () => {
   try {
     if (Platform.OS === "android") {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const Constants = require("expo-constants").default;
       const isExpoGo = Constants?.executionEnvironment === "storeClient";
 
       if (!isExpoGo) {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const NavigationBar = require("expo-navigation-bar");
 
         await NavigationBar.setButtonStyleAsync("light");
@@ -88,17 +91,19 @@ export default function RootLayout() {
 
 
   return (
-    <View style={{ flex: 1, backgroundColor: Colors.background }}>
-      <ConvexProvider client={convex}>
-        <NetworkProvider>
-          <AuthProvider>
-            <ToastProvider>
-              <OfflineBanner type="fullscreen" />
-              <AppGate fontsLoaded={fontsLoaded} />
-            </ToastProvider>
-          </AuthProvider>
-        </NetworkProvider>
-      </ConvexProvider>
-    </View>
+    <SafeAreaProvider>
+      <View style={{ flex: 1, backgroundColor: Colors.background }}>
+        <ConvexProvider client={convex}>
+          <NetworkProvider>
+            <AuthProvider>
+              <ToastProvider>
+                <OfflineBanner type="fullscreen" />
+                <AppGate fontsLoaded={fontsLoaded} />
+              </ToastProvider>
+            </AuthProvider>
+          </NetworkProvider>
+        </ConvexProvider>
+      </View>
+    </SafeAreaProvider>
   );
 }

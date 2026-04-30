@@ -2,7 +2,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { formatMonthLabel, getCurrentMonthKey, getRevenueMetricsForMonth } from "@/utils/adminRevenueAnalytics";
+import { formatMonthLabel, getCurrentMonthKey, getRevenueMetricsForMonth } from "@/utils";
 import { useMutation, useQuery } from "convex/react";
 import { useMemo, useState } from "react";
 

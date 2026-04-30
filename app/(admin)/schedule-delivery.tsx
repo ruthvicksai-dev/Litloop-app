@@ -5,7 +5,7 @@ import SlotTimePicker from "@/components/ui/pickers/SlotTimePicker";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useScheduleDeliveryScreen } from "@/hooks";
-import { formatDateString, getValidDates, getValidTimeSlots } from "@/utils/timeSlots";
+import { formatDateString, getValidDates, getValidTimeSlots } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";

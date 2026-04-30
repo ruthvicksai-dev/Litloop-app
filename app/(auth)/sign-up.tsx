@@ -9,7 +9,7 @@ import { Colors, Layout, scale, Spacing } from "@/constants/theme";
 import { useToast } from "@/context/ToastContext";
 import { useAuthRedirect, useFadeSlideScaleIn, useSignUpScreen } from "@/hooks";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
-import { maskEmail } from "@/utils/mask";
+import { maskEmail } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
