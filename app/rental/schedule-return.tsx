@@ -1,5 +1,7 @@
 import BookLoader from "@/components/ui/BookLoader";
 import Button from "@/components/ui/Button";
+import ConfirmActionModal from "@/components/ui/ConfirmActionModal";
+import DropdownField from "@/components/ui/DropdownField";
 import InputField from "@/components/ui/InputField";
 import MapLocationPicker from "@/components/ui/MapLocationPicker";
 import SlotDatePicker from "@/components/ui/SlotDatePicker";
@@ -8,6 +10,12 @@ import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useToast } from "@/context/ToastContext";
 import { useScheduleReturnScreen } from "@/hooks";
+import { getReliableCurrentLocation } from "@/utils/currentLocation";
+import {
+    ALLOWED_AREAS,
+    resolveDeliveryAreaFromLocation,
+    validateDeliveryAreaSelection,
+} from "@/utils/areaUtils";
 import { formatDateString, getValidDates, getValidTimeSlots } from "@/utils/timeSlots";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
@@ -59,12 +67,21 @@ export default function ScheduleReturnScreen() {
         setRollNo,
         setLatitude,
         setLongitude,
+        area,
+        setArea,
         latitude,
         longitude,
         formattedAddress,
         setFormattedAddress,
     } = useScheduleReturnScreen(rentalId);
     const [isMapPickerVisible, setIsMapPickerVisible] = React.useState(false);
+    const [mismatchModalVisible, setMismatchModalVisible] = React.useState(false);
+    const [mismatchConfig, setMismatchConfig] = React.useState({
+        title: "",
+        message: "",
+        confirmLabel: "",
+        onConfirm: () => { },
+    });
 
     const updateAddressFromCoords = async (nextLatitude: number, nextLongitude: number) => {
         setLatitude(nextLatitude);
@@ -77,12 +94,120 @@ export default function ScheduleReturnScreen() {
 
         if (address && address.length > 0) {
             const addr = address[0];
-            setFormattedAddress(
-                [addr.name, addr.street, addr.district, addr.city, addr.region, addr.postalCode]
-                    .filter(Boolean)
-                    .join(", ")
-            );
+            const fullAddress = [addr.name, addr.street, addr.district, addr.city, addr.region, addr.postalCode]
+                .filter(Boolean)
+                .join(", ");
+            setFormattedAddress(fullAddress);
+
+            const detectedArea = resolveDeliveryAreaFromLocation({
+                formattedAddress: fullAddress,
+                latitude: nextLatitude,
+                longitude: nextLongitude,
+            })?.area;
+            if (detectedArea) {
+                if (area && area !== detectedArea.name) {
+                    setMismatchConfig({
+                        title: "Location Mismatch",
+                        message: `We detected your location as ${detectedArea.name}, but you selected ${area}.`,
+                        confirmLabel: `Change to ${detectedArea.name}`,
+                        onConfirm: () => {
+                            setArea(detectedArea.name);
+                            setMismatchModalVisible(false);
+                        }
+                    });
+                    setMismatchModalVisible(true);
+                } else if (!area) {
+                    setArea(detectedArea.name);
+                }
+            } else if (area) {
+                setMismatchConfig({
+                    title: "Location Mismatch",
+                    message: "Your current location does not match the selected pickup area.",
+                    confirmLabel: "Change Area",
+                    onConfirm: () => {
+                        setArea("");
+                        setMismatchModalVisible(false);
+                    }
+                });
+                setMismatchModalVisible(true);
+            }
         }
+    };
+
+    const handleAreaChange = (nextArea: string) => {
+        setArea(nextArea);
+
+        if (!formattedAddress.trim() && (latitude === undefined || longitude === undefined)) {
+            return;
+        }
+
+        const validation = validateDeliveryAreaSelection({
+            selectedArea: nextArea,
+            formattedAddress,
+            latitude,
+            longitude,
+        });
+        if (!validation.isValid && validation.reason !== "missing_location") {
+            setMismatchConfig({
+                title: "Location Mismatch",
+                message:
+                    validation.reason === "address_mismatch" && validation.detectedArea
+                        ? `We detected your location as ${validation.detectedArea.name}, but you selected ${nextArea}.`
+                        : "Your current location does not match the selected pickup area.",
+                confirmLabel: "Change Area",
+                onConfirm: () => {
+                    setArea("");
+                    setMismatchModalVisible(false);
+                }
+            });
+            setMismatchModalVisible(true);
+        }
+    };
+
+    const handleSubmitPickup = async () => {
+        if (!useSameAddress && rental?.zone === "Home") {
+            const validation = validateDeliveryAreaSelection({
+                selectedArea: area,
+                formattedAddress,
+                latitude,
+                longitude,
+            });
+
+            if (!validation.isValid) {
+                if (validation.reason === "address_mismatch" && validation.detectedArea) {
+                    setMismatchConfig({
+                        title: "Location Mismatch",
+                        message: `We detected your location as ${validation.detectedArea.name}, but you selected ${area}.`,
+                        confirmLabel: `Change to ${validation.detectedArea.name}`,
+                        onConfirm: () => {
+                            setArea(validation.detectedArea!.name);
+                            setMismatchModalVisible(false);
+                        },
+                    });
+                } else {
+                    setMismatchConfig({
+                        title: "Location Mismatch",
+                        message: "Your current location does not match the selected pickup area.",
+                        confirmLabel: "Change Area",
+                        onConfirm: () => {
+                            setArea("");
+                            setMismatchModalVisible(false);
+                        },
+                    });
+                }
+
+                setMismatchModalVisible(true);
+                showToast(
+                    validation.reason === "missing_location"
+                        ? "Please use your current location to verify the pickup area."
+                        : "Your current location does not match the selected pickup area.",
+                    "error"
+                );
+                return;
+            }
+        }
+
+        await handleSchedule();
     };
 
     const availableDates = React.useMemo(() => {
@@ -238,17 +363,22 @@ export default function ScheduleReturnScreen() {
                                         <TouchableOpacity
                                             style={styles.locationBtn}
                                             onPress={async () => {
-                                                let { status } = await Location.requestForegroundPermissionsAsync();
-                                                if (status !== "granted") {
-                                                    showToast("Permission to access location was denied", "error");
-                                                    return;
+                                                try {
+                                                    const location = await getReliableCurrentLocation();
+
+                                                    await updateAddressFromCoords(
+                                                        location.coords.latitude,
+                                                        location.coords.longitude
+                                                    );
+                                                    showToast("Location updated!", "success");
+                                                } catch (error) {
+                                                    showToast(
+                                                        error instanceof Error
+                                                            ? error.message
+                                                            : "Failed to fetch location. Please try again.",
+                                                        "error"
+                                                    );
                                                 }
-                                                let location = await Location.getCurrentPositionAsync({});
-                                                await updateAddressFromCoords(
-                                                    location.coords.latitude,
-                                                    location.coords.longitude
-                                                );
-                                                showToast("Location updated!", "success");
                                             }}
                                         >
                                             <View style={styles.locationBtnContent}>
@@ -276,6 +406,13 @@ export default function ScheduleReturnScreen() {
                                                 ) : null}
                                             </View>
                                         ) : null}
+                                        <DropdownField
+                                            label="Pickup Area"
+                                            value={area}
+                                            options={ALLOWED_AREAS}
+                                            onSelect={handleAreaChange}
+                                            placeholder="Select a pickup area"
+                                        />
                                         <InputField
                                             label="Landmark / Area"
                                             placeholder="e.g. Near Temple"
@@ -351,7 +488,7 @@ export default function ScheduleReturnScreen() {
 
                         <Button
                             title="Schedule Pickup"
-                            onPress={handleSchedule}
+                            onPress={handleSubmitPickup}
                             loading={loading}
                             style={{ marginTop: Spacing.md }}
                         />
@@ -378,6 +515,16 @@ export default function ScheduleReturnScreen() {
                     }}
                 />
             ) : null}
+            <ConfirmActionModal
+                visible={mismatchModalVisible}
+                title={mismatchConfig.title}
+                message={mismatchConfig.message}
+                confirmLabel={mismatchConfig.confirmLabel}
+                cancelLabel="Keep Selected Area"
+                stackActions
+                onConfirm={mismatchConfig.onConfirm}
+                onCancel={() => setMismatchModalVisible(false)}
+            />
         </SafeAreaView>
     );
 }

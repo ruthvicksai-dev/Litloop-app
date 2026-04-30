@@ -3,7 +3,7 @@ import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Modal, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
 type ConfirmActionModalProps = {
     visible: boolean;
@@ -15,6 +15,7 @@ type ConfirmActionModalProps = {
     onCancel: () => void;
     tone?: "default" | "danger";
     loading?: boolean;
+    stackActions?: boolean;
 };
 
 export default function ConfirmActionModal({
@@ -27,8 +28,11 @@ export default function ConfirmActionModal({
     onCancel,
     tone = "default",
     loading = false,
+    stackActions = false,
 }: ConfirmActionModalProps) {
     const isDanger = tone === "danger";
+    const { width } = useWindowDimensions();
+    const shouldStackActions = stackActions || width < 390;
 
     return (
         <Modal
@@ -54,22 +58,28 @@ export default function ConfirmActionModal({
                     </View>
                     <Text style={styles.title}>{title}</Text>
                     <Text style={styles.message}>{message}</Text>
-                    <View style={styles.actions}>
-                        <Button
-                            title={cancelLabel}
-                            onPress={onCancel}
-                            variant="outline"
-                            style={styles.button}
-                        />
-                        <Button
-                            title={confirmLabel}
-                            onPress={onConfirm}
-                            loading={loading}
-                            style={[
-                                styles.button,
-                                isDanger && styles.confirmDanger,
-                            ]}
-                        />
+                    <View style={[styles.actions, shouldStackActions && styles.actionsStacked]}>
+                        <View style={[styles.buttonWrap, shouldStackActions && styles.buttonWrapStacked]}>
+                            <Button
+                                title={cancelLabel}
+                                onPress={onCancel}
+                                variant="outline"
+                                containerStyle={styles.buttonContainer}
+                                style={styles.button}
+                            />
+                        </View>
+                        <View style={[styles.buttonWrap, shouldStackActions && styles.buttonWrapStacked]}>
+                            <Button
+                                title={confirmLabel}
+                                onPress={onConfirm}
+                                loading={loading}
+                                containerStyle={styles.buttonContainer}
+                                style={[
+                                    styles.button,
+                                    isDanger && styles.confirmDanger,
+                                ]}
+                            />
+                        </View>
                     </View>
                 </View>
             </View>
@@ -123,8 +133,22 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         gap: Spacing.sm,
     },
-    button: {
+    actionsStacked: {
+        flexDirection: "column",
+    },
+    buttonWrap: {
         flex: 1,
+    },
+    buttonWrapStacked: {
+        width: "100%",
+        flex: 0,
+    },
+    button: {
+        width: "100%",
+    },
+    buttonContainer: {
+        width: "100%",
+        alignSelf: "stretch",
     },
     confirmDanger: {
         backgroundColor: Colors.error,

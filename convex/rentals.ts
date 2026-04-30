@@ -1,5 +1,10 @@
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
+import {
+    ALLOWED_AREAS,
+    getDeliveryAreaByName,
+    validateDeliveryAreaSelection,
+} from "../utils/areaUtils";
 import { internal } from "./_generated/api";
 import { internalMutation, mutation, query } from "./_generated/server";
 import { recordRentalCreated, recordUserActivity } from "./analytics";
@@ -97,6 +102,27 @@ export const requestRental = mutation({
         // H1: DB-backed rate limit
         const rentalRequestKey = buildRateLimitKey("rental", "request", userId, args.ipAddress);
         await assertRateLimit(ctx, rentalRequestKey, RENTAL_RATE_LIMITS.requestRental);
+
+        if (args.zone === "Home") {
+            const selectedArea = args.deliveryLocation.area?.trim() ?? "";
+            if (!selectedArea) {
+                throw new Error("Please select a delivery area.");
+            }
+            if (!(ALLOWED_AREAS as readonly string[]).includes(selectedArea) || !getDeliveryAreaByName(selectedArea)) {
+                throw new Error("Service not available in your area. Please select a valid delivery area in Guntur.");
+            }
+
+            const areaValidation = validateDeliveryAreaSelection({
+                selectedArea,
+                formattedAddress: args.deliveryLocation.formattedAddress,
+                latitude: args.deliveryLocation.latitude,
+                longitude: args.deliveryLocation.longitude,
+            });
+
+            if (!areaValidation.isValid) {
+                throw new Error(areaValidation.message);
+            }
+        }
 
         const book = await ctx.db.get(args.bookId);
         if (!book) throw new Error("Book not found.");
@@ -293,6 +319,27 @@ export const schedulePickup = mutation({
 
         if (rental.userId !== user._id && user.role !== "admin") {
             throw new Error("Unauthorized");
+        }
+
+        if (args.pickupLocation && rental.zone === "Home") {
+            const selectedArea = args.pickupLocation.area?.trim() ?? "";
+            if (!selectedArea) {
+                throw new Error("Please select your pickup area.");
+            }
+            if (!(ALLOWED_AREAS as readonly string[]).includes(selectedArea) || !getDeliveryAreaByName(selectedArea)) {
+                throw new Error("Service not available in your area. Please select a valid delivery area in Guntur.");
+            }
+
+            const areaValidation = validateDeliveryAreaSelection({
+                selectedArea,
+                formattedAddress: args.pickupLocation.formattedAddress,
+                latitude: args.pickupLocation.latitude,
+                longitude: args.pickupLocation.longitude,
+            });
+
+            if (!areaValidation.isValid) {
+                throw new Error(areaValidation.message);
+            }
         }
 
         if (rental.status !== "delivered")

@@ -1,7 +1,7 @@
 import { FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import React, { createContext, ReactNode, useCallback, useContext, useRef, useState } from "react";
-import { Animated, Dimensions, StyleSheet, Text } from "react-native";
+import { Animated, Dimensions, Modal, StyleSheet, Text, View } from "react-native";
 
 type ToastType = "success" | "error" | "info";
 
@@ -26,6 +26,7 @@ const TOAST_COLORS: Record<ToastType, string> = {
 export function ToastProvider({ children }: { children: ReactNode }) {
     const [message, setMessage] = useState("");
     const [type, setType] = useState<ToastType>("info");
+    const [isToastVisible, setIsToastVisible] = useState(false);
     const [opacity] = useState(new Animated.Value(0));
     const [translateY] = useState(new Animated.Value(50));
     const timerRef = useRef<any>(null);
@@ -42,6 +43,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             const startShowing = () => {
                 setMessage(msg);
                 setType(toastType);
+                setIsToastVisible(true);
                 isVisibleRef.current = true;
 
                 // Important: Reset values first
@@ -87,6 +89,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                     }),
                 ]).start(() => {
                     isVisibleRef.current = false;
+                    setIsToastVisible(false);
                     if (callback) {
                         callback();
                     }
@@ -106,19 +109,28 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     return (
         <ToastContext.Provider value={{ showToast }}>
             {children}
-            <Animated.View
-                pointerEvents="none"
-                style={[
-                    styles.toastContainer,
-                    {
-                        opacity,
-                        transform: [{ translateY }],
-                        backgroundColor: TOAST_COLORS[type],
-                    },
-                ]}
+            <Modal
+                visible={isToastVisible}
+                transparent
+                animationType="none"
+                statusBarTranslucent
             >
-                <Text style={styles.toastText}>{message}</Text>
-            </Animated.View>
+                <View pointerEvents="box-none" style={styles.modalOverlay}>
+                    <Animated.View
+                        pointerEvents="none"
+                        style={[
+                            styles.toastContainer,
+                            {
+                                opacity,
+                                transform: [{ translateY }],
+                                backgroundColor: TOAST_COLORS[type],
+                            },
+                        ]}
+                    >
+                        <Text style={styles.toastText}>{message}</Text>
+                    </Animated.View>
+                </View>
+            </Modal>
         </ToastContext.Provider>
     );
 }
@@ -126,11 +138,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 const { width } = Dimensions.get("window");
 
 const styles = StyleSheet.create({
+    modalOverlay: {
+        flex: 1,
+        justifyContent: "flex-end",
+    },
     toastContainer: {
-        position: "absolute",
-        bottom: 36,
-        left: Spacing.md,
-        right: Spacing.md,
+        marginBottom: 36,
+        marginHorizontal: Spacing.md,
         maxWidth: width - 32,
         paddingHorizontal: Spacing.lg,
         paddingVertical: Spacing.md,

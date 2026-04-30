@@ -26,7 +26,6 @@ import type * as readLater from "../readLater.js";
 import type * as rentals from "../rentals.js";
 import type * as reviews from "../reviews.js";
 import type * as series from "../series.js";
-import type * as testApi from "../testApi.js";
 import type * as users from "../users.js";
 
 import type {
@@ -54,7 +53,6 @@ declare const fullApi: ApiFromModules<{
   rentals: typeof rentals;
   reviews: typeof reviews;
   series: typeof series;
-  testApi: typeof testApi;
   users: typeof users;
 }>;
 

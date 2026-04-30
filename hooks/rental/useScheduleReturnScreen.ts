@@ -27,6 +27,7 @@ export function useScheduleReturnScreen(rentalId: string) {
     // Pickup Address States
     const [useSameAddress, setUseSameAddress] = useState(true);
     const [phone, setPhone] = useState("");
+    const [area, setArea] = useState("");
     const [landmark, setLandmark] = useState("");
     const [roomNo, setRoomNo] = useState("");
     const [yearOfStudy, setYearOfStudy] = useState("");
@@ -95,8 +96,14 @@ export function useScheduleReturnScreen(rentalId: string) {
                 showToast(phoneError, "error");
                 return;
             }
+            if (rental?.zone === "Home" && !area.trim()) {
+                showToast("Please select your pickup area.", "error");
+                return;
+            }
+
             pickupLocation = {
                 phone: normalizePhoneNumber(phone),
+                area: area.trim(),
                 landmark: landmark.trim(),
                 roomNo: roomNo.trim(),
                 yearOfStudy: yearOfStudy.trim(),
@@ -162,6 +169,8 @@ export function useScheduleReturnScreen(rentalId: string) {
         setDepartment,
         rollNo,
         setRollNo,
+        area,
+        setArea,
         latitude,
         setLatitude,
         longitude,

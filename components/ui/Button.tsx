@@ -18,6 +18,7 @@ interface ButtonProps {
     variant?: "primary" | "secondary" | "outline";
     loading?: boolean;
     disabled?: boolean;
+    containerStyle?: StyleProp<ViewStyle>;
     style?: StyleProp<ViewStyle>;
     textStyle?: StyleProp<TextStyle>;
 }
@@ -28,6 +29,7 @@ export default function Button({
     variant = "primary",
     loading = false,
     disabled = false,
+    containerStyle,
     style,
     textStyle,
 }: ButtonProps) {
@@ -66,7 +68,7 @@ export default function Button({
     ];
 
     return (
-        <Animated.View style={{ transform: [{ scale }] }}>
+        <Animated.View style={[containerStyle, { transform: [{ scale }] }]}>
             <TouchableOpacity
                 style={buttonStyles}
                 onPress={onPress}

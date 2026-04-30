@@ -28,38 +28,39 @@ export function useRequestRentalScreen(bookId: string) {
     const [rollNo, setRollNo] = useState("");
 
     // Home Specifics
+    const [area, setArea] = useState("");
     const [latitude, setLatitude] = useState<number | undefined>();
     const [longitude, setLongitude] = useState<number | undefined>();
     const [formattedAddress, setFormattedAddress] = useState("");
 
     const handleRequest = async () => {
-        if (!zone) {
-            showToast("Please select a zone.", "error");
+        const normalizedPhone = normalizePhoneNumber(phone);
+        const isCompletelyEmpty =
+            !zone &&
+            !normalizedPhone &&
+            !landmark.trim() &&
+            !roomNo.trim() &&
+            !yearOfStudy.trim() &&
+            !department.trim() &&
+            !rollNo.trim() &&
+            !area.trim() &&
+            !formattedAddress.trim();
+        const hasMissingRequiredDetails =
+            !zone ||
+            !normalizedPhone ||
+            (zone === "College" && (!roomNo.trim() || !rollNo.trim())) ||
+            (zone === "Home" && (!area.trim() || !formattedAddress.trim()));
+
+        if (isCompletelyEmpty || hasMissingRequiredDetails) {
+            showToast("Please fill in the details.", "error");
             return;
         }
+
         const phoneError = getPhoneValidationError(phone);
         if (phoneError) {
             showToast(phoneError, "error");
             return;
         }
-
-        if (zone === "College") {
-            if (!roomNo.trim()) {
-                showToast("Room number is required for College delivery.", "error");
-                return;
-            }
-            if (!rollNo.trim()) {
-                showToast("Roll number is required for College delivery.", "error");
-                return;
-            }
-        } else if (zone === "Home") {
-            if (!formattedAddress.trim()) {
-                showToast("Delivery address is required for Home delivery.", "error");
-                return;
-            }
-        }
-
-        const normalizedPhone = normalizePhoneNumber(phone);
 
         setLoading(true);
         try {
@@ -70,6 +71,7 @@ export function useRequestRentalScreen(bookId: string) {
                 zone,
                 deliveryLocation: {
                     phone: normalizedPhone,
+                    area: area.trim(),
                     landmark,
                     roomNo,
                     yearOfStudy,
@@ -109,6 +111,8 @@ export function useRequestRentalScreen(bookId: string) {
         setDepartment,
         rollNo,
         setRollNo,
+        area,
+        setArea,
         latitude,
         setLatitude,
         longitude,
