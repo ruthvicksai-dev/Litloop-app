@@ -1,6 +1,6 @@
 import { Bullet, Para, Section } from "@/components/legal/LayoutHelpers";
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Spacing } from "@/constants/theme";
+import { Colors, Layout, Spacing } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
@@ -25,19 +25,14 @@ export default function TermsOfServiceScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
-            {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity
-                    style={styles.backBtn}
-                    onPress={() => router.back()}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
-                    <Ionicons name="arrow-back" size={22} color={Colors.text} />
+                <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+                    <Ionicons name="chevron-back" size={24} color={Colors.text} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle} allowFontScaling={false}>
                     Terms of Service
                 </Text>
-                <View style={styles.backBtn} />
+                <View style={styles.headerSpacer} />
             </View>
 
             <ScrollView
@@ -177,11 +172,8 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: Colors.border,
-        backgroundColor: Colors.background,
+        paddingHorizontal: Layout.screenPaddingWide,
+        paddingVertical: Spacing.sm,
     },
     backBtn: {
         width: 40,
@@ -194,8 +186,12 @@ const styles = StyleSheet.create({
         fontFamily: Fonts.bold,
         color: Colors.text,
     },
+    headerSpacer: {
+        width: 40,
+    },
     content: {
-        padding: 20,
+        paddingHorizontal: Layout.screenPaddingWide,
+        paddingTop: Spacing.md,
         paddingBottom: 60,
     },
     lastUpdated: {

@@ -24,7 +24,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const TYPE_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
-    rental: "cube-outline",
+    rental: "book-outline",
     book: "book-outline",
     general: "notifications-outline",
 };
@@ -105,8 +105,17 @@ export default function NotificationsScreen() {
     if (isLoading) {
         return (
             <SafeAreaView style={styles.container}>
-                <View style={styles.header}>
-                    <Skeleton width={180} height={32} />
+                <View style={styles.headerBar}>
+                    <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+                        <Ionicons name="chevron-back" size={24} color={Colors.text} />
+                    </TouchableOpacity>
+                    <Text style={styles.headerTitle} allowFontScaling={false}>
+                        Notifications
+                    </Text>
+                    <View style={styles.headerSpacer} />
+                </View>
+                <View style={styles.summaryRow}>
+                    <Skeleton width={120} height={18} />
                 </View>
                 <View style={styles.emptyContainer}>
                     <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 40 }} />
@@ -122,19 +131,27 @@ export default function NotificationsScreen() {
                 subtitle="Get alerts for book availability, delivery updates, and more!"
                 headerTitle="Notifications"
                 icon="notifications-outline"
+                showBackButton
             />
         );
     }
 
     return (
         <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
-                <View>
-                    <Text style={styles.title}>Notifications</Text>
-                    <Text style={styles.subtitle}>
-                        {unreadCount > 0 ? `${unreadCount} unread` : "All caught up!"}
-                    </Text>
-                </View>
+            <View style={styles.headerBar}>
+                <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+                    <Ionicons name="chevron-back" size={24} color={Colors.text} />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle} allowFontScaling={false}>
+                    Notifications
+                </Text>
+                <View style={styles.headerSpacer} />
+            </View>
+
+            <View style={styles.summaryRow}>
+                <Text style={styles.summaryText}>
+                    {unreadCount > 0 ? `${unreadCount} unread` : "All caught up!"}
+                </Text>
                 {unreadCount > 0 && (
                     <TouchableOpacity onPress={handleMarkAllRead} style={styles.markAllBtn}>
                         <Text style={styles.markAllText}>Mark all read</Text>
@@ -148,7 +165,9 @@ export default function NotificationsScreen() {
                         <Ionicons name="notifications-off-outline" size={24} color={Colors.warning} />
                         <View style={styles.pushPromptTextContainer}>
                             <Text style={styles.pushPromptTitle}>Push Notifications Disabled</Text>
-                            <Text style={styles.pushPromptSubtitle}>Turn on push notifications so you don't miss important updates.</Text>
+                            <Text style={styles.pushPromptSubtitle}>
+                                Turn on push notifications so you don{"'"}t miss important updates.
+                            </Text>
                         </View>
                     </View>
                     <TouchableOpacity style={styles.pushPromptButton} onPress={handleEnablePush}>
@@ -190,21 +209,36 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: Colors.background,
     },
-    header: {
+    headerBar: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
         paddingHorizontal: Layout.screenPaddingWide,
-        paddingTop: Spacing.sm,
-        paddingBottom: Spacing.md,
+        paddingVertical: Spacing.sm,
     },
-    title: {
-        fontSize: FontSizes.heading,
+    backBtn: {
+        width: 40,
+        height: 40,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    headerTitle: {
+        fontSize: FontSizes.title,
         color: Colors.text,
         fontFamily: Fonts.bold,
     },
-    subtitle: {
-        marginTop: Spacing.xs,
+    headerSpacer: {
+        width: 40,
+    },
+    summaryRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: Spacing.md,
+        paddingHorizontal: Layout.screenPaddingWide,
+        paddingBottom: Spacing.md,
+    },
+    summaryText: {
         fontSize: FontSizes.body,
         color: Colors.textSecondary,
         fontFamily: Fonts.regular,

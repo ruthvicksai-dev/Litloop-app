@@ -1,12 +1,14 @@
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
 import LoadingOverlay from "@/components/ui/LoadingOverlay";
+import OtpCodeInput from "@/components/ui/OtpCodeInput";
 import PasswordRequirements from "@/components/ui/PasswordRequirements";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, scale, Spacing } from "@/constants/theme";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import { maskEmail } from "@/utils/mask";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation } from "convex/react";
 import { useRouter } from "expo-router";
@@ -235,14 +237,13 @@ export default function ForgotPasswordScreen() {
                             <>
                                 <View style={styles.emailBadge}>
                                     <Ionicons name="mail" size={16} color={Colors.primary} />
-                                    <Text style={styles.emailBadgeText}>{email}</Text>
+                                    <Text style={styles.emailBadgeText}>{maskEmail(email)}</Text>
                                 </View>
-                                <InputField
+                                <OtpCodeInput
                                     label="Verification Code"
-                                    placeholder="Enter 6-digit code"
                                     value={otpCode}
-                                    onChangeText={(text) => setOtpCode(text.replace(/[^0-9]/g, "").slice(0, 6))}
-                                    keyboardType="number-pad"
+                                    onChange={(text) => setOtpCode(text.replace(/[^0-9]/g, "").slice(0, 6))}
+                                    autoFocus
                                 />
                                 <Button
                                     title="Verify Code"

@@ -358,12 +358,19 @@ export const schedulePickup = mutation({
         maxDate.setDate(now.getDate() + 5);
         const maxDateStr = maxDate.toISOString().split('T')[0];
 
-        if (args.pickupDate <= todayStr) throw new Error("Cannot schedule pickup for today. Please provide at least 1 day notice.");
+        if (args.pickupDate < todayStr) throw new Error("Cannot schedule pickup in the past.");
         if (args.pickupDate > maxDateStr) throw new Error("Cannot schedule pickup more than 5 days in advance.");
 
         const slotStartHour = VALID_SLOTS[args.pickupTime];
         if (slotStartHour === undefined) {
             throw new Error("Invalid pickup time slot.");
+        }
+
+        if (args.pickupDate === todayStr) {
+            const currentHour = now.getHours();
+            if (slotStartHour < currentHour + 1) {
+                throw new Error("Pickup must be scheduled at least 1 hour in advance.");
+            }
         }
 
         if (!rental.deliveryDate || !rental.deliveryTime)

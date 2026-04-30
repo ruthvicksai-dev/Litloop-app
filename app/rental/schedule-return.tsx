@@ -211,15 +211,14 @@ export default function ScheduleReturnScreen() {
     };
 
     const availableDates = React.useMemo(() => {
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        tomorrow.setHours(0, 0, 0, 0);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
         const nextDayAfterDelivery = rental?.deliveryDate
             ? new Date(new Date(rental.deliveryDate).getTime() + 24 * 60 * 60 * 1000)
-            : tomorrow;
+            : today;
 
-        const start = new Date(Math.max(tomorrow.getTime(), nextDayAfterDelivery.getTime()));
+        const start = new Date(Math.max(today.getTime(), nextDayAfterDelivery.getTime()));
         return getValidDates(start, 5);
     }, [rental?.deliveryDate]);
 

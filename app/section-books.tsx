@@ -2,7 +2,7 @@ import BookCard from "@/components/search/BookCard";
 import BookLoader from "@/components/ui/BookLoader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Spacing } from "@/constants/theme";
+import { Colors, Layout, Spacing } from "@/constants/theme";
 import { api } from "@/convex/_generated/api";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";
@@ -86,21 +86,23 @@ export default function SectionBooksScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
-            {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity
-                    style={styles.backBtn}
-                    onPress={() => router.back()}
-                >
-                    <Ionicons name="arrow-back" size={24} color={Colors.text} />
+            <View style={styles.headerBar}>
+                <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+                    <Ionicons name="chevron-back" size={24} color={Colors.text} />
                 </TouchableOpacity>
-                <View style={styles.headerText}>
-                    <Text style={styles.screenTitle}>{config.title}</Text>
-                    {config.subtitle ? (
-                        <Text style={styles.screenSubtitle}>{config.subtitle}</Text>
-                    ) : null}
-                </View>
+                <Text style={styles.screenTitle} allowFontScaling={false}>
+                    {config.title}
+                </Text>
+                <View style={styles.headerSpacer} />
             </View>
+
+            {config.subtitle ? (
+                <View style={styles.subtitleRow}>
+                    <Text style={styles.screenSubtitle} allowFontScaling={false}>
+                        {config.subtitle}
+                    </Text>
+                </View>
+            ) : null}
 
             {books === undefined ? (
                 <View style={styles.center}>
@@ -145,30 +147,35 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: Colors.background,
     },
-    header: {
+    headerBar: {
         flexDirection: "row",
         alignItems: "center",
-        paddingHorizontal: 16,
-        paddingTop: Spacing.sm,
-        paddingBottom: Spacing.md,
-        gap: Spacing.sm,
+        justifyContent: "space-between",
+        paddingHorizontal: Layout.screenPaddingWide,
+        paddingVertical: Spacing.sm,
     },
     backBtn: {
-        padding: 4,
-    },
-    headerText: {
-        flex: 1,
+        width: 40,
+        height: 40,
+        alignItems: "center",
+        justifyContent: "center",
     },
     screenTitle: {
-        fontSize: FontSizes.titleLarge,
+        fontSize: FontSizes.title,
         fontFamily: Fonts.bold,
         color: Colors.text,
     },
+    headerSpacer: {
+        width: 40,
+    },
+    subtitleRow: {
+        paddingHorizontal: Layout.screenPaddingWide,
+        paddingBottom: Spacing.md,
+    },
     screenSubtitle: {
-        fontSize: FontSizes.caption,
+        fontSize: FontSizes.body,
         fontFamily: Fonts.regular,
         color: Colors.textSecondary,
-        marginTop: 2,
     },
     center: {
         flex: 1,
@@ -176,7 +183,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     list: {
-        paddingHorizontal: 16,
+        paddingHorizontal: Layout.screenPaddingWide,
         paddingBottom: 32,
         paddingTop: Spacing.sm,
     },

@@ -1,6 +1,6 @@
 import Button from "@/components/ui/Button";
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Spacing } from "@/constants/theme";
+import { Colors, Layout, Spacing } from "@/constants/theme";
 import { triggerHaptic } from "@/utils/haptics";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -33,16 +33,19 @@ export function GuestView({
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
-                {showBackButton && (
+                {showBackButton ? (
                     <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                        <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+                        <Ionicons name="chevron-back" size={24} color={Colors.text} />
                     </TouchableOpacity>
+                ) : (
+                    <View style={styles.headerSpacer} />
                 )}
                 {headerTitle && (
                     <Text style={styles.pageTitle} allowFontScaling={false}>
                         {headerTitle}
                     </Text>
                 )}
+                <View style={styles.headerSpacer} />
             </View>
 
             <View style={styles.content}>
@@ -85,20 +88,23 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: "row",
         alignItems: "center",
-        paddingHorizontal: 20,
-        paddingTop: Spacing.sm,
-        paddingBottom: Spacing.md,
-        gap: Spacing.sm,
+        justifyContent: "space-between",
+        paddingHorizontal: Layout.screenPaddingWide,
+        paddingVertical: Spacing.sm,
     },
     backBtn: {
-        padding: 4,
-        marginLeft: -4,
+        width: 40,
+        height: 40,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    headerSpacer: {
+        width: 40,
     },
     pageTitle: {
-        fontSize: 28,
+        fontSize: FontSizes.title,
         color: Colors.text,
         fontFamily: Fonts.bold,
-        letterSpacing: -0.5,
     },
     content: {
         flex: 1,
