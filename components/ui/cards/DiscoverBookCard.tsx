@@ -25,6 +25,8 @@ export interface DiscoverBookCardProps {
     genre?: string;
     bookViews?: number;
     top10Position?: number;
+    onPress?: () => void;
+    hideFavorite?: boolean;
 }
 
 const CARD_WIDTH = scale(120);
@@ -37,6 +39,8 @@ export default function DiscoverBookCard({
     coverUrl,
     coverUrls,
     top10Position,
+    onPress,
+    hideFavorite,
 }: DiscoverBookCardProps) {
     const router = useRouter();
     const { isFavorite, toggleFavorite } = useFavorites();
@@ -68,7 +72,7 @@ export default function DiscoverBookCard({
         <Animated.View style={[styles.card, { transform: [{ scale: cardScale }] }]}>
             <TouchableOpacity
                 activeOpacity={0.9}
-                onPress={() => router.push(`/book/${_id}` as any)}
+                onPress={onPress ?? (() => router.push(`/book/${_id}` as any))}
                 onPressIn={() =>
                     Animated.spring(cardScale, { toValue: 0.96, useNativeDriver: true }).start()
                 }
@@ -109,19 +113,21 @@ export default function DiscoverBookCard({
                         </LinearGradient>
                     ) : null}
 
-                    <TouchableOpacity
-                        style={styles.bookmarkBtn}
-                        onPress={handleToggleFavorite}
-                        activeOpacity={0.7}
-                    >
-                        <Animated.View style={{ transform: [{ scale: heartScale }] }}>
-                            <Ionicons
-                                name={isLiked ? "heart" : "heart-outline"}
-                                size={scale(18)}
-                                color={isLiked ? Colors.error : Colors.white}
-                            />
-                        </Animated.View>
-                    </TouchableOpacity>
+                    {!hideFavorite && (
+                        <TouchableOpacity
+                            style={styles.bookmarkBtn}
+                            onPress={handleToggleFavorite}
+                            activeOpacity={0.7}
+                        >
+                            <Animated.View style={{ transform: [{ scale: heartScale }] }}>
+                                <Ionicons
+                                    name={isLiked ? "heart" : "heart-outline"}
+                                    size={scale(18)}
+                                    color={isLiked ? Colors.error : Colors.white}
+                                />
+                            </Animated.View>
+                        </TouchableOpacity>
+                    )}
                 </View>
 
                 <Text style={styles.title} numberOfLines={2} allowFontScaling={false}>

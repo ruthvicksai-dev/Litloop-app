@@ -76,11 +76,13 @@ export default defineSchema({
         reviewText: v.optional(v.string()),
         helpfulCount: v.optional(v.number()),
         unhelpfulCount: v.optional(v.number()),
+        isFlagged: v.optional(v.boolean()),
         createdAt: v.number(),
     })
         .index("by_bookId", ["bookId"])
         .index("by_userId_bookId", ["userId", "bookId"])
-        .index("by_rentalId", ["rentalId"]),
+        .index("by_rentalId", ["rentalId"])
+        .index("by_isFlagged", ["isFlagged"]),
 
     review_votes: defineTable({
         userId: v.id("users"),
@@ -124,6 +126,9 @@ export default defineSchema({
         coverImages: v.optional(v.array(v.id("_storage"))),
         totalCopies: v.number(),
         availableCopies: v.number(),
+        avgRating: v.optional(v.number()),
+        totalReviews: v.optional(v.number()),
+        flaggedCount: v.optional(v.number()),
         createdAt: v.number(),
     })
         .index("by_title", ["title"])

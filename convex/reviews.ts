@@ -174,6 +174,7 @@ export const updateReview = mutation({
             
             await ctx.db.patch(review.bookId, {
                 rating: Number.isFinite(nextRating) ? Math.max(0, nextRating) : 0,
+                avgRating: Number.isFinite(nextRating) ? Math.max(0, nextRating) : 0,
             });
         }
 
@@ -206,12 +207,21 @@ export const deleteReview = mutation({
             const nextCount = Math.max(0, safeCurrentCount - 1);
 
             if (nextCount === 0) {
-                await ctx.db.patch(review.bookId, { rating: 0, ratingCount: 0 });
+                await ctx.db.patch(review.bookId, { 
+                    rating: 0, 
+                    ratingCount: 0,
+                    avgRating: 0,
+                    totalReviews: 0,
+                    flaggedCount: Math.max(0, (book.flaggedCount ?? 0) - (review.isFlagged ? 1 : 0)),
+                });
             } else {
                 const nextRating = ((safeCurrentRating * safeCurrentCount) - review.rating) / nextCount;
                 await ctx.db.patch(review.bookId, {
                     rating: Number.isFinite(nextRating) ? Math.max(0, nextRating) : 0,
                     ratingCount: nextCount,
+                    avgRating: Number.isFinite(nextRating) ? Math.max(0, nextRating) : 0,
+                    totalReviews: nextCount,
+                    flaggedCount: Math.max(0, (book.flaggedCount ?? 0) - (review.isFlagged ? 1 : 0)),
                 });
             }
         }
@@ -225,6 +235,103 @@ export const deleteReview = mutation({
             .collect();
         for (const report of reports) {
             await ctx.db.delete(report._id);
+        }
+
+        return { success: true };
+    },
+});
+
+export const getReviewsByBook = query({
+    args: { bookId: v.id("books") },
+    handler: async (ctx, args) => {
+        const reviews = await ctx.db
+            .query("reviews")
+            .withIndex("by_bookId", (q) => q.eq("bookId", args.bookId))
+            .collect();
+
+        // Sort by createdAt desc
+        const sorted = reviews.sort((a, b) => b.createdAt - a.createdAt);
+
+        const enriched = await Promise.all(sorted.map(async (r) => {
+            const user = await ctx.db.get(r.userId);
+            return {
+                ...r,
+                userName: user?.name ?? "Unknown",
+                userAvatar: user?.avatarUrl,
+            };
+        }));
+
+        return {
+            recentReviews: enriched.slice(0, 10),
+            flaggedReviews: enriched.filter(r => r.isFlagged),
+        };
+    },
+});
+
+export const getAllFlaggedReviews = query({
+    args: { accessToken: v.string() },
+    handler: async (ctx, args) => {
+        const { assertAdmin } = require("./lib/authHelpers");
+        await assertAdmin(ctx, args.accessToken);
+
+        const flagged = await ctx.db
+            .query("reviews")
+            .withIndex("by_isFlagged", (q) => q.eq("isFlagged", true))
+            .collect();
+
+        return Promise.all(flagged.map(async (r) => {
+            const user = await ctx.db.get(r.userId);
+            const book = await ctx.db.get(r.bookId);
+            return {
+                ...r,
+                userName: user?.name ?? "Unknown",
+                userAvatar: user?.avatarUrl,
+                bookTitle: book?.title ?? "Unknown Book",
+            };
+        }));
+    },
+});
+
+export const flagReview = mutation({
+    args: { reviewId: v.id("reviews"), accessToken: v.string() },
+    handler: async (ctx, args) => {
+        const { assertAdmin } = require("./lib/authHelpers");
+        await assertAdmin(ctx, args.accessToken);
+
+        const review = await ctx.db.get(args.reviewId);
+        if (!review) throw new Error("Review not found");
+        if (review.isFlagged) return { success: true };
+
+        await ctx.db.patch(args.reviewId, { isFlagged: true });
+
+        const book = await ctx.db.get(review.bookId);
+        if (book) {
+            await ctx.db.patch(review.bookId, {
+                flaggedCount: (book.flaggedCount ?? 0) + 1,
+            });
+        }
+
+        return { success: true };
+    },
+});
+
+export const unflagReview = mutation({
+    args: { reviewId: v.id("reviews"), accessToken: v.string() },
+    handler: async (ctx, args) => {
+        const { assertAdmin } = require("./lib/authHelpers");
+        await assertAdmin(ctx, args.accessToken);
+
+        const review = await ctx.db.get(args.reviewId);
+        if (!review) throw new Error("Review not found");
+        if (!review.isFlagged) return { success: true };
+
+        await ctx.db.patch(args.reviewId, { isFlagged: false });
+
+        const book = await ctx.db.get(review.bookId);
+        if (book) {
+            await ctx.db.patch(review.bookId, {
+                flaggedCount: Math.max(0, (book.flaggedCount ?? 0) - 1),
+            });
         }
 
         return { success: true };

@@ -1,4 +1,5 @@
 export * from "./useAddBookScreen";
+export * from "./useAdminBookDetailsScreen";
 export * from "./useAdminBooksScreen";
 export * from "./useAdminDashboard";
 export * from "./useEditBookScreen";

@@ -29,6 +29,7 @@ interface BookCardProps {
     showRequestButton?: boolean;
     isRequestDestructive?: boolean;
     top10Position?: number;
+    onViewReviews?: () => void;
 }
 
 export default function BookCard({
@@ -46,6 +47,7 @@ export default function BookCard({
     showRequestButton = true,
     isRequestDestructive = false,
     top10Position,
+    onViewReviews,
 }: BookCardProps) {
     const scale = useRef(new Animated.Value(1)).current;
 
@@ -137,6 +139,12 @@ export default function BookCard({
                             <Text style={styles.requestBtnText}>{requestLabel}</Text>
                         </TouchableOpacity>
                     ) : null}
+                    {onViewReviews && (
+                        <TouchableOpacity style={styles.reviewsBtn} onPress={onViewReviews}>
+                            <Ionicons name="chatbubbles-outline" size={16} color={Colors.primary} />
+                            <Text style={styles.reviewsBtnText}>Reviews</Text>
+                        </TouchableOpacity>
+                    )}
                 </View>
             </TouchableOpacity>
         </Animated.View>
@@ -271,5 +279,22 @@ const styles = StyleSheet.create({
     },
     destructiveBtn: {
         backgroundColor: Colors.error,
+    },
+    reviewsBtn: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 6,
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: Colors.primary + "40",
+        minWidth: 100,
+    },
+    reviewsBtnText: {
+        color: Colors.primary,
+        fontFamily: Fonts.medium,
+        fontSize: FontSizes.small,
     },
 });

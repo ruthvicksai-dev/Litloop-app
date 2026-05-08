@@ -4,7 +4,7 @@ import {
     ALLOWED_AREAS,
     getDeliveryAreaByName,
     validateDeliveryAreaSelection,
-} from "../utils/areaUtils";
+} from "../utils/location/areas";
 import { internal } from "./_generated/api";
 import { internalMutation, mutation, query } from "./_generated/server";
 import { recordRentalCreated, recordUserActivity } from "./analytics";
@@ -58,19 +58,21 @@ function safeRatingRollback(
     currentRating: number | undefined,
     currentCount: number | undefined,
     removedRating: number
-): { rating: number; ratingCount: number } {
+): { rating: number; ratingCount: number; avgRating: number; totalReviews: number } {
     const safeCurrentRating = typeof currentRating === "number" && Number.isFinite(currentRating) ? currentRating : 0;
     const safeCurrentCount = typeof currentCount === "number" && Number.isFinite(currentCount) ? currentCount : 0;
     const nextCount = Math.max(0, safeCurrentCount - 1);
 
     if (nextCount === 0) {
-        return { rating: 0, ratingCount: 0 };
+        return { rating: 0, ratingCount: 0, avgRating: 0, totalReviews: 0 };
     }
 
     const nextRating = ((safeCurrentRating * safeCurrentCount) - removedRating) / nextCount;
     return {
         rating: Number.isFinite(nextRating) ? Math.max(0, nextRating) : 0,
         ratingCount: nextCount,
+        avgRating: Number.isFinite(nextRating) ? Math.max(0, nextRating) : 0,
+        totalReviews: nextCount,
     };
 }
 
@@ -394,6 +396,8 @@ export const schedulePickup = mutation({
         await ctx.db.patch(rental.bookId, {
             rating: nextRating,
             ratingCount: nextCount,
+            avgRating: nextRating,
+            totalReviews: nextCount,
         });
 
         // C3: Prevent duplicate review on rapid double-tap
@@ -471,12 +475,17 @@ export const cancelPickup = mutation({
         if (rental.userRating) {
             const book = await ctx.db.get(rental.bookId);
             if (book) {
-                const { rating, ratingCount } = safeRatingRollback(
+                const { rating, ratingCount, avgRating, totalReviews } = safeRatingRollback(
                     book.rating,
                     book.ratingCount,
                     rental.userRating
                 );
-                await ctx.db.patch(rental.bookId, { rating, ratingCount });
+                await ctx.db.patch(rental.bookId, { 
+                    rating, 
+                    ratingCount,
+                    avgRating,
+                    totalReviews,
+                });
             }
         }
 
@@ -513,12 +522,17 @@ export const autoCancelPickup = internalMutation({
         if (rental.userRating) {
             const book = await ctx.db.get(rental.bookId);
             if (book) {
-                const { rating, ratingCount } = safeRatingRollback(
+                const { rating, ratingCount, avgRating, totalReviews } = safeRatingRollback(
                     book.rating,
                     book.ratingCount,
                     rental.userRating
                 );
-                await ctx.db.patch(rental.bookId, { rating, ratingCount });
+                await ctx.db.patch(rental.bookId, { 
+                    rating, 
+                    ratingCount,
+                    avgRating,
+                    totalReviews,
+                });
             }
         }
 
@@ -770,5 +784,35 @@ export const getRental = query({
                 : null,
             screenshotUrl,
         };
+    },
+});
+
+export const getBookRentals = query({
+    args: { bookId: v.id("books"), accessToken: v.string() },
+    handler: async (ctx, args) => {
+        await assertAdmin(ctx, args.accessToken);
+
+        const rentals = await ctx.db
+            .query("rentals")
+            .withIndex("by_bookId", (q) => q.eq("bookId", args.bookId))
+            .order("desc")
+            .take(50);
+
+        const enriched = await Promise.all(
+            rentals.map(async (rental) => {
+                const user = await ctx.db.get(rental.userId);
+                return {
+                    _id: rental._id,
+                    userName: user?.name ?? "Unknown",
+                    userEmail: user?.email ?? "",
+                    status: rental.status,
+                    deliveryDate: rental.deliveryDate,
+                    pickupDate: rental.pickupDate,
+                    createdAt: rental.createdAt,
+                };
+            })
+        );
+
+        return enriched;
     },
 });

@@ -6,7 +6,7 @@ import { useMemo, useState } from "react";
 
 export function useAdminBooksScreen() {
     const booksQuery = useQuery(api.books.list, {
-        paginationOpts: BOOKS_PAGINATION_OPTS,
+        paginationOpts: { ...BOOKS_PAGINATION_OPTS, numItems: 100 },
     });
     const [search, setSearch] = useState("");
 

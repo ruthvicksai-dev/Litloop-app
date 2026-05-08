@@ -67,6 +67,7 @@ function normalizeGenres(genres: string[] | undefined) {
         new Set(
             (genres ?? [])
                 .map((genre) => genre.trim())
+                .map((genre) => MAIN_GENRES.find(g => g.toLowerCase() === genre.toLowerCase()) ?? genre)
                 .filter((genre) => MAIN_GENRES.includes(genre))
                 .filter(Boolean)
         )
@@ -80,7 +81,7 @@ function normalizeBookValue(value: string): string {
 function normalizeSingleGenre(genre: string | undefined): string | undefined {
     if (!genre) return undefined;
     const normalized = genre.trim();
-    return MAIN_GENRES.includes(normalized) ? normalized : undefined;
+    return MAIN_GENRES.find(g => g.toLowerCase() === normalized.toLowerCase());
 }
 
 function buildSearchText(input: {
@@ -788,6 +789,25 @@ export const getNewlyAddedBooks = query({
             .order("desc")
             .take(10);
         return Promise.all(books.map((book) => mapBookForClient(ctx, book)));
+    },
+});
+
+export const getProblemBooks = query({
+    args: { accessToken: v.string() },
+    handler: async (ctx, args) => {
+        await assertAdmin(ctx, args.accessToken);
+
+        const books = await ctx.db
+            .query("books")
+            .collect();
+
+        const problemBooks = books.filter(b => {
+            const avgRating = b.avgRating ?? b.rating ?? 0;
+            const flaggedCount = b.flaggedCount ?? 0;
+            return (avgRating > 0 && avgRating < 3) || flaggedCount > 0;
+        });
+
+        return Promise.all(problemBooks.map(b => mapBookForClient(ctx, b)));
     },
 });
 

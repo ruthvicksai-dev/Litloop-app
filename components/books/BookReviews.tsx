@@ -10,6 +10,7 @@ import React, { useState } from "react";
 import { Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Button from "../ui/core/Button";
 import ConfirmActionModal from "../ui/feedback/ConfirmActionModal";
+import ReviewCard from "../ui/cards/ReviewCard";
 
 interface Props {
     bookId: string;
@@ -212,87 +213,23 @@ export default function BookReviews({ bookId }: Props) {
             </View>
 
             {reviews.map((review) => (
-                <View key={review._id.toString()} style={styles.reviewCard}>
-                    <View style={styles.reviewHeader}>
-                        <View style={styles.ratingBadge}>
-                            <Text style={styles.ratingBadgeText}>{review.rating}</Text>
-                            <Ionicons name="star" size={10} color={Colors.white} />
-                        </View>
-                        <Text style={styles.reviewHeadline}>
-                            {review.rating >= 4 ? "Excellent" : review.rating >= 3 ? "Good" : "Average"}
-                        </Text>
-                        <Text style={styles.reviewDate}>{timeAgo(review.createdAt)}</Text>
-                    </View>
-
-                    {review.reviewText ? (
-                        <Text style={styles.reviewText} numberOfLines={4}>
-                            {review.reviewText}
-                        </Text>
-                    ) : null}
-
-                    <View style={styles.reviewFooter}>
-                        <View style={styles.userInfoCol}>
-                            <Text style={styles.verifiedText}>Reviewed by {review.userName}</Text>
-                        </View>
-
-                        <View style={styles.reviewActions}>
-                            <TouchableOpacity
-                                style={styles.voteBtn}
-                                onPress={() => handleVote(review._id, "helpful")}
-                            >
-                                <Ionicons
-                                    name={review.userVote === "helpful" ? "thumbs-up" : "thumbs-up-outline"}
-                                    size={18}
-                                    color={review.userVote === "helpful" ? Colors.primary : Colors.textSecondary}
-                                />
-                                <Text style={[styles.voteCount, review.userVote === "helpful" && { color: Colors.primary }]}>
-                                    {review.helpfulCount || 0}
-                                </Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                onPress={() => handleVote(review._id, "unhelpful")}
-                                style={[styles.voteBtn, { marginLeft: 16 }]}
-                            >
-                                <Ionicons
-                                    name={review.userVote === "unhelpful" ? "thumbs-down" : "thumbs-down-outline"}
-                                    size={18}
-                                    color={review.userVote === "unhelpful" ? Colors.error : Colors.textSecondary}
-                                />
-                                <Text style={[styles.voteCount, review.userVote === "unhelpful" && { color: Colors.error }]}>
-                                    {review.unhelpfulCount || 0}
-                                </Text>
-                            </TouchableOpacity>
-
-                            {userId && review.userId && userId.toString() === review.userId.toString() ? (
-                                <View style={styles.authorActions}>
-                                    <TouchableOpacity
-                                        onPress={() => setEditingReview({
-                                            id: review._id,
-                                            rating: review.rating,
-                                            text: review.reviewText || ""
-                                        })}
-                                    >
-                                        <Ionicons name="create-outline" size={18} color={Colors.primary} />
-                                    </TouchableOpacity>
-                                    <TouchableOpacity 
-                                        onPress={() => setDeletingReviewId(review._id)}
-                                        style={{ marginLeft: 12 }}
-                                    >
-                                        <Ionicons name="trash-outline" size={18} color={Colors.error} />
-                                    </TouchableOpacity>
-                                </View>
-                            ) : (
-                                <TouchableOpacity
-                                    onPress={() => handleReport(review._id)}
-                                    style={styles.flagBtn}
-                                >
-                                    <Ionicons name="flag-outline" size={14} color={Colors.textLight} />
-                                </TouchableOpacity>
-                            )}
-                        </View>
-                    </View>
-                </View>
+                <ReviewCard
+                    key={review._id.toString()}
+                    review={{
+                        ...review,
+                        _id: review._id.toString(),
+                        userId: review.userId.toString(),
+                    }}
+                    currentUserId={userId?.toString()}
+                    onVote={(voteType) => handleVote(review._id, voteType)}
+                    onFlag={() => handleReport(review._id)}
+                    onDelete={() => setDeletingReviewId(review._id)}
+                    onEdit={() => setEditingReview({
+                        id: review._id,
+                        rating: review.rating,
+                        text: review.reviewText || ""
+                    })}
+                />
             ))}
 
             <Modal
