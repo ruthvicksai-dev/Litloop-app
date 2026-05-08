@@ -23,6 +23,7 @@ interface User {
     avatarUrl?: string;
     role: "user" | "admin";
     pushToken?: string;
+    isVerifiedStudent?: boolean;
 }
 
 type PendingToast = {

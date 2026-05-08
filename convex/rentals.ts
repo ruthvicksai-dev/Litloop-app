@@ -105,6 +105,16 @@ export const requestRental = mutation({
         const rentalRequestKey = buildRateLimitKey("rental", "request", userId, args.ipAddress);
         await assertRateLimit(ctx, rentalRequestKey, RENTAL_RATE_LIMITS.requestRental);
 
+        // College Zone: Only verified students can place orders
+        if (args.zone === "College") {
+            if (!user.isVerifiedStudent && user.role !== "admin") {
+                throw new Error(
+                    "Only verified students from KITS can place orders in the College Zone. " +
+                    "Please verify your student status in Profile → Verify Student."
+                );
+            }
+        }
+
         if (args.zone === "Home") {
             const selectedArea = args.deliveryLocation.area?.trim() ?? "";
             if (!selectedArea) {

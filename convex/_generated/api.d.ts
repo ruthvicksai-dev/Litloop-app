@@ -28,6 +28,7 @@ import type * as rentals from "../rentals.js";
 import type * as reviews from "../reviews.js";
 import type * as series from "../series.js";
 import type * as users from "../users.js";
+import type * as verifications from "../verifications.js";
 
 import type {
   ApiFromModules,
@@ -56,6 +57,7 @@ declare const fullApi: ApiFromModules<{
   reviews: typeof reviews;
   series: typeof series;
   users: typeof users;
+  verifications: typeof verifications;
 }>;
 
 /**

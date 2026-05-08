@@ -14,6 +14,7 @@ export default defineSchema({
         pushToken: v.optional(v.string()),
         acceptedTerms: v.optional(v.boolean()),
         acceptedAt: v.optional(v.number()),
+        isVerifiedStudent: v.optional(v.boolean()),
         createdAt: v.number(),
     })
         .index("by_email", ["email"])
@@ -337,4 +338,24 @@ export default defineSchema({
         updatedAt: v.number(),
         updatedBy: v.id("users"),
     }).index("by_active", ["active"]),
+
+    // Student ID verification for College Zone access
+    student_verifications: defineTable({
+        userId: v.id("users"),
+        studentIdNumber: v.string(),
+        fullNameOnId: v.string(),
+        department: v.optional(v.string()),
+        year: v.optional(v.string()),
+        idCardImageId: v.id("_storage"),
+        status: v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected")),
+        rejectionReason: v.optional(v.string()),
+        verifiedAt: v.optional(v.number()),
+        verifiedBy: v.optional(v.id("users")),
+        createdAt: v.number(),
+        updatedAt: v.number(),
+    })
+        .index("by_userId", ["userId"])
+        .index("by_status", ["status"])
+        .index("by_userId_status", ["userId", "status"])
+        .index("by_createdAt", ["createdAt"]),
 });

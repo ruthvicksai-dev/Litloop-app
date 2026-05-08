@@ -1,7 +1,9 @@
 import DetailRow from "@/components/admin/DetailRow";
 import SummaryStat from "@/components/admin/SummaryStat";
+import StudentVerificationsList from "@/components/admin/StudentVerificationsList";
 import BookLoader from "@/components/ui/feedback/BookLoader";
 import Button from "@/components/ui/core/Button";
+import { SegmentedControl, SegmentOption } from "@/components/ui/core/SegmentedControl";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing, scale } from "@/constants/theme";
 import { useVerifyPaymentScreen } from "@/hooks";
@@ -25,7 +27,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 
 
+const TAB_OPTIONS: SegmentOption[] = [
+    { label: "Payments", value: "payments", icon: "cash-outline", activeIcon: "cash" },
+    { label: "Students", value: "students", icon: "school-outline", activeIcon: "school" },
+];
+
 export default function VerifyPaymentScreen() {
+    const [activeTab, setActiveTab] = React.useState("payments");
     const params = useLocalSearchParams<{ rentalId?: string }>();
     const router = useRouter();
     const [refreshing, setRefreshing] = React.useState(false);
@@ -246,7 +254,7 @@ export default function VerifyPaymentScreen() {
     return (
         <SafeAreaView style={styles.container}>
             <FlatList
-                data={pendingPayments}
+                data={activeTab === 'payments' ? pendingPayments : []}
                 keyExtractor={(item) => item._id}
                 refreshControl={
                     <RefreshControl
@@ -367,13 +375,22 @@ export default function VerifyPaymentScreen() {
                                 <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
                                     <Ionicons name="chevron-back" size={24} color={Colors.text} />
                                 </TouchableOpacity>
-                                <Text style={styles.headerTitle} allowFontScaling={false}>Pending Payments</Text>
+                                <Text style={styles.headerTitle} allowFontScaling={false}>Verifications</Text>
                                 <View style={styles.headerSpacer} />
                             </View>
                         </View>
-                        <Text style={styles.screenSubtitle}>
-                            Review incoming proofs and confirm them with confidence.
-                        </Text>
+                        
+                        <SegmentedControl
+                            options={TAB_OPTIONS}
+                            activeValue={activeTab}
+                            onChange={(val) => setActiveTab(val)}
+                        />
+                        
+                        {activeTab === "payments" ? (
+                            <>
+                                <Text style={styles.screenSubtitle}>
+                                    Review incoming proofs and confirm them with confidence.
+                                </Text>
 
                         <LinearGradient
                             colors={["#FFFFFF", "#F7EAD8", "#F2DDC8"]}
@@ -412,24 +429,34 @@ export default function VerifyPaymentScreen() {
                                 />
                             </View>
                         </LinearGradient>
+                            </>
+                        ) : null}
                     </View>
                 }
                 ListEmptyComponent={
-                    <View style={styles.emptyState}>
-                        <View style={styles.emptyIconWrap}>
-                            <Ionicons
-                                name="checkmark-circle-outline"
-                                size={28}
-                                color={Colors.success}
-                            />
+                    activeTab === "payments" ? (
+                        <View style={styles.emptyState}>
+                            <View style={styles.emptyIconWrap}>
+                                <Ionicons
+                                    name="checkmark-circle-outline"
+                                    size={28}
+                                    color={Colors.success}
+                                />
+                            </View>
+                            <Text style={styles.emptyTitle}>All payments are cleared</Text>
+                            <Text style={styles.emptyText}>
+                                There are no pending payment proofs waiting for admin verification.
+                            </Text>
                         </View>
-                        <Text style={styles.emptyTitle}>All payments are cleared</Text>
-                        <Text style={styles.emptyText}>
-                            There are no pending payment proofs waiting for admin verification.
-                        </Text>
-                    </View>
+                    ) : null
                 }
             />
+
+            {activeTab === "students" && (
+                <View style={{ flex: 1, marginTop: -20 }}>
+                    <StudentVerificationsList />
+                </View>
+            )}
 
             {/* Rejection reason modal */}
             <RejectReasonModal

@@ -288,6 +288,8 @@ export default function RequestRentalScreen() {
                 loading={loading}
                 onAdjustLocation={() => setIsMapPickerVisible(true)}
                 showAdjustLocation={latitude !== undefined && longitude !== undefined}
+                isVerifiedStudent={user.isVerifiedStudent === true}
+                onVerifyPress={() => router.push("/profile/verify")}
             />
 
             {latitude !== undefined && longitude !== undefined ? (

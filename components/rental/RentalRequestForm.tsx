@@ -48,6 +48,8 @@ interface RentalRequestFormProps {
     loading: boolean;
     onAdjustLocation?: () => void;
     showAdjustLocation?: boolean;
+    isVerifiedStudent?: boolean;
+    onVerifyPress?: () => void;
 }
 
 export default function RentalRequestForm({
@@ -78,6 +80,8 @@ export default function RentalRequestForm({
     loading,
     onAdjustLocation,
     showAdjustLocation = false,
+    isVerifiedStudent,
+    onVerifyPress,
 }: RentalRequestFormProps) {
     const [areaPickerVisible, setAreaPickerVisible] = React.useState(false);
 
@@ -133,38 +137,62 @@ export default function RentalRequestForm({
                     )}
 
                     {zone === "College" ? (
-                        <>
-                            <InputField
-                                label="Room No"
-                                placeholder="e.g. 205"
-                                value={roomNo}
-                                onChangeText={setRoomNo}
-                            />
-                            <View style={styles.row}>
-                                <View style={[styles.halfField, styles.halfFieldSpacing]}>
-                                    <InputField
-                                        label="Year of Study"
-                                        placeholder="e.g. 3rd"
-                                        value={yearOfStudy}
-                                        onChangeText={setYearOfStudy}
-                                    />
+                        <View style={styles.collegeZoneWrapper}>
+                            <View 
+                                style={[styles.collegeFieldsInner, !isVerifiedStudent && styles.blurredFields]}
+                                pointerEvents={!isVerifiedStudent ? "none" : "auto"}
+                            >
+                                <InputField
+                                    label="Room No"
+                                    placeholder="e.g. 205"
+                                    value={roomNo}
+                                    onChangeText={setRoomNo}
+                                />
+                                <View style={styles.row}>
+                                    <View style={[styles.halfField, styles.halfFieldSpacing]}>
+                                        <InputField
+                                            label="Year of Study"
+                                            placeholder="e.g. 3rd"
+                                            value={yearOfStudy}
+                                            onChangeText={setYearOfStudy}
+                                        />
+                                    </View>
+                                    <View style={styles.halfField}>
+                                        <InputField
+                                            label="Department"
+                                            placeholder="e.g. CSE"
+                                            value={department}
+                                            onChangeText={setDepartment}
+                                        />
+                                    </View>
                                 </View>
-                                <View style={styles.halfField}>
-                                    <InputField
-                                        label="Department"
-                                        placeholder="e.g. CSE"
-                                        value={department}
-                                        onChangeText={setDepartment}
-                                    />
-                                </View>
+                                <InputField
+                                    label="Roll No"
+                                    placeholder="e.g. 21K61A0501"
+                                    value={rollNo}
+                                    onChangeText={setRollNo}
+                                />
                             </View>
-                            <InputField
-                                label="Roll No"
-                                placeholder="e.g. 21K61A0501"
-                                value={rollNo}
-                                onChangeText={setRollNo}
-                            />
-                        </>
+
+                            {!isVerifiedStudent && (
+                                <View style={styles.verifyOverlay}>
+                                    <View style={styles.verifyOverlayIconBg}>
+                                        <Ionicons name="lock-closed" size={24} color={Colors.primary} />
+                                    </View>
+                                    <Text style={styles.verifyOverlayTitle}>Verified Students Only</Text>
+                                    <Text style={styles.verifyOverlaySubtitle}>
+                                        You must verify your KITS student status to request delivery to the College Zone.
+                                    </Text>
+                                    <TouchableOpacity 
+                                        style={styles.verifyOverlayBtn}
+                                        onPress={onVerifyPress}
+                                    >
+                                        <Text style={styles.verifyOverlayBtnText}>Verify Student Status</Text>
+                                        <Ionicons name="arrow-forward" size={16} color={Colors.white} />
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+                        </View>
                     ) : zone === "Home" ? (
                         <>
                             <View style={styles.deliveryAreaNote}>
@@ -317,7 +345,11 @@ export default function RentalRequestForm({
                         title="Submit Request"
                         onPress={onSubmit}
                         loading={loading}
-                        style={styles.submitButton}
+                        disabled={loading || (zone === "College" && !isVerifiedStudent)}
+                        style={[
+                            styles.submitButton,
+                            (zone === "College" && !isVerifiedStudent) && styles.submitButtonDisabled
+                        ]}
                     />
                 </Animated.View>
             </ScrollView>
@@ -333,7 +365,7 @@ const styles = StyleSheet.create({
         flexGrow: 1,
         paddingHorizontal: 20,
         paddingTop: Spacing.sm,
-        paddingBottom: 28,
+        paddingBottom: 100,
     },
     row: {
         flexDirection: "row",
@@ -571,5 +603,76 @@ const styles = StyleSheet.create({
     },
     submitButton: {
         marginTop: Spacing.md,
+    },
+    submitButtonDisabled: {
+        opacity: 0.5,
+    },
+    collegeZoneWrapper: {
+        position: "relative",
+        overflow: "hidden",
+        borderRadius: 16,
+        marginBottom: Spacing.md,
+    },
+    collegeFieldsInner: {
+        paddingTop: 4,
+    },
+    blurredFields: {
+        opacity: 0.25,
+    },
+    verifyOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: "rgba(255,255,255,0.7)",
+        justifyContent: "center",
+        alignItems: "center",
+        padding: Spacing.lg,
+        zIndex: 10,
+    },
+    verifyOverlayIconBg: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: Colors.white,
+        justifyContent: "center",
+        alignItems: "center",
+        marginBottom: Spacing.sm,
+        shadowColor: Colors.shadow,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+    verifyOverlayTitle: {
+        fontSize: FontSizes.bodyLarge,
+        fontFamily: Fonts.bold,
+        color: Colors.text,
+        textAlign: "center",
+        marginBottom: 4,
+    },
+    verifyOverlaySubtitle: {
+        fontSize: FontSizes.small,
+        fontFamily: Fonts.regular,
+        color: Colors.textSecondary,
+        textAlign: "center",
+        marginBottom: Spacing.md,
+        lineHeight: 18,
+    },
+    verifyOverlayBtn: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: Colors.primary,
+        paddingHorizontal: Spacing.lg,
+        paddingVertical: 12,
+        borderRadius: 24,
+        gap: Spacing.sm,
+        shadowColor: Colors.primary,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+    verifyOverlayBtnText: {
+        color: Colors.white,
+        fontFamily: Fonts.bold,
+        fontSize: FontSizes.body,
     },
 });

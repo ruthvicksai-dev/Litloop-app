@@ -1,5 +1,6 @@
 import { GuestView } from "@/components/profile/GuestProfileView";
 import { ProfileUserCard } from "@/components/profile/ProfileUserCard";
+import VerifiedBadge from "@/components/ui/feedback/VerifiedBadge";
 import { BookCardSkeleton } from "@/components/ui/skeletons/BookCardSkeleton";
 import DiscoverSectionRow from "@/components/ui/cards/DiscoverSectionRow";
 import { EmptyState } from "@/components/ui/feedback/EmptyState";
@@ -216,6 +217,34 @@ export default function ProfileScreen() {
                         scaleAnim={scaleAnim}
                     />
 
+                    {/* Student Verification */}
+                    {user?.isVerifiedStudent ? (
+                        <Animated.View style={{ opacity: fadeAnim }}>
+                            <VerifiedBadge variant="card" />
+                        </Animated.View>
+                    ) : (
+                        <Animated.View style={{ opacity: fadeAnim, paddingHorizontal: 20, marginBottom: Spacing.md }}>
+                            <TouchableOpacity
+                                style={styles.verifyLink}
+                                onPress={() => {
+                                    triggerHaptic("medium");
+                                    router.push("/profile/verify");
+                                }}
+                            >
+                                <Ionicons name="school-outline" size={20} color={Colors.primary} />
+                                <View style={{ flex: 1, marginLeft: 10 }}>
+                                    <Text style={styles.verifyLinkTitle} allowFontScaling={false}>
+                                        Verify Student Status
+                                    </Text>
+                                    <Text style={styles.verifyLinkSubtitle} allowFontScaling={false}>
+                                        Required for College Zone delivery
+                                    </Text>
+                                </View>
+                                <Ionicons name="chevron-forward" size={18} color={Colors.textLight} />
+                            </TouchableOpacity>
+                        </Animated.View>
+                    )}
+
                     {isAdmin && (
                         <Animated.View style={{ opacity: fadeAnim, paddingHorizontal: 20 }}>
                             <TouchableOpacity
@@ -346,5 +375,25 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
+    },
+    verifyLink: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: Colors.white,
+        borderRadius: 16,
+        padding: Spacing.md,
+        borderWidth: 1,
+        borderColor: Colors.border,
+    },
+    verifyLinkTitle: {
+        fontSize: FontSizes.body,
+        fontFamily: Fonts.bold,
+        color: Colors.text,
+    },
+    verifyLinkSubtitle: {
+        fontSize: FontSizes.caption,
+        fontFamily: Fonts.regular,
+        color: Colors.textSecondary,
+        marginTop: 1,
     },
 });

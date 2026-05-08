@@ -15,6 +15,7 @@ import {
 } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -30,6 +31,7 @@ export default function RentalRequestModal({
     onClose,
     bookId,
 }: RentalRequestModalProps) {
+    const router = useRouter();
     const { user, isLoading: isAuthLoading } = useAuth();
     const { fadeAnim, slideAnim } = useFadeSlideIn();
     const {
@@ -295,6 +297,11 @@ export default function RentalRequestModal({
                     latitude !== undefined &&
                     longitude !== undefined
                 }
+                isVerifiedStudent={user?.isVerifiedStudent === true}
+                onVerifyPress={() => {
+                    onClose();
+                    router.push("/profile/verify");
+                }}
             />
         );
     };

@@ -185,11 +185,7 @@ export default function BookReviews({ bookId, limit, hasMore, onLoadMore, isAdmi
 
     if (!reviews || !summary) return null;
     if (summary.totalReviews === 0) {
-        return (
-            <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>No reviews yet.</Text>
-            </View>
-        );
+        return null;
     }
 
     const maxDist = Math.max(...Object.values(summary.distribution), 1);
