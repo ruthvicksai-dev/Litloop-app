@@ -88,9 +88,7 @@ export function useScheduleReturnScreen(rentalId: string) {
         }
 
         let pickupLocation;
-        if (useSameAddress && rental) {
-            pickupLocation = rental.deliveryLocation;
-        } else {
+        if (!useSameAddress) {
             const phoneError = getPhoneValidationError(phone, "Pickup phone number");
             if (phoneError) {
                 showToast(phoneError, "error");

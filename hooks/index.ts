@@ -5,6 +5,7 @@ export * from "./admin/useAdminDashboard";
 export * from "./admin/useEditBookScreen";
 export * from "./admin/useScheduleDeliveryScreen";
 export * from "./admin/useVerifyPaymentScreen";
+export * from "./admin/usePaymentSettings";
 export * from "./animations/useFadeSlideIn";
 export * from "./animations/useFadeSlideScaleIn";
 export * from "./auth/useAuthRedirect";

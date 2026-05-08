@@ -7,7 +7,7 @@ import { Colors, scale, Spacing } from "@/constants/theme";
 import { useToast } from "@/context/ToastContext";
 import { usePaymentScreen } from "@/hooks";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
-import { buildUpiUri, UPI_ID } from "@/utils";
+import { buildUpiUri, UPI_ID_FALLBACK, PAYEE_NAME_FALLBACK } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -30,6 +30,7 @@ export default function PaymentScreen() {
     const router = useRouter();
     const {
         rental,
+        paymentSettings,
         utrNumber,
         setUtrNumber,
         screenshot,
@@ -42,6 +43,11 @@ export default function PaymentScreen() {
         canceling,
         handleCancelPickup,
     } = usePaymentScreen(rentalId);
+
+    // Resolve dynamic config from backend, with env-var fallbacks
+    const upiId = paymentSettings?.upiId ?? UPI_ID_FALLBACK;
+    const merchantName = paymentSettings?.merchantName ?? PAYEE_NAME_FALLBACK;
+    const upiOnHold = paymentSettings === null;
 
     const { isOnline } = useNetworkStatus();
     const { showToast } = useToast();
@@ -176,8 +182,16 @@ export default function PaymentScreen() {
                             style={[
                                 styles.methodCard,
                                 paymentMethod === "upi" && styles.methodActive,
+                                upiOnHold && { opacity: 0.45 },
                             ]}
-                            onPress={() => setPaymentMethod("upi")}
+                            onPress={() => {
+                                if (upiOnHold) {
+                                    showToast("UPI payments are currently on hold. Please use Cash.", "info");
+                                    return;
+                                }
+                                setPaymentMethod("upi");
+                            }}
+                            disabled={upiOnHold}
                         >
                             <View
                                 style={[
@@ -199,6 +213,9 @@ export default function PaymentScreen() {
                             >
                                 UPI
                             </Text>
+                            {upiOnHold && (
+                                <Text style={styles.onHoldLabel}>On Hold</Text>
+                            )}
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={[
@@ -240,7 +257,9 @@ export default function PaymentScreen() {
                                     <QRCode
                                         value={buildUpiUri(
                                             rental.totalRent ?? 0,
-                                            typeof rentalId === "string" ? rentalId : ""
+                                            typeof rentalId === "string" ? rentalId : "",
+                                            upiId,
+                                            merchantName
                                         )}
                                         size={scale(180)}
                                         color={Colors.text}
@@ -249,7 +268,7 @@ export default function PaymentScreen() {
                                     />
                                 </View>
 
-                                <Text style={styles.qrUpiId}>{UPI_ID}</Text>
+                                <Text style={styles.qrUpiId}>{upiId}</Text>
                                 <Text style={styles.qrNote}>
                                     Pay ₹{rental.totalRent ?? 0} using any UPI app
                                 </Text>
@@ -261,7 +280,9 @@ export default function PaymentScreen() {
                                         Linking.openURL(
                                             buildUpiUri(
                                                 rental.totalRent ?? 0,
-                                                typeof rentalId === "string" ? rentalId : ""
+                                                typeof rentalId === "string" ? rentalId : "",
+                                                upiId,
+                                                merchantName
                                             )
                                         ).catch(() => { })
                                     }
@@ -282,11 +303,11 @@ export default function PaymentScreen() {
 
                             <InputField
                                 label="UTR / Transaction Number"
-                                placeholder="Enter 12-character UTR number"
+                                placeholder="Enter 12–22 character UTR number"
                                 value={utrNumber}
                                 onChangeText={setUtrNumber}
                                 autoCapitalize="characters"
-                                maxLength={12}
+                                maxLength={22}
                             />
 
                             <Text style={styles.uploadLabel}>Payment Screenshot (Optional)</Text>
@@ -630,5 +651,11 @@ const styles = StyleSheet.create({
         textAlign: "center",
         lineHeight: 20,
         fontFamily: Fonts.regular,
+    },
+    onHoldLabel: {
+        fontSize: FontSizes.tiny,
+        fontFamily: Fonts.bold,
+        color: Colors.error,
+        marginTop: 2,
     },
 });

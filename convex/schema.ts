@@ -202,6 +202,8 @@ export default defineSchema({
                 v.literal("cancelled")
             )
         ),
+        rejectionReason: v.optional(v.string()),
+
         paymentExpiresAt: v.optional(v.number()),
         utrNumber: v.optional(v.string()),
         paymentScreenshot: v.optional(v.id("_storage")),
@@ -325,4 +327,14 @@ export default defineSchema({
         count: v.number(),
         resetAt: v.number(),
     }).index("by_key", ["key"]),
+
+    // Backend-driven payment configuration (admin-editable, no app rebuild needed)
+    payment_settings: defineTable({
+        upiId: v.string(),
+        merchantName: v.string(),
+        active: v.boolean(),
+        qrEnabled: v.boolean(),
+        updatedAt: v.number(),
+        updatedBy: v.id("users"),
+    }).index("by_active", ["active"]),
 });

@@ -350,3 +350,29 @@ export const getDashboardAnalytics = query({
         };
     },
 });
+
+/**
+ * Lightweight query for the admin dashboard revenue card.
+ * Reads from the same pre-aggregated analytics_monthly table used by
+ * the analytics dashboard, ensuring consistency.
+ */
+export const getDashboardRevenue = query({
+    args: {},
+    handler: async (ctx) => {
+        const now = Date.now();
+        const currentMonth = getMonthKey(now);
+        const stats = await ensureMonthlyAnalytics(ctx, currentMonth);
+
+        const monthDate = new Date(now);
+        const monthLabel = monthDate.toLocaleDateString("en-US", {
+            month: "short",
+            year: "numeric",
+        });
+
+        return {
+            monthlyRevenue: stats.revenue,
+            monthlyOrders: stats.rentals,
+            currentMonthLabel: monthLabel,
+        };
+    },
+});

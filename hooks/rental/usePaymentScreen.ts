@@ -2,6 +2,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { MAX_UPLOAD_SIZE_BYTES } from "@/utils";
 import { useMutation, useQuery } from "convex/react";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
@@ -13,6 +14,10 @@ export function usePaymentScreen(rentalId: string) {
         api.rentals.getRental,
         accessToken ? { accessToken, rentalId: rentalId as Id<"rentals"> } : "skip"
     );
+
+    // Fetch backend-driven payment settings for dynamic QR/UPI config
+    const paymentSettings = useQuery(api.paymentSettings.getActiveSettings);
+
     const { showToast } = useToast();
     const router = useRouter();
 
@@ -36,12 +41,23 @@ export function usePaymentScreen(rentalId: string) {
         });
 
         if (!result.canceled && result.assets[0]) {
-            setScreenshot(result.assets[0].uri);
+            const asset = result.assets[0];
+
+            // Client-side file size validation
+            if (asset.fileSize && asset.fileSize > MAX_UPLOAD_SIZE_BYTES) {
+                showToast("Image too large. Please select an image under 10 MB.", "error");
+                return;
+            }
+
+            setScreenshot(asset.uri);
         }
     };
 
     const handleUpiPayment = async () => {
-        if (!utrNumber.trim()) {
+        // Normalize UTR to uppercase for consistent matching
+        const normalizedUtr = utrNumber.trim().toUpperCase();
+
+        if (!normalizedUtr) {
             showToast("UTR number is required.", "error");
             return;
         }
@@ -66,7 +82,7 @@ export function usePaymentScreen(rentalId: string) {
             await submitUpiPayment({
                 accessToken,
                 rentalId: rentalId as Id<"rentals">,
-                utrNumber,
+                utrNumber: normalizedUtr,
                 paymentScreenshot: storageId,
             });
 
@@ -124,6 +140,7 @@ export function usePaymentScreen(rentalId: string) {
 
     return {
         rental,
+        paymentSettings,
         utrNumber,
         setUtrNumber,
         screenshot,

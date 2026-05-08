@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
     emptyText: {
         fontSize: FontSizes.body,
         fontFamily: Fonts.regular,
-        color: Colors.textSecondary,
+        color: Colors.white,
     },
     errorText: {
         color: Colors.error,

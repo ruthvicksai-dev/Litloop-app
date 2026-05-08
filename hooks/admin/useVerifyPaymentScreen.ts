@@ -33,13 +33,18 @@ export function useVerifyPaymentScreen(rentalId?: string) {
             : "skip"
     );
 
-    const handleVerify = async (targetRentalId: string, approved: boolean) => {
+    const handleVerify = async (
+        targetRentalId: string,
+        approved: boolean,
+        rejectionReason?: string
+    ) => {
         try {
             if (!accessToken) throw new Error("Unauthenticated");
             await verifyPayment({
                 accessToken,
                 rentalId: targetRentalId as Id<"rentals">,
                 approved,
+                rejectionReason: !approved ? rejectionReason?.trim() : undefined,
             });
             showToast(
                 approved ? "Payment approved!" : "Payment rejected.",

@@ -17,6 +17,7 @@ import {
     ScrollView,
     StyleSheet,
     Text,
+    TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
@@ -36,6 +37,27 @@ export default function VerifyPaymentScreen() {
         setRefreshing(true);
         setTimeout(() => setRefreshing(false), 1000);
     }, []);
+
+    // Rejection reason state
+    const [rejectModalVisible, setRejectModalVisible] = React.useState(false);
+    const [rejectTargetId, setRejectTargetId] = React.useState<string | null>(null);
+    const [rejectionReason, setRejectionReason] = React.useState("");
+    const [rejecting, setRejecting] = React.useState(false);
+
+    const openRejectModal = (targetId: string) => {
+        setRejectTargetId(targetId);
+        setRejectionReason("");
+        setRejectModalVisible(true);
+    };
+
+    const confirmReject = async () => {
+        if (!rejectTargetId) return;
+        setRejecting(true);
+        await handleVerify(rejectTargetId, false, rejectionReason);
+        setRejecting(false);
+        setRejectModalVisible(false);
+        setRejectTargetId(null);
+    };
 
     if ((params.rentalId && singleRental === undefined) || pendingPayments === undefined) {
         return (
@@ -196,7 +218,7 @@ export default function VerifyPaymentScreen() {
                             <View style={styles.actionButtonWrap}>
                                 <Button
                                     title="Reject"
-                                    onPress={() => handleVerify(singleRental._id, false)}
+                                    onPress={() => openRejectModal(singleRental._id)}
                                     variant="outline"
                                     style={[styles.fullWidthButton, styles.compactActionButton]}
                                     textStyle={styles.compactActionButtonText}
@@ -205,6 +227,16 @@ export default function VerifyPaymentScreen() {
                         </View>
                     </View>
                 </ScrollView>
+
+                {/* Rejection reason modal */}
+                <RejectReasonModal
+                    visible={rejectModalVisible}
+                    reason={rejectionReason}
+                    setReason={setRejectionReason}
+                    loading={rejecting}
+                    onConfirm={confirmReject}
+                    onCancel={() => setRejectModalVisible(false)}
+                />
             </SafeAreaView>
         );
     }
@@ -316,7 +348,7 @@ export default function VerifyPaymentScreen() {
                                 <View style={styles.actionButtonWrap}>
                                     <Button
                                         title="Reject"
-                                        onPress={() => handleVerify(item._id, false)}
+                                        onPress={() => openRejectModal(item._id)}
                                         variant="outline"
                                         style={[styles.fullWidthButton, styles.compactActionButton]}
                                         textStyle={styles.compactActionButtonText}
@@ -398,9 +430,124 @@ export default function VerifyPaymentScreen() {
                     </View>
                 }
             />
+
+            {/* Rejection reason modal */}
+            <RejectReasonModal
+                visible={rejectModalVisible}
+                reason={rejectionReason}
+                setReason={setRejectionReason}
+                loading={rejecting}
+                onConfirm={confirmReject}
+                onCancel={() => setRejectModalVisible(false)}
+            />
         </SafeAreaView>
     );
 }
+
+/** Inline modal that prompts admin for a rejection reason before rejecting a payment. */
+function RejectReasonModal({
+    visible,
+    reason,
+    setReason,
+    loading,
+    onConfirm,
+    onCancel,
+}: {
+    visible: boolean;
+    reason: string;
+    setReason: (v: string) => void;
+    loading: boolean;
+    onConfirm: () => void;
+    onCancel: () => void;
+}) {
+    if (!visible) return null;
+
+    return (
+        <View style={rejectStyles.overlay}>
+            <View style={rejectStyles.card}>
+                <Text style={rejectStyles.title}>Reject Payment</Text>
+                <Text style={rejectStyles.subtitle}>
+                    Provide a reason so the user knows why their payment was rejected.
+                </Text>
+                <TextInput
+                    style={rejectStyles.input}
+                    placeholder="e.g., UTR does not match, amount incorrect"
+                    placeholderTextColor={Colors.textLight}
+                    value={reason}
+                    onChangeText={setReason}
+                    multiline
+                    numberOfLines={3}
+                    maxLength={200}
+                    autoFocus
+                />
+                <View style={rejectStyles.actions}>
+                    <Button
+                        title="Cancel"
+                        onPress={onCancel}
+                        variant="outline"
+                        style={rejectStyles.btn}
+                    />
+                    <Button
+                        title="Reject"
+                        onPress={onConfirm}
+                        loading={loading}
+                        style={[rejectStyles.btn, { backgroundColor: Colors.error }]}
+                    />
+                </View>
+            </View>
+        </View>
+    );
+}
+
+const rejectStyles = StyleSheet.create({
+    overlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: "rgba(0,0,0,0.45)",
+        justifyContent: "center",
+        alignItems: "center",
+        padding: Spacing.lg,
+        zIndex: 100,
+    },
+    card: {
+        backgroundColor: Colors.white,
+        borderRadius: Layout.cardRadiusLarge,
+        padding: Spacing.lg,
+        width: "100%",
+        maxWidth: 400,
+    },
+    title: {
+        fontSize: FontSizes.title,
+        fontFamily: Fonts.bold,
+        color: Colors.text,
+        marginBottom: Spacing.xs,
+    },
+    subtitle: {
+        fontSize: FontSizes.body,
+        fontFamily: Fonts.regular,
+        color: Colors.textSecondary,
+        marginBottom: Spacing.md,
+        lineHeight: scale(20),
+    },
+    input: {
+        borderWidth: 1,
+        borderColor: Colors.border,
+        borderRadius: Layout.borderRadius,
+        padding: Spacing.sm,
+        fontSize: FontSizes.body,
+        fontFamily: Fonts.regular,
+        color: Colors.text,
+        minHeight: scale(80),
+        textAlignVertical: "top",
+        marginBottom: Spacing.md,
+    },
+    actions: {
+        flexDirection: "row",
+        gap: Spacing.md,
+    },
+    btn: {
+        flex: 1,
+    },
+});
 
 const styles = StyleSheet.create({
     container: {

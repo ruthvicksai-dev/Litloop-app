@@ -78,6 +78,7 @@ export async function getReliableCurrentLocation(): Promise<Location.LocationObj
     }
 
     let location: Location.LocationObject | null = null;
+    let lastError: Error | null = null;
 
     try {
         location = await Location.getCurrentPositionAsync({
@@ -85,6 +86,7 @@ export async function getReliableCurrentLocation(): Promise<Location.LocationObj
             mayShowUserSettingsDialog: true,
         });
     } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
         console.warn("[Location] Current position unavailable, trying lower-accuracy fallback...", error);
     }
 
@@ -95,6 +97,7 @@ export async function getReliableCurrentLocation(): Promise<Location.LocationObj
                 mayShowUserSettingsDialog: true,
             });
         } catch (error) {
+            lastError = error instanceof Error ? error : new Error(String(error));
             console.warn("[Location] Lower-accuracy current position unavailable, trying last known position...", error);
         }
     }
@@ -115,8 +118,12 @@ export async function getReliableCurrentLocation(): Promise<Location.LocationObj
             throw new Error(ANDROID_EMULATOR_LOCATION_HELP);
         }
 
+        if (lastError && lastError.message.includes("location services")) {
+            throw new Error("Current location is unavailable. Please make sure that location services are enabled.");
+        }
+
         throw new Error(
-            "Could not determine your current location. Make sure GPS is on, then try again in an open area or near a window."
+            lastError?.message || "Could not determine your current location. Make sure GPS is on, then try again in an open area or near a window."
         );
     }
 

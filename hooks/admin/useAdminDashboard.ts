@@ -2,7 +2,6 @@ import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { formatMonthLabel, getCurrentMonthKey, getRevenueMetricsForMonth } from "@/utils";
 import { useMutation, useQuery } from "convex/react";
 import { useMemo, useState } from "react";
 
@@ -36,6 +35,9 @@ export function useAdminDashboard() {
     const markReturned = useMutation(api.rentals.markReturned);
     const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>("all");
 
+    // Revenue from the same pre-aggregated table as the analytics page
+    const serverRevenue = useQuery(api.analytics.getDashboardRevenue);
+
     const stats = useMemo(() => {
         const rentalList = rentals?.page ?? [];
 
@@ -54,20 +56,9 @@ export function useAdminDashboard() {
     }, [rentals]);
 
     const revenue = useMemo(() => {
-        const rentalList = rentals?.page ?? [];
-
-        const currentMonthKey = getCurrentMonthKey();
-        const currentMonthMetrics = getRevenueMetricsForMonth(
-            rentalList,
-            currentMonthKey
-        );
-
-        return {
-            monthlyRevenue: currentMonthMetrics.revenue,
-            monthlyOrders: currentMonthMetrics.totalOrders,
-            currentMonthLabel: formatMonthLabel(currentMonthKey),
-        };
-    }, [rentals]);
+        if (serverRevenue) return serverRevenue;
+        return { monthlyRevenue: 0, monthlyOrders: 0, currentMonthLabel: "" };
+    }, [serverRevenue]);
 
     const filteredRentals = useMemo(() => {
         const rentalList = rentals?.page ?? [];

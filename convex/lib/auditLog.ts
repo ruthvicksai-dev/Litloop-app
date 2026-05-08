@@ -28,39 +28,4 @@ export async function insertAuditLog(
     });
 }
 
-/**
- * H3: DB-backed rate limiter for critical paths.
- * Unlike the in-memory rate limiter, this is persisted in the Convex DB
- * and is consistent across all isolate instances.
- *
- * Use for: payment submission, sign-in, sign-up.
- */
-export async function assertDbRateLimit(
-    ctx: { db: any },
-    key: string,
-    limit: number,
-    windowMs: number,
-    message: string
-): Promise<void> {
-    const now = Date.now();
-    const existing = await ctx.db
-        .query("rate_limit_events")
-        .withIndex("by_key", (q: any) => q.eq("key", key))
-        .first();
 
-    if (existing && existing.resetAt > now) {
-        if (existing.count >= limit) {
-            throw new Error(message);
-        }
-        await ctx.db.patch(existing._id, { count: existing.count + 1 });
-    } else {
-        if (existing) {
-            await ctx.db.delete(existing._id);
-        }
-        await ctx.db.insert("rate_limit_events", {
-            key,
-            count: 1,
-            resetAt: now + windowMs,
-        });
-    }
-}

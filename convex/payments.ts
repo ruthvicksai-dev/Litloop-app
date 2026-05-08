@@ -8,6 +8,8 @@ import { assertAdmin, getAuthenticatedUser } from "./lib/authHelpers";
 import { getBookWithCoverUrls } from "./lib/bookHelpers";
 import { assertRateLimit, buildRateLimitKey } from "./lib/rateLimit";
 
+const MAX_UPLOAD_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+
 const PAYMENT_RATE_LIMITS = {
     submitUpiPayment: {
         limit: 5,
@@ -18,6 +20,11 @@ const PAYMENT_RATE_LIMITS = {
         limit: 5,
         windowMs: 15 * 60 * 1000,
         message: "Too many payment selections. Please try again later.",
+    },
+    uploadUrl: {
+        limit: 10,
+        windowMs: 15 * 60 * 1000,
+        message: "Too many upload requests. Please try again later.",
     },
     global: {
         limit: 15,
@@ -68,10 +75,12 @@ export const submitUpiPayment = mutation({
         );
         await assertRateLimit(ctx, submitPaymentKey, PAYMENT_RATE_LIMITS.submitUpiPayment);
 
-        if (!args.utrNumber.trim()) throw new Error("UTR number is required.");
+        // Normalize UTR: uppercase + trim for consistent duplicate detection
+        const normalizedUtr = args.utrNumber.trim().toUpperCase();
+        if (!normalizedUtr) throw new Error("UTR number is required.");
         // M4 FIX: Accept 12–22 chars — covers UPI txn IDs (12) and NEFT/IMPS UTR (up to 22)
         const utrRegex = /^[A-Za-z0-9]{12,22}$/;
-        if (!utrRegex.test(args.utrNumber.trim())) {
+        if (!utrRegex.test(normalizedUtr)) {
             throw new Error("Invalid UTR/transaction ID. Must be 12–22 alphanumeric characters.");
         }
 
@@ -87,20 +96,37 @@ export const submitUpiPayment = mutation({
             );
         }
 
+        // File size enforcement — protect Convex Free Tier storage
+        if (fileMetadata.size > MAX_UPLOAD_SIZE_BYTES) {
+            throw new Error("File too large. Payment screenshot must be under 10 MB.");
+        }
+
         const existingWithSameUtr = await ctx.db
             .query("rentals")
-            .withIndex("by_utrNumber", (q) => q.eq("utrNumber", args.utrNumber.trim()))
+            .withIndex("by_utrNumber", (q) => q.eq("utrNumber", normalizedUtr))
             .first();
         if (existingWithSameUtr && existingWithSameUtr._id !== args.rentalId) {
+            // Audit: log duplicate UTR attempt for fraud detection
+            await insertAuditLog(ctx, "duplicate_utr_attempt", caller._id, args.rentalId, "rental", {
+                utrNumber: normalizedUtr,
+                conflictingRentalId: existingWithSameUtr._id,
+            });
             throw new Error("This UTR number has already been used for another payment. Please provide the correct transaction ID.");
         }
 
         await ctx.db.patch(args.rentalId, {
             paymentMethod: "upi",
             paymentStatus: "verification_pending",
-            utrNumber: args.utrNumber.trim(),
+            utrNumber: normalizedUtr,
             paymentScreenshot: args.paymentScreenshot,
             status: "payment_pending",
+        });
+
+        // Audit: log payment submission for traceability
+        await insertAuditLog(ctx, "payment_submitted", caller._id, args.rentalId, "rental", {
+            method: "upi",
+            utrNumber: normalizedUtr,
+            amount: rental.totalRent ?? 0,
         });
 
         const book = await ctx.db.get(rental.bookId);
@@ -177,6 +203,7 @@ export const verifyPayment = mutation({
     args: {
         rentalId: v.id("rentals"),
         approved: v.boolean(),
+        rejectionReason: v.optional(v.string()),
         accessToken: v.string(),
     },
     handler: async (ctx, args) => {
@@ -184,6 +211,8 @@ export const verifyPayment = mutation({
         const rental = await ctx.db.get(args.rentalId);
         if (!rental) throw new Error("Rental not found.");
 
+        // Convex mutations are serialized per-document — no TOCTOU risk.
+        // A second mutation on the same rental will queue behind this one.
         if (
             rental.paymentStatus !== "verification_pending" &&
             rental.paymentStatus !== "cash_pending"
@@ -191,21 +220,11 @@ export const verifyPayment = mutation({
             throw new Error("Payment is not pending verification.");
         }
 
-        // C2: Re-read to guard against concurrent approval by two admins
-        const freshRental = await ctx.db.get(args.rentalId);
-        if (
-            !freshRental ||
-            (freshRental.paymentStatus !== "verification_pending" &&
-                freshRental.paymentStatus !== "cash_pending")
-        ) {
-            throw new Error("Payment has already been processed.");
-        }
-
-        const book = await ctx.db.get(freshRental.bookId);
+        const book = await ctx.db.get(rental.bookId);
 
         if (args.approved) {
             const genres = book?.genres ?? [];
-            const amount = (freshRental.totalRent ?? 0) + (freshRental.lateFee ?? 0);
+            const amount = (rental.totalRent ?? 0) + (rental.lateFee ?? 0);
 
             await ctx.db.patch(args.rentalId, {
                 paymentStatus: "paid",
@@ -234,20 +253,25 @@ export const verifyPayment = mutation({
                 dataJson: JSON.stringify({ rentalId: args.rentalId, type: "rental" }),
             });
         } else {
+            const reason = args.rejectionReason?.trim() || undefined;
             await ctx.db.patch(args.rentalId, {
                 paymentStatus: "rejected",
+                rejectionReason: reason,
                 status: "pickup_scheduled", // Roll back to allow resubmission
             });
 
             await insertAuditLog(ctx, "payment_rejected", admin._id, args.rentalId, "rental", {
                 method: rental.paymentMethod,
+                rejectionReason: reason,
             });
 
             // H4: Notify user of payment rejection so they can resubmit
             await ctx.scheduler.runAfter(0, internal.notifications.notifyUser, {
                 userId: rental.userId,
                 title: "Payment Rejected ❌",
-                body: `Your ${rental.paymentMethod?.toUpperCase() ?? "payment"} for "${book?.title ?? "your book"}" was rejected. Please verify your details and resubmit within the payment window.`,
+                body: reason
+                    ? `Your ${rental.paymentMethod?.toUpperCase() ?? "payment"} for "${book?.title ?? "your book"}" was rejected: ${reason}. Please resubmit within the payment window.`
+                    : `Your ${rental.paymentMethod?.toUpperCase() ?? "payment"} for "${book?.title ?? "your book"}" was rejected. Please verify your details and resubmit within the payment window.`,
                 dataJson: JSON.stringify({ rentalId: args.rentalId, type: "rental" }),
             });
         }
@@ -259,7 +283,12 @@ export const verifyPayment = mutation({
 export const generateUploadUrl = mutation({
     args: { accessToken: v.string() },
     handler: async (ctx, args) => {
-        await getAuthenticatedUser(ctx, args.accessToken);
+        const user = await getAuthenticatedUser(ctx, args.accessToken);
+
+        // Rate-limit uploads to protect Convex Free Tier storage
+        const uploadKey = buildRateLimitKey("payment", "upload", user._id);
+        await assertRateLimit(ctx, uploadKey, PAYMENT_RATE_LIMITS.uploadUrl);
+
         return await ctx.storage.generateUploadUrl();
     },
 });

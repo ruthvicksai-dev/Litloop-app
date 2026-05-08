@@ -24,6 +24,7 @@ import * as Location from "expo-location";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
+    ActivityIndicator,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -77,6 +78,7 @@ export default function ScheduleReturnScreen() {
         setFormattedAddress,
     } = useScheduleReturnScreen(rentalId);
     const [isMapPickerVisible, setIsMapPickerVisible] = React.useState(false);
+    const [isLocating, setIsLocating] = React.useState(false);
     const [mismatchModalVisible, setMismatchModalVisible] = React.useState(false);
     const [mismatchConfig, setMismatchConfig] = React.useState({
         title: "",
@@ -363,8 +365,10 @@ export default function ScheduleReturnScreen() {
                                     <>
                                         <TouchableOpacity
                                             style={styles.locationBtn}
+                                            disabled={isLocating}
                                             onPress={async () => {
                                                 try {
+                                                    setIsLocating(true);
                                                     const location = await getReliableCurrentLocation();
 
                                                     await updateAddressFromCoords(
@@ -379,12 +383,20 @@ export default function ScheduleReturnScreen() {
                                                             : "Failed to fetch location. Please try again.",
                                                         "error"
                                                     );
+                                                } finally {
+                                                    setIsLocating(false);
                                                 }
                                             }}
                                         >
                                             <View style={styles.locationBtnContent}>
-                                                <Ionicons name="location" size={18} color={Colors.primary} />
-                                                <Text style={styles.locationBtnText}>Use Current Location</Text>
+                                                {isLocating ? (
+                                                    <ActivityIndicator size="small" color={Colors.primary} />
+                                                ) : (
+                                                    <Ionicons name="location" size={18} color={Colors.primary} />
+                                                )}
+                                                <Text style={styles.locationBtnText}>
+                                                    {isLocating ? "Locating..." : "Use Current Location"}
+                                                </Text>
                                             </View>
                                         </TouchableOpacity>
                                         {formattedAddress ? (

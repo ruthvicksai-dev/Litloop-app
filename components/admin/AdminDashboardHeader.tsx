@@ -6,13 +6,13 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 type AdminDashboardHeaderProps = {
     onNotificationsPress: () => void;
-    onSignOut: () => void;
+    onSettingsPress: () => void;
     unreadCount?: number;
 };
 
 export default function AdminDashboardHeader({
     onNotificationsPress,
-    onSignOut,
+    onSettingsPress,
     unreadCount = 0,
 }: AdminDashboardHeaderProps) {
     return (
@@ -30,8 +30,8 @@ export default function AdminDashboardHeader({
                     />
                     {unreadCount > 0 ? <View style={styles.badge} /> : null}
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.logoutBtn} onPress={onSignOut}>
-                    <Ionicons name="log-out-outline" size={20} color={Colors.textSecondary} />
+                <TouchableOpacity style={styles.settingsBtn} onPress={onSettingsPress}>
+                    <Ionicons name="settings-outline" size={20} color={Colors.textSecondary} />
                 </TouchableOpacity>
             </View>
         </View>
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
         borderWidth: 1.5,
         borderColor: Colors.primaryLight,
     },
-    logoutBtn: {
+    settingsBtn: {
         width: 40,
         aspectRatio: 1,
         borderRadius: 12,

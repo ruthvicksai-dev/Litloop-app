@@ -3,7 +3,6 @@ import AdminDashboardStats from "@/components/admin/AdminDashboardStats";
 import AdminRentalCard from "@/components/admin/AdminRentalCard";
 import AdminStatusFilters from "@/components/admin/AdminStatusFilters";
 import BookLoader from "@/components/ui/feedback/BookLoader";
-import ConfirmActionModal from "@/components/ui/feedback/ConfirmActionModal";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
@@ -42,7 +41,6 @@ export default function AdminDashboard() {
         statusFilters,
     } = useAdminDashboard();
     const { fadeAnim, slideAnim } = useFadeSlideIn();
-    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     const unreadCount = useQuery(
         api.notifications.getUnreadCount,
         accessToken ? { accessToken } : "skip"
@@ -78,9 +76,9 @@ export default function AdminDashboard() {
                                 triggerHaptic("light");
                                 router.push("/(admin)/notifications" as any);
                             }}
-                            onSignOut={() => {
-                                triggerHaptic("medium");
-                                setShowLogoutConfirm(true);
+                            onSettingsPress={() => {
+                                triggerHaptic("light");
+                                router.push("/(admin)/payment-settings" as any);
                             }}
                         />
 
@@ -184,19 +182,6 @@ export default function AdminDashboard() {
                 }
             />
 
-            <ConfirmActionModal
-                visible={showLogoutConfirm}
-                title="Sign Out?"
-                message="Are you sure you want to log out of the admin panel?"
-                confirmLabel="Log Out"
-                cancelLabel="Cancel"
-                tone="danger"
-                onCancel={() => setShowLogoutConfirm(false)}
-                onConfirm={async () => {
-                    setShowLogoutConfirm(false);
-                    await handleSignOut();
-                }}
-            />
         </SafeAreaView>
     );
 }
