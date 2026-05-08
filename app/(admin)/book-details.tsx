@@ -1,16 +1,17 @@
-import BookImageCarousel from "@/components/books/BookImageCarousel";
+
 import BookReviews from "@/components/books/BookReviews";
-import ConfirmActionModal from "@/components/ui/feedback/ConfirmActionModal";
 import BookLoader from "@/components/ui/feedback/BookLoader";
+import ConfirmActionModal from "@/components/ui/feedback/ConfirmActionModal";
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Layout, Spacing, RENTAL_STATUS_LABELS, STATUS_COLORS } from "@/constants/theme";
+import { Colors, Layout, RENTAL_STATUS_LABELS, Spacing, STATUS_COLORS } from "@/constants/theme";
 import { useAdminBookDetailsScreen } from "@/hooks";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useState } from "react";
+import React from "react";
 import {
     Alert,
     Animated,
+    Image,
     ScrollView,
     StyleSheet,
     Text,
@@ -23,7 +24,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function AdminBookDetailsScreen() {
     const { bookId } = useLocalSearchParams<{ bookId: string }>();
     const router = useRouter();
-    const [activeIndex, setActiveIndex] = useState(0);
 
     const {
         book,
@@ -44,6 +44,10 @@ export default function AdminBookDetailsScreen() {
         confirmDelete,
         cancelDelete,
         handleUpdateInventory,
+        loadMoreReviews,
+        loadMoreRentals,
+        reviewsLimit,
+        rentalsLimit,
         fadeAnim,
         slideAnim,
     } = useAdminBookDetailsScreen(bookId);
@@ -117,50 +121,75 @@ export default function AdminBookDetailsScreen() {
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
             >
-                {/* Book Cover Carousel */}
-                <BookImageCarousel
-                    images={images}
-                    activeIndex={activeIndex}
-                    onIndexChange={setActiveIndex}
-                    isUnavailable={book.availableCopies === 0}
-                />
-
-                {/* Book Information Section */}
+                {/* Hero Section */}
                 <Animated.View
                     style={[
-                        styles.infoSection,
+                        styles.heroSection,
                         { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
                     ]}
                 >
-                    <Text style={styles.bookTitle}>{book.title}</Text>
-                    <Text style={styles.bookAuthor}>by {book.author}</Text>
+                    <View style={styles.heroLeftCol}>
+                        {images.length > 0 ? (
+                            <Image source={{ uri: images[0] }} style={styles.heroCover} />
+                        ) : (
+                            <View style={[styles.heroCover, styles.heroCoverPlaceholder]}>
+                                <Ionicons name="book-outline" size={40} color={Colors.textLight} />
+                            </View>
+                        )}
+                    </View>
 
-                    <View style={styles.badgeRow}>
-                        <View style={styles.genreBadge}>
-                            <Text style={styles.genreBadgeText}>{genre}</Text>
-                        </View>
-                        <View style={[
-                            styles.statusBadge,
-                            { backgroundColor: book.availableCopies > 0 ? Colors.success + "18" : Colors.error + "18" },
-                        ]}>
+                    <View style={styles.heroInfo}>
+                        <Text style={styles.heroTitle} numberOfLines={2}>{book.title}</Text>
+                        <Text style={styles.heroAuthor} numberOfLines={1}>by {book.author}</Text>
+
+                        <View style={styles.heroBadgeRow}>
+                            <View style={styles.genreBadge}>
+                                <Text style={styles.genreBadgeText}>{genre}</Text>
+                            </View>
                             <View style={[
-                                styles.statusDot,
-                                { backgroundColor: book.availableCopies > 0 ? Colors.success : Colors.error },
-                            ]} />
-                            <Text style={[
-                                styles.statusBadgeText,
-                                { color: book.availableCopies > 0 ? Colors.success : Colors.error },
+                                styles.statusBadge,
+                                { backgroundColor: book.availableCopies > 0 ? Colors.success + "18" : Colors.error + "18" },
                             ]}>
-                                {book.availableCopies > 0 ? "Available" : "Out of Stock"}
-                            </Text>
+                                <View style={[
+                                    styles.statusDot,
+                                    { backgroundColor: book.availableCopies > 0 ? Colors.success : Colors.error },
+                                ]} />
+                                <Text style={[
+                                    styles.statusBadgeText,
+                                    { color: book.availableCopies > 0 ? Colors.success : Colors.error },
+                                ]}>
+                                    {book.availableCopies > 0 ? "Available" : "Out of Stock"}
+                                </Text>
+                            </View>
+                        </View>
+
+                        <View style={styles.priceRow}>
+                            <Ionicons name="pricetag-outline" size={16} color={Colors.primary} />
+                            <Text style={styles.priceText}>₹{book.rentPerDay}/day</Text>
+                        </View>
+
+                        <View style={styles.heroMetaRow}>
+                            <View style={styles.heroMetaItem}>
+                                <Ionicons name="library-outline" size={14} color={Colors.textSecondary} />
+                                <Text style={styles.heroMetaText}>{book.totalCopies} Copies</Text>
+                            </View>
+                            {(book.avgRating ?? book.rating ?? 0) > 0 && (
+                                <View style={styles.heroMetaItem}>
+                                    <Ionicons name="star" size={14} color={Colors.warning} />
+                                    <Text style={styles.heroMetaText}>{(book.avgRating ?? book.rating).toFixed(1)}</Text>
+                                </View>
+                            )}
                         </View>
                     </View>
+                </Animated.View>
 
-                    <View style={styles.priceRow}>
-                        <Ionicons name="pricetag-outline" size={18} color={Colors.primary} />
-                        <Text style={styles.priceText}>₹{book.rentPerDay}/day</Text>
-                    </View>
-
+                {/* Main Content Sections */}
+                <Animated.View
+                    style={[
+                        styles.contentSections,
+                        { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+                    ]}
+                >
                     {/* Description */}
                     <View style={styles.sectionCard}>
                         <Text style={styles.sectionLabel}>Description</Text>
@@ -259,7 +288,13 @@ export default function AdminBookDetailsScreen() {
                             <Ionicons name="chatbubbles-outline" size={20} color={Colors.primary} />
                             <Text style={styles.sectionLabel}>Reviews</Text>
                         </View>
-                        <BookReviews bookId={bookId} />
+                        <BookReviews
+                            bookId={bookId}
+                            limit={reviewsLimit}
+                            hasMore={(reviewSummary?.totalReviews ?? 0) > (reviews?.length ?? 0)}
+                            onLoadMore={loadMoreReviews}
+                            isAdmin={true}
+                        />
                     </View>
 
                     {/* Borrow Records Section */}
@@ -308,6 +343,11 @@ export default function AdminBookDetailsScreen() {
                                         </View>
                                     );
                                 })}
+                                {bookRentals.length === rentalsLimit && (
+                                    <TouchableOpacity style={styles.loadMoreBtn} onPress={loadMoreRentals} activeOpacity={0.8}>
+                                        <Text style={styles.loadMoreText}>Load More</Text>
+                                    </TouchableOpacity>
+                                )}
                             </View>
                         )}
                     </View>
@@ -389,6 +429,73 @@ const styles = StyleSheet.create({
     scrollContent: {
         paddingBottom: Spacing.xl + 40,
     },
+    heroSection: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        paddingHorizontal: Spacing.md,
+        paddingTop: Spacing.sm,
+        paddingBottom: Spacing.xs,
+        gap: Spacing.md,
+    },
+    heroLeftCol: {
+        width: '25%',
+        alignItems: 'center',
+        gap: 5,
+    },
+    heroCover: {
+        width: '100%',
+        aspectRatio: 2 / 3,
+        borderRadius: Layout.cardRadius,
+        backgroundColor: Colors.border,
+    },
+    heroCoverPlaceholder: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    heroInfo: {
+        flex: 1,
+        justifyContent: 'flex-start',
+    },
+    heroTitle: {
+        fontSize: FontSizes.titleLarge,
+        color: Colors.text,
+        fontFamily: Fonts.bold,
+        lineHeight: 28,
+        marginBottom: 4,
+    },
+    heroAuthor: {
+        fontSize: FontSizes.small,
+        color: Colors.textSecondary,
+        fontFamily: Fonts.medium,
+        marginBottom: Spacing.sm,
+    },
+    heroBadgeRow: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        gap: Spacing.xs,
+        marginBottom: Spacing.sm,
+    },
+    heroMetaRow: {
+        flexDirection: 'row',
+        gap: Spacing.sm,
+    },
+    heroMetaItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+    },
+    heroMetaText: {
+        fontSize: FontSizes.caption,
+        fontFamily: Fonts.medium,
+        color: Colors.textSecondary,
+    },
+    contentSections: {
+        paddingHorizontal: Spacing.md,
+        paddingTop: Spacing.sm,
+        borderTopLeftRadius: Layout.cardRadiusLarge + 10,
+        borderTopRightRadius: Layout.cardRadiusLarge + 10,
+        backgroundColor: Colors.background,
+    },
     infoSection: {
         paddingHorizontal: Spacing.lg,
         paddingTop: Spacing.xl,
@@ -458,12 +565,12 @@ const styles = StyleSheet.create({
 
     // Section Cards
     sectionCard: {
-        backgroundColor: Colors.white,
-        borderRadius: Layout.cardRadiusLarge,
-        padding: Spacing.lg,
+        paddingTop: Spacing.xs,
+        paddingBottom: Spacing.md,
+        paddingHorizontal: Spacing.xs,
         marginBottom: Spacing.md,
-        borderWidth: 1,
-        borderColor: "rgba(0,0,0,0.05)",
+        borderBottomWidth: 1,
+        borderBottomColor: "rgba(0,0,0,0.05)",
     },
     sectionHeaderRow: {
         flexDirection: "row",
@@ -472,7 +579,7 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.md,
     },
     sectionLabel: {
-        fontSize: FontSizes.title,
+        fontSize: FontSizes.subtitle,
         fontFamily: Fonts.bold,
         color: Colors.text,
         flex: 1,
@@ -494,11 +601,14 @@ const styles = StyleSheet.create({
     // Inventory
     inventoryGrid: {
         flexDirection: "row",
-        backgroundColor: Colors.background,
+        backgroundColor: "rgba(255, 255, 255, 0.5)",
         borderRadius: Layout.cardRadius,
-        paddingVertical: Spacing.md,
+        paddingVertical: Spacing.sm,
+        paddingHorizontal: Spacing.sm,
         alignItems: "center",
-        marginBottom: Spacing.md,
+        marginBottom: Spacing.sm,
+        borderWidth: 1,
+        borderColor: "rgba(0,0,0,0.03)",
     },
     inventoryItem: {
         flex: 1,
@@ -506,14 +616,14 @@ const styles = StyleSheet.create({
         gap: 4,
     },
     inventoryNumber: {
-        fontSize: FontSizes.heading,
+        fontSize: FontSizes.titleLarge,
         fontFamily: Fonts.bold,
         color: Colors.text,
     },
     inventoryLabel: {
-        fontSize: FontSizes.caption,
+        fontSize: FontSizes.tiny,
         color: Colors.textSecondary,
-        fontFamily: Fonts.regular,
+        fontFamily: Fonts.medium,
         textTransform: "uppercase",
         letterSpacing: 0.5,
     },
@@ -535,7 +645,7 @@ const styles = StyleSheet.create({
     inventoryUpdateRow: {
         flexDirection: "row",
         alignItems: "center",
-        gap: Spacing.sm,
+        gap: Spacing.xs,
     },
     inventoryInput: {
         flex: 1,
@@ -546,8 +656,8 @@ const styles = StyleSheet.create({
         fontSize: FontSizes.body,
         fontFamily: Fonts.regular,
         color: Colors.text,
-        borderWidth: 1,
-        borderColor: Colors.border,
+        borderWidth: 1.5,
+        borderColor: Colors.primaryDark,
     },
     inventoryUpdateBtn: {
         flexDirection: "row",
@@ -596,9 +706,11 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
-        backgroundColor: Colors.background,
-        borderRadius: 12,
-        padding: 14,
+        backgroundColor: "rgba(255, 255, 255, 0.5)",
+        borderRadius: 10,
+        padding: 10,
+        borderWidth: 1,
+        borderColor: "rgba(0,0,0,0.02)",
     },
     recordInfo: {
         flex: 1,
@@ -625,6 +737,19 @@ const styles = StyleSheet.create({
         fontSize: FontSizes.tiny,
         fontFamily: Fonts.bold,
         textTransform: "uppercase",
+    },
+    loadMoreBtn: {
+        paddingVertical: 12,
+        alignItems: "center",
+        justifyContent: "center",
+        marginTop: Spacing.sm,
+        borderRadius: Layout.borderRadius,
+        backgroundColor: Colors.primaryLight,
+    },
+    loadMoreText: {
+        fontSize: FontSizes.body,
+        fontFamily: Fonts.bold,
+        color: Colors.primary,
     },
 
     // Admin Actions

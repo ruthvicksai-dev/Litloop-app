@@ -14,6 +14,10 @@ import ReviewCard from "../ui/cards/ReviewCard";
 
 interface Props {
     bookId: string;
+    limit?: number;
+    hasMore?: boolean;
+    onLoadMore?: () => void;
+    isAdmin?: boolean;
 }
 
 interface Review {
@@ -65,13 +69,14 @@ function timeAgo(timestamp: number): string {
     return `${Math.floor(months / 12)}y ago`;
 }
 
-export default function BookReviews({ bookId }: Props) {
+export default function BookReviews({ bookId, limit, hasMore, onLoadMore, isAdmin }: Props) {
     const { accessToken, userId } = useAuth();
     const { showToast } = useToast();
     
     const reviewsData = useQuery(api.reviews.getBookReviews, {
         bookId: bookId as Id<"books">,
-        accessToken: accessToken ?? undefined
+        accessToken: accessToken ?? undefined,
+        ...(limit ? { limit } : {})
     });
     const reviews = reviewsData as Review[] | undefined;
     
@@ -179,7 +184,13 @@ export default function BookReviews({ bookId }: Props) {
     };
 
     if (!reviews || !summary) return null;
-    if (summary.totalReviews === 0) return null;
+    if (summary.totalReviews === 0) {
+        return (
+            <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No reviews yet.</Text>
+            </View>
+        );
+    }
 
     const maxDist = Math.max(...Object.values(summary.distribution), 1);
 
@@ -220,6 +231,7 @@ export default function BookReviews({ bookId }: Props) {
                         _id: review._id.toString(),
                         userId: review.userId.toString(),
                     }}
+                    isAdmin={isAdmin}
                     currentUserId={userId?.toString()}
                     onVote={(voteType) => handleVote(review._id, voteType)}
                     onFlag={() => handleReport(review._id)}
@@ -231,6 +243,12 @@ export default function BookReviews({ bookId }: Props) {
                     })}
                 />
             ))}
+
+            {hasMore && onLoadMore && (
+                <TouchableOpacity style={styles.loadMoreBtn} onPress={onLoadMore} activeOpacity={0.8}>
+                    <Text style={styles.loadMoreText}>View All Reviews</Text>
+                </TouchableOpacity>
+            )}
 
             <Modal
                 visible={!!editingReview}
@@ -653,5 +671,28 @@ const styles = StyleSheet.create({
     reasonTextSelected: {
         fontFamily: Fonts.medium,
         color: Colors.primary,
+    },
+    loadMoreBtn: {
+        paddingVertical: 12,
+        alignItems: "center",
+        justifyContent: "center",
+        marginTop: Spacing.sm,
+        borderRadius: Layout.borderRadius,
+        backgroundColor: Colors.primaryLight,
+    },
+    loadMoreText: {
+        fontSize: FontSizes.body,
+        fontFamily: Fonts.bold,
+        color: Colors.primary,
+    },
+    emptyContainer: {
+        paddingVertical: Spacing.lg,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    emptyText: {
+        fontSize: FontSizes.body,
+        color: Colors.textLight,
+        fontFamily: Fonts.regular,
     },
 });

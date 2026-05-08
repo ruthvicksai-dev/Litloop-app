@@ -3,11 +3,14 @@ import { Id } from "@/convex/_generated/dataModel";
 import { useAuth } from "@/context/AuthContext";
 import { useFadeSlideIn } from "@/hooks/animations/useFadeSlideIn";
 import { useMutation, useQuery } from "convex/react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 export function useAdminBookDetailsScreen(bookId: string) {
     const { accessToken } = useAuth();
     const { fadeAnim, slideAnim } = useFadeSlideIn({ slideFrom: 20, duration: 400 });
+
+    const [reviewsLimit, setReviewsLimit] = useState(3);
+    const [rentalsLimit, setRentalsLimit] = useState(5);
 
     const book = useQuery(api.books.get, {
         bookId: bookId as Id<"books">,
@@ -16,6 +19,7 @@ export function useAdminBookDetailsScreen(bookId: string) {
     const reviews = useQuery(api.reviews.getBookReviews, {
         bookId: bookId as Id<"books">,
         accessToken: accessToken ?? undefined,
+        limit: reviewsLimit,
     });
 
     const reviewSummary = useQuery(api.reviews.getBookReviewSummary, {
@@ -24,7 +28,7 @@ export function useAdminBookDetailsScreen(bookId: string) {
 
     const bookRentals = useQuery(
         api.rentals.getBookRentals,
-        accessToken ? { bookId: bookId as Id<"books">, accessToken } : "skip"
+        accessToken ? { bookId: bookId as Id<"books">, accessToken, limit: rentalsLimit } : "skip"
     );
 
     const removeBook = useMutation(api.books.remove);
@@ -79,22 +83,27 @@ export function useAdminBookDetailsScreen(bookId: string) {
         }
     };
 
-    const images =
-        book?.coverUrls && book.coverUrls.length > 0
+    const loadMoreReviews = () => setReviewsLimit(prev => prev + 10);
+    const loadMoreRentals = () => setRentalsLimit(prev => prev + 10);
+
+    const images = useMemo(() => {
+        return book?.coverUrls && book.coverUrls.length > 0
             ? book.coverUrls
             : book?.coverUrl
                 ? [book.coverUrl]
                 : [];
+    }, [book?.coverUrls, book?.coverUrl]);
 
-    const borrowedCopies = book ? book.totalCopies - book.availableCopies : 0;
+    const borrowedCopies = useMemo(() => {
+        return book ? book.totalCopies - book.availableCopies : 0;
+    }, [book?.totalCopies, book?.availableCopies]);
 
-    const inventoryStatus = !book
-        ? "loading"
-        : book.availableCopies === 0
-            ? "out_of_stock"
-            : book.availableCopies <= 2
-                ? "low_stock"
-                : "in_stock";
+    const inventoryStatus = useMemo(() => {
+        if (!book) return "loading";
+        if (book.availableCopies === 0) return "out_of_stock";
+        if (book.availableCopies <= 2) return "low_stock";
+        return "in_stock";
+    }, [book?.availableCopies]);
 
     return {
         book,
@@ -115,6 +124,10 @@ export function useAdminBookDetailsScreen(bookId: string) {
         confirmDelete,
         cancelDelete,
         handleUpdateInventory,
+        loadMoreReviews,
+        loadMoreRentals,
+        reviewsLimit,
+        rentalsLimit,
         fadeAnim,
         slideAnim,
     };

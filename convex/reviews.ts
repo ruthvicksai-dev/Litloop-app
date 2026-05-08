@@ -6,13 +6,14 @@ export const getBookReviews = query({
     args: {
         bookId: v.id("books"),
         accessToken: v.optional(v.string()),
+        limit: v.optional(v.number()),
     },
     handler: async (ctx, args) => {
-        // L1: Capped at 50 to prevent unbounded reads for popular books
+        // L1: Capped at limit or 50 to prevent unbounded reads for popular books
         const reviews = await ctx.db
             .query("reviews")
             .withIndex("by_bookId", (q) => q.eq("bookId", args.bookId))
-            .take(50);
+            .take(args.limit ?? 50);
 
         // Sort newest first
         reviews.sort((a, b) => b.createdAt - a.createdAt);

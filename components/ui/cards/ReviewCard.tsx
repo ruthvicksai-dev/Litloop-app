@@ -140,26 +140,16 @@ export default function ReviewCard({
                             )}
                         </>
                     ) : (
-                        <View style={styles.adminActions}>
-                            <TouchableOpacity
-                                style={[styles.adminBtn, review.isFlagged ? styles.unflagBtn : styles.flagBtnAdmin]}
-                                onPress={review.isFlagged ? onUnflag : onFlag}
-                            >
+                        <View style={styles.authorActions}>
+                            <TouchableOpacity onPress={review.isFlagged ? onUnflag : onFlag}>
                                 <Ionicons 
                                     name={review.isFlagged ? "flag" : "flag-outline"} 
-                                    size={14} 
-                                    color={review.isFlagged ? Colors.white : Colors.warning} 
+                                    size={18} 
+                                    color={review.isFlagged ? Colors.warning : Colors.textLight} 
                                 />
-                                <Text style={[styles.adminBtnText, review.isFlagged && styles.whiteText]}>
-                                    {review.isFlagged ? "Unflag" : "Flag"}
-                                </Text>
                             </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.adminBtn, styles.deleteBtnAdmin]}
-                                onPress={onDelete}
-                            >
-                                <Ionicons name="trash-outline" size={14} color={Colors.error} />
-                                <Text style={[styles.adminBtnText, styles.errorText]}>Delete</Text>
+                            <TouchableOpacity onPress={onDelete} style={{ marginLeft: 12 }}>
+                                <Ionicons name="trash-outline" size={18} color={Colors.error} />
                             </TouchableOpacity>
                         </View>
                     )}
@@ -264,40 +254,5 @@ const styles = StyleSheet.create({
     flagBtn: {
         padding: 4,
         marginLeft: 12,
-    },
-    adminActions: {
-        flexDirection: "row",
-        gap: 8,
-    },
-    adminBtn: {
-        flexDirection: "row",
-        alignItems: "center",
-        paddingHorizontal: 10,
-        paddingVertical: 6,
-        borderRadius: 6,
-        borderWidth: 1,
-    },
-    flagBtnAdmin: {
-        borderColor: Colors.warning,
-        backgroundColor: 'transparent',
-    },
-    unflagBtn: {
-        borderColor: Colors.warning,
-        backgroundColor: Colors.warning,
-    },
-    deleteBtnAdmin: {
-        borderColor: Colors.error,
-        backgroundColor: 'transparent',
-    },
-    adminBtnText: {
-        fontSize: 12,
-        fontFamily: Fonts.medium,
-        marginLeft: 4,
-    },
-    whiteText: {
-        color: Colors.white,
-    },
-    errorText: {
-        color: Colors.error,
     },
 });

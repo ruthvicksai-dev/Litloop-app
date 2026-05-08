@@ -788,7 +788,7 @@ export const getRental = query({
 });
 
 export const getBookRentals = query({
-    args: { bookId: v.id("books"), accessToken: v.string() },
+    args: { bookId: v.id("books"), accessToken: v.string(), limit: v.optional(v.number()) },
     handler: async (ctx, args) => {
         await assertAdmin(ctx, args.accessToken);
 
@@ -796,7 +796,7 @@ export const getBookRentals = query({
             .query("rentals")
             .withIndex("by_bookId", (q) => q.eq("bookId", args.bookId))
             .order("desc")
-            .take(50);
+            .take(args.limit ?? 50);
 
         const enriched = await Promise.all(
             rentals.map(async (rental) => {
