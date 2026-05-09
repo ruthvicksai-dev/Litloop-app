@@ -467,13 +467,16 @@ export const getDashboardAnalytics = query({
             getCounter(ctx, "totalRentals"),
             getCounter(ctx, "activeRentals"),
         ]);
+        // B-02 FIX: Reduced fallback scan caps from 1000/500 to 200.
+        // These fallbacks only fire before rebuildDashboardCounters has been run.
+        // With 200-cap, worst case is 600 reads instead of the previous 2500.
         const [fallbackTotalUsers, fallbackTotalRentals, fallbackActiveRentals] = await Promise.all([
-            countersReady !== 1 ? ctx.db.query("users").take(1000).then((res: any[]) => res.length) : null,
-            countersReady !== 1 ? ctx.db.query("rentals").take(1000).then((res: any[]) => res.length) : null,
+            countersReady !== 1 ? ctx.db.query("users").take(200).then((res: any[]) => res.length) : null,
+            countersReady !== 1 ? ctx.db.query("rentals").take(200).then((res: any[]) => res.length) : null,
             countersReady !== 1
                 ? ctx.db.query("rentals")
                     .filter((q: any) => q.neq(q.field("status"), "returned"))
-                    .take(500)
+                    .take(200)
                     .then((res: any[]) => res.length)
                 : null,
         ]);

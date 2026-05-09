@@ -150,7 +150,7 @@ export default defineSchema({
         .index("by_top10Position", ["top10Position"])
         .searchIndex("search_books", {
             searchField: "searchText",
-            filterFields: ["genre"],
+            filterFields: ["genres"],
         }),
 
     rentals: defineTable({
@@ -235,7 +235,8 @@ export default defineSchema({
         .index("by_zone", ["zone"])
         .index("by_userId_status", ["userId", "status"])
         .index("by_utrNumber", ["utrNumber"])
-        .index("by_createdAt", ["createdAt"]),
+        .index("by_createdAt", ["createdAt"])
+        .index("by_userId_createdAt", ["userId", "createdAt"]),
 
     analytics_monthly: defineTable({
         month: v.string(),

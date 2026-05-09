@@ -119,7 +119,94 @@ export const deleteAccount = mutation({
             .take(500);
         for (const n of notifications) await ctx.db.delete(n._id);
 
-        // 5. Audit log before deletion
+        // S-04 FIX: Clean up all remaining user-linked data to prevent orphaned
+        // records and ensure GDPR-compliant deletion.
+
+        // 5. Delete reviews and rollback book ratings
+        const reviews = await ctx.db
+            .query("reviews")
+            .withIndex("by_userId_bookId", (q) => q.eq("userId", userId))
+            .take(200);
+        for (const review of reviews) {
+            const book = await ctx.db.get(review.bookId);
+            if (book) {
+                const currentRating = typeof book.rating === "number" && Number.isFinite(book.rating) ? book.rating : 0;
+                const currentCount = typeof book.ratingCount === "number" && Number.isFinite(book.ratingCount) ? book.ratingCount : 0;
+                const nextCount = Math.max(0, currentCount - 1);
+                if (nextCount === 0) {
+                    await ctx.db.patch(review.bookId, { rating: 0, ratingCount: 0, avgRating: 0, totalReviews: 0 });
+                } else {
+                    const nextRating = ((currentRating * currentCount) - review.rating) / nextCount;
+                    await ctx.db.patch(review.bookId, {
+                        rating: Number.isFinite(nextRating) ? Math.max(0, nextRating) : 0,
+                        ratingCount: nextCount,
+                        avgRating: Number.isFinite(nextRating) ? Math.max(0, nextRating) : 0,
+                        totalReviews: nextCount,
+                    });
+                }
+            }
+            // Delete associated review votes
+            const votes = await ctx.db
+                .query("review_votes")
+                .withIndex("by_reviewId", (q) => q.eq("reviewId", review._id))
+                .take(200);
+            for (const vote of votes) await ctx.db.delete(vote._id);
+            // Delete associated reports
+            const reports = await ctx.db
+                .query("reports")
+                .withIndex("by_targetId", (q) => q.eq("targetId", review._id))
+                .take(100);
+            for (const report of reports) await ctx.db.delete(report._id);
+            await ctx.db.delete(review._id);
+        }
+
+        // 6. Delete review votes cast by this user on other reviews
+        const userVotes = await ctx.db
+            .query("review_votes")
+            .withIndex("by_user_review", (q) => q.eq("userId", userId))
+            .take(500);
+        for (const vote of userVotes) {
+            const review = await ctx.db.get(vote.reviewId);
+            if (review) {
+                const field = vote.voteType === "helpful" ? "helpfulCount" : "unhelpfulCount";
+                const currentCount = (review as any)[field] ?? 0;
+                await ctx.db.patch(vote.reviewId, { [field]: Math.max(0, currentCount - 1) });
+            }
+            await ctx.db.delete(vote._id);
+        }
+
+        // 7. Delete book notification subscriptions
+        const bookNotifs = await ctx.db
+            .query("book_notifications")
+            .withIndex("by_userId_bookId", (q) => q.eq("userId", userId))
+            .take(200);
+        for (const bn of bookNotifs) await ctx.db.delete(bn._id);
+
+        // 8. Delete student verifications + uploaded ID card images from storage
+        const verifications = await ctx.db
+            .query("student_verifications")
+            .withIndex("by_userId", (q) => q.eq("userId", userId))
+            .take(20);
+        for (const verification of verifications) {
+            try { await ctx.storage.delete(verification.idCardImageId); } catch { /* ignore missing files */ }
+            await ctx.db.delete(verification._id);
+        }
+
+        // 9. Delete reports filed by this user
+        const userReports = await ctx.db
+            .query("reports")
+            .withIndex("by_reporterId", (q) => q.eq("reporterId", userId))
+            .take(200);
+        for (const report of userReports) await ctx.db.delete(report._id);
+
+        // 10. Delete any pending OTP requests
+        const otpRequests = await ctx.db
+            .query("otp_requests")
+            .withIndex("by_email", (q) => q.eq("email", (user as any).email ?? ""))
+            .take(10);
+        for (const otp of otpRequests) await ctx.db.delete(otp._id);
+
+        // 11. Audit log before deletion
         await ctx.db.insert("audit_logs", {
             action: "account_deleted",
             actorId: userId,
@@ -129,7 +216,7 @@ export const deleteAccount = mutation({
             timestamp: Date.now(),
         });
 
-        // 6. Delete the user document
+        // 12. Delete the user document
         await ctx.db.delete(userId);
 
         return { success: true };

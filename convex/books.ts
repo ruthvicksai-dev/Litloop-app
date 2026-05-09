@@ -284,7 +284,7 @@ export const searchBooks = query({
                 .query("books")
                 .withSearchIndex("search_books", (q) => {
                     const searched = q.search("searchText", normalizedSearch);
-                    return selectedGenre ? searched.eq("genre", selectedGenre) : searched;
+                    return selectedGenre ? searched.eq("genres", selectedGenre as any) : searched;
                 })
                 .paginate(args.paginationOpts);
 
@@ -788,14 +788,19 @@ export const getProblemBooks = query({
 export const getDiscoverData = query({
     args: {},
     handler: async (ctx) => {
+        // B-01 FIX: Reduced take() from 10→5 per section to halve document reads
+        // per subscription re-evaluation. With 200 concurrent users, every book
+        // mutation triggers a full re-evaluation for all subscribers — cutting
+        // reads in half directly reduces Free Tier function call budget usage.
+
         // Top Picks — by rating desc
         const topPicksRaw = await ctx.db
             .query("books")
             .withIndex("by_rating")
             .order("desc")
-            .take(10);
+            .take(5);
 
-        // Top 10 — curated list
+        // Top 10 — curated list (kept at 10 since this is a fixed curated list)
         const top10Raw = await ctx.db
             .query("books")
             .withIndex("by_isTop10", (q) => q.eq("isTop10", true))
@@ -809,29 +814,29 @@ export const getDiscoverData = query({
             .query("books")
             .withIndex("by_rankingScore")
             .order("desc")
-            .take(10);
+            .take(5);
 
         // Famous — flagged books
         const famousRaw = await ctx.db
             .query("books")
             .withIndex("by_isFamous", (q) => q.eq("isFamous", true))
             .order("desc")
-            .take(10);
+            .take(5);
 
         // Newly Added — latest by creation
         const newlyAddedRaw = await ctx.db
             .query("books")
             .withIndex("by_createdAt")
             .order("desc")
-            .take(10);
+            .take(5);
 
-        // Series — series with their books
-        const seriesRaw = await ctx.db.query("book_series").order("desc").take(15);
+        // Series — reduced from 15 to 8, books per series from 10 to 5
+        const seriesRaw = await ctx.db.query("book_series").order("desc").take(8);
         const seriesWithBooks = await Promise.all(seriesRaw.map(async (s) => {
             const books = await ctx.db
                 .query("books")
                 .withIndex("by_seriesId", (q) => q.eq("seriesId", s._id))
-                .take(10);
+                .take(5);
             const coverUrl = await ctx.storage.getUrl(s.coverImage);
             const mappedBooks = await Promise.all(books.map((b) => mapBookForClient(ctx, b)));
             return { ...s, coverUrl, books: mappedBooks };

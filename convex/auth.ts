@@ -200,6 +200,12 @@ export const sendSignupOTP = mutation({
         const otpString = isDevMode ? "123456" : (100000 + (otpArray[0] % 900000)).toString();
         const otpCodeHash = await sha256(otpString);
 
+        // S-03 FIX: Pre-hash password before storing in OTP request.
+        // Previously the plaintext password was persisted in signupData for up
+        // to 10 minutes. Now only the hash is stored — verifySignupOTP uses it
+        // directly instead of re-hashing.
+        const preHashedPassword = await hashPassword(args.password);
+
         // Store request in db
         await ctx.db.insert("otp_requests", {
             email: normalizedEmail,
@@ -207,7 +213,7 @@ export const sendSignupOTP = mutation({
             signupData: JSON.stringify({
                 name: args.name.trim(),
                 phone: normalizedPhone,
-                password: args.password,
+                passwordHash: preHashedPassword,
                 deviceInfo: args.deviceInfo,
                 ipAddress: args.ipAddress,
             }),
@@ -274,7 +280,10 @@ export const verifySignupOTP = mutation({
         if (!request.signupData) throw new Error("Registration data lost.");
         const signupData = JSON.parse(request.signupData);
 
-        const passwordHash = await hashPassword(signupData.password);
+        // S-03 FIX: Password was pre-hashed in sendSignupOTP — use the stored
+        // hash directly instead of re-hashing from plaintext.
+        const passwordHash = signupData.passwordHash;
+        if (!passwordHash) throw new Error("Registration data corrupted. Please sign up again.");
 
         const userId = await ctx.db.insert("users", {
             name: signupData.name,
@@ -876,6 +885,11 @@ export const changePassword = mutation({
 
         if (args.newPassword.length < 8) {
             throw new Error("New password must be at least 8 characters.");
+        }
+        // S-05 FIX: Cap password length to prevent DoS via expensive PBKDF2
+        // computation on oversized input strings.
+        if (args.newPassword.length > 128) {
+            throw new Error("Password is too long (max 128 characters).");
         }
 
         const changePasswordKey = buildRateLimitKey("auth", "changePassword", userId);

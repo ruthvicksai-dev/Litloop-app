@@ -340,13 +340,17 @@ export const getAdminRecipients = internalQuery({
     },
 });
 
+/**
+ * B-03 FIX: Replaced unbounded .collect() with .take(200) to prevent
+ * timeouts when a popular book accumulates hundreds of subscribers.
+ */
 export const getBookSubscriberRecipients = internalQuery({
     args: { bookId: v.id("books") },
     handler: async (ctx, args) => {
         const subscribers = await ctx.db
             .query("book_notifications")
             .withIndex("by_bookId", (q) => q.eq("bookId", args.bookId))
-            .collect();
+            .take(200);
 
         const recipients = await Promise.all(
             subscribers.map(async (subscriber) => {
@@ -525,6 +529,9 @@ export const reconcileAvailableCopies = internalMutation({
         let corrected = 0;
 
         for (const book of books) {
+            // B-04 FIX: Replaced unbounded .collect() with .take(50).
+            // A book can't have more active rentals than totalCopies (typically <10).
+            // This caps reads at 50 per book × 50 books = 2500 max per cron run.
             const activeRentals = await ctx.db
                 .query("rentals")
                 .withIndex("by_bookId", (q) => q.eq("bookId", book._id))
@@ -532,7 +539,7 @@ export const reconcileAvailableCopies = internalMutation({
                     const statuses = [...ACTIVE_STATUSES];
                     return q.or(...statuses.map((s) => q.eq(q.field("status"), s)));
                 })
-                .collect();
+                .take(50);
 
             const expected = Math.max(0, book.totalCopies - activeRentals.length);
             if (book.availableCopies !== expected) {

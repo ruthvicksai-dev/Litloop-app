@@ -1,18 +1,21 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { insertAuditLog } from "./lib/auditLog";
-import { assertAdmin } from "./lib/authHelpers";
+import { assertAdmin, getAuthenticatedUser } from "./lib/authHelpers";
 
 /** Maximum number of UPI IDs an admin can configure. */
 const MAX_UPI_IDS = 2;
 
 /**
- * Returns the active payment settings for the frontend QR/UPI flow.
- * Public query — no auth needed (read-only, returns only safe fields).
+ * S-02 FIX: Returns the active payment settings for the frontend QR/UPI flow.
+ * Now requires authentication to prevent unauthenticated enumeration of
+ * merchant payment identity (phishing risk).
  */
 export const getActiveSettings = query({
-    args: {},
-    handler: async (ctx) => {
+    args: { accessToken: v.string() },
+    handler: async (ctx, args) => {
+        await getAuthenticatedUser(ctx, args.accessToken);
+
         const settings = await ctx.db
             .query("payment_settings")
             .withIndex("by_active", (q: any) => q.eq("active", true))

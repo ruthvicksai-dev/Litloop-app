@@ -15,8 +15,11 @@ export function usePaymentScreen(rentalId: string) {
         accessToken ? { accessToken, rentalId: rentalId as Id<"rentals"> } : "skip"
     );
 
-    // Fetch backend-driven payment settings for dynamic QR/UPI config
-    const paymentSettings = useQuery(api.paymentSettings.getActiveSettings);
+    // S-02 FIX: Pass accessToken — this query now requires auth
+    const paymentSettings = useQuery(
+        api.paymentSettings.getActiveSettings,
+        accessToken ? { accessToken } : "skip"
+    );
 
     const { showToast } = useToast();
     const router = useRouter();
