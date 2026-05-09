@@ -8,7 +8,7 @@ import { SegmentedControl, SegmentOption } from "@/components/ui/core/SegmentedC
 import { Skeleton } from "@/components/ui/skeletons/Skeleton";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthState } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";
 import { useFadeSlideScaleIn, useProfileTabs } from "@/hooks";
 import { triggerHaptic } from "@/utils";
@@ -37,7 +37,7 @@ const TAB_OPTIONS: SegmentOption[] = [
 
 
 export default function ProfileScreen() {
-    const { user, isAdmin, accessToken, isLoading } = useAuth();
+    const { user, isAdmin, accessToken, isLoading } = useAuthState();
     const router = useRouter();
     const { fadeAnim, slideAnim, scaleAnim } = useFadeSlideScaleIn();
     const [refreshing, setRefreshing] = useState(false);

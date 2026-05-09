@@ -1,4 +1,4 @@
-import { useAuth } from "@/context/AuthContext";
+import { useAuthActions } from "@/context/AuthContext";
 import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
 import { useEffect, useState } from "react";
@@ -16,7 +16,7 @@ const EXPO_OWNER = process.env.EXPO_PUBLIC_OWNER || "ruthvicksai";
 const redirectUri = `https://auth.expo.io/@${EXPO_OWNER}/litloop`;
 
 export function useGoogleAuth() {
-    const { signInWithGoogle } = useAuth();
+    const { signInWithGoogle } = useAuthActions();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 

@@ -4,7 +4,7 @@ import ConfirmActionModal from "@/components/ui/feedback/ConfirmActionModal";
 import LoadingOverlay from "@/components/ui/feedback/LoadingOverlay";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing } from "@/constants/theme";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthActions, useAuthState } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { triggerHaptic } from "@/utils";
@@ -29,7 +29,8 @@ import { Linking, Modal, StyleSheet, Switch, Text, TouchableOpacity, View } from
  * app/(admin)/payment-settings.tsx.
  */
 export function CommonSettingsSections() {
-    const { user, accessToken, signOut } = useAuth();
+    const { user, accessToken } = useAuthState();
+    const { signOut } = useAuthActions();
     const { showToast } = useToast();
 
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);

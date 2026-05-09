@@ -1,4 +1,4 @@
-import { useAuth } from "@/context/AuthContext";
+import { useAuthState } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -10,7 +10,7 @@ import { useState } from "react";
 export function useScheduleDeliveryScreen(rentalId: string) {
     const router = useRouter();
     const { showToast } = useToast();
-    const { accessToken } = useAuth();
+    const { accessToken } = useAuthState();
     const rental = useQuery(
         api.rentals.getRental,
         accessToken ? { accessToken, rentalId: rentalId as Id<"rentals"> } : "skip"

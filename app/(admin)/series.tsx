@@ -3,19 +3,19 @@ import InputField from "@/components/ui/core/InputField";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { SERIES_PAGINATION_OPTS } from "@/constants/pagination";
 import { Colors, Spacing } from "@/constants/theme";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthState } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery } from "convex/react";
+import { Image as ExpoImage } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import AdminHeader from "@/components/admin/AdminHeader";
 import React, { useState } from "react";
 import {
     ActivityIndicator,
     FlatList,
-    Image,
     KeyboardAvoidingView,
     Modal,
     Platform,
@@ -38,7 +38,7 @@ type SeriesItem = {
 
 export default function SeriesManagementScreen() {
     const { showToast } = useToast();
-    const { accessToken } = useAuth();
+    const { accessToken } = useAuthState();
     const seriesQuery = useQuery(api.series.list, {
         paginationOpts: SERIES_PAGINATION_OPTS,
     });
@@ -167,7 +167,7 @@ export default function SeriesManagementScreen() {
     const renderItem = ({ item }: { item: SeriesItem }) => (
         <View style={styles.card}>
             {item.coverUrl ? (
-                <Image source={{ uri: item.coverUrl }} style={styles.cardImage} />
+                <ExpoImage source={{ uri: item.coverUrl }} style={styles.cardImage} cachePolicy="disk" />
             ) : (
                 <View style={styles.cardImageFallback}>
                     <Ionicons name="layers-outline" size={22} color={Colors.textLight} />
@@ -254,7 +254,7 @@ export default function SeriesManagementScreen() {
 
                             <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
                                 {coverUri ? (
-                                    <Image source={{ uri: coverUri }} style={styles.pickedImage} />
+                                    <ExpoImage source={{ uri: coverUri }} style={styles.pickedImage} cachePolicy="disk" />
                                 ) : (
                                     <View style={styles.imagePlaceholder}>
                                         <Ionicons name="camera" size={40} color={Colors.textLight} />

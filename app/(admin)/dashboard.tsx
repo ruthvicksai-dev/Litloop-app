@@ -5,7 +5,7 @@ import AdminStatusFilters from "@/components/admin/AdminStatusFilters";
 import BookLoader from "@/components/ui/feedback/BookLoader";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthState } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";
 import { useAdminDashboard, useFadeSlideIn } from "@/hooks";
 import { triggerHaptic } from "@/utils";
@@ -26,7 +26,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function AdminDashboard() {
     const router = useRouter();
-    const { accessToken } = useAuth();
+    const { accessToken } = useAuthState();
     const [refreshing, setRefreshing] = useState(false);
     const {
         rentals,

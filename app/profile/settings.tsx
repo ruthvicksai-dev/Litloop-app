@@ -2,7 +2,7 @@ import { CommonSettingsSections } from "@/components/shared/CommonSettingsSectio
 import { SettingsSkeleton } from "@/components/ui/skeletons/SettingsSkeleton";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing } from "@/constants/theme";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthState } from "@/context/AuthContext";
 import { triggerHaptic } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -12,7 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SettingsScreen() {
     const router = useRouter();
-    const { user } = useAuth();
+    const { user } = useAuthState();
 
     if (!user) {
         return (

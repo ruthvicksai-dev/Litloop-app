@@ -2,7 +2,7 @@ import AppSplash from "@/components/ui/AppSplash";
 import ErrorBoundary from "@/components/ui/feedback/ErrorBoundary";
 import { NotificationPermissionModal, useNotificationRationale } from "@/components/ui/feedback/NotificationPermissionModal";
 import { Colors } from "@/constants/theme";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthState } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useMutation } from "convex/react";
@@ -16,7 +16,7 @@ let hasCompletedStartupSplash = false;
 
 /** Blocks navigation until startup splash and auth state are both resolved. */
 export default function AppGate({ fontsLoaded }: { fontsLoaded: boolean }) {
-  const { isLoading, userId, user, accessToken } = useAuth();
+  const { isLoading, userId, user, accessToken } = useAuthState();
   const [isSplashAnimationDone, setIsSplashAnimationDone] = useState(hasCompletedStartupSplash);
   const [hasResolvedInitialAuth, setHasResolvedInitialAuth] = useState(false);
   const showSplash = !isSplashAnimationDone || !hasResolvedInitialAuth;

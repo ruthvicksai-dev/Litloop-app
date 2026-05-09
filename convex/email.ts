@@ -51,12 +51,32 @@ export const sendOTP = internalAction({
 
         const apiKey = process.env.RESEND_API_KEY;
         if (!apiKey) {
-            console.warn(`[OTP System] RESEND_API_KEY is not set. Mocking email delivery to ${email}.`);
-            console.warn(`🚨 Mock OTP Code for ${email} (${purpose}): ${otpString} 🚨`);
-            return {
-                status: "mock_delivered",
-                message: "API Key not found, OTP printed in logs.",
-            };
+            if (process.env.USE_DEV_OTP === "true") {
+                console.warn(`[OTP System] RESEND_API_KEY is not set. Dev OTP mode is enabled for ${email}.`);
+                return {
+                    status: "mock_delivered",
+                    message: "API Key not found, dev OTP mode is enabled.",
+                };
+            }
+
+            console.error("[OTP System] RESEND_API_KEY is not set. Refusing to deliver OTP.");
+            throw new Error("Email delivery is not configured.");
+        }
+
+        if (args.otpProvider !== "resend") {
+            throw new Error("Unsupported OTP provider.");
+        }
+
+        if (!["signup", "password_reset"].includes(purpose)) {
+            throw new Error("Unsupported OTP purpose.");
+        }
+
+        if (!/^\d{6}$/.test(otpString)) {
+            throw new Error("Invalid OTP format.");
+        }
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            throw new Error("Invalid email address.");
         }
 
         const template = getEmailTemplate(purpose, otpString);
@@ -69,7 +89,11 @@ export const sendOTP = internalAction({
                 subject: template.subject,
                 html: template.html,
             });
-            return { status: "delivered", message: "Email sent successfully", providerId: data.data?.id };
+            return {
+                status: "delivered",
+                message: "Email sent successfully",
+                providerId: data.data?.id,
+            };
         } catch (error: any) {
             console.error("[OTP System] Failed to send email via Resend:", error);
             throw new Error(`Failed to send verification email: ${error.message}`);

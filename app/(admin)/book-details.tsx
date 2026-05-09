@@ -7,12 +7,12 @@ import { Colors, Layout, RENTAL_STATUS_LABELS, Spacing, STATUS_COLORS } from "@/
 import { useAdminBookDetailsScreen } from "@/hooks";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { Image } from "expo-image";
 import AdminHeader from "@/components/admin/AdminHeader";
 import React from "react";
 import {
     Alert,
     Animated,
-    Image,
     ScrollView,
     StyleSheet,
     Text,
@@ -120,7 +120,7 @@ export default function AdminBookDetailsScreen() {
                 >
                     <View style={styles.heroLeftCol}>
                         {images.length > 0 ? (
-                            <Image source={{ uri: images[0] }} style={styles.heroCover} />
+                            <Image source={{ uri: images[0] }} style={styles.heroCover} cachePolicy="disk" />
                         ) : (
                             <View style={[styles.heroCover, styles.heroCoverPlaceholder]}>
                                 <Ionicons name="book-outline" size={40} color={Colors.textLight} />

@@ -1,11 +1,12 @@
 import AppSplash from "@/components/ui/AppSplash";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthActions, useAuthState } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { useRouter } from "expo-router";
 import { useEffect } from "react";
 
 export default function Index() {
-    const { user, isLoading, consumePendingAuthToast } = useAuth();
+    const { user, isLoading } = useAuthState();
+    const { consumePendingAuthToast } = useAuthActions();
     const { showToast } = useToast();
     const router = useRouter();
 

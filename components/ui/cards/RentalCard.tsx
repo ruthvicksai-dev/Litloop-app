@@ -8,9 +8,10 @@ import {
     scale,
 } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useState } from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface RentalCardProps {
     bookTitle: string;
@@ -79,7 +80,12 @@ export default function RentalCard({
 
             <View style={styles.cardMainRow}>
                 {coverUrl ? (
-                    <Image source={{ uri: coverUrl }} style={styles.coverImage} />
+                    <Image
+                        source={coverUrl}
+                        style={styles.coverImage}
+                        cachePolicy="disk"
+                        contentFit="cover"
+                    />
                 ) : (
                     <View style={[styles.coverImage, styles.coverFallback]}>
                         <Ionicons name="book-outline" size={scale(22)} color={Colors.textLight} />

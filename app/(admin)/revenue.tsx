@@ -5,7 +5,7 @@ import BookLoader from "@/components/ui/feedback/BookLoader";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { RENTALS_PAGINATION_OPTS } from "@/constants/pagination";
 import { Colors, Spacing } from "@/constants/theme";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthState } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";
 import {
     formatMonthLabel,
@@ -22,7 +22,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 
 export default function AdminRevenueScreen() {
-    const { accessToken } = useAuth();
+    const { accessToken } = useAuthState();
     const rentalsQuery = useQuery(
         api.rentals.getAllRentals,
         accessToken

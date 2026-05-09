@@ -1,7 +1,8 @@
 import CarouselDots from "@/components/books/CarouselDots";
 import { Colors } from "@/constants/theme";
+import { Image } from "expo-image";
 import React, { useRef } from "react";
-import { Animated, FlatList, Image, Platform, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { Animated, FlatList, Platform, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { Fonts, FontSizes } from "@/constants/fonts";
 
 type BookImageCarouselProps = {
@@ -37,9 +38,11 @@ export default function BookImageCarousel({
             {/* Background Blur Effect (Simulated) */}
             <View style={styles.backgroundLayer}>
                 <Image
-                    source={{ uri: images[activeIndex] }}
+                    source={images[activeIndex]}
                     style={styles.backgroundImage}
                     blurRadius={Platform.OS === 'ios' ? 30 : 15}
+                    cachePolicy="disk"
+                    contentFit="cover"
                 />
                 <View style={styles.backgroundOverlay} />
             </View>
@@ -70,8 +73,10 @@ export default function BookImageCarousel({
                         <View style={styles.imageShadow}>
                             <View style={[styles.coverWrap, { width: imageWidth, height: imageHeight }]}>
                                 <Image
-                                    source={{ uri: item }}
+                                    source={item}
                                     style={[styles.cover, { width: imageWidth, height: imageHeight }]}
+                                    cachePolicy="disk"
+                                    contentFit="cover"
                                 />
                                 {isUnavailable ? (
                                     <View style={styles.unavailableOverlay}>

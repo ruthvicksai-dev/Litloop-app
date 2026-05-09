@@ -7,7 +7,7 @@ import ConfirmActionModal from "@/components/ui/feedback/ConfirmActionModal";
 import DiscoverBookCard from "@/components/ui/cards/DiscoverBookCard";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing } from "@/constants/theme";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthState } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -19,6 +19,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
     Animated,
+    FlatList,
     ScrollView,
     StyleSheet,
     Text,
@@ -30,7 +31,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function BookDetailsScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const router = useRouter();
-    const { userId, accessToken } = useAuth();
+    const { userId, accessToken } = useAuthState();
     const { showToast } = useToast();
     const subscribeToBook = useMutation(api.notifications.subscribeToBook);
     const [isSubscribing, setIsSubscribing] = useState(false);
@@ -325,14 +326,14 @@ export default function BookDetailsScreen() {
                         <View style={styles.relatedSection}>
                             <Text style={styles.relatedTitle}>You may also like</Text>
                             <Text style={styles.relatedSubtitle}>{relatedSubtitle}</Text>
-                            <ScrollView
+                            <FlatList
                                 horizontal
+                                data={relatedBooks}
+                                keyExtractor={(item) => item._id}
                                 showsHorizontalScrollIndicator={false}
                                 contentContainerStyle={styles.relatedList}
-                            >
-                                {relatedBooks.map((item) => (
+                                renderItem={({ item }) => (
                                     <DiscoverBookCard
-                                        key={item._id}
                                         _id={item._id}
                                         title={item.title}
                                         author={item.author}
@@ -344,8 +345,8 @@ export default function BookDetailsScreen() {
                                         bookViews={item.bookViews}
                                         top10Position={item.top10Position}
                                     />
-                                ))}
-                            </ScrollView>
+                                )}
+                            />
                         </View>
                     ) : null}
                 </Animated.View>

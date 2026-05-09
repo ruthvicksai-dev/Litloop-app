@@ -1,11 +1,11 @@
-import { useAuth } from "@/context/AuthContext";
+import { useAuthState } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 
 export function useVerifyStudentsScreen() {
-    const { accessToken } = useAuth();
+    const { accessToken } = useAuthState();
     const { showToast } = useToast();
 
     const approveVerification = useMutation(api.verifications.approveVerification);

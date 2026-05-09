@@ -1,6 +1,6 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, scale, Spacing } from "@/constants/theme";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthState } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -56,7 +56,7 @@ function StarIcons({ rating, size = 14 }: { rating: number; size?: number }) {
 }
 
 export default function BookReviews({ bookId, limit, hasMore, onLoadMore, isAdmin }: Props) {
-    const { accessToken, userId } = useAuth();
+    const { accessToken, userId } = useAuthState();
     const { showToast } = useToast();
     
     const reviewsData = useQuery(api.reviews.getBookReviews, {

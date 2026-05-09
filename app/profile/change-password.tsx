@@ -3,7 +3,7 @@ import InputField from "@/components/ui/core/InputField";
 import PasswordRequirements from "@/components/ui/auth/PasswordRequirements";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing } from "@/constants/theme";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthState } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Ionicons } from "@expo/vector-icons";
@@ -23,7 +23,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ChangePasswordScreen() {
     const router = useRouter();
-    const { user, accessToken, isLoading } = useAuth();
+    const { user, accessToken, isLoading } = useAuthState();
     const { showToast } = useToast();
     const changePasswordMutation = useMutation(api.auth.changePassword);
 

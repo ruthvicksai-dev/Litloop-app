@@ -11,6 +11,7 @@ import { useVerifyPaymentScreen } from "@/hooks";
 import { formatCurrency, getBookCoverUri } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { Image as ExpoImage } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
@@ -122,7 +123,7 @@ export default function VerifyPaymentScreen() {
                     >
                         <View style={styles.heroTopRow}>
                             {coverUri ? (
-                                <Image source={{ uri: coverUri }} style={styles.heroCover} />
+                                <ExpoImage source={{ uri: coverUri }} style={styles.heroCover} cachePolicy="disk" />
                             ) : (
                                 <View style={[styles.heroCover, styles.heroCoverPlaceholder]}>
                                     <Ionicons name="book-outline" size={24} color={Colors.primary} />
@@ -263,7 +264,7 @@ export default function VerifyPaymentScreen() {
                             <View style={styles.paymentCardTop}>
                                 <View style={styles.paymentCardIdentity}>
                                     {coverUri ? (
-                                        <Image source={{ uri: coverUri }} style={styles.paymentCover} />
+                                        <ExpoImage source={{ uri: coverUri }} style={styles.paymentCover} cachePolicy="disk" />
                                     ) : (
                                         <View style={[styles.paymentCover, styles.paymentCoverPlaceholder]}>
                                             <Ionicons name="book-outline" size={18} color={Colors.primary} />

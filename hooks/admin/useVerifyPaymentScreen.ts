@@ -1,4 +1,4 @@
-import { useAuth } from "@/context/AuthContext";
+import { useAuthState } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -11,7 +11,7 @@ const PAGE_SIZE = 20;
 export function useVerifyPaymentScreen(rentalId?: string) {
     const { showToast } = useToast();
     const router = useRouter();
-    const { accessToken } = useAuth();
+    const { accessToken } = useAuthState();
     const verifyPayment = useMutation(api.payments.verifyPayment);
 
     // M1: getPendingPayments is now paginated — use usePaginatedQuery so the

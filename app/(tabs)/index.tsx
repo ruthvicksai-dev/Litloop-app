@@ -3,7 +3,7 @@ import { HomeSkeleton } from "@/components/ui/skeletons/HomeSkeleton";
 import SeriesSectionRow from "@/components/ui/cards/SeriesSectionRow";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing } from "@/constants/theme";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthState } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";
 import { useDiscoverSections, useHomeEntrance } from "@/hooks";
 import { triggerHaptic } from "@/utils";
@@ -23,7 +23,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
-  const { user, accessToken } = useAuth();
+  const { user, accessToken } = useAuthState();
   const router = useRouter();
   const [refreshing, setRefreshing] = React.useState(false);
   const { fadeAnim, slideAnim } = useHomeEntrance();

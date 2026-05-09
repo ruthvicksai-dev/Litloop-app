@@ -4,7 +4,7 @@ import AdminLineChart from "@/components/admin/AdminLineChart";
 import StatCard from "@/components/admin/StatCard";
 import AdminVerticalBarChart from "@/components/admin/AdminVerticalBarChart";
 import BookLoader from "@/components/ui/feedback/BookLoader";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthState } from "@/context/AuthContext";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { api } from "@/convex/_generated/api";
@@ -27,7 +27,7 @@ const formatCurrency = (value: number) =>
     }).format(value);
 
 export default function AdminAnalyticsDashboard() {
-    const { accessToken } = useAuth();
+    const { accessToken } = useAuthState();
     const [range, setRange] = useState<(typeof FILTERS)[number]["key"]>("30d");
     const [refreshing, setRefreshing] = useState(false);
     const analytics = useQuery(

@@ -5,7 +5,7 @@ import { RentalHistorySkeleton } from "@/components/ui/skeletons/RentalHistorySk
 import { Skeleton } from "@/components/ui/skeletons/Skeleton";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthState } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";
 import { useFadeSlideIn, useRentalFilters } from "@/hooks";
 import { triggerHaptic } from "@/utils";
@@ -25,7 +25,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function RentalHistoryScreen() {
-    const { user, userId, accessToken, isLoading } = useAuth();
+    const { user, userId, accessToken, isLoading } = useAuthState();
     const [refreshing, setRefreshing] = useState(false);
     const {
         statusFilter,

@@ -2,7 +2,7 @@ import Button from "@/components/ui/core/Button";
 import InputField from "@/components/ui/core/InputField";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing } from "@/constants/theme";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthState } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { getPhoneValidationError, normalizePhoneNumber } from "@/utils";
@@ -23,7 +23,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function EditProfileScreen() {
     const router = useRouter();
-    const { user, accessToken, isLoading } = useAuth();
+    const { user, accessToken, isLoading } = useAuthState();
     const { showToast } = useToast();
     const updateUserMutation = useMutation(api.users.updateUser);
 

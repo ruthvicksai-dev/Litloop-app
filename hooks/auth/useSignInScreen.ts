@@ -1,4 +1,4 @@
-import { useAuth } from "@/context/AuthContext";
+import { useAuthActions, useAuthState } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { useState } from "react";
 
@@ -35,7 +35,8 @@ export function useSignInScreen() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
-    const { signIn, user } = useAuth();
+    const { signIn } = useAuthActions();
+    const { user } = useAuthState();
     const { showToast } = useToast();
 
     const handleSignIn = async () => {

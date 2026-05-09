@@ -14,6 +14,7 @@ import type * as books from "../books.js";
 import type * as crons from "../crons.js";
 import type * as email from "../email.js";
 import type * as favorites from "../favorites.js";
+import type * as http from "../http.js";
 import type * as lib_auditLog from "../lib/auditLog.js";
 import type * as lib_authHelpers from "../lib/authHelpers.js";
 import type * as lib_bookHelpers from "../lib/bookHelpers.js";
@@ -44,6 +45,7 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   email: typeof email;
   favorites: typeof favorites;
+  http: typeof http;
   "lib/auditLog": typeof lib_auditLog;
   "lib/authHelpers": typeof lib_authHelpers;
   "lib/bookHelpers": typeof lib_bookHelpers;

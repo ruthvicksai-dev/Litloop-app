@@ -3,7 +3,7 @@ import BookLoader from "@/components/ui/feedback/BookLoader";
 import RentalCard from "@/components/ui/cards/RentalCard";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing } from "@/constants/theme";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthState } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";
 import { useFadeSlideIn } from "@/hooks";
 import { Ionicons } from "@expo/vector-icons";
@@ -21,7 +21,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function MyRentalsScreen() {
-    const { user, userId, accessToken, isLoading } = useAuth();
+    const { user, userId, accessToken, isLoading } = useAuthState();
     const rentals = useQuery(
         api.rentals.getUserRentals,
         userId && accessToken ? { userId, accessToken } : "skip"

@@ -1,6 +1,6 @@
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthState } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { useMutation, useQuery } from "convex/react";
 
@@ -9,7 +9,7 @@ type ToggleFavoriteOptions = {
 };
 
 export function useFavorites() {
-    const { accessToken } = useAuth();
+    const { accessToken } = useAuthState();
     const { showToast } = useToast();
 
     // 1. Fetch user's favorite book IDs

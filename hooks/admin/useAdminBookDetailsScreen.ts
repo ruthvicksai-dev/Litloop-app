@@ -1,12 +1,12 @@
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthState } from "@/context/AuthContext";
 import { useFadeSlideIn } from "@/hooks/animations/useFadeSlideIn";
 import { useMutation, useQuery } from "convex/react";
 import { useState, useMemo } from "react";
 
 export function useAdminBookDetailsScreen(bookId: string) {
-    const { accessToken } = useAuth();
+    const { accessToken } = useAuthState();
     const { fadeAnim, slideAnim } = useFadeSlideIn({ slideFrom: 20, duration: 400 });
 
     const [reviewsLimit, setReviewsLimit] = useState(3);

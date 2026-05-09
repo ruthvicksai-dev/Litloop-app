@@ -10,6 +10,7 @@ import React, {
     useCallback,
     useContext,
     useEffect,
+    useMemo,
     useRef,
     useState,
 } from "react";
@@ -32,13 +33,16 @@ type PendingToast = {
     type: "success" | "error" | "info";
 };
 
-interface AuthContextType {
+interface AuthStateContextType {
     user: User | null;
     userId: Id<"users"> | null;
     accessToken: string | null;
     isLoading: boolean;
     isRefreshing: boolean;
     isAdmin: boolean;
+}
+
+interface AuthActionsContextType {
     signIn: (email: string, password: string) => Promise<void>;
     sendOtp: (
         name: string,
@@ -53,23 +57,42 @@ interface AuthContextType {
     consumePendingAuthToast: () => PendingToast | null;
 }
 
-const AuthContext = createContext<AuthContextType>({
+type AuthContextType = AuthStateContextType & AuthActionsContextType;
+
+const defaultAuthState: AuthStateContextType = {
     user: null,
     userId: null,
     accessToken: null,
     isLoading: true,
     isRefreshing: false,
     isAdmin: false,
+};
+
+const defaultAuthActions: AuthActionsContextType = {
     signIn: async () => { },
     sendOtp: async () => { },
     verifyOtp: async () => { },
     signInWithGoogle: async () => { },
     signOut: async () => { },
     consumePendingAuthToast: () => null,
-});
+};
+
+const AuthStateContext = createContext<AuthStateContextType>(defaultAuthState);
+const AuthActionsContext = createContext<AuthActionsContextType>(defaultAuthActions);
 
 export function useAuth() {
-    return useContext(AuthContext);
+    return {
+        ...useContext(AuthStateContext),
+        ...useContext(AuthActionsContext),
+    };
+}
+
+export function useAuthState() {
+    return useContext(AuthStateContext);
+}
+
+export function useAuthActions() {
+    return useContext(AuthActionsContext);
 }
 
 // ─── SecureStore Keys ────────────────────────────────────────────────────────
@@ -84,6 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [tokenLoaded, setTokenLoaded] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [pendingAuthToast, setPendingAuthToast] = useState<PendingToast | null>(null);
+    const pendingAuthToastRef = useRef<PendingToast | null>(null);
     const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const signOutInProgressRef = useRef(false);
 
@@ -93,6 +117,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const refreshSessionMutation = useMutation(api.auth.refreshSession);
     const signOutMutation = useMutation(api.auth.signOut);
     const googleSignInMutation = useMutation(api.auth.googleSignIn);
+
+    const queuePendingAuthToast = useCallback((toast: PendingToast) => {
+        pendingAuthToastRef.current = toast;
+        setPendingAuthToast(toast);
+    }, []);
 
     // Fetch user from Convex using the current access token
     const sessionUser = useQuery(
@@ -271,6 +300,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
     }, [user]);
 
+    useEffect(() => {
+        pendingAuthToastRef.current = pendingAuthToast;
+    }, [pendingAuthToast]);
+
     // ─── Load session on mount ───────────────────────────────────────────
 
     useEffect(() => {
@@ -346,10 +379,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, result.accessToken);
             await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, result.refreshToken);
             setAccessToken(result.accessToken);
-            setPendingAuthToast({ message: "Welcome back!", type: "success" });
+            queuePendingAuthToast({ message: "Welcome back!", type: "success" });
             scheduleRefresh(result.accessToken);
         },
-        [signInMutation, scheduleRefresh]
+        [queuePendingAuthToast, signInMutation, scheduleRefresh]
     );
 
     const sendOtp = useCallback(
@@ -393,10 +426,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, result.accessToken);
             await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, result.refreshToken);
             setAccessToken(result.accessToken);
-            setPendingAuthToast({ message: "Welcome back!", type: "success" });
+            queuePendingAuthToast({ message: "Welcome back!", type: "success" });
             scheduleRefresh(result.accessToken);
         },
-        [googleSignInMutation, scheduleRefresh]
+        [googleSignInMutation, queuePendingAuthToast, scheduleRefresh]
     );
 
     const signOut = useCallback(async () => {
@@ -423,33 +456,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, [clearLocalSession, signOutMutation]);
 
     const consumePendingAuthToast = useCallback(() => {
-        if (!pendingAuthToast) {
+        if (!pendingAuthToastRef.current) {
             return null;
         }
 
-        const toast = pendingAuthToast;
+        const toast = pendingAuthToastRef.current;
+        pendingAuthToastRef.current = null;
         setPendingAuthToast(null);
         return toast;
-    }, [pendingAuthToast]);
+    }, []);
+
+    const authState = useMemo<AuthStateContextType>(
+        () => ({
+            user,
+            userId: user?._id ?? null,
+            accessToken,
+            isLoading,
+            isRefreshing,
+            isAdmin: user?.role === "admin",
+        }),
+        [accessToken, isLoading, isRefreshing, user]
+    );
+
+    const authActions = useMemo<AuthActionsContextType>(
+        () => ({
+            signIn,
+            sendOtp,
+            verifyOtp,
+            signInWithGoogle,
+            signOut,
+            consumePendingAuthToast,
+        }),
+        [consumePendingAuthToast, sendOtp, signIn, signInWithGoogle, signOut, verifyOtp]
+    );
 
     return (
-        <AuthContext.Provider
-            value={{
-                user,
-                userId: user?._id ?? null,
-                accessToken,
-                isLoading,
-                isRefreshing,
-                isAdmin: user?.role === "admin",
-                signIn,
-                sendOtp,
-                verifyOtp,
-                signInWithGoogle,
-                signOut,
-                consumePendingAuthToast,
-            }}
-        >
-            {children}
-        </AuthContext.Provider>
+        <AuthActionsContext.Provider value={authActions}>
+            <AuthStateContext.Provider value={authState}>
+                {children}
+            </AuthStateContext.Provider>
+        </AuthActionsContext.Provider>
     );
 }

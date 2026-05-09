@@ -1,6 +1,6 @@
 import { MAIN_GENRES } from "@/constants/mainGenres";
 import { SERIES_PAGINATION_OPTS } from "@/constants/pagination";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthState } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -17,7 +17,7 @@ import { useMemo, useState } from "react";
 
 export function useAddBookScreen() {
     const { showToast } = useToast();
-    const { accessToken } = useAuth();
+    const { accessToken } = useAuthState();
     const router = useRouter();
     const addBook = useMutation(api.books.add);
     const generateUploadUrl = useMutation(api.books.generateUploadUrl);

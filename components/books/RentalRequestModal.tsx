@@ -5,7 +5,7 @@ import ConfirmActionModal from "@/components/ui/feedback/ConfirmActionModal";
 import MapLocationPicker from "@/components/ui/pickers/MapLocationPicker";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, FEATURE_FLAGS } from "@/constants/theme";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthState } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { useFadeSlideIn, useRequestRentalScreen } from "@/hooks";
 import { 
@@ -32,7 +32,7 @@ export default function RentalRequestModal({
     bookId,
 }: RentalRequestModalProps) {
     const router = useRouter();
-    const { user, isLoading: isAuthLoading } = useAuth();
+    const { user, isLoading: isAuthLoading } = useAuthState();
     const { fadeAnim, slideAnim } = useFadeSlideIn();
     const {
         book,

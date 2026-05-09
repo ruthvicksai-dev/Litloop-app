@@ -1,4 +1,4 @@
-import { useAuth } from "@/context/AuthContext";
+import { useAuthState } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -11,7 +11,7 @@ import { useState } from "react";
 const MAX_ID_CARD_SIZE = 1 * 1024 * 1024;
 
 export function useStudentVerification() {
-    const { accessToken, user } = useAuth();
+    const { accessToken, user } = useAuthState();
     const { showToast } = useToast();
     const router = useRouter();
 

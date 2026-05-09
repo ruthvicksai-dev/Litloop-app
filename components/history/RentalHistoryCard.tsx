@@ -1,9 +1,10 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, RENTAL_STATUS_LABELS, Spacing, STATUS_COLORS } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
-import { Animated, Image, StyleSheet, Text, View } from "react-native";
+import { Animated, StyleSheet, Text, View } from "react-native";
 import { AnimatedPressable } from "../ui/core/AnimatedPressable";
 import { HistoryDetailTile } from "./HistoryDetailTile";
 
@@ -70,7 +71,12 @@ export function RentalHistoryCard({
 
                 <View style={styles.cardMainRow}>
                     {item.coverUrl ? (
-                        <Image source={{ uri: item.coverUrl }} style={styles.coverImage} />
+                        <Image
+                            source={item.coverUrl}
+                            style={styles.coverImage}
+                            cachePolicy="disk"
+                            contentFit="cover"
+                        />
                     ) : (
                         <View style={[styles.coverImage, styles.coverFallback]}>
                             <Ionicons name="book-outline" size={22} color={Colors.textLight} />

@@ -2,10 +2,10 @@ import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, RENTAL_STATUS_LABELS, scale, STATUS_COLORS } from "@/constants/theme";
 import { triggerHaptic } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
-    Image,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -47,8 +47,10 @@ export default function AdminRentalCard({
                 <View style={styles.coverWrap}>
                     {coverUri ? (
                         <Image
-                            source={{ uri: coverUri }}
+                            source={coverUri}
                             style={styles.cover}
+                            cachePolicy="disk"
+                            contentFit="cover"
                         />
                     ) : (
                         <View style={[styles.cover, styles.coverPlaceholder]}>

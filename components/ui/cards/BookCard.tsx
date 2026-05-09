@@ -1,11 +1,11 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useRef } from "react";
 import {
     Animated,
-    Image,
     StyleProp,
     StyleSheet,
     Text,
@@ -78,8 +78,10 @@ export default function BookCard({
                 <View style={styles.row}>
                     {(coverUrls && coverUrls.length > 0) || coverUrl ? (
                         <Image
-                            source={{ uri: (coverUrls && coverUrls.length > 0) ? coverUrls[0] : coverUrl! }}
+                            source={(coverUrls && coverUrls.length > 0) ? coverUrls[0] : coverUrl!}
                             style={styles.cover}
+                            cachePolicy="disk"
+                            contentFit="cover"
                         />
                     ) : (
                         <View style={[styles.cover, styles.placeholder]}>

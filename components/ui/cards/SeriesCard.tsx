@@ -1,10 +1,10 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing, scale } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import {
-    Image,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -34,7 +34,12 @@ export default function SeriesCard({
                 <View style={styles.container}>
                     <View style={styles.imageContainer}>
                         {coverUrl ? (
-                            <Image source={{ uri: coverUrl }} style={styles.image} />
+                            <Image
+                                source={coverUrl}
+                                style={styles.image}
+                                cachePolicy="disk"
+                                contentFit="cover"
+                            />
                         ) : (
                             <View style={[styles.image, styles.placeholder]}>
                                 <Text style={styles.placeholderText} allowFontScaling={false}>
@@ -91,7 +96,6 @@ const styles = StyleSheet.create({
     image: {
         width: "100%",
         height: "100%",
-        resizeMode: "cover",
     },
     placeholder: {
         backgroundColor: Colors.primary + "20",

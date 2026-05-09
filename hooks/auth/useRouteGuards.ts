@@ -1,9 +1,9 @@
-import { useAuth } from "@/context/AuthContext";
+import { useAuthState } from "@/context/AuthContext";
 import { useRouter } from "expo-router";
 import { useEffect } from "react";
 
 export function useRootRedirect() {
-    const { user, isLoading, isRefreshing } = useAuth();
+    const { user, isLoading, isRefreshing } = useAuthState();
     const router = useRouter();
 
     useEffect(() => {
@@ -20,7 +20,7 @@ export function useRootRedirect() {
 }
 
 export function useTabsRouteGuard() {
-    const { user, isLoading, isRefreshing } = useAuth();
+    const { user, isLoading, isRefreshing } = useAuthState();
     const router = useRouter();
 
     useEffect(() => {
@@ -35,7 +35,7 @@ export function useTabsRouteGuard() {
 }
 
 export function useAdminRouteGuard() {
-    const { user, isLoading, isAdmin, isRefreshing } = useAuth();
+    const { user, isLoading, isAdmin, isRefreshing } = useAuthState();
     const router = useRouter();
 
     useEffect(() => {

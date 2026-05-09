@@ -1,12 +1,12 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing, scale } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useRef } from "react";
 import {
     Animated,
-    Image,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -66,7 +66,12 @@ export default function Top10BookCard({
             >
                 <View style={styles.coverWrap}>
                     {imageUri ? (
-                        <Image source={{ uri: imageUri }} style={styles.cover} />
+                        <Image
+                            source={imageUri}
+                            style={styles.cover}
+                            cachePolicy="disk"
+                            contentFit="cover"
+                        />
                     ) : (
                         <View style={[styles.cover, styles.placeholder]}>
                             <Ionicons name="book" size={scale(26)} color={Colors.primary} />

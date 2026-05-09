@@ -343,7 +343,8 @@ export const sendPasswordResetOTP = mutation({
         }
 
         const isDevMode = process.env.USE_DEV_OTP === "true";
-        const otpString = isDevMode ? "123456" : Math.floor(100000 + Math.random() * 900000).toString();
+        const otpArray = crypto.getRandomValues(new Uint32Array(1));
+        const otpString = isDevMode ? "123456" : (100000 + (otpArray[0] % 900000)).toString();
         const otpCodeHash = await sha256(otpString);
 
         await ctx.db.insert("otp_requests", {

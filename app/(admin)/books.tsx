@@ -8,7 +8,7 @@ import AdminHeader from "@/components/admin/AdminHeader";
 import { useAdminBooksScreen, useFadeSlideIn } from "@/hooks";
 import { useRouter } from "expo-router";
 import React from "react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthState } from "@/context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import {
     Alert,
@@ -27,7 +27,7 @@ import { useMutation, useQuery } from "convex/react";
 
 export default function AdminBooksScreen() {
     const router = useRouter();
-    const { accessToken } = useAuth();
+    const { accessToken } = useAuthState();
     const [refreshing, setRefreshing] = React.useState(false);
     const { books, search, setSearch, genreSections } = useAdminBooksScreen();
     const { fadeAnim, slideAnim } = useFadeSlideIn({ slideFrom: 20, duration: 400 });

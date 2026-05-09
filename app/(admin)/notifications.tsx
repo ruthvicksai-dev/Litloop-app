@@ -2,7 +2,7 @@ import { NotificationItem } from "@/components/notifications/NotificationItem";
 import { EmptyState } from "@/components/ui/feedback/EmptyState";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing } from "@/constants/theme";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthState } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { Ionicons } from "@expo/vector-icons";
@@ -29,7 +29,7 @@ const TYPE_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
 };
 
 export default function AdminNotificationsScreen() {
-    const { accessToken, isLoading } = useAuth();
+    const { accessToken, isLoading } = useAuthState();
     const router = useRouter();
 
     const notifications = useQuery(
@@ -40,7 +40,7 @@ export default function AdminNotificationsScreen() {
     const markAllReadMutation = useMutation(api.notifications.markAllRead);
     const updatePushToken = useMutation(api.notifications.updatePushToken);
 
-    const { user } = useAuth();
+    const { user } = useAuthState();
     const unreadCount = notifications?.filter((n) => !n.isRead).length ?? 0;
 
     const handleEnablePush = async () => {

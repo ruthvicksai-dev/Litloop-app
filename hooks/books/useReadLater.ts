@@ -1,4 +1,4 @@
-import { useAuth } from "@/context/AuthContext";
+import { useAuthState } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -9,7 +9,7 @@ type ToggleReadLaterOptions = {
 };
 
 export function useReadLater() {
-    const { accessToken } = useAuth();
+    const { accessToken } = useAuthState();
     const { showToast } = useToast();
 
     // 1. Fetch user's read later book IDs

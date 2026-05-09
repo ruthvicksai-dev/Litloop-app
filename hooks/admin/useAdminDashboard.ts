@@ -1,4 +1,4 @@
-import { useAuth } from "@/context/AuthContext";
+import { useAuthActions, useAuthState } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -18,7 +18,8 @@ const STATUS_FILTERS = [
 
 export function useAdminDashboard() {
     const { showToast } = useToast();
-    const { signOut, accessToken } = useAuth();
+    const { accessToken } = useAuthState();
+    const { signOut } = useAuthActions();
     const rentals = useQuery(
         api.rentals.getAllRentals,
         accessToken

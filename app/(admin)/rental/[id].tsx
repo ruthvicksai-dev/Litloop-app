@@ -3,12 +3,13 @@ import Button from "@/components/ui/core/Button";
 import ConfirmActionModal from "@/components/ui/feedback/ConfirmActionModal";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing, Layout, RENTAL_STATUS_LABELS, STATUS_COLORS } from "@/constants/theme";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthState } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { triggerHaptic } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery } from "convex/react";
+import { Image as ExpoImage } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import AdminHeader from "@/components/admin/AdminHeader";
 import React, { useState } from "react";
@@ -28,7 +29,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function AdminRentalDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const router = useRouter();
-    const { accessToken } = useAuth();
+    const { accessToken } = useAuthState();
     const rental = useQuery(api.rentals.getRental, accessToken ? { accessToken, rentalId: id as Id<"rentals"> } : "skip");
     const markDelivered = useMutation(api.rentals.markDelivered);
     const markReturned = useMutation(api.rentals.markReturned);
@@ -172,7 +173,7 @@ export default function AdminRentalDetailScreen() {
                     onPress={() => router.push(`/(admin)/book-details?bookId=${rental.bookId}`)}
                 >
                     {coverUri ? (
-                        <Image source={{ uri: coverUri }} style={styles.bookCover} />
+                        <ExpoImage source={{ uri: coverUri }} style={styles.bookCover} cachePolicy="disk" />
                     ) : (
                         <View style={styles.bookPlaceholder}>
                             <Ionicons name="book" size={28} color={Colors.textLight} />
