@@ -14,7 +14,7 @@ import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
 import { router as globalRouter, useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Modal, StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
+import { Linking, Modal, StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
 
 /**
  * Shared settings sections used by both the user profile settings page
@@ -137,7 +137,7 @@ export function CommonSettingsSections() {
                     style={styles.row}
                     onPress={() => {
                         triggerHaptic("light");
-                        router.push("/legal/privacy-policy" as any);
+                        Linking.openURL("https://litloop.in/privacy-policy");
                     }}
                 >
                     <View style={[styles.iconContainer, { backgroundColor: `${Colors.primary}15` }]}>
@@ -153,7 +153,7 @@ export function CommonSettingsSections() {
                     style={styles.row}
                     onPress={() => {
                         triggerHaptic("light");
-                        router.push("/legal/terms-of-service" as any);
+                        Linking.openURL("https://litloop.in/terms-of-service");
                     }}
                 >
                     <View style={[styles.iconContainer, { backgroundColor: `${Colors.textSecondary}15` }]}>

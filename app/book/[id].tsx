@@ -588,11 +588,6 @@ const styles = StyleSheet.create({
         borderRadius: Layout.borderRadius + 8,
         borderWidth: 1,
         borderColor: "rgba(255,255,255,0.4)",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 5,
-        elevation: 8,
     },
     top10Text: {
         color: Colors.white,

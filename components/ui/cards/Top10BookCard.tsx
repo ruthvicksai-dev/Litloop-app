@@ -104,14 +104,11 @@ const styles = StyleSheet.create({
     },
     coverWrap: {
         borderRadius: scale(14),
-        overflow: "visible",
+        overflow: "hidden",
         backgroundColor: Colors.white,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.15,
-        shadowRadius: 10,
-        elevation: 6,
         position: "relative",
+        borderWidth: 1,
+        borderColor: "rgba(0,0,0,0.05)",
     },
     cover: {
         width: COVER_W,
@@ -128,10 +125,6 @@ const styles = StyleSheet.create({
         borderRadius: scale(10),
         borderWidth: 1.5,
         borderColor: "rgba(255,255,255,0.4)",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 3,
     },
     badgeText: {
         color: Colors.white,

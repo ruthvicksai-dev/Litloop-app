@@ -76,11 +76,8 @@ const styles = StyleSheet.create({
         marginRight: Spacing.md,
         borderRadius: Layout.cardRadius,
         backgroundColor: Colors.white,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 8,
-        elevation: 5,
+        borderWidth: 1,
+        borderColor: "rgba(0,0,0,0.05)",
     },
     container: {
         flex: 1,

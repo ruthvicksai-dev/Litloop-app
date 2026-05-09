@@ -149,14 +149,11 @@ const styles = StyleSheet.create({
     },
     coverWrap: {
         borderRadius: scale(14),
-        overflow: "visible",
+        overflow: "hidden", // Change to hidden to keep it clean
         backgroundColor: Colors.white,
         position: "relative",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.15,
-        shadowRadius: 10,
-        elevation: 6,
+        borderWidth: 1, // Add subtle border as fallback
+        borderColor: "rgba(0,0,0,0.05)",
     },
     coverGradient: {
         borderRadius: scale(14),
@@ -193,11 +190,6 @@ const styles = StyleSheet.create({
         borderRadius: scale(6),
         borderWidth: 1,
         borderColor: "rgba(255,255,255,0.4)",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 3,
-        elevation: 3,
     },
     top10Text: {
         color: Colors.white,

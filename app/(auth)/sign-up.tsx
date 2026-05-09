@@ -21,6 +21,7 @@ import {
     Text,
     TouchableOpacity,
     View,
+    Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -150,14 +151,14 @@ export default function SignUpScreen() {
                                         I agree to the{" "}
                                         <Text
                                             style={styles.linkText}
-                                            onPress={() => router.push("/legal/privacy-policy")}
+                                            onPress={() => Linking.openURL("https://litloop.in/privacy-policy")}
                                         >
                                             Privacy Policy
                                         </Text>{" "}
                                         and{" "}
                                         <Text
                                             style={styles.linkText}
-                                            onPress={() => router.push("/legal/terms-of-service")}
+                                            onPress={() => Linking.openURL("https://litloop.in/terms-of-service")}
                                         >
                                             Terms of Service
                                         </Text>

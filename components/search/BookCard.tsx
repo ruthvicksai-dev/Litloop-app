@@ -347,11 +347,6 @@ const styles = StyleSheet.create({
         borderRadius: scale(6),
         borderWidth: 1.2,
         borderColor: "rgba(255,255,255,0.4)",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 3,
-        elevation: 3,
     },
     top10Text: {
         color: Colors.white,

@@ -173,11 +173,6 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: "rgba(117,64,67,0.10)",
         overflow: "hidden",
-        shadowColor: Colors.shadow,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 10,
-        elevation: 3,
     },
     cardMainRow: {
         flexDirection: "row",
