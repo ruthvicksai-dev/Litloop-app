@@ -2,7 +2,7 @@ import BookLoader from "@/components/ui/feedback/BookLoader";
 import Button from "@/components/ui/core/Button";
 import ConfirmActionModal from "@/components/ui/feedback/ConfirmActionModal";
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors } from "@/constants/theme";
+import { Colors, Spacing, Layout, scale, RENTAL_STATUS_LABELS, STATUS_COLORS } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -106,32 +106,14 @@ export default function AdminRentalDetailScreen() {
         }
     };
 
-    const renderTimelineStep = (label: string, subLabel: string, isDone: boolean, isActive: boolean, icon: keyof typeof Ionicons.glyphMap) => (
-        <View style={styles.stepRow}>
-            <View style={[styles.stepDot, isDone && styles.stepDotDone, isActive && styles.stepDotActive]}>
-                <Ionicons
-                    name={isDone ? (isActive ? icon : "checkmark") : icon}
-                    size={14}
-                    color={isDone ? Colors.white : Colors.textSecondary}
-                />
-            </View>
-            <View style={styles.stepTextContainer}>
-                <Text style={[styles.stepLabel, isDone && styles.stepLabelDone]}>{label}</Text>
-                <Text style={styles.stepSubLabel}>{subLabel}</Text>
-            </View>
-        </View>
-    );
+    const STATUS_FLOW = ["requested", "delivery_scheduled", "delivered", "payment_pending", "paid", "returned"];
+    const currentIndex = STATUS_FLOW.indexOf(rental.status);
+    const statusColor = STATUS_COLORS[rental.status] || Colors.textSecondary;
+    const statusLabel = RENTAL_STATUS_LABELS[rental.status] || rental.status;
 
     return (
         <SafeAreaView style={styles.container}>
-            <AdminHeader 
-                title="Order Details" 
-                rightComponent={
-                    <View style={styles.idBadge}>
-                        <Text style={styles.idText} numberOfLines={1}>#{rental._id.slice(-6).toUpperCase()}</Text>
-                    </View>
-                }
-            />
+            <AdminHeader title="Order Details" />
 
             <ScrollView
                 contentContainerStyle={styles.scroll}
@@ -144,284 +126,254 @@ export default function AdminRentalDetailScreen() {
                     />
                 }
             >
-                {/* Amazon/Flipkart Style Timeline */}
-                <View style={styles.timelineSection}>
-                    <Text style={styles.sectionTitle}>Order Status</Text>
-                    <View style={styles.timelineContainer}>
-                        {renderTimelineStep(
-                            "Order Placed",
-                            `Requested on ${new Date(rental.createdAt).toLocaleDateString()}`,
-                            ["requested", "delivery_scheduled", "delivered", "payment_pending", "paid", "returned"].includes(rental.status),
-                            rental.status === "requested",
-                            "receipt-outline"
-                        )}
-                        <View style={[styles.timelineLine, ["delivery_scheduled", "delivered", "payment_pending", "paid", "returned"].includes(rental.status) && styles.timelineLineActive]} />
-
-                        {renderTimelineStep(
-                            "Delivery Scheduled",
-                            rental.deliveryDate ? `Scheduled for ${rental.deliveryDate}` : "Waiting for schedule",
-                            ["delivery_scheduled", "delivered", "payment_pending", "paid", "returned"].includes(rental.status),
-                            rental.status === "delivery_scheduled",
-                            "calendar-outline"
-                        )}
-                        <View style={[styles.timelineLine, ["delivered", "payment_pending", "paid", "returned"].includes(rental.status) && styles.timelineLineActive]} />
-
-                        {renderTimelineStep(
-                            "Delivered",
-                            rental.status === "delivered" || ["payment_pending", "paid", "returned"].includes(rental.status) ? "Order delivered successfully" : "Pending delivery",
-                            ["delivered", "payment_pending", "paid", "returned"].includes(rental.status),
-                            rental.status === "delivered" || rental.status === "payment_pending",
-                            "bicycle-outline"
-                        )}
-                        <View style={[styles.timelineLine, ["paid", "returned"].includes(rental.status) && styles.timelineLineActive]} />
-
-                        {renderTimelineStep(
-                            "Completed",
-                            rental.status === "returned" || rental.status === "paid" ? "Transaction finished" : "Pending return & verification",
-                            ["paid", "returned"].includes(rental.status),
-                            rental.status === "paid" || rental.status === "returned",
-                            "checkbox-outline"
-                        )}
-                    </View>
+                {/* Status Banner */}
+                <View style={styles.statusBanner}>
+                    <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
+                    <Text style={[styles.statusLabel, { color: statusColor }]}>{statusLabel}</Text>
+                    <Text style={styles.statusDate}>
+                        {new Date(rental.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                    </Text>
                 </View>
 
-                {/* Section: Book Info */}
+                {/* Horizontal Timeline Stepper */}
+                <View style={styles.stepperRow}>
+                    {STATUS_FLOW.map((step, i) => {
+                        const isDone = i <= currentIndex;
+                        const isCurrent = i === currentIndex;
+                        return (
+                            <React.Fragment key={step}>
+                                <View style={styles.stepperDotWrap}>
+                                    <View style={[
+                                        styles.stepperDot,
+                                        isDone && { backgroundColor: Colors.success, borderColor: Colors.success },
+                                        isCurrent && { backgroundColor: statusColor, borderColor: statusColor, transform: [{ scale: 1.2 }] },
+                                    ]}>
+                                        {isDone && !isCurrent && <Ionicons name="checkmark" size={10} color={Colors.white} />}
+                                        {isCurrent && <View style={styles.stepperDotInner} />}
+                                    </View>
+                                    {isCurrent && (
+                                        <Text style={styles.stepperLabel} numberOfLines={1}>
+                                            {RENTAL_STATUS_LABELS[step]?.split(" ")[0]}
+                                        </Text>
+                                    )}
+                                </View>
+                                {i < STATUS_FLOW.length - 1 && (
+                                    <View style={[styles.stepperLine, i < currentIndex && { backgroundColor: Colors.success }]} />
+                                )}
+                            </React.Fragment>
+                        );
+                    })}
+                </View>
+
+                {/* Book Info - Tappable Row */}
+                <TouchableOpacity 
+                    style={styles.bookRow}
+                    activeOpacity={0.7}
+                    onPress={() => router.push(`/(admin)/book-details?bookId=${rental.bookId}`)}
+                >
+                    {coverUri ? (
+                        <Image source={{ uri: coverUri }} style={styles.bookCover} />
+                    ) : (
+                        <View style={styles.bookPlaceholder}>
+                            <Ionicons name="book" size={28} color={Colors.textLight} />
+                        </View>
+                    )}
+                    <View style={styles.bookMeta}>
+                        <Text style={styles.bookTitle} numberOfLines={2}>{rental.book?.title}</Text>
+                        <Text style={styles.bookAuthor}>{rental.book?.author}</Text>
+                        <Text style={styles.bookPrice}>₹{rental.rentPerDay}/day</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color={Colors.textLight} />
+                </TouchableOpacity>
+
+                {/* Customer */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Book Information</Text>
-                    <View style={styles.bookCard}>
-                        {coverUri ? (
-                            <Image source={{ uri: coverUri }} style={styles.bookCover} />
-                        ) : (
-                            <View style={styles.bookPlaceholder}>
-                                <Ionicons name="book" size={32} color={Colors.border} />
-                            </View>
-                        )}
-                        <View style={styles.bookDetails}>
-                            <Text style={styles.bookTitle} numberOfLines={2}>{rental.book?.title}</Text>
-                            <Text style={styles.bookAuthor}>{rental.book?.author}</Text>
-                            <View style={styles.priceTag}>
-                                <Text style={styles.priceText}>₹{rental.rentPerDay}/day</Text>
-                            </View>
-                        </View>
+                    <Text style={styles.sectionLabel}>Customer</Text>
+                    <View style={styles.detailRow}>
+                        <Ionicons name="person-outline" size={16} color={Colors.textSecondary} />
+                        <Text style={styles.detailValue}>{rental.user?.name}</Text>
+                    </View>
+                    <View style={styles.detailRow}>
+                        <Ionicons name="mail-outline" size={16} color={Colors.textSecondary} />
+                        <Text style={styles.detailValue}>{rental.user?.email}</Text>
+                    </View>
+                    <View style={styles.detailRow}>
+                        <Ionicons name="call-outline" size={16} color={Colors.textSecondary} />
+                        <Text style={styles.detailValue}>{rental.user?.phone}</Text>
                     </View>
                 </View>
 
-                {/* Section: User Info */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Customer Details</Text>
-                    <View style={styles.infoCard}>
-                        <View style={styles.infoRow}>
-                            <Ionicons name="person-outline" size={18} color={Colors.textSecondary} />
-                            <Text style={styles.infoValue}>{rental.user?.name}</Text>
-                        </View>
-                        <View style={styles.infoRow}>
-                            <Ionicons name="mail-outline" size={18} color={Colors.textSecondary} />
-                            <Text style={styles.infoValue}>{rental.user?.email}</Text>
-                        </View>
-                        <View style={styles.infoRow}>
-                            <Ionicons name="call-outline" size={18} color={Colors.textSecondary} />
-                            <Text style={styles.infoValue}>{rental.user?.phone}</Text>
-                        </View>
-                    </View>
-                </View>
-
-                {/* Section: Delivery Details */}
+                {/* Delivery */}
                 <View style={styles.section}>
                     <View style={styles.sectionHeaderRow}>
-                        <Text style={styles.sectionTitle}>Delivery Details</Text>
-                        <View style={styles.zoneBadge}>
-                            <Text style={styles.zoneText}>{rental.zone}</Text>
+                        <Text style={styles.sectionLabel}>Delivery</Text>
+                        <View style={[styles.badge, { backgroundColor: Colors.primary + "18" }]}>
+                            <Text style={[styles.badgeText, { color: Colors.primary }]}>{rental.zone}</Text>
                         </View>
                     </View>
-                    <View style={styles.infoCard}>
+                    {rental.zone === "College" ? (
+                        <>
+                            <View style={styles.gridRow}>
+                                <View style={styles.gridItem}>
+                                    <Text style={styles.gridLabel}>Room No</Text>
+                                    <Text style={styles.gridValue}>{rental.deliveryLocation.roomNo}</Text>
+                                </View>
+                                <View style={styles.gridItem}>
+                                    <Text style={styles.gridLabel}>Roll No</Text>
+                                    <Text style={styles.gridValue}>{rental.deliveryLocation.rollNo}</Text>
+                                </View>
+                            </View>
+                            <View style={styles.gridRow}>
+                                <View style={styles.gridItem}>
+                                    <Text style={styles.gridLabel}>Department</Text>
+                                    <Text style={styles.gridValue}>{rental.deliveryLocation.department || "N/A"}</Text>
+                                </View>
+                                <View style={styles.gridItem}>
+                                    <Text style={styles.gridLabel}>Year</Text>
+                                    <Text style={styles.gridValue}>{rental.deliveryLocation.yearOfStudy || "N/A"}</Text>
+                                </View>
+                            </View>
+                        </>
+                    ) : (
+                        <>
+                            <Text style={styles.addressText}>
+                                {rental.deliveryLocation.formattedAddress ||
+                                    `${rental.deliveryLocation.area}, ${rental.deliveryLocation.city}`}
+                            </Text>
+                            {rental.deliveryLocation.latitude && (
+                                <TouchableOpacity style={styles.mapBtn} onPress={openMap}>
+                                    <Ionicons name="navigate-outline" size={14} color={Colors.primary} />
+                                    <Text style={styles.mapBtnText}>Open in Maps</Text>
+                                </TouchableOpacity>
+                            )}
+                        </>
+                    )}
+                    {rental.deliveryDate && (
+                        <View style={styles.scheduleRow}>
+                            <Ionicons name="time-outline" size={14} color={Colors.primary} />
+                            <Text style={styles.scheduleText}>{rental.deliveryDate} at {rental.deliveryTime}</Text>
+                        </View>
+                    )}
+                </View>
+
+                {/* Pickup */}
+                {rental.pickupLocation && (
+                    <View style={styles.section}>
+                        <View style={styles.sectionHeaderRow}>
+                            <Text style={styles.sectionLabel}>Pickup</Text>
+                            <View style={[styles.badge, { backgroundColor: Colors.success + "18" }]}>
+                                <Text style={[styles.badgeText, { color: Colors.success }]}>Collection</Text>
+                            </View>
+                        </View>
                         {rental.zone === "College" ? (
                             <>
                                 <View style={styles.gridRow}>
                                     <View style={styles.gridItem}>
                                         <Text style={styles.gridLabel}>Room No</Text>
-                                        <Text style={styles.gridValue}>{rental.deliveryLocation.roomNo}</Text>
+                                        <Text style={styles.gridValue}>{rental.pickupLocation.roomNo || "N/A"}</Text>
                                     </View>
                                     <View style={styles.gridItem}>
                                         <Text style={styles.gridLabel}>Roll No</Text>
-                                        <Text style={styles.gridValue}>{rental.deliveryLocation.rollNo}</Text>
+                                        <Text style={styles.gridValue}>{rental.pickupLocation.rollNo || "N/A"}</Text>
                                     </View>
                                 </View>
                                 <View style={styles.gridRow}>
                                     <View style={styles.gridItem}>
                                         <Text style={styles.gridLabel}>Department</Text>
-                                        <Text style={styles.gridValue}>{rental.deliveryLocation.department || "N/A"}</Text>
+                                        <Text style={styles.gridValue}>{rental.pickupLocation.department || "N/A"}</Text>
                                     </View>
                                     <View style={styles.gridItem}>
                                         <Text style={styles.gridLabel}>Year</Text>
-                                        <Text style={styles.gridValue}>{rental.deliveryLocation.yearOfStudy || "N/A"}</Text>
+                                        <Text style={styles.gridValue}>{rental.pickupLocation.yearOfStudy || "N/A"}</Text>
                                     </View>
                                 </View>
                             </>
                         ) : (
                             <>
                                 <Text style={styles.addressText}>
-                                    {rental.deliveryLocation.formattedAddress ||
-                                        `${rental.deliveryLocation.area}, ${rental.deliveryLocation.city}`}
+                                    {rental.pickupLocation.formattedAddress ||
+                                        (rental.pickupLocation.area ? `${rental.pickupLocation.area}, ${rental.pickupLocation.city}` : "Delivery Address Reused")}
                                 </Text>
-                                {rental.deliveryLocation.latitude && (
-                                    <TouchableOpacity style={styles.mapBtn} onPress={openMap}>
-                                        <Ionicons name="map" size={18} color={Colors.white} />
-                                        <Text style={styles.mapBtnText}>Open in Maps</Text>
+                                {rental.pickupLocation.latitude && (
+                                    <TouchableOpacity
+                                        style={styles.mapBtn}
+                                        onPress={() => {
+                                            const { latitude, longitude } = rental.pickupLocation!;
+                                            const url = Platform.select({
+                                                ios: `maps:0,0?q=${latitude},${longitude}`,
+                                                android: `geo:0,0?q=${latitude},${longitude}`,
+                                            });
+                                            if (url) Linking.openURL(url);
+                                        }}
+                                    >
+                                        <Ionicons name="navigate-outline" size={14} color={Colors.success} />
+                                        <Text style={[styles.mapBtnText, { color: Colors.success }]}>Open in Maps</Text>
                                     </TouchableOpacity>
                                 )}
                             </>
                         )}
-
-                        {rental.deliveryDate && (
-                            <View style={styles.scheduleInfo}>
-                                <Ionicons name="time-outline" size={16} color={Colors.primary} />
-                                <Text style={styles.scheduleText}>
-                                    Scheduled: {rental.deliveryDate} at {rental.deliveryTime}
-                                </Text>
+                        <View style={styles.detailRow}>
+                            <Ionicons name="call-outline" size={16} color={Colors.success} />
+                            <Text style={[styles.detailValue, { color: Colors.success }]}>{rental.pickupLocation.phone}</Text>
+                        </View>
+                        {rental.pickupDate && (
+                            <View style={styles.scheduleRow}>
+                                <Ionicons name="calendar-outline" size={14} color={Colors.success} />
+                                <Text style={[styles.scheduleText, { color: Colors.success }]}>{rental.pickupDate} at {rental.pickupTime}</Text>
                             </View>
                         )}
                     </View>
-                </View>
-
-                {/* Section: Pickup Details */}
-                {rental.pickupLocation && (
-                    <View style={styles.section}>
-                        <View style={styles.sectionHeaderRow}>
-                            <Text style={styles.sectionTitle}>Pickup Details</Text>
-                            <View style={[styles.zoneBadge, { backgroundColor: Colors.success }]}>
-                                <Text style={styles.zoneText}>Collection</Text>
-                            </View>
-                        </View>
-                        <View style={styles.infoCard}>
-                            {rental.zone === "College" ? (
-                                <>
-                                    <View style={styles.gridRow}>
-                                        <View style={styles.gridItem}>
-                                            <Text style={styles.gridLabel}>Room No</Text>
-                                            <Text style={styles.gridValue}>{rental.pickupLocation.roomNo || "N/A"}</Text>
-                                        </View>
-                                        <View style={styles.gridItem}>
-                                            <Text style={styles.gridLabel}>Roll No</Text>
-                                            <Text style={styles.gridValue}>{rental.pickupLocation.rollNo || "N/A"}</Text>
-                                        </View>
-                                    </View>
-                                    <View style={styles.gridRow}>
-                                        <View style={styles.gridItem}>
-                                            <Text style={styles.gridLabel}>Department</Text>
-                                            <Text style={styles.gridValue}>{rental.pickupLocation.department || "N/A"}</Text>
-                                        </View>
-                                        <View style={styles.gridItem}>
-                                            <Text style={styles.gridLabel}>Year</Text>
-                                            <Text style={styles.gridValue}>{rental.pickupLocation.yearOfStudy || "N/A"}</Text>
-                                        </View>
-                                    </View>
-                                </>
-                            ) : (
-                                <>
-                                    <Text style={styles.addressText}>
-                                        {rental.pickupLocation.formattedAddress ||
-                                            (rental.pickupLocation.area ? `${rental.pickupLocation.area}, ${rental.pickupLocation.city}` : "Delivery Address Reused")}
-                                    </Text>
-                                    {rental.pickupLocation.latitude && (
-                                        <TouchableOpacity
-                                            style={[styles.mapBtn, { backgroundColor: Colors.success }]}
-                                            onPress={() => {
-                                                const { latitude, longitude } = rental.pickupLocation!;
-                                                const url = Platform.select({
-                                                    ios: `maps:0,0?q=${latitude},${longitude}`,
-                                                    android: `geo:0,0?q=${latitude},${longitude}`,
-                                                });
-                                                if (url) Linking.openURL(url);
-                                            }}
-                                        >
-                                            <Ionicons name="map" size={18} color={Colors.white} />
-                                            <Text style={styles.mapBtnText}>Open Pickup in Maps</Text>
-                                        </TouchableOpacity>
-                                    )}
-                                </>
-                            )}
-
-                            <View style={styles.infoRow}>
-                                <Ionicons name="call-outline" size={18} color={Colors.success} />
-                                <Text style={[styles.infoValue, { color: Colors.success }]}>{rental.pickupLocation.phone}</Text>
-                            </View>
-
-                            {rental.pickupDate && (
-                                <View style={[styles.scheduleInfo, { borderTopColor: Colors.success + "20" }]}>
-                                    <Ionicons name="calendar-outline" size={16} color={Colors.success} />
-                                    <Text style={[styles.scheduleText, { color: Colors.success }]}>
-                                        Collection: {rental.pickupDate} at {rental.pickupTime}
-                                    </Text>
-                                </View>
-                            )}
-                        </View>
-                    </View>
                 )}
 
-                {/* Section: Payment & Fees */}
+                {/* Payment & Fees */}
                 {(rental.totalRent !== undefined || rental.paymentStatus) && (
                     <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>Payment & Fees</Text>
-                        <View style={styles.infoCard}>
+                        <Text style={styles.sectionLabel}>Payment & Fees</Text>
+                        <View style={styles.gridRow}>
                             {rental.totalRent !== undefined && (
-                                <View style={styles.gridRow}>
-                                    <View style={styles.gridItem}>
-                                        <Text style={styles.gridLabel}>Total Rent</Text>
-                                        <Text style={[styles.gridValue, { color: Colors.success, fontFamily: Fonts.bold }]}>
-                                            ₹{rental.totalRent}
-                                        </Text>
-                                    </View>
-                                    {rental.lateFee !== undefined && (
-                                        <View style={styles.gridItem}>
-                                            <Text style={styles.gridLabel}>Late Fee</Text>
-                                            <Text style={[styles.gridValue, { color: Colors.error }]}>
-                                                ₹{rental.lateFee}
-                                            </Text>
-                                        </View>
-                                    )}
-                                </View>
-                            )}
-
-                            <View style={styles.gridRow}>
-                                {rental.paymentMethod && (
-                                    <View style={styles.gridItem}>
-                                        <Text style={styles.gridLabel}>Method</Text>
-                                        <Text style={styles.gridValue}>{rental.paymentMethod.toUpperCase()}</Text>
-                                    </View>
-                                )}
-                                {rental.paymentStatus && (
-                                    <View style={styles.gridItem}>
-                                        <Text style={styles.gridLabel}>Payment Status</Text>
-                                        <Text style={[styles.gridValue, { color: rental.paymentStatus === "paid" ? Colors.success : Colors.warning }]}>
-                                            {rental.paymentStatus.replace("_", " ").toUpperCase()}
-                                        </Text>
-                                    </View>
-                                )}
-                            </View>
-
-                            {rental.utrNumber && (
                                 <View style={styles.gridItem}>
-                                    <Text style={styles.gridLabel}>UTR Number</Text>
-                                    <Text style={styles.gridValue}>{rental.utrNumber}</Text>
+                                    <Text style={styles.gridLabel}>Total Rent</Text>
+                                    <Text style={[styles.gridValue, { color: Colors.success, fontFamily: Fonts.bold }]}>₹{rental.totalRent}</Text>
                                 </View>
                             )}
-
-                            {rental.screenshotUrl && (
-                                <View style={styles.screenshotSection}>
-                                    <Text style={styles.gridLabel}>Payment Screenshot</Text>
-                                    <TouchableOpacity
-                                        onPress={() => Linking.openURL(rental.screenshotUrl!)}
-                                        style={styles.screenshotWrap}
-                                    >
-                                        <Image source={{ uri: rental.screenshotUrl }} style={styles.screenshot} resizeMode="contain" />
-                                        <View style={styles.screenshotOverlay}>
-                                            <Ionicons name="expand" size={20} color={Colors.white} />
-                                            <Text style={styles.screenshotOverlayText}>Tap to Expand</Text>
-                                        </View>
-                                    </TouchableOpacity>
+                            {rental.lateFee !== undefined && (
+                                <View style={styles.gridItem}>
+                                    <Text style={styles.gridLabel}>Late Fee</Text>
+                                    <Text style={[styles.gridValue, { color: Colors.error }]}>₹{rental.lateFee}</Text>
                                 </View>
                             )}
                         </View>
+                        <View style={styles.gridRow}>
+                            {rental.paymentMethod && (
+                                <View style={styles.gridItem}>
+                                    <Text style={styles.gridLabel}>Method</Text>
+                                    <Text style={styles.gridValue}>{rental.paymentMethod.toUpperCase()}</Text>
+                                </View>
+                            )}
+                            {rental.paymentStatus && (
+                                <View style={styles.gridItem}>
+                                    <Text style={styles.gridLabel}>Status</Text>
+                                    <Text style={[styles.gridValue, { color: rental.paymentStatus === "paid" ? Colors.success : Colors.warning }]}>
+                                        {rental.paymentStatus.replace("_", " ").toUpperCase()}
+                                    </Text>
+                                </View>
+                            )}
+                        </View>
+                        {rental.utrNumber && (
+                            <View style={styles.gridItem}>
+                                <Text style={styles.gridLabel}>UTR Number</Text>
+                                <Text style={styles.gridValue}>{rental.utrNumber}</Text>
+                            </View>
+                        )}
+                        {rental.screenshotUrl && (
+                            <TouchableOpacity onPress={() => Linking.openURL(rental.screenshotUrl!)} style={styles.screenshotWrap}>
+                                <Image source={{ uri: rental.screenshotUrl }} style={styles.screenshot} resizeMode="cover" />
+                                <View style={styles.screenshotOverlay}>
+                                    <Ionicons name="expand" size={18} color={Colors.white} />
+                                    <Text style={styles.screenshotOverlayText}>Tap to view</Text>
+                                </View>
+                            </TouchableOpacity>
+                        )}
                     </View>
                 )}
 
@@ -487,328 +439,48 @@ export default function AdminRentalDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: Colors.background,
-    },
-    center: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    header: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        paddingHorizontal: 20,
-        paddingVertical: 15,
-        backgroundColor: Colors.white,
-        borderBottomWidth: 1,
-        borderBottomColor: Colors.border,
-    },
-    headerLeft: {
-        flex: 1,
-        flexDirection: "row",
-        alignItems: "center",
-    },
-    backBtn: {
-        width: 75,
-        height: 40,
-        alignItems: "flex-start",
-        justifyContent: "center",
-        paddingLeft: 25,
-        marginLeft: -25,
-    },
-    headerTitle: {
-        flex: 1,
-        fontSize: FontSizes.title,
-        color: Colors.text,
-        textAlign: "center",
-        fontFamily: Fonts.bold,
-    },
-    headerSpacer: {
-        width: 75,
-        alignItems: "flex-end",
-        justifyContent: "center",
-        paddingRight: 20,
-        marginRight: -20,
-    },
-    idBadge: {
-        backgroundColor: Colors.background,
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 6,
-    },
-    idText: {
-        fontSize: 10,
-        fontFamily: Fonts.bold,
-        color: Colors.textSecondary,
-    },
-    scroll: {
-        paddingBottom: 40,
-    },
-    timelineSection: {
-        padding: 20,
-        backgroundColor: Colors.white,
-        marginHorizontal: 20,
-        marginTop: 20,
-        borderRadius: 20,
-        marginBottom: 25,
-        shadowColor: Colors.shadow,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.05,
-        shadowRadius: 12,
-        elevation: 3,
-    },
-    timelineContainer: {
-        marginTop: 10,
-    },
-    stepRow: {
-        flexDirection: "row",
-        alignItems: "flex-start",
-    },
-    stepDot: {
-        width: 28,
-        height: 28,
-        borderRadius: 14,
-        backgroundColor: Colors.background,
-        justifyContent: "center",
-        alignItems: "center",
-        borderWidth: 1,
-        borderColor: Colors.border,
-        zIndex: 2,
-    },
-    stepDotDone: {
-        backgroundColor: Colors.success,
-        borderColor: Colors.success,
-    },
-    stepDotActive: {
-        backgroundColor: Colors.primary,
-        borderColor: Colors.primary,
-        transform: [{ scale: 1.1 }],
-    },
-    timelineLine: {
-        width: 2,
-        height: 30,
-        backgroundColor: Colors.border,
-        marginLeft: 13,
-        zIndex: 1,
-        marginVertical: -2,
-    },
-    timelineLineActive: {
-        backgroundColor: Colors.success,
-    },
-    stepTextContainer: {
-        marginLeft: 15,
-        flex: 1,
-        paddingBottom: 5,
-    },
-    stepLabel: {
-        fontSize: FontSizes.body,
-        fontFamily: Fonts.medium,
-        color: Colors.textSecondary,
-    },
-    stepLabelDone: {
-        color: Colors.text,
-        fontFamily: Fonts.bold,
-    },
-    stepSubLabel: {
-        fontSize: 11,
-        fontFamily: Fonts.regular,
-        color: Colors.textSecondary,
-        marginTop: 2,
-    },
-    section: {
-        paddingHorizontal: 20,
-        marginBottom: 25,
-    },
-    sectionTitle: {
-        fontSize: FontSizes.small,
-        fontFamily: Fonts.bold,
-        color: Colors.textSecondary,
-        textTransform: "uppercase",
-        letterSpacing: 1,
-        marginBottom: 12,
-    },
-    sectionHeaderRow: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: 12,
-    },
-    bookCard: {
-        flexDirection: "row",
-        backgroundColor: Colors.white,
-        borderRadius: 16,
-        padding: 12,
-        shadowColor: Colors.shadow,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
-    },
-    bookCover: {
-        width: 60,
-        aspectRatio: 2 / 3,
-        borderRadius: 8,
-    },
-    bookPlaceholder: {
-        width: 60,
-        aspectRatio: 2 / 3,
-        borderRadius: 8,
-        backgroundColor: Colors.background,
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    bookDetails: {
-        flex: 1,
-        marginLeft: 15,
-        justifyContent: "center",
-    },
-    bookTitle: {
-        fontSize: FontSizes.body,
-        fontFamily: Fonts.bold,
-        color: Colors.text,
-        marginBottom: 4,
-    },
-    bookAuthor: {
-        fontSize: FontSizes.caption,
-        fontFamily: Fonts.regular,
-        color: Colors.textSecondary,
-        marginBottom: 8,
-    },
-    priceTag: {
-        alignSelf: "flex-start",
-        backgroundColor: Colors.primary + "10",
-        paddingHorizontal: 8,
-        paddingVertical: 2,
-        borderRadius: 4,
-    },
-    priceText: {
-        fontSize: 10,
-        fontFamily: Fonts.bold,
-        color: Colors.primary,
-    },
-    infoCard: {
-        backgroundColor: Colors.white,
-        borderRadius: 16,
-        padding: 16,
-        gap: 12,
-        shadowColor: Colors.shadow,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
-    },
-    infoRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 12,
-    },
-    infoValue: {
-        fontSize: FontSizes.body,
-        fontFamily: Fonts.medium,
-        color: Colors.text,
-    },
-    zoneBadge: {
-        backgroundColor: Colors.primary,
-        paddingHorizontal: 10,
-        paddingVertical: 3,
-        borderRadius: 99,
-    },
-    zoneText: {
-        fontSize: 10,
-        fontFamily: Fonts.bold,
-        color: Colors.white,
-    },
-    gridRow: {
-        flexDirection: "row",
-        gap: 15,
-    },
-    gridItem: {
-        flex: 1,
-    },
-    gridLabel: {
-        fontSize: 10,
-        fontFamily: Fonts.bold,
-        color: Colors.textSecondary,
-        marginBottom: 2,
-    },
-    gridValue: {
-        fontSize: FontSizes.body,
-        fontFamily: Fonts.medium,
-        color: Colors.text,
-    },
-    addressText: {
-        fontSize: FontSizes.body,
-        fontFamily: Fonts.medium,
-        color: Colors.text,
-        lineHeight: 22,
-    },
-    mapBtn: {
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: Colors.primary,
-        alignSelf: "flex-start",
-        paddingHorizontal: 15,
-        paddingVertical: 8,
-        borderRadius: 8,
-        gap: 8,
-        marginTop: 5,
-    },
-    mapBtnText: {
-        fontSize: FontSizes.caption,
-        fontFamily: Fonts.bold,
-        color: Colors.white,
-    },
-    scheduleInfo: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 6,
-        marginTop: 5,
-        paddingTop: 12,
-        borderTopWidth: 1,
-        borderTopColor: Colors.border,
-    },
-    scheduleText: {
-        fontSize: FontSizes.caption,
-        fontFamily: Fonts.medium,
-        color: Colors.primary,
-    },
-    actionSection: {
-        paddingHorizontal: 20,
-        marginTop: 10,
-    },
-    errorText: {
-        fontSize: FontSizes.body,
-        color: Colors.error,
-        fontFamily: Fonts.bold,
-    },
-    screenshotSection: {
-        marginTop: 5,
-    },
-    screenshotWrap: {
-        width: "100%",
-        aspectRatio: 3 / 4,
-        borderRadius: 12,
-        backgroundColor: Colors.background,
-        overflow: "hidden",
-        marginTop: 8,
-    },
-    screenshot: {
-        width: "100%",
-        height: "100%",
-    },
-    screenshotOverlay: {
-        ...StyleSheet.absoluteFillObject,
-        backgroundColor: "rgba(0,0,0,0.3)",
-        justifyContent: "center",
-        alignItems: "center",
-        gap: 5,
-    },
-    screenshotOverlayText: {
-        color: Colors.white,
-        fontSize: 10,
-        fontFamily: Fonts.bold,
-    },
-});
+    container: { flex: 1, backgroundColor: Colors.background },
+    center: { flex: 1, justifyContent: "center", alignItems: "center" },
+    idBadge: { backgroundColor: Colors.primaryLight, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 },
+    idText: { fontSize: FontSizes.tiny, fontFamily: Fonts.bold, color: Colors.primary },
+    scroll: { paddingBottom: 40 },
+    statusBanner: { flexDirection: "row", alignItems: "center", paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md, marginTop: Spacing.sm },
+    statusDot: { width: 10, height: 10, borderRadius: 5, marginRight: Spacing.sm },
+    statusLabel: { fontSize: FontSizes.subtitle, fontFamily: Fonts.bold, flex: 1 },
+    statusDate: { fontSize: FontSizes.caption, fontFamily: Fonts.regular, color: Colors.textSecondary },
+    stepperRow: { flexDirection: "row", alignItems: "center", paddingHorizontal: Spacing.lg, paddingBottom: Spacing.lg },
+    stepperDotWrap: { alignItems: "center" },
+    stepperDot: { width: 18, height: 18, borderRadius: 9, backgroundColor: Colors.border, borderWidth: 2, borderColor: Colors.border, justifyContent: "center", alignItems: "center" },
+    stepperDotInner: { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.white },
+    stepperLabel: { fontSize: 9, fontFamily: Fonts.bold, color: Colors.textSecondary, marginTop: 4 },
+    stepperLine: { flex: 1, height: 2, backgroundColor: Colors.border, marginHorizontal: 2 },
+    bookRow: { flexDirection: "row", alignItems: "center", paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md, borderBottomWidth: 1, borderBottomColor: Colors.border },
+    bookCover: { width: 50, aspectRatio: 2 / 3, borderRadius: 6 },
+    bookPlaceholder: { width: 50, aspectRatio: 2 / 3, borderRadius: 6, backgroundColor: Colors.primaryLight, justifyContent: "center", alignItems: "center" },
+    bookMeta: { flex: 1, marginLeft: Spacing.md },
+    bookTitle: { fontSize: FontSizes.body, fontFamily: Fonts.bold, color: Colors.text, marginBottom: 2 },
+    bookAuthor: { fontSize: FontSizes.caption, fontFamily: Fonts.regular, color: Colors.textSecondary, marginBottom: 4 },
+    bookPrice: { fontSize: FontSizes.caption, fontFamily: Fonts.bold, color: Colors.primary },
+    section: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md, borderBottomWidth: 1, borderBottomColor: Colors.border, gap: Spacing.sm },
+    sectionLabel: { fontSize: FontSizes.caption, fontFamily: Fonts.bold, color: Colors.textSecondary, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 },
+    sectionHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 4 },
+    badge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 99 },
+    badgeText: { fontSize: FontSizes.tiny, fontFamily: Fonts.bold },
+    detailRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+    detailValue: { fontSize: FontSizes.body, fontFamily: Fonts.medium, color: Colors.text, flex: 1 },
+    gridRow: { flexDirection: "row", gap: Spacing.md },
+    gridItem: { flex: 1 },
+    gridLabel: { fontSize: FontSizes.tiny, fontFamily: Fonts.bold, color: Colors.textSecondary, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 },
+    gridValue: { fontSize: FontSizes.body, fontFamily: Fonts.medium, color: Colors.text },
+    addressText: { fontSize: FontSizes.body, fontFamily: Fonts.regular, color: Colors.text, lineHeight: 22 },
+    mapBtn: { flexDirection: "row", alignItems: "center", alignSelf: "flex-start", gap: 6, marginTop: 4 },
+    mapBtnText: { fontSize: FontSizes.caption, fontFamily: Fonts.bold, color: Colors.primary },
+    scheduleRow: { flexDirection: "row", alignItems: "center", gap: 6, paddingTop: Spacing.sm, marginTop: Spacing.xs, borderTopWidth: 1, borderTopColor: Colors.border },
+    scheduleText: { fontSize: FontSizes.caption, fontFamily: Fonts.medium, color: Colors.primary },
+    actionSection: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.lg },
+    errorText: { fontSize: FontSizes.body, color: Colors.error, fontFamily: Fonts.bold },
+    screenshotWrap: { width: "100%", aspectRatio: 4 / 3, borderRadius: Layout.borderRadius, backgroundColor: Colors.primaryLight, overflow: "hidden", marginTop: Spacing.sm },
+    screenshot: { width: "100%", height: "100%" },
+    screenshotOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.25)", justifyContent: "center", alignItems: "center", gap: 4 },
+    screenshotOverlayText: { color: Colors.white, fontSize: FontSizes.tiny, fontFamily: Fonts.bold },
+});
