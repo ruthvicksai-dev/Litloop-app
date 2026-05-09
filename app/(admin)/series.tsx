@@ -10,7 +10,6 @@ import { Id } from "@/convex/_generated/dataModel";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery } from "convex/react";
 import * as ImagePicker from "expo-image-picker";
-import { useRouter } from "expo-router";
 import AdminHeader from "@/components/admin/AdminHeader";
 import React, { useState } from "react";
 import {
@@ -38,7 +37,6 @@ type SeriesItem = {
 };
 
 export default function SeriesManagementScreen() {
-    const router = useRouter();
     const { showToast } = useToast();
     const { accessToken } = useAuth();
     const seriesQuery = useQuery(api.series.list, {

@@ -129,6 +129,11 @@ export default defineSchema({
         availableCopies: v.number(),
         avgRating: v.optional(v.number()),
         totalReviews: v.optional(v.number()),
+        rating1Count: v.optional(v.number()),
+        rating2Count: v.optional(v.number()),
+        rating3Count: v.optional(v.number()),
+        rating4Count: v.optional(v.number()),
+        rating5Count: v.optional(v.number()),
         flaggedCount: v.optional(v.number()),
         createdAt: v.number(),
     })
@@ -269,6 +274,12 @@ export default defineSchema({
         .index("by_rentals", ["rentals"])
         .index("by_revenue", ["revenue"]),
 
+    analytics_counters: defineTable({
+        key: v.string(),
+        value: v.number(),
+        updatedAt: v.number(),
+    }).index("by_key", ["key"]),
+
     favorites: defineTable({
         userId: v.id("users"),
         bookId: v.id("books"),
@@ -327,6 +338,13 @@ export default defineSchema({
         key: v.string(),
         count: v.number(),
         resetAt: v.number(),
+    }).index("by_key", ["key"]),
+
+    // Small internal state records for cron cursors and maintenance progress.
+    system_state: defineTable({
+        key: v.string(),
+        value: v.optional(v.string()),
+        updatedAt: v.number(),
     }).index("by_key", ["key"]),
 
     // Backend-driven payment configuration (admin-editable, no app rebuild needed)

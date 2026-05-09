@@ -1,7 +1,7 @@
 import Button from "@/components/ui/core/Button";
 import SummaryStat from "@/components/admin/SummaryStat";
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Spacing, scale, Layout } from "@/constants/theme";
+import { Colors, Spacing, scale } from "@/constants/theme";
 import { useVerifyStudentsScreen } from "@/hooks";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";

@@ -4,6 +4,8 @@ import { internal } from "./_generated/api";
 import { internalMutation, mutation, query } from "./_generated/server";
 import { insertAuditLog } from "./lib/auditLog";
 import { assertAdmin } from "./lib/authHelpers";
+import { calculateRankingScore, mapBookForClient } from "./lib/bookHelpers";
+import { assertRateLimit, buildRateLimitKey } from "./lib/rateLimit";
 
 const MAIN_GENRES = [
     "Action",
@@ -22,6 +24,14 @@ const MAIN_GENRES = [
     "Business",
     "Psychology",
 ];
+
+const BOOK_RATE_LIMITS = {
+    uploadUrl: {
+        limit: 30,
+        windowMs: 15 * 60 * 1000,
+        message: "Too many upload requests. Please try again later.",
+    },
+} as const;
 
 const GENRE_KEYWORDS: Record<string, string[]> = {
     Romance: ["love", "relationship", "romance", "affair", "couple", "heart", "emotion"],
@@ -108,16 +118,6 @@ function normalizeRating(rating: number | undefined) {
     return Math.max(0, Math.min(5, rating));
 }
 
-function calculateRankingScore(book: {
-    rating?: number;
-    bookRentals?: number;
-    bookViews?: number;
-}) {
-    return (book.rating ?? 0) * 0.5 +
-        (book.bookRentals ?? 0) * 0.3 +
-        (book.bookViews ?? 0) * 0.2;
-}
-
 function normalizeOptionalPositiveInt(value: number | undefined, fieldLabel: string) {
     if (value === undefined) return undefined;
     if (!Number.isFinite(value) || value <= 0 || !Number.isInteger(value)) {
@@ -164,54 +164,6 @@ function normalizeSeries(series: string | undefined) {
     if (series === undefined) return undefined;
     const normalized = series.trim();
     return normalized || undefined;
-}
-
-async function resolveCoverUrls(
-    ctx: any,
-    book: {
-        coverImage?: any;
-        coverImages?: any[];
-    }
-): Promise<{ coverUrl: string | null; coverUrls: string[] }> {
-    let coverUrl: string | null = null;
-    const coverUrls: string[] = [];
-
-    if (book.coverImages && book.coverImages.length > 0) {
-        for (const curr of book.coverImages) {
-            const url = await ctx.storage.getUrl(curr as any);
-            if (url) coverUrls.push(url);
-        }
-        if (coverUrls.length > 0) coverUrl = coverUrls[0];
-    } else if (book.coverImage) {
-        coverUrl = await ctx.storage.getUrl(book.coverImage as any);
-        if (coverUrl) coverUrls.push(coverUrl);
-    }
-
-    return { coverUrl, coverUrls };
-}
-
-export async function mapBookForClient(
-    ctx: any,
-    book: any
-): Promise<any> {
-    const { coverUrl, coverUrls } = await resolveCoverUrls(ctx, book);
-    return {
-        ...book,
-        genre: book.genre ?? book.genres?.[0] ?? "General",
-        genres: book.genres ?? [],
-        rating: typeof book.rating === "number" ? book.rating : 0,
-        ratingCount: typeof book.ratingCount === "number" ? book.ratingCount : 0,
-        bookViews: typeof book.bookViews === "number" ? book.bookViews : 0,
-        bookRentals: typeof book.bookRentals === "number" ? book.bookRentals : 0,
-        rankingScore: typeof book.rankingScore === "number"
-            ? book.rankingScore
-            : calculateRankingScore(book),
-        isTop10: Boolean(book.isTop10),
-        isFamous: Boolean(book.isFamous),
-        isTrending: Boolean(book.isTrending),
-        coverUrl,
-        coverUrls,
-    };
 }
 
 export const list = query({
@@ -665,7 +617,10 @@ export const update = mutation({
 export const generateUploadUrl = mutation({
     args: { accessToken: v.string() },
     handler: async (ctx, args) => {
-        await assertAdmin(ctx, args.accessToken);
+        const admin = await assertAdmin(ctx, args.accessToken);
+        const uploadKey = buildRateLimitKey("book", "upload", admin._id);
+        await assertRateLimit(ctx, uploadKey, BOOK_RATE_LIMITS.uploadUrl);
+
         return await ctx.storage.generateUploadUrl();
     },
 });
@@ -793,19 +748,34 @@ export const getNewlyAddedBooks = query({
 });
 
 export const getProblemBooks = query({
-    args: { accessToken: v.string() },
+    args: {
+        accessToken: v.string(),
+        limit: v.optional(v.number()),
+    },
     handler: async (ctx, args) => {
         await assertAdmin(ctx, args.accessToken);
+        const limit = Math.min(Math.max(args.limit ?? 20, 1), 50);
 
-        const books = await ctx.db
+        const lowRatedCandidates = await ctx.db
             .query("books")
-            .collect();
+            .withIndex("by_rating")
+            .order("asc")
+            .take(100);
+        const recentCandidates = await ctx.db
+            .query("books")
+            .withIndex("by_createdAt")
+            .order("desc")
+            .take(100);
+        const booksById = new Map();
+        for (const book of [...lowRatedCandidates, ...recentCandidates]) {
+            booksById.set(book._id, book);
+        }
 
-        const problemBooks = books.filter(b => {
+        const problemBooks = [...booksById.values()].filter(b => {
             const avgRating = b.avgRating ?? b.rating ?? 0;
             const flaggedCount = b.flaggedCount ?? 0;
             return (avgRating > 0 && avgRating < 3) || flaggedCount > 0;
-        });
+        }).slice(0, limit);
 
         return Promise.all(problemBooks.map(b => mapBookForClient(ctx, b)));
     },
@@ -889,10 +859,17 @@ export const getDiscoverData = query({
 });
 
 export const backfillSearchFields = mutation({
-    args: { accessToken: v.string() },
+    args: {
+        accessToken: v.string(),
+        paginationOpts: paginationOptsValidator,
+    },
     handler: async (ctx, args) => {
         const admin = await assertAdmin(ctx, args.accessToken);
-        const books = await ctx.db.query("books").collect();
+        const results = await ctx.db
+            .query("books")
+            .order("asc")
+            .paginate(args.paginationOpts);
+        const books = results.page;
         let updated = 0;
 
         for (const book of books) {
@@ -943,6 +920,11 @@ export const backfillSearchFields = mutation({
 
         await insertAuditLog(ctx, "books_search_backfilled", admin._id, undefined, undefined, { updated, scanned: books.length });
 
-        return { scanned: books.length, updated };
+        return {
+            scanned: books.length,
+            updated,
+            continueCursor: results.continueCursor,
+            isDone: results.isDone,
+        };
     },
 });

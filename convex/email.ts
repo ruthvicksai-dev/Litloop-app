@@ -1,11 +1,6 @@
-"use node";
-
 import { v } from "convex/values";
 import { Resend } from "resend";
 import { internalAction } from "./_generated/server";
-
-// Initialize Resend
-const resend = new Resend(process.env.RESEND_API_KEY || "dummy_key");
 
 function getEmailTemplate(purpose: string, otpString: string) {
     if (purpose === "password_reset") {
@@ -54,7 +49,8 @@ export const sendOTP = internalAction({
         const { email, otpString } = args;
         const purpose = args.purpose ?? "signup";
 
-        if (!process.env.RESEND_API_KEY) {
+        const apiKey = process.env.RESEND_API_KEY;
+        if (!apiKey) {
             console.warn(`[OTP System] RESEND_API_KEY is not set. Mocking email delivery to ${email}.`);
             console.warn(`🚨 Mock OTP Code for ${email} (${purpose}): ${otpString} 🚨`);
             return {
@@ -64,6 +60,7 @@ export const sendOTP = internalAction({
         }
 
         const template = getEmailTemplate(purpose, otpString);
+        const resend = new Resend(apiKey);
 
         try {
             const data = await resend.emails.send({

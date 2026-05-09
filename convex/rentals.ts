@@ -7,10 +7,11 @@ import {
 } from "../utils/location/areas";
 import { internal } from "./_generated/api";
 import { internalMutation, mutation, query } from "./_generated/server";
-import { recordRentalCreated, recordUserActivity } from "./analytics";
+import { recordRentalCreated, recordRentalReturned, recordUserActivity } from "./analytics";
 import { assertAdmin, getAuthenticatedUser } from "./lib/authHelpers";
 import { getBookWithCoverUrls } from "./lib/bookHelpers";
 import { assertRateLimit, buildRateLimitKey } from "./lib/rateLimit";
+import { incrementRatingCountPatch } from "./lib/reviewCounters";
 
 const VALID_SLOTS: Record<string, number> = {
     "Morning (9 AM - 12 PM)": 9,
@@ -408,6 +409,7 @@ export const schedulePickup = mutation({
             ratingCount: nextCount,
             avgRating: nextRating,
             totalReviews: nextCount,
+            ...incrementRatingCountPatch(book, args.userRating, 1),
         });
 
         // C3: Prevent duplicate review on rapid double-tap
@@ -495,6 +497,7 @@ export const cancelPickup = mutation({
                     ratingCount,
                     avgRating,
                     totalReviews,
+                    ...incrementRatingCountPatch(book, rental.userRating, -1),
                 });
             }
         }
@@ -542,6 +545,7 @@ export const autoCancelPickup = internalMutation({
                     ratingCount,
                     avgRating,
                     totalReviews,
+                    ...incrementRatingCountPatch(book, rental.userRating, -1),
                 });
             }
         }
@@ -605,6 +609,7 @@ export const markReturned = mutation({
             status: "returned",
             lateFee: lateFee > 0 ? lateFee : undefined,
         });
+        await recordRentalReturned(ctx);
 
         const book = await ctx.db.get(rental.bookId);
         await ctx.scheduler.runAfter(0, internal.notifications.notifyUser, {

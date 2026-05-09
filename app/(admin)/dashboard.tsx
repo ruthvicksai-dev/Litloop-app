@@ -37,7 +37,6 @@ export default function AdminDashboard() {
         groupedByZone,
         handleMarkDelivered,
         handleMarkReturned,
-        handleSignOut,
         statusFilters,
     } = useAdminDashboard();
     const { fadeAnim, slideAnim } = useFadeSlideIn();

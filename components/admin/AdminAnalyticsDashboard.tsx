@@ -4,12 +4,11 @@ import AdminLineChart from "@/components/admin/AdminLineChart";
 import StatCard from "@/components/admin/StatCard";
 import AdminVerticalBarChart from "@/components/admin/AdminVerticalBarChart";
 import BookLoader from "@/components/ui/feedback/BookLoader";
+import { useAuth } from "@/context/AuthContext";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { api } from "@/convex/_generated/api";
-import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";
-import { useRouter } from "expo-router";
 import AdminHeader from "@/components/admin/AdminHeader";
 import React, { useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -28,10 +27,13 @@ const formatCurrency = (value: number) =>
     }).format(value);
 
 export default function AdminAnalyticsDashboard() {
-    const router = useRouter();
+    const { accessToken } = useAuth();
     const [range, setRange] = useState<(typeof FILTERS)[number]["key"]>("30d");
     const [refreshing, setRefreshing] = useState(false);
-    const analytics = useQuery(api.analytics.getDashboardAnalytics, { range });
+    const analytics = useQuery(
+        api.analytics.getDashboardAnalytics,
+        accessToken ? { accessToken, range } : "skip"
+    );
 
     const onRefresh = React.useCallback(() => {
         setRefreshing(true);

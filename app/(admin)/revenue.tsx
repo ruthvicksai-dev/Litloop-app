@@ -14,9 +14,7 @@ import {
     getRevenueMetricsForMonth,
     formatCurrency,
 } from "@/utils";
-import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";
-import { useRouter } from "expo-router";
 import AdminHeader from "@/components/admin/AdminHeader";
 import React, { useMemo, useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -24,7 +22,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 
 export default function AdminRevenueScreen() {
-    const router = useRouter();
     const { accessToken } = useAuth();
     const rentalsQuery = useQuery(
         api.rentals.getAllRentals,

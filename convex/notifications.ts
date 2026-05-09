@@ -20,6 +20,8 @@ const NOTIFICATION_RATE_LIMITS = {
 
 /** Max notifications to mark-as-read in a single call — protects against timeouts. */
 const MARK_ALL_READ_BATCH_SIZE = 100;
+const RECONCILE_BOOKS_CURSOR_KEY = "reconcile_available_copies_cursor";
+const RECONCILE_BOOKS_BATCH_SIZE = 50;
 
 function isExpoPushToken(token: string) {
     return token.startsWith("ExponentPushToken") || token.startsWith("ExpoPushToken");
@@ -493,9 +495,8 @@ export const cleanupOldNotifications = internalMutation({
 /**
  * L2: Reconcile availableCopies for all books — called by nightly cron.
  *
- * M3 FIX: Now processes a bounded batch of 50 books per run to avoid
- * N+1 query timeouts as the catalog grows. The cron runs nightly so
- * all books are covered across multiple nights at worst.
+ * Processes a bounded batch of books per run and persists the next cursor
+ * so the cron advances through the catalog instead of repeating page one.
  */
 export const reconcileAvailableCopies = internalMutation({
     args: {},
@@ -508,13 +509,18 @@ export const reconcileAvailableCopies = internalMutation({
             "payment_pending",
         ]);
 
-        // M3 FIX: Process at most 50 books per run instead of the full catalog.
-        // This bounds the query count to 51 max (1 books fetch + 50 rental fetches)
-        // and stays well within Convex mutation time limits as the catalog scales.
-        const books = await ctx.db
+        const state = await ctx.db
+            .query("system_state")
+            .withIndex("by_key", (q) => q.eq("key", RECONCILE_BOOKS_CURSOR_KEY))
+            .first();
+        const results = await ctx.db
             .query("books")
             .withIndex("by_createdAt")
-            .take(50);
+            .paginate({
+                cursor: state?.value ?? null,
+                numItems: RECONCILE_BOOKS_BATCH_SIZE,
+            });
+        const books = results.page;
 
         let corrected = 0;
 
@@ -538,6 +544,25 @@ export const reconcileAvailableCopies = internalMutation({
             }
         }
 
-        return { scanned: books.length, corrected };
+        const nextCursor = results.isDone ? undefined : results.continueCursor;
+        if (state) {
+            await ctx.db.patch(state._id, {
+                value: nextCursor,
+                updatedAt: Date.now(),
+            });
+        } else {
+            await ctx.db.insert("system_state", {
+                key: RECONCILE_BOOKS_CURSOR_KEY,
+                value: nextCursor,
+                updatedAt: Date.now(),
+            });
+        }
+
+        return {
+            scanned: books.length,
+            corrected,
+            continueCursor: nextCursor ?? null,
+            isDone: results.isDone,
+        };
     },
 });

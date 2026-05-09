@@ -34,6 +34,8 @@ yarn-error.*
 .env*.local
 .env
 convex/.env
+google-services.json
+android/app/google-services.json
 
 # typescript
 *.tsbuildinfo

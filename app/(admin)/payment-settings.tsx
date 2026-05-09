@@ -8,7 +8,6 @@ import { Colors, Layout, Spacing, scale } from "@/constants/theme";
 import { usePaymentSettings } from "@/hooks";
 import { triggerHaptic } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
 import AdminHeader from "@/components/admin/AdminHeader";
 import React, { useState } from "react";
 import {
@@ -22,7 +21,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function PaymentSettingsScreen() {
-    const router = useRouter();
     const {
         allSettings,
         saving,

@@ -84,7 +84,7 @@ export default function VerifyStudentScreen() {
                     <Text style={styles.statusTitle}>Under Review</Text>
                     <Text style={styles.statusSubtitle}>
                         Your verification request is being reviewed by our team. This usually takes
-                        a few hours. You'll receive a notification once it's processed.
+                        a few hours. You will receive a notification once it is processed.
                     </Text>
                     <View style={styles.pendingCard}>
                         <DetailItem label="Name on ID" value={verification.fullNameOnId} />

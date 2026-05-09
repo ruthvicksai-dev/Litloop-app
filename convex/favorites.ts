@@ -1,8 +1,8 @@
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
-import { mapBookForClient } from "./books";
 import { getAuthenticatedUser, getUserIdFromAccessToken } from "./lib/authHelpers";
+import { mapBookForClient } from "./lib/bookHelpers";
 
 export const toggleFavorite = mutation({
     args: { accessToken: v.string(), bookId: v.id("books") },

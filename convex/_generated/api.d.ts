@@ -20,6 +20,7 @@ import type * as lib_bookHelpers from "../lib/bookHelpers.js";
 import type * as lib_google from "../lib/google.js";
 import type * as lib_jwt from "../lib/jwt.js";
 import type * as lib_rateLimit from "../lib/rateLimit.js";
+import type * as lib_reviewCounters from "../lib/reviewCounters.js";
 import type * as notifications from "../notifications.js";
 import type * as paymentSettings from "../paymentSettings.js";
 import type * as payments from "../payments.js";
@@ -49,6 +50,7 @@ declare const fullApi: ApiFromModules<{
   "lib/google": typeof lib_google;
   "lib/jwt": typeof lib_jwt;
   "lib/rateLimit": typeof lib_rateLimit;
+  "lib/reviewCounters": typeof lib_reviewCounters;
   notifications: typeof notifications;
   paymentSettings: typeof paymentSettings;
   payments: typeof payments;

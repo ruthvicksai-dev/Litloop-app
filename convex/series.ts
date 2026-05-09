@@ -2,6 +2,9 @@ import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { assertAdmin } from "./lib/authHelpers";
+import { mapBookForClient } from "./lib/bookHelpers";
+
+const SERIES_DETAIL_BOOK_LIMIT = 50;
 
 export async function mapSeriesForClient(ctx: any, series: any) {
     const coverUrl = await ctx.storage.getUrl(series.coverImage);
@@ -21,20 +24,22 @@ export const list = query({
 });
 
 export const getWithBooks = query({
-    args: { seriesId: v.id("book_series") },
+    args: {
+        seriesId: v.id("book_series"),
+        limit: v.optional(v.number()),
+    },
     handler: async (ctx, args) => {
         const series = await ctx.db.get(args.seriesId);
         if (!series) return null;
 
+        const take = Math.min(args.limit ?? SERIES_DETAIL_BOOK_LIMIT, SERIES_DETAIL_BOOK_LIMIT);
         const books = await ctx.db
             .query("books")
             .withIndex("by_seriesId", (q) => q.eq("seriesId", args.seriesId))
-            .collect();
+            .take(take);
 
         const mappedSeries = await mapSeriesForClient(ctx, series);
 
-        // Circular dependency check if needed, but here we just map books
-        const { mapBookForClient } = await import("./books");
         const mappedBooks = await Promise.all(books.map(b => mapBookForClient(ctx, b)));
 
         return {

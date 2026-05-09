@@ -6,25 +6,18 @@ import GenreSelector from "@/components/books/GenreSelector";
 import AdminHeader from "@/components/admin/AdminHeader";
 import Button from "@/components/ui/core/Button";
 import InputField from "@/components/ui/core/InputField";
-import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useAddBookScreen } from "@/hooks";
-import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
 import React from "react";
 import {
     KeyboardAvoidingView,
     Platform,
     ScrollView,
     StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function AddBookScreen() {
-    const router = useRouter();
     const {
         title,
         setTitle,

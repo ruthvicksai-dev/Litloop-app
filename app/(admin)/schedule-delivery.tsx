@@ -7,7 +7,7 @@ import { Colors, Spacing } from "@/constants/theme";
 import { useScheduleDeliveryScreen } from "@/hooks";
 import { formatDateString, getValidDates, getValidTimeSlots } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import AdminHeader from "@/components/admin/AdminHeader";
 import React from "react";
 import {
@@ -15,14 +15,12 @@ import {
     ScrollView,
     StyleSheet,
     Text,
-    TouchableOpacity,
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ScheduleDeliveryScreen() {
     const { rentalId } = useLocalSearchParams<{ rentalId: string }>();
-    const router = useRouter();
     const [refreshing, setRefreshing] = React.useState(false);
     const {
         rental,

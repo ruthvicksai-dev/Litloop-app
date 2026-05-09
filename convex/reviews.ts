@@ -1,6 +1,16 @@
+import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
+import { assertAdmin, getAuthenticatedUser } from "./lib/authHelpers";
+import {
+    getRatingCountField,
+    getRatingDistributionFromBook,
+    incrementRatingCountPatch,
+    moveRatingCountPatch,
+} from "./lib/reviewCounters";
+
+const ADMIN_FLAGGED_REVIEWS_LIMIT = 100;
 
 export const getBookReviews = query({
     args: {
@@ -20,7 +30,6 @@ export const getBookReviews = query({
 
         let callerId: Id<"users"> | null = null;
         if (args.accessToken) {
-            const { getAuthenticatedUser } = require("./lib/authHelpers");
             try {
                 const user = await getAuthenticatedUser(ctx, args.accessToken);
                 callerId = user._id;
@@ -68,12 +77,8 @@ export const getBookReviewSummary = query({
         bookId: v.id("books"),
     },
     handler: async (ctx, args) => {
-        const reviews = await ctx.db
-            .query("reviews")
-            .withIndex("by_bookId", (q) => q.eq("bookId", args.bookId))
-            .collect();
-
-        if (reviews.length === 0) {
+        const book = await ctx.db.get(args.bookId);
+        if (!book) {
             return {
                 averageRating: 0,
                 totalReviews: 0,
@@ -81,21 +86,21 @@ export const getBookReviewSummary = query({
             };
         }
 
-        const distribution: Record<number, number> = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-        let totalRating = 0;
+        const totalReviews = book.totalReviews ?? book.ratingCount ?? 0;
+        const averageRating = book.avgRating ?? book.rating ?? 0;
 
-        for (const review of reviews) {
-            totalRating += review.rating;
-            const star = Math.round(review.rating);
-            if (star >= 1 && star <= 5) {
-                distribution[star]++;
-            }
+        if (totalReviews === 0) {
+            return {
+                averageRating: 0,
+                totalReviews: 0,
+                distribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
+            };
         }
 
         return {
-            averageRating: totalRating / reviews.length,
-            totalReviews: reviews.length,
-            distribution,
+            averageRating,
+            totalReviews,
+            distribution: getRatingDistributionFromBook(book),
         };
     },
 });
@@ -107,10 +112,6 @@ export const reportReview = mutation({
         accessToken: v.string(),
     },
     handler: async (ctx, args) => {
-        // We use the same hacky approach to get the auth user as the rest of the file
-        // Or in this case we'll just import getAuthenticatedUser from lib/authHelpers if it exists
-        // Wait, review.ts doesn't import getAuthenticatedUser. Let me just use a simpler check:
-        const { getAuthenticatedUser } = require("./lib/authHelpers");
         let caller;
         try {
             caller = await getAuthenticatedUser(ctx, args.accessToken);
@@ -157,7 +158,6 @@ export const updateReview = mutation({
         accessToken: v.string(),
     },
     handler: async (ctx, args) => {
-        const { getAuthenticatedUser } = require("./lib/authHelpers");
         const user = await getAuthenticatedUser(ctx, args.accessToken);
         
         const review = await ctx.db.get(args.reviewId);
@@ -176,6 +176,7 @@ export const updateReview = mutation({
             await ctx.db.patch(review.bookId, {
                 rating: Number.isFinite(nextRating) ? Math.max(0, nextRating) : 0,
                 avgRating: Number.isFinite(nextRating) ? Math.max(0, nextRating) : 0,
+                ...moveRatingCountPatch(book, review.rating, args.rating),
             });
         }
 
@@ -194,7 +195,6 @@ export const deleteReview = mutation({
         accessToken: v.string(),
     },
     handler: async (ctx, args) => {
-        const { getAuthenticatedUser } = require("./lib/authHelpers");
         const user = await getAuthenticatedUser(ctx, args.accessToken);
 
         const review = await ctx.db.get(args.reviewId);
@@ -213,6 +213,11 @@ export const deleteReview = mutation({
                     ratingCount: 0,
                     avgRating: 0,
                     totalReviews: 0,
+                    rating1Count: 0,
+                    rating2Count: 0,
+                    rating3Count: 0,
+                    rating4Count: 0,
+                    rating5Count: 0,
                     flaggedCount: Math.max(0, (book.flaggedCount ?? 0) - (review.isFlagged ? 1 : 0)),
                 });
             } else {
@@ -222,6 +227,7 @@ export const deleteReview = mutation({
                     ratingCount: nextCount,
                     avgRating: Number.isFinite(nextRating) ? Math.max(0, nextRating) : 0,
                     totalReviews: nextCount,
+                    ...incrementRatingCountPatch(book, review.rating, -1),
                     flaggedCount: Math.max(0, (book.flaggedCount ?? 0) - (review.isFlagged ? 1 : 0)),
                 });
             }
@@ -233,7 +239,7 @@ export const deleteReview = mutation({
         const reports = await ctx.db
             .query("reports")
             .withIndex("by_targetId", (q) => q.eq("targetId", args.reviewId))
-            .collect();
+            .take(100);
         for (const report of reports) {
             await ctx.db.delete(report._id);
         }
@@ -248,7 +254,13 @@ export const getReviewsByBook = query({
         const reviews = await ctx.db
             .query("reviews")
             .withIndex("by_bookId", (q) => q.eq("bookId", args.bookId))
-            .collect();
+            .take(50);
+
+        const flagged = await ctx.db
+            .query("reviews")
+            .withIndex("by_bookId", (q) => q.eq("bookId", args.bookId))
+            .filter((q) => q.eq(q.field("isFlagged"), true))
+            .take(25);
 
         // Sort by createdAt desc
         const sorted = reviews.sort((a, b) => b.createdAt - a.createdAt);
@@ -264,7 +276,14 @@ export const getReviewsByBook = query({
 
         return {
             recentReviews: enriched.slice(0, 10),
-            flaggedReviews: enriched.filter(r => r.isFlagged),
+            flaggedReviews: await Promise.all(flagged.map(async (r) => {
+                const user = await ctx.db.get(r.userId);
+                return {
+                    ...r,
+                    userName: user?.name ?? "Unknown",
+                    userAvatar: user?.avatarUrl,
+                };
+            })),
         };
     },
 });
@@ -272,13 +291,12 @@ export const getReviewsByBook = query({
 export const getAllFlaggedReviews = query({
     args: { accessToken: v.string() },
     handler: async (ctx, args) => {
-        const { assertAdmin } = require("./lib/authHelpers");
         await assertAdmin(ctx, args.accessToken);
 
         const flagged = await ctx.db
             .query("reviews")
             .withIndex("by_isFlagged", (q) => q.eq("isFlagged", true))
-            .collect();
+            .take(ADMIN_FLAGGED_REVIEWS_LIMIT);
 
         return Promise.all(flagged.map(async (r) => {
             const user = await ctx.db.get(r.userId);
@@ -293,10 +311,126 @@ export const getAllFlaggedReviews = query({
     },
 });
 
+export const rebuildBookReviewCounters = mutation({
+    args: {
+        accessToken: v.string(),
+        bookId: v.id("books"),
+        paginationOpts: paginationOptsValidator,
+        reset: v.optional(v.boolean()),
+    },
+    handler: async (ctx, args) => {
+        await assertAdmin(ctx, args.accessToken);
+
+        const stateKey = `book_review_counters_${args.bookId}`;
+        const existingState = await ctx.db
+            .query("system_state")
+            .withIndex("by_key", (q) => q.eq("key", stateKey))
+            .first();
+
+        if (args.reset && existingState) {
+            await ctx.db.delete(existingState._id);
+        }
+
+        const state = args.reset
+            ? null
+            : existingState?.value
+                ? JSON.parse(existingState.value)
+                : null;
+        const nextState = state ?? {
+            cursor: null,
+            totalReviews: 0,
+            ratingTotal: 0,
+            rating1Count: 0,
+            rating2Count: 0,
+            rating3Count: 0,
+            rating4Count: 0,
+            rating5Count: 0,
+            flaggedCount: 0,
+        };
+
+        const results = await ctx.db
+            .query("reviews")
+            .withIndex("by_bookId", (q) => q.eq("bookId", args.bookId))
+            .paginate({
+                ...args.paginationOpts,
+                cursor: nextState.cursor,
+            });
+
+        for (const review of results.page) {
+            nextState.totalReviews += 1;
+            nextState.ratingTotal += review.rating;
+            nextState[getRatingCountField(review.rating)] += 1;
+            if (review.isFlagged) {
+                nextState.flaggedCount += 1;
+            }
+        }
+
+        if (results.isDone) {
+            const averageRating =
+                nextState.totalReviews > 0
+                    ? nextState.ratingTotal / nextState.totalReviews
+                    : 0;
+            await ctx.db.patch(args.bookId, {
+                rating: averageRating,
+                avgRating: averageRating,
+                ratingCount: nextState.totalReviews,
+                totalReviews: nextState.totalReviews,
+                rating1Count: nextState.rating1Count,
+                rating2Count: nextState.rating2Count,
+                rating3Count: nextState.rating3Count,
+                rating4Count: nextState.rating4Count,
+                rating5Count: nextState.rating5Count,
+                flaggedCount: nextState.flaggedCount,
+            });
+
+            const savedState = await ctx.db
+                .query("system_state")
+                .withIndex("by_key", (q) => q.eq("key", stateKey))
+                .first();
+            if (savedState) {
+                await ctx.db.delete(savedState._id);
+            }
+        } else {
+            nextState.cursor = results.continueCursor;
+            const payload = JSON.stringify(nextState);
+            const savedState = await ctx.db
+                .query("system_state")
+                .withIndex("by_key", (q) => q.eq("key", stateKey))
+                .first();
+
+            if (savedState) {
+                await ctx.db.patch(savedState._id, {
+                    value: payload,
+                    updatedAt: Date.now(),
+                });
+            } else {
+                await ctx.db.insert("system_state", {
+                    key: stateKey,
+                    value: payload,
+                    updatedAt: Date.now(),
+                });
+            }
+        }
+
+        return {
+            scanned: results.page.length,
+            totals: {
+                totalReviews: nextState.totalReviews,
+                rating1Count: nextState.rating1Count,
+                rating2Count: nextState.rating2Count,
+                rating3Count: nextState.rating3Count,
+                rating4Count: nextState.rating4Count,
+                rating5Count: nextState.rating5Count,
+                flaggedCount: nextState.flaggedCount,
+            },
+            isDone: results.isDone,
+        };
+    },
+});
+
 export const flagReview = mutation({
     args: { reviewId: v.id("reviews"), accessToken: v.string() },
     handler: async (ctx, args) => {
-        const { assertAdmin } = require("./lib/authHelpers");
         await assertAdmin(ctx, args.accessToken);
 
         const review = await ctx.db.get(args.reviewId);
@@ -319,7 +453,6 @@ export const flagReview = mutation({
 export const unflagReview = mutation({
     args: { reviewId: v.id("reviews"), accessToken: v.string() },
     handler: async (ctx, args) => {
-        const { assertAdmin } = require("./lib/authHelpers");
         await assertAdmin(ctx, args.accessToken);
 
         const review = await ctx.db.get(args.reviewId);
@@ -346,7 +479,6 @@ export const voteReview = mutation({
         accessToken: v.string(),
     },
     handler: async (ctx, args) => {
-        const { getAuthenticatedUser } = require("./lib/authHelpers");
         const user = await getAuthenticatedUser(ctx, args.accessToken);
 
         const review = await ctx.db.get(args.reviewId);

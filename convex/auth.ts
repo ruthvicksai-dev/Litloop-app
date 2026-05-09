@@ -1,3 +1,4 @@
+import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
@@ -780,10 +781,17 @@ export const signOut = mutation({
 });
 
 export const backfillLegacySessions = mutation({
-    args: { accessToken: v.string() },
+    args: {
+        accessToken: v.string(),
+        paginationOpts: paginationOptsValidator,
+    },
     handler: async (ctx, args) => {
         await assertAdmin(ctx, args.accessToken);
-        const sessions = await ctx.db.query("sessions").collect();
+        const results = await ctx.db
+            .query("sessions")
+            .order("asc")
+            .paginate(args.paginationOpts);
+        const sessions = results.page;
         let updated = 0;
 
         for (const session of sessions) {
@@ -804,15 +812,27 @@ export const backfillLegacySessions = mutation({
             updated += 1;
         }
 
-        return { scanned: sessions.length, updated };
+        return {
+            scanned: sessions.length,
+            updated,
+            continueCursor: results.continueCursor,
+            isDone: results.isDone,
+        };
     },
 });
 
 export const backfillUsers = mutation({
-    args: { accessToken: v.string() },
+    args: {
+        accessToken: v.string(),
+        paginationOpts: paginationOptsValidator,
+    },
     handler: async (ctx, args) => {
         await assertAdmin(ctx, args.accessToken);
-        const users = await ctx.db.query("users").collect();
+        const results = await ctx.db
+            .query("users")
+            .order("asc")
+            .paginate(args.paginationOpts);
+        const users = results.page;
         let updated = 0;
 
         for (const user of users) {
@@ -826,7 +846,12 @@ export const backfillUsers = mutation({
             updated += 1;
         }
 
-        return { scanned: users.length, updated };
+        return {
+            scanned: users.length,
+            updated,
+            continueCursor: results.continueCursor,
+            isDone: results.isDone,
+        };
     },
 });
 

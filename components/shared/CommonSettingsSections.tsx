@@ -12,7 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useMutation } from "convex/react";
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
-import { router as globalRouter, useRouter } from "expo-router";
+import { router as globalRouter } from "expo-router";
 import React, { useState } from "react";
 import { Linking, Modal, StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
 
@@ -29,7 +29,6 @@ import { Linking, Modal, StyleSheet, Switch, Text, TouchableOpacity, View } from
  * app/(admin)/payment-settings.tsx.
  */
 export function CommonSettingsSections() {
-    const router = useRouter();
     const { user, accessToken, signOut } = useAuth();
     const { showToast } = useToast();
 

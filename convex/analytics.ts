@@ -1,12 +1,17 @@
+import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
-import { query } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
+import { assertAdmin } from "./lib/authHelpers";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 type DbCtx = {
     db: any;
 };
+
+type CounterKey = "totalUsers" | "totalRentals" | "activeRentals" | "dashboardCountersReady";
+const DASHBOARD_COUNTERS_REBUILD_KEY = "dashboard_counters_rebuild";
 
 const getDateKey = (timestamp: number) =>
     new Date(timestamp).toISOString().slice(0, 10);
@@ -145,6 +150,57 @@ async function touchMonthlyActiveUser(
     return true;
 }
 
+async function getCounter(ctx: DbCtx, key: CounterKey) {
+    const counter = await ctx.db
+        .query("analytics_counters")
+        .withIndex("by_key", (q: any) => q.eq("key", key))
+        .first();
+
+    return counter?.value ?? null;
+}
+
+async function incrementCounter(ctx: DbCtx, key: CounterKey, delta: number) {
+    const existing = await ctx.db
+        .query("analytics_counters")
+        .withIndex("by_key", (q: any) => q.eq("key", key))
+        .first();
+
+    if (!existing) {
+        await ctx.db.insert("analytics_counters", {
+            key,
+            value: Math.max(0, delta),
+            updatedAt: Date.now(),
+        });
+        return;
+    }
+
+    await ctx.db.patch(existing._id, {
+        value: Math.max(0, existing.value + delta),
+        updatedAt: Date.now(),
+    });
+}
+
+async function setCounter(ctx: DbCtx, key: CounterKey, value: number) {
+    const existing = await ctx.db
+        .query("analytics_counters")
+        .withIndex("by_key", (q: any) => q.eq("key", key))
+        .first();
+
+    if (!existing) {
+        await ctx.db.insert("analytics_counters", {
+            key,
+            value: Math.max(0, value),
+            updatedAt: Date.now(),
+        });
+        return;
+    }
+
+    await ctx.db.patch(existing._id, {
+        value: Math.max(0, value),
+        updatedAt: Date.now(),
+    });
+}
+
 export async function recordUserRegistered(
     ctx: DbCtx,
     userId: Id<"users">,
@@ -158,6 +214,7 @@ export async function recordUserRegistered(
         newUsers: monthly.newUsers + 1,
         activeUsers: monthly.activeUsers + (isNewActive ? 1 : 0),
     });
+    await incrementCounter(ctx, "totalUsers", 1);
 }
 
 export async function recordRentalCreated(
@@ -179,6 +236,12 @@ export async function recordRentalCreated(
     await ctx.db.patch(daily._id, {
         rentals: daily.rentals + 1,
     });
+    await incrementCounter(ctx, "totalRentals", 1);
+    await incrementCounter(ctx, "activeRentals", 1);
+}
+
+export async function recordRentalReturned(ctx: DbCtx) {
+    await incrementCounter(ctx, "activeRentals", -1);
 }
 
 export async function recordPaymentCompleted(
@@ -238,8 +301,131 @@ export async function recordUserActivity(
     }
 }
 
+export const rebuildDashboardCounters = mutation({
+    args: {
+        accessToken: v.string(),
+        paginationOpts: paginationOptsValidator,
+        reset: v.optional(v.boolean()),
+    },
+    handler: async (ctx, args) => {
+        await assertAdmin(ctx, args.accessToken);
+
+        const existingState = await ctx.db
+            .query("system_state")
+            .withIndex("by_key", (q) => q.eq("key", DASHBOARD_COUNTERS_REBUILD_KEY))
+            .first();
+
+        if (args.reset && existingState) {
+            await ctx.db.delete(existingState._id);
+        }
+
+        const state = args.reset
+            ? null
+            : existingState?.value
+                ? JSON.parse(existingState.value)
+                : null;
+        const startingState = state ?? {
+            usersCursor: null,
+            rentalsCursor: null,
+            totalUsers: 0,
+            totalRentals: 0,
+            activeRentals: 0,
+            usersDone: false,
+            rentalsDone: false,
+        };
+
+        let nextState = { ...startingState };
+        let scannedUsers = 0;
+        let scannedRentals = 0;
+
+        if (!nextState.usersDone) {
+            const userResults = await ctx.db
+                .query("users")
+                .withIndex("by_createdAt")
+                .paginate({
+                    ...args.paginationOpts,
+                    cursor: nextState.usersCursor,
+                });
+            scannedUsers = userResults.page.length;
+            nextState = {
+                ...nextState,
+                usersCursor: userResults.isDone ? null : userResults.continueCursor,
+                totalUsers: nextState.totalUsers + userResults.page.length,
+                usersDone: userResults.isDone,
+            };
+        }
+
+        if (!nextState.rentalsDone) {
+            const rentalResults = await ctx.db
+                .query("rentals")
+                .withIndex("by_createdAt")
+                .paginate({
+                    ...args.paginationOpts,
+                    cursor: nextState.rentalsCursor,
+                });
+            scannedRentals = rentalResults.page.length;
+            nextState = {
+                ...nextState,
+                rentalsCursor: rentalResults.isDone ? null : rentalResults.continueCursor,
+                totalRentals: nextState.totalRentals + rentalResults.page.length,
+                activeRentals:
+                    nextState.activeRentals +
+                    rentalResults.page.filter((r: any) => r.status !== "returned").length,
+                rentalsDone: rentalResults.isDone,
+            };
+        }
+
+        const isDone = nextState.usersDone && nextState.rentalsDone;
+        if (isDone) {
+            await setCounter(ctx, "totalUsers", nextState.totalUsers);
+            await setCounter(ctx, "totalRentals", nextState.totalRentals);
+            await setCounter(ctx, "activeRentals", nextState.activeRentals);
+            await setCounter(ctx, "dashboardCountersReady", 1);
+
+            const savedState = await ctx.db
+                .query("system_state")
+                .withIndex("by_key", (q) => q.eq("key", DASHBOARD_COUNTERS_REBUILD_KEY))
+                .first();
+            if (savedState) {
+                await ctx.db.delete(savedState._id);
+            }
+        } else {
+            const payload = JSON.stringify(nextState);
+            const savedState = await ctx.db
+                .query("system_state")
+                .withIndex("by_key", (q) => q.eq("key", DASHBOARD_COUNTERS_REBUILD_KEY))
+                .first();
+
+            if (savedState) {
+                await ctx.db.patch(savedState._id, {
+                    value: payload,
+                    updatedAt: Date.now(),
+                });
+            } else {
+                await ctx.db.insert("system_state", {
+                    key: DASHBOARD_COUNTERS_REBUILD_KEY,
+                    value: payload,
+                    updatedAt: Date.now(),
+                });
+            }
+        }
+
+        return {
+            scannedUsers,
+            scannedRentals,
+            totals: {
+                totalUsers: nextState.totalUsers,
+                totalRentals: nextState.totalRentals,
+                activeRentals: nextState.activeRentals,
+            },
+            isDone,
+        };
+    },
+});
+
 export const getDashboardAnalytics = query({
     args: {
+        accessToken: v.string(),
         range: v.union(
             v.literal("7d"),
             v.literal("30d"),
@@ -248,6 +434,8 @@ export const getDashboardAnalytics = query({
         ),
     },
     handler: async (ctx, args) => {
+        await assertAdmin(ctx, args.accessToken);
+
         const now = Date.now();
         const days = args.range === "7d" ? 7 : args.range === "30d" ? 30 : args.range === "6m" ? 180 : 365;
         const dateKeys = getDateRange(Math.min(days, 30));
@@ -273,15 +461,25 @@ export const getDashboardAnalytics = query({
                 .take(10),
         ]);
 
-        // 2. Fetch Global Totals (Note: These are approximations or require lightweight scans)
-        // In a real production app at 100k+, these should be in a 'counters' table.
-        // For Litloop's current scale, we'll fetch some core counts with limits.
-        const totalUsers = await ctx.db.query("users").take(1000).then(res => res.length);
-        const totalRentals = await ctx.db.query("rentals").take(1000).then(res => res.length);
-        const activeRentalsCount = await ctx.db.query("rentals")
-            .filter((q: any) => q.neq(q.field("status"), "returned"))
-            .take(500)
-            .then(res => res.length);
+        const [countersReady, totalUsersCounter, totalRentalsCounter, activeRentalsCounter] = await Promise.all([
+            getCounter(ctx, "dashboardCountersReady"),
+            getCounter(ctx, "totalUsers"),
+            getCounter(ctx, "totalRentals"),
+            getCounter(ctx, "activeRentals"),
+        ]);
+        const [fallbackTotalUsers, fallbackTotalRentals, fallbackActiveRentals] = await Promise.all([
+            countersReady !== 1 ? ctx.db.query("users").take(1000).then((res: any[]) => res.length) : null,
+            countersReady !== 1 ? ctx.db.query("rentals").take(1000).then((res: any[]) => res.length) : null,
+            countersReady !== 1
+                ? ctx.db.query("rentals")
+                    .filter((q: any) => q.neq(q.field("status"), "returned"))
+                    .take(500)
+                    .then((res: any[]) => res.length)
+                : null,
+        ]);
+        const totalUsers = countersReady === 1 ? totalUsersCounter ?? 0 : fallbackTotalUsers ?? 0;
+        const totalRentals = countersReady === 1 ? totalRentalsCounter ?? 0 : fallbackTotalRentals ?? 0;
+        const activeRentalsCount = countersReady === 1 ? activeRentalsCounter ?? 0 : fallbackActiveRentals ?? 0;
 
         // 3. Process Daily/Monthly Charts
         const dailyRentals = dateKeys.map(date => ({

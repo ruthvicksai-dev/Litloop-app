@@ -2,7 +2,7 @@ import BookLoader from "@/components/ui/feedback/BookLoader";
 import Button from "@/components/ui/core/Button";
 import ConfirmActionModal from "@/components/ui/feedback/ConfirmActionModal";
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Spacing, Layout, scale, RENTAL_STATUS_LABELS, STATUS_COLORS } from "@/constants/theme";
+import { Colors, Spacing, Layout, RENTAL_STATUS_LABELS, STATUS_COLORS } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -483,4 +483,4 @@ const styles = StyleSheet.create({
     screenshot: { width: "100%", height: "100%" },
     screenshotOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.25)", justifyContent: "center", alignItems: "center", gap: 4 },
     screenshotOverlayText: { color: Colors.white, fontSize: FontSizes.tiny, fontFamily: Fonts.bold },
-});
+});
