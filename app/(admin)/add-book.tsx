@@ -3,6 +3,7 @@ import CoverGalleryField from "@/components/books/CoverGalleryField";
 import FeaturedSectionsFields from "@/components/books/FeaturedSectionsFields";
 import FormSectionHeader from "@/components/books/FormSectionHeader";
 import GenreSelector from "@/components/books/GenreSelector";
+import AdminHeader from "@/components/admin/AdminHeader";
 import Button from "@/components/ui/core/Button";
 import InputField from "@/components/ui/core/InputField";
 import { Fonts, FontSizes } from "@/constants/fonts";
@@ -72,6 +73,7 @@ export default function AddBookScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
+            <AdminHeader title="Add New Book" />
             <KeyboardAvoidingView
                 style={styles.flex}
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -82,19 +84,6 @@ export default function AddBookScreen() {
                     keyboardShouldPersistTaps="handled"
                     keyboardDismissMode="on-drag"
                 >
-                    <View style={styles.header}>
-                        <TouchableOpacity
-                            onPress={() => router.back()}
-                            style={styles.backBtn}
-                            accessibilityRole="button"
-                            accessibilityLabel="Go back"
-                        >
-                            <Ionicons name="arrow-back" size={24} color={Colors.primary} />
-                        </TouchableOpacity>
-                        <View style={styles.headerText}>
-                            <Text style={styles.title}>Add New Book</Text>
-                        </View>
-                    </View>
 
                     <InputField
                         label="Title"
@@ -210,29 +199,9 @@ const styles = StyleSheet.create({
     scroll: {
         flexGrow: 1,
         paddingHorizontal: Spacing.lg,
-        paddingTop: Spacing.lg,
         paddingBottom: Spacing.xl,
-    },
-    header: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: Spacing.md,
-        marginBottom: Spacing.lg,
-    },
-    backBtn: {
-        alignSelf: "flex-start",
-        padding: 4,
-        marginLeft: -4,
-    },
-    headerText: {
-        flex: 1,
     },
     fetchInfoBtn: {
         marginBottom: Spacing.md,
-    },
-    title: {
-        fontSize: FontSizes.heading,
-        color: Colors.text,
-        fontFamily: Fonts.bold,
     },
 });

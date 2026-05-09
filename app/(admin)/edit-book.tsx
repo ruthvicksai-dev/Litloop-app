@@ -11,6 +11,7 @@ import { Colors, Spacing } from "@/constants/theme";
 import { useEditBookScreen, useFadeSlideIn } from "@/hooks";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import AdminHeader from "@/components/admin/AdminHeader";
 import React from "react";
 import {
     Animated,
@@ -88,13 +89,7 @@ export default function EditBookScreen() {
     if (book === null) {
         return (
             <SafeAreaView style={styles.container}>
-                <View style={styles.header}>
-                    <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                        <Ionicons name="arrow-back" size={24} color={Colors.primary} />
-                    </TouchableOpacity>
-                    <Text style={styles.headerTitle}>Edit Book</Text>
-                    <View style={{ width: 40 }} />
-                </View>
+                <AdminHeader title="Edit Book" />
                 <View style={[styles.center, { paddingHorizontal: 40 }]}>
                     <Ionicons
                         name="book-outline"
@@ -114,14 +109,15 @@ export default function EditBookScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
-            <Animated.View style={[styles.header, { opacity: fadeAnim }]}>
-                <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                    <Ionicons name="arrow-back" size={24} color={Colors.primary} />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Edit Book</Text>
-                <TouchableOpacity onPress={handleDelete} disabled={deleting}>
-                    <Ionicons name="trash-outline" size={22} color={Colors.error} />
-                </TouchableOpacity>
+            <Animated.View style={{ opacity: fadeAnim }}>
+                <AdminHeader 
+                    title="Edit Book" 
+                    rightComponent={
+                        <TouchableOpacity onPress={handleDelete} disabled={deleting}>
+                            <Ionicons name="trash-outline" size={22} color={Colors.error} />
+                        </TouchableOpacity>
+                    }
+                />
             </Animated.View>
 
             <KeyboardAvoidingView

@@ -9,6 +9,7 @@ import { usePaymentSettings } from "@/hooks";
 import { triggerHaptic } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import AdminHeader from "@/components/admin/AdminHeader";
 import React, { useState } from "react";
 import {
     Modal,
@@ -41,15 +42,7 @@ export default function PaymentSettingsScreen() {
     if (allSettings === undefined) {
         return (
             <SafeAreaView style={styles.container}>
-                <View style={styles.header}>
-                    <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                        <Ionicons name="chevron-back" size={24} color={Colors.text} />
-                    </TouchableOpacity>
-                    <Text style={styles.headerTitle} allowFontScaling={false}>
-                        Settings
-                    </Text>
-                    <View style={styles.headerSpacer} />
-                </View>
+                <AdminHeader title="Settings" />
                 <AdminSettingsSkeleton />
             </SafeAreaView>
         );
@@ -70,15 +63,7 @@ export default function PaymentSettingsScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                    <Ionicons name="chevron-back" size={24} color={Colors.text} />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle} allowFontScaling={false}>
-                    Settings
-                </Text>
-                <View style={styles.headerSpacer} />
-            </View>
+            <AdminHeader title="Settings" />
 
             <ScrollView
                 contentContainerStyle={styles.content}

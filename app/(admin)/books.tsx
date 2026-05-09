@@ -4,6 +4,7 @@ import ReviewCard from "@/components/ui/cards/ReviewCard";
 import BookLoader from "@/components/ui/feedback/BookLoader";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
+import AdminHeader from "@/components/admin/AdminHeader";
 import { useAdminBooksScreen, useFadeSlideIn } from "@/hooks";
 import { useRouter } from "expo-router";
 import React from "react";
@@ -90,21 +91,21 @@ export default function AdminBooksScreen() {
         <SafeAreaView style={styles.container}>
             <Animated.View
                 style={[
-                    styles.header,
                     { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
                 ]}
             >
-                <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                    <Ionicons name="chevron-back" size={24} color={Colors.primary} />
-                </TouchableOpacity>
-                <Text style={styles.title}>Manage Books</Text>
-                <TouchableOpacity
-                    style={styles.addBtn}
-                    onPress={() => router.push("/(admin)/add-book")}
-                >
-                    <Ionicons name="add" size={20} color={Colors.white} />
-                    <Text style={styles.addBtnText}>Add</Text>
-                </TouchableOpacity>
+                <AdminHeader 
+                    title="Manage Books" 
+                    rightComponent={
+                        <TouchableOpacity
+                            style={styles.addBtn}
+                            onPress={() => router.push("/(admin)/add-book")}
+                        >
+                            <Ionicons name="add" size={20} color={Colors.white} />
+                            <Text style={styles.addBtnText}>Add</Text>
+                        </TouchableOpacity>
+                    }
+                />
             </Animated.View>
 
             <Animated.View style={[styles.searchBox, { opacity: fadeAnim }]}>

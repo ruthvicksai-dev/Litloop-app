@@ -17,6 +17,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";
+import AdminHeader from "@/components/admin/AdminHeader";
 import React, { useMemo, useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -69,6 +70,7 @@ export default function AdminRevenueScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
+            <AdminHeader title="Revenue Analytics" />
             <ScrollView
                 contentContainerStyle={styles.content}
                 showsVerticalScrollIndicator={false}
@@ -80,15 +82,6 @@ export default function AdminRevenueScreen() {
                     />
                 }
             >
-                <View style={styles.header}>
-                    <View style={styles.headerLeft}>
-                        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                            <Ionicons name="chevron-back" size={24} color={Colors.text} />
-                        </TouchableOpacity>
-                        <Text style={styles.headerTitle} allowFontScaling={false}>Revenue Analytics</Text>
-                        <View style={styles.headerSpacer} />
-                    </View>
-                </View>
                 <Text style={styles.screenSubtitle}>
                     {activeMonthOption?.fullLabel ?? formatMonthLabel(activeMonth)}
                 </Text>

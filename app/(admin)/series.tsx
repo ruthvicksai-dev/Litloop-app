@@ -11,6 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery } from "convex/react";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
+import AdminHeader from "@/components/admin/AdminHeader";
 import React, { useState } from "react";
 import {
     ActivityIndicator,
@@ -199,15 +200,14 @@ export default function SeriesManagementScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                    <Ionicons name="arrow-back" size={24} color={Colors.primary} />
-                </TouchableOpacity>
-                <Text style={styles.title}>Book Series</Text>
-                <TouchableOpacity onPress={() => handleOpenModal()} style={styles.addBtn}>
-                    <Ionicons name="add" size={28} color={Colors.primary} />
-                </TouchableOpacity>
-            </View>
+            <AdminHeader 
+                title="Book Series" 
+                rightComponent={
+                    <TouchableOpacity onPress={() => handleOpenModal()} style={styles.addBtn}>
+                        <Ionicons name="add" size={28} color={Colors.primary} />
+                    </TouchableOpacity>
+                }
+            />
 
             {seriesQuery === undefined ? (
                 <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 50 }} />

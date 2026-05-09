@@ -1,6 +1,7 @@
 import DetailRow from "@/components/admin/DetailRow";
 import SummaryStat from "@/components/admin/SummaryStat";
 import StudentVerificationsList from "@/components/admin/StudentVerificationsList";
+import AdminHeader from "@/components/admin/AdminHeader";
 import BookLoader from "@/components/ui/feedback/BookLoader";
 import Button from "@/components/ui/core/Button";
 import { SegmentedControl, SegmentOption } from "@/components/ui/core/SegmentedControl";
@@ -22,6 +23,7 @@ import {
     TextInput,
     TouchableOpacity,
     View,
+    Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -34,6 +36,7 @@ const TAB_OPTIONS: SegmentOption[] = [
 
 export default function VerifyPaymentScreen() {
     const [activeTab, setActiveTab] = React.useState("payments");
+    const [selectedImage, setSelectedImage] = React.useState<string | null>(null);
     const params = useLocalSearchParams<{ rentalId?: string }>();
     const router = useRouter();
     const [refreshing, setRefreshing] = React.useState(false);
@@ -78,15 +81,7 @@ export default function VerifyPaymentScreen() {
     if (params.rentalId && !singleRental) {
         return (
             <SafeAreaView style={styles.container}>
-                <View style={styles.header}>
-                    <View style={styles.headerLeft}>
-                        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                            <Ionicons name="chevron-back" size={24} color={Colors.text} />
-                        </TouchableOpacity>
-                        <Text style={styles.headerTitle} allowFontScaling={false}>Verify Payment</Text>
-                        <View style={styles.headerSpacer} />
-                    </View>
-                </View>
+                <AdminHeader title="Verify Payment" />
                 <Text style={styles.screenSubtitle}>This payment request is no longer available.</Text>
                 <View style={styles.emptyState}>
                     <View style={styles.emptyIconWrap}>
@@ -107,6 +102,7 @@ export default function VerifyPaymentScreen() {
 
         return (
             <SafeAreaView style={styles.container}>
+                <AdminHeader title="Verify Payment" />
                 <ScrollView
                     contentContainerStyle={styles.singleScroll}
                     showsVerticalScrollIndicator={false}
@@ -118,22 +114,6 @@ export default function VerifyPaymentScreen() {
                         />
                     }
                 >
-                    <View style={styles.header}>
-                        <View style={styles.headerLeft}>
-                            <TouchableOpacity
-                                onPress={() => router.back()}
-                                style={styles.backBtn}
-                                accessibilityRole="button"
-                                accessibilityLabel="Go back"
-                            >
-                                <Ionicons name="chevron-back" size={24} color={Colors.text} />
-                            </TouchableOpacity>
-                            <Text style={styles.headerTitle} allowFontScaling={false}>Verify Payment</Text>
-                            <View style={styles.headerSpacer} />
-                        </View>
-                    </View>
-                    <Text style={styles.screenSubtitle}>Review the payment proof before approving.</Text>
-
                     <LinearGradient
                         colors={["#FFFDFC", "#F6E6CF", "#F1D8BF"]}
                         start={{ x: 0, y: 0 }}
@@ -188,23 +168,20 @@ export default function VerifyPaymentScreen() {
                     </View>
 
                     {singleRental.screenshotUrl ? (
-                        <View style={styles.proofCard}>
-                            <View style={styles.proofHeader}>
-                                <View style={styles.proofIconWrap}>
-                                    <Ionicons name="image-outline" size={18} color={Colors.primary} />
-                                </View>
-                                <View style={styles.proofHeaderText}>
-                                    <Text style={styles.sectionTitle}>Payment proof</Text>
-                                    <Text style={styles.sectionSubtitle}>
-                                        Screenshot submitted by the user
-                                    </Text>
-                                </View>
+                        <TouchableOpacity 
+                            style={styles.imageAttachmentCard}
+                            onPress={() => setSelectedImage(singleRental.screenshotUrl!)}
+                            activeOpacity={0.7}
+                        >
+                            <View style={styles.attachmentIconWrap}>
+                                <Ionicons name="image" size={20} color={Colors.primary} />
                             </View>
-                            <Image
-                                source={{ uri: singleRental.screenshotUrl }}
-                                style={styles.screenshot}
-                            />
-                        </View>
+                            <View style={styles.attachmentTextWrap}>
+                                <Text style={styles.attachmentTitle}>Payment Proof</Text>
+                                <Text style={styles.attachmentSub}>Tap to view full screen</Text>
+                            </View>
+                            <Image source={{ uri: singleRental.screenshotUrl }} style={styles.attachmentThumb} />
+                        </TouchableOpacity>
                     ) : null}
 
                     <View style={styles.reviewCard}>
@@ -253,31 +230,36 @@ export default function VerifyPaymentScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
-            <FlatList
-                data={activeTab === 'payments' ? pendingPayments : []}
-                keyExtractor={(item) => item._id}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={onRefresh}
-                        colors={[Colors.primary]}
+            <View style={styles.listHeaderWrap}>
+                <AdminHeader title="Verifications" />
+                
+                <View style={{ paddingBottom: Spacing.sm }}>
+                    <SegmentedControl
+                        options={TAB_OPTIONS}
+                        activeValue={activeTab}
+                        onChange={(val) => setActiveTab(val)}
                     />
-                }
-                renderItem={({ item }) => {
+                </View>
+            </View>
+
+            {activeTab === "payments" && (
+                <FlatList
+                    data={pendingPayments}
+                    keyExtractor={(item) => item._id}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            colors={[Colors.primary]}
+                        />
+                    }
+                    renderItem={({ item }) => {
                     const coverUri = getBookCoverUri(item);
                     const paymentMethod = item.paymentMethod?.toUpperCase() || "N/A";
                     const isCashPayment = item.paymentMethod === "cash";
 
                     return (
                         <View style={styles.paymentCard}>
-                            <LinearGradient
-                                pointerEvents="none"
-                                colors={["#FFFFFF", `${Colors.primary}0A`, Colors.primaryLight]}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 1 }}
-                                style={StyleSheet.absoluteFillObject}
-                            />
-
                             <View style={styles.paymentCardTop}>
                                 <View style={styles.paymentCardIdentity}>
                                     {coverUri ? (
@@ -295,7 +277,7 @@ export default function VerifyPaymentScreen() {
                                             {item.book?.author || "Unknown author"}
                                         </Text>
                                         <Text style={styles.paymentSub} numberOfLines={1}>
-                                            {item.user?.name || "Unknown"} {"\u2022"} {paymentMethod}
+                                            {item.user?.name || "Unknown"}
                                         </Text>
                                     </View>
                                 </View>
@@ -323,28 +305,32 @@ export default function VerifyPaymentScreen() {
                             </View>
 
                             {item.screenshotUrl || !isCashPayment ? (
-                                <View style={styles.proofRow}>
-                                    {item.screenshotUrl ? (
-                                        <>
-                                            <View style={styles.proofPreviewBadge}>
-                                                <Ionicons name="image-outline" size={12} color={Colors.primary} />
-                                                <Text style={styles.proofPreviewText}>Screenshot attached</Text>
-                                            </View>
-                                            <Image
-                                                source={{ uri: item.screenshotUrl }}
-                                                style={styles.paymentScreenshot}
-                                            />
-                                        </>
-                                    ) : (
+                                item.screenshotUrl ? (
+                                    <TouchableOpacity 
+                                        style={styles.imageAttachmentCard}
+                                        onPress={() => setSelectedImage(item.screenshotUrl!)}
+                                        activeOpacity={0.7}
+                                    >
+                                        <View style={styles.attachmentIconWrap}>
+                                            <Ionicons name="image" size={20} color={Colors.primary} />
+                                        </View>
+                                        <View style={styles.attachmentTextWrap}>
+                                            <Text style={styles.attachmentTitle}>Payment Proof</Text>
+                                            <Text style={styles.attachmentSub}>Tap to view full screen</Text>
+                                        </View>
+                                        <Image source={{ uri: item.screenshotUrl }} style={styles.attachmentThumb} />
+                                    </TouchableOpacity>
+                                ) : (
+                                    <View style={styles.proofRow}>
                                         <View style={styles.noProofCard}>
                                             <Ionicons name="image-outline" size={14} color={Colors.textLight} />
                                             <Text style={styles.noProofText}>Proof not uploaded yet</Text>
                                         </View>
-                                    )}
-                                </View>
+                                    </View>
+                                )
                             ) : null}
 
-                            <View style={styles.actionRow}>
+                             <View style={styles.actionRow}>
                                 <View style={styles.actionButtonWrap}>
                                     <Button
                                         title="Approve"
@@ -369,41 +355,20 @@ export default function VerifyPaymentScreen() {
                 contentContainerStyle={styles.list}
                 showsVerticalScrollIndicator={false}
                 ListHeaderComponent={
-                    <View style={styles.listHeaderWrap}>
-                        <View style={styles.header}>
-                            <View style={styles.headerLeft}>
-                                <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                                    <Ionicons name="chevron-back" size={24} color={Colors.text} />
-                                </TouchableOpacity>
-                                <Text style={styles.headerTitle} allowFontScaling={false}>Verifications</Text>
-                                <View style={styles.headerSpacer} />
-                            </View>
-                        </View>
-                        
-                        <SegmentedControl
-                            options={TAB_OPTIONS}
-                            activeValue={activeTab}
-                            onChange={(val) => setActiveTab(val)}
-                        />
-                        
-                        {activeTab === "payments" ? (
-                            <>
-                                <Text style={styles.screenSubtitle}>
-                                    Review incoming proofs and confirm them with confidence.
-                                </Text>
+                    <View style={{ paddingBottom: Spacing.md }}>
 
                         <LinearGradient
-                            colors={["#FFFFFF", "#F7EAD8", "#F2DDC8"]}
+                            colors={["#FFFFFF", "#E8F5E9", "#C8E6C9"]}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 1 }}
                             style={styles.overviewCard}
                         >
                             <View style={styles.overviewTop}>
                                 <View style={styles.overviewBadgeRow}>
-                                    <View style={styles.overviewIconWrap}>
-                                        <Ionicons name="shield-checkmark-outline" size={20} color={Colors.primary} />
+                                    <View style={[styles.overviewIconWrap, { backgroundColor: Colors.success + "20" }]}>
+                                        <Ionicons name="shield-checkmark-outline" size={20} color={Colors.success} />
                                     </View>
-                                    <Text style={styles.overviewEyebrow}>Admin review queue</Text>
+                                    <Text style={[styles.overviewEyebrow, { color: Colors.success }]}>Admin review queue</Text>
                                 </View>
                                 <Text style={styles.overviewTitle}>Payment verification desk</Text>
                                 <Text style={styles.overviewSubtitle}>
@@ -429,31 +394,28 @@ export default function VerifyPaymentScreen() {
                                 />
                             </View>
                         </LinearGradient>
-                            </>
-                        ) : null}
                     </View>
                 }
                 ListEmptyComponent={
-                    activeTab === "payments" ? (
-                        <View style={styles.emptyState}>
-                            <View style={styles.emptyIconWrap}>
-                                <Ionicons
-                                    name="checkmark-circle-outline"
-                                    size={28}
-                                    color={Colors.success}
-                                />
-                            </View>
-                            <Text style={styles.emptyTitle}>All payments are cleared</Text>
-                            <Text style={styles.emptyText}>
-                                There are no pending payment proofs waiting for admin verification.
-                            </Text>
+                    <View style={styles.emptyState}>
+                        <View style={styles.emptyIconWrap}>
+                            <Ionicons
+                                name="checkmark-circle-outline"
+                                size={28}
+                                color={Colors.success}
+                            />
                         </View>
-                    ) : null
+                        <Text style={styles.emptyTitle}>All payments are cleared</Text>
+                        <Text style={styles.emptyText}>
+                            There are no pending payment proofs waiting for admin verification.
+                        </Text>
+                    </View>
                 }
             />
+            )}
 
             {activeTab === "students" && (
-                <View style={{ flex: 1, marginTop: -20 }}>
+                <View style={{ flex: 1 }}>
                     <StudentVerificationsList />
                 </View>
             )}
@@ -467,6 +429,25 @@ export default function VerifyPaymentScreen() {
                 onConfirm={confirmReject}
                 onCancel={() => setRejectModalVisible(false)}
             />
+
+            {/* Image Viewer Modal */}
+            <Modal visible={!!selectedImage} transparent={true} animationType="fade" onRequestClose={() => setSelectedImage(null)}>
+                <View style={styles.imageViewerOverlay}>
+                    <TouchableOpacity 
+                        style={styles.imageViewerClose}
+                        onPress={() => setSelectedImage(null)}
+                    >
+                        <Ionicons name="close" size={28} color="#FFF" />
+                    </TouchableOpacity>
+                    {selectedImage && (
+                        <Image 
+                            source={{ uri: selectedImage }} 
+                            style={styles.imageViewerImage} 
+                            resizeMode="contain" 
+                        />
+                    )}
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 }
@@ -590,57 +571,23 @@ const styles = StyleSheet.create({
     singleScroll: {
         flexGrow: 1,
         paddingHorizontal: Layout.screenPaddingWide,
-        paddingTop: Spacing.lg,
         paddingBottom: Spacing.xl * 1.5,
+    },
+    screenSubtitle: {
+        fontSize: FontSizes.body,
+        fontFamily: Fonts.regular,
+        color: Colors.textSecondary,
+        textAlign: "center",
+        paddingHorizontal: Spacing.xl,
+        marginTop: Spacing.sm,
+    },
+    listHeaderWrap: {
+        // No extra padding here, relying on AdminHeader and inner component padding
     },
     list: {
         flexGrow: 1,
         paddingHorizontal: Layout.screenPaddingWide,
         paddingBottom: Spacing.xl,
-    },
-    listHeaderWrap: {
-        paddingTop: Spacing.lg,
-        paddingBottom: Spacing.md,
-    },
-    header: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        paddingHorizontal: Layout.screenPaddingWide,
-        paddingTop: Spacing.sm,
-        paddingBottom: Spacing.md,
-    },
-    headerLeft: {
-        flex: 1,
-        flexDirection: "row",
-        alignItems: "center",
-    },
-    backBtn: {
-        width: 40,
-        height: 40,
-        alignItems: "center",
-        justifyContent: "center",
-        marginLeft: -25,
-    },
-    headerTitle: {
-        flex: 1,
-        fontSize: FontSizes.title,
-        color: Colors.text,
-        textAlign: "center",
-        fontFamily: Fonts.bold,
-    },
-    headerSpacer: {
-        width: 40,
-        marginRight: -25,
-    },
-    screenSubtitle: {
-        fontSize: FontSizes.body,
-        color: Colors.textSecondary,
-        fontFamily: Fonts.regular,
-        textAlign: "left",
-        paddingHorizontal: Layout.screenPaddingWide,
-        marginBottom: Spacing.lg,
-        lineHeight: scale(20),
     },
     heroCard: {
         borderRadius: Layout.cardRadiusLarge,
@@ -772,6 +719,65 @@ const styles = StyleSheet.create({
         resizeMode: "contain",
         backgroundColor: Colors.background,
     },
+    imageAttachmentCard: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: Colors.white,
+        borderWidth: 1,
+        borderColor: Colors.border,
+        borderRadius: Layout.cardRadiusLarge,
+        padding: Spacing.sm,
+        marginBottom: Spacing.md,
+    },
+    attachmentIconWrap: {
+        width: 40,
+        height: 40,
+        borderRadius: 8,
+        backgroundColor: Colors.primaryLight,
+        justifyContent: "center",
+        alignItems: "center",
+        marginRight: Spacing.sm,
+    },
+    attachmentTextWrap: {
+        flex: 1,
+    },
+    attachmentTitle: {
+        fontSize: FontSizes.body,
+        fontFamily: Fonts.medium,
+        color: Colors.text,
+        marginBottom: 2,
+    },
+    attachmentSub: {
+        fontSize: FontSizes.caption,
+        fontFamily: Fonts.regular,
+        color: Colors.textSecondary,
+    },
+    attachmentThumb: {
+        width: 44,
+        height: 44,
+        borderRadius: 6,
+        borderWidth: 1,
+        borderColor: Colors.border,
+    },
+    imageViewerOverlay: {
+        flex: 1,
+        backgroundColor: "rgba(0,0,0,0.9)",
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    imageViewerClose: {
+        position: "absolute",
+        top: 50,
+        right: 20,
+        zIndex: 10,
+        padding: 10,
+        backgroundColor: "rgba(255,255,255,0.2)",
+        borderRadius: 24,
+    },
+    imageViewerImage: {
+        width: "100%",
+        height: "80%",
+    },
     reviewCard: {
         backgroundColor: Colors.white,
         borderRadius: Layout.cardRadiusLarge,
@@ -785,7 +791,7 @@ const styles = StyleSheet.create({
     actionRow: {
         flexDirection: "row",
         gap: Spacing.md,
-        marginTop: Spacing.xs + 2,
+        marginTop: Spacing.md,
     },
     actionButtonWrap: {
         flex: 1,
@@ -795,24 +801,17 @@ const styles = StyleSheet.create({
         width: "100%",
     },
     compactActionButton: {
-        minHeight: scale(34),
-        paddingVertical: scale(6),
-        paddingHorizontal: Spacing.sm + 2,
+        height: 40,
     },
     compactActionButtonText: {
-        fontSize: FontSizes.body,
+        fontSize: FontSizes.small,
     },
     overviewCard: {
-        borderRadius: Layout.cardRadiusLarge,
         padding: Spacing.lg,
+        borderRadius: 20,
         borderWidth: 1,
-        borderColor: "rgba(117,64,67,0.08)",
-        marginBottom: Spacing.lg,
-        shadowColor: Colors.shadow,
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.08,
-        shadowRadius: 14,
-        elevation: 3,
+        borderColor: "rgba(0,0,0,0.05)",
+        marginBottom: Spacing.xs,
     },
     overviewTop: {
         gap: Spacing.sm,
@@ -851,34 +850,37 @@ const styles = StyleSheet.create({
     },
     summaryRow: {
         flexDirection: "row",
-        gap: Spacing.xs,
+        gap: Spacing.sm,
         marginTop: Spacing.md,
+        paddingTop: Spacing.md,
+        borderTopWidth: 1,
+        borderTopColor: "rgba(0,0,0,0.05)",
     },
 
     paymentCard: {
         backgroundColor: Colors.white,
         borderRadius: Layout.cardRadiusLarge,
-        padding: Spacing.sm + 4,
+        padding: Spacing.lg,
         marginBottom: Spacing.md,
         borderWidth: 1,
-        borderColor: "rgba(117,64,67,0.08)",
-        overflow: "hidden",
+        borderColor: Colors.border,
         shadowColor: Colors.shadow,
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.06,
-        shadowRadius: 12,
-        elevation: 3,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.04,
+        shadowRadius: 10,
+        elevation: 2,
     },
     paymentCardTop: {
         flexDirection: "row",
-        alignItems: "center",
+        alignItems: "flex-start",
+        justifyContent: "space-between",
         gap: Spacing.sm,
     },
     paymentCardIdentity: {
         flex: 1,
         flexDirection: "row",
         alignItems: "flex-start",
-        gap: Spacing.sm,
+        gap: Spacing.md,
         minWidth: 0,
     },
     paymentCover: {

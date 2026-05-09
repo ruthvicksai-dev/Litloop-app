@@ -99,8 +99,8 @@ export default function AdminDashboard() {
                                     router.push("/(admin)/verify-payment");
                                 }}
                             >
-                                <Ionicons name="card" size={18} color={Colors.primary} />
-                                <Text style={styles.quickActionText}>Payments</Text>
+                                <Ionicons name="shield-checkmark" size={18} color={Colors.primary} />
+                                <Text style={styles.quickActionText}>Verify</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.quickAction}

@@ -10,6 +10,7 @@ import { triggerHaptic } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery } from "convex/react";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import AdminHeader from "@/components/admin/AdminHeader";
 import React, { useState } from "react";
 import {
     Image,
@@ -123,25 +124,14 @@ export default function AdminRentalDetailScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
-                <View style={styles.headerLeft}>
-                    <TouchableOpacity
-                        onPress={() => {
-                            triggerHaptic("light");
-                            router.back();
-                        }}
-                        style={styles.backBtn}
-                    >
-                        <Ionicons name="chevron-back" size={24} color={Colors.text} />
-                    </TouchableOpacity>
-                    <Text style={styles.headerTitle} allowFontScaling={false}>Order Details</Text>
-                    <View style={styles.headerSpacer}>
-                        <View style={styles.idBadge}>
-                            <Text style={styles.idText} numberOfLines={1}>#{rental._id.slice(-6).toUpperCase()}</Text>
-                        </View>
+            <AdminHeader 
+                title="Order Details" 
+                rightComponent={
+                    <View style={styles.idBadge}>
+                        <Text style={styles.idText} numberOfLines={1}>#{rental._id.slice(-6).toUpperCase()}</Text>
                     </View>
-                </View>
-            </View>
+                }
+            />
 
             <ScrollView
                 contentContainerStyle={styles.scroll}

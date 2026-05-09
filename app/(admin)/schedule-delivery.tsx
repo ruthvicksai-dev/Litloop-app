@@ -8,6 +8,7 @@ import { useScheduleDeliveryScreen } from "@/hooks";
 import { formatDateString, getValidDates, getValidTimeSlots } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import AdminHeader from "@/components/admin/AdminHeader";
 import React from "react";
 import {
     RefreshControl,
@@ -78,6 +79,7 @@ export default function ScheduleDeliveryScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
+            <AdminHeader title="Schedule Delivery" />
             <ScrollView
                 contentContainerStyle={styles.scroll}
                 keyboardShouldPersistTaps="handled"
@@ -89,19 +91,6 @@ export default function ScheduleDeliveryScreen() {
                     />
                 }
             >
-                <View style={styles.header}>
-                    <TouchableOpacity
-                        onPress={() => router.back()}
-                        style={styles.backBtn}
-                        accessibilityRole="button"
-                        accessibilityLabel="Go back"
-                    >
-                        <Ionicons name="arrow-back" size={24} color={Colors.primary} />
-                    </TouchableOpacity>
-                    <View style={styles.headerText}>
-                        <Text style={styles.title}>Schedule Delivery</Text>
-                    </View>
-                </View>
 
                 <View style={styles.infoCard}>
                     <Text style={styles.infoTitle}>{rental.book?.title}</Text>

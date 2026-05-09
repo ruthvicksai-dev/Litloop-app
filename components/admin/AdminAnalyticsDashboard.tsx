@@ -10,6 +10,7 @@ import { api } from "@/convex/_generated/api";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";
+import AdminHeader from "@/components/admin/AdminHeader";
 import React, { useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -47,6 +48,7 @@ export default function AdminAnalyticsDashboard() {
 
     return (
         <SafeAreaView style={styles.container}>
+            <AdminHeader title="Analytics Dashboard" />
             <ScrollView
                 contentContainerStyle={styles.content}
                 showsVerticalScrollIndicator={false}
@@ -58,15 +60,6 @@ export default function AdminAnalyticsDashboard() {
                     />
                 }
             >
-                <View style={styles.header}>
-                    <View style={styles.headerLeft}>
-                        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                            <Ionicons name="chevron-back" size={24} color={Colors.text} />
-                        </TouchableOpacity>
-                        <Text style={styles.headerTitle} allowFontScaling={false}>Analytics Dashboard</Text>
-                        <View style={styles.headerSpacer} />
-                    </View>
-                </View>
                 <Text style={styles.screenSubtitle}>Marketplace performance overview</Text>
 
                 <ScrollView
@@ -215,37 +208,6 @@ const styles = StyleSheet.create({
     },
     content: {
         paddingBottom: Spacing.xl,
-    },
-    header: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        paddingHorizontal: 20,
-        paddingTop: Spacing.sm,
-        paddingBottom: Spacing.md,
-    },
-    headerLeft: {
-        flex: 1,
-        flexDirection: "row",
-        alignItems: "center",
-    },
-    backBtn: {
-        width: 40,
-        height: 40,
-        alignItems: "center",
-        justifyContent: "center",
-        marginLeft: -25,
-    },
-    headerTitle: {
-        flex: 1,
-        fontSize: FontSizes.title,
-        color: Colors.text,
-        textAlign: "center",
-        fontFamily: Fonts.bold,
-    },
-    headerSpacer: {
-        width: 40,
-        marginRight: -25,
     },
     screenSubtitle: {
         fontSize: FontSizes.body,

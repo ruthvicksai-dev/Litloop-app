@@ -11,6 +11,7 @@ import { useMutation, useQuery } from "convex/react";
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
+import AdminHeader from "@/components/admin/AdminHeader";
 import React from "react";
 import {
     ActivityIndicator,
@@ -86,9 +87,7 @@ export default function AdminNotificationsScreen() {
     if (isLoading) {
         return (
             <SafeAreaView style={styles.container}>
-                <View style={styles.header}>
-                    <Skeleton width={180} height={32} />
-                </View>
+                <AdminHeader title="Admin Alerts" />
                 <View style={styles.emptyContainer}>
                     <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 40 }} />
                 </View>
@@ -98,17 +97,7 @@ export default function AdminNotificationsScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
-                <View style={styles.headerLeft}>
-                    <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                        <Ionicons name="chevron-back" size={24} color={Colors.text} />
-                    </TouchableOpacity>
-                    <Text style={styles.headerTitle} allowFontScaling={false}>
-                        Admin Alerts
-                    </Text>
-                    <View style={styles.headerSpacer} />
-                </View>
-            </View>
+            <AdminHeader title="Admin Alerts" />
             <View style={styles.summaryRow}>
                    <Text style={styles.summaryText}>
                        {unreadCount > 0 ? `${unreadCount} unread` : "All caught up!"}

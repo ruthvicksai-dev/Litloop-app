@@ -1,15 +1,17 @@
 import Button from "@/components/ui/core/Button";
+import SummaryStat from "@/components/admin/SummaryStat";
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Spacing } from "@/constants/theme";
+import { Colors, Spacing, scale, Layout } from "@/constants/theme";
 import { useVerifyStudentsScreen } from "@/hooks";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
-import { FlatList, Image, RefreshControl, StyleSheet, Text, TextInput, View } from "react-native";
+import { FlatList, Image, RefreshControl, StyleSheet, Text, TextInput, View, TouchableOpacity, Modal } from "react-native";
 
 export default function StudentVerificationsList() {
-    const { pendingVerifications, handleApprove, handleReject } = useVerifyStudentsScreen();
+    const { pendingVerifications, verificationHistory, handleApprove, handleReject } = useVerifyStudentsScreen();
     const [refreshing, setRefreshing] = useState(false);
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
     // Reject Modal state
     const [rejectModalVisible, setRejectModalVisible] = useState(false);
@@ -75,6 +77,24 @@ export default function StudentVerificationsList() {
                                     Review student ID cards to grant access to the College Zone.
                                 </Text>
                             </View>
+
+                            <View style={styles.summaryRow}>
+                                <SummaryStat
+                                    icon="time-outline"
+                                    label="Pending"
+                                    value={`${pendingVerifications?.length || 0}`}
+                                />
+                                <SummaryStat
+                                    icon="checkmark-circle-outline"
+                                    label="Verified"
+                                    value={`${verificationHistory?.filter(v => v.status === 'approved').length || 0}`}
+                                />
+                                <SummaryStat
+                                    icon="shield-checkmark-outline"
+                                    label="Mode"
+                                    value="Manual"
+                                />
+                            </View>
                         </LinearGradient>
                     </View>
                 }
@@ -118,29 +138,36 @@ export default function StudentVerificationsList() {
                             ) : null}
                         </View>
 
-                        <View style={styles.proofRow}>
-                            {item.idCardImageUrl ? (
-                                <>
-                                    <View style={styles.proofPreviewBadge}>
-                                        <Ionicons name="image-outline" size={12} color={Colors.primary} />
-                                        <Text style={styles.proofPreviewText}>ID Card Attached</Text>
-                                    </View>
-                                    <Image source={{ uri: item.idCardImageUrl }} style={styles.idScreenshot} />
-                                </>
-                            ) : (
+                        {item.idCardImageUrl ? (
+                            <TouchableOpacity 
+                                style={styles.imageAttachmentCard}
+                                onPress={() => setSelectedImage(item.idCardImageUrl)}
+                                activeOpacity={0.7}
+                            >
+                                <View style={styles.attachmentIconWrap}>
+                                    <Ionicons name="image" size={20} color={Colors.primary} />
+                                </View>
+                                <View style={styles.attachmentTextWrap}>
+                                    <Text style={styles.attachmentTitle}>ID Card Image</Text>
+                                    <Text style={styles.attachmentSub}>Tap to view full screen</Text>
+                                </View>
+                                <Image source={{ uri: item.idCardImageUrl }} style={styles.attachmentThumb} />
+                            </TouchableOpacity>
+                        ) : (
+                            <View style={styles.proofRow}>
                                 <View style={styles.noProofCard}>
                                     <Ionicons name="alert-circle-outline" size={14} color={Colors.textLight} />
                                     <Text style={styles.noProofText}>Missing ID Card Image</Text>
                                 </View>
-                            )}
-                        </View>
+                            </View>
+                        )}
 
                         <View style={styles.actionRow}>
                             <View style={styles.actionButtonWrap}>
                                 <Button
                                     title="Approve"
                                     onPress={() => handleApprove(item._id)}
-                                    style={[styles.fullWidthButton, styles.compactActionButton, { backgroundColor: Colors.success }]}
+                                    style={[styles.fullWidthButton, styles.compactActionButton]}
                                     textStyle={styles.compactActionButtonText}
                                 />
                             </View>
@@ -166,6 +193,24 @@ export default function StudentVerificationsList() {
                 onConfirm={confirmReject}
                 onCancel={() => setRejectModalVisible(false)}
             />
+
+            <Modal visible={!!selectedImage} transparent={true} animationType="fade" onRequestClose={() => setSelectedImage(null)}>
+                <View style={styles.imageViewerOverlay}>
+                    <TouchableOpacity 
+                        style={styles.imageViewerClose}
+                        onPress={() => setSelectedImage(null)}
+                    >
+                        <Ionicons name="close" size={28} color="#FFF" />
+                    </TouchableOpacity>
+                    {selectedImage && (
+                        <Image 
+                            source={{ uri: selectedImage }} 
+                            style={styles.imageViewerImage} 
+                            resizeMode="contain" 
+                        />
+                    )}
+                </View>
+            </Modal>
         </>
     );
 }
@@ -214,7 +259,7 @@ const styles = StyleSheet.create({
         paddingBottom: 40,
     },
     listHeaderWrap: {
-        paddingTop: Spacing.sm,
+        paddingTop: Spacing.xs,
         paddingBottom: Spacing.md,
     },
     overviewCard: {
@@ -256,37 +301,42 @@ const styles = StyleSheet.create({
         color: Colors.textSecondary,
         lineHeight: 20,
     },
+    summaryRow: {
+        flexDirection: "row",
+        gap: Spacing.sm,
+        marginTop: Spacing.md,
+        paddingTop: Spacing.md,
+        borderTopWidth: 1,
+        borderTopColor: "rgba(0,0,0,0.05)",
+    },
     emptyState: {
         alignItems: "center",
         justifyContent: "center",
-        paddingVertical: 60,
-        backgroundColor: Colors.white,
-        borderRadius: 20,
-        marginTop: 10,
-        borderWidth: 1,
-        borderColor: "rgba(0,0,0,0.05)",
+        paddingHorizontal: Spacing.xl,
+        paddingVertical: Spacing.xl * 2,
     },
     emptyIconWrap: {
-        width: 64,
-        height: 64,
-        borderRadius: 32,
-        backgroundColor: Colors.success + "15",
-        justifyContent: "center",
+        width: scale(68),
+        height: scale(68),
+        borderRadius: scale(22),
+        backgroundColor: Colors.white,
         alignItems: "center",
+        justifyContent: "center",
         marginBottom: Spacing.md,
     },
     emptyTitle: {
-        fontSize: FontSizes.title,
-        fontFamily: Fonts.bold,
+        fontSize: FontSizes.subtitle,
         color: Colors.text,
-        marginBottom: 6,
+        fontFamily: Fonts.bold,
+        textAlign: "center",
     },
     emptyText: {
         fontSize: FontSizes.body,
-        fontFamily: Fonts.regular,
         color: Colors.textSecondary,
+        fontFamily: Fonts.regular,
         textAlign: "center",
-        paddingHorizontal: Spacing.lg,
+        lineHeight: scale(22),
+        marginTop: Spacing.sm,
     },
     requestCard: {
         backgroundColor: Colors.white,
@@ -390,6 +440,65 @@ const styles = StyleSheet.create({
         fontSize: FontSizes.small,
         fontFamily: Fonts.medium,
         color: Colors.textLight,
+    },
+    imageAttachmentCard: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: Colors.background,
+        borderWidth: 1,
+        borderColor: Colors.border,
+        borderRadius: 12,
+        padding: Spacing.sm,
+        marginBottom: Spacing.md,
+    },
+    attachmentIconWrap: {
+        width: 40,
+        height: 40,
+        borderRadius: 8,
+        backgroundColor: Colors.primaryLight,
+        justifyContent: "center",
+        alignItems: "center",
+        marginRight: Spacing.sm,
+    },
+    attachmentTextWrap: {
+        flex: 1,
+    },
+    attachmentTitle: {
+        fontSize: FontSizes.body,
+        fontFamily: Fonts.medium,
+        color: Colors.text,
+        marginBottom: 2,
+    },
+    attachmentSub: {
+        fontSize: FontSizes.caption,
+        fontFamily: Fonts.regular,
+        color: Colors.textSecondary,
+    },
+    attachmentThumb: {
+        width: 44,
+        height: 44,
+        borderRadius: 6,
+        borderWidth: 1,
+        borderColor: Colors.border,
+    },
+    imageViewerOverlay: {
+        flex: 1,
+        backgroundColor: "rgba(0,0,0,0.9)",
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    imageViewerClose: {
+        position: "absolute",
+        top: 50,
+        right: 20,
+        zIndex: 10,
+        padding: 10,
+        backgroundColor: "rgba(255,255,255,0.2)",
+        borderRadius: 24,
+    },
+    imageViewerImage: {
+        width: "100%",
+        height: "80%",
     },
     actionRow: {
         flexDirection: "row",

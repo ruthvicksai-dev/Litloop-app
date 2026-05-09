@@ -185,6 +185,16 @@ export default function BookReviews({ bookId, limit, hasMore, onLoadMore, isAdmi
 
     if (!reviews || !summary) return null;
     if (summary.totalReviews === 0) {
+        if (isAdmin) {
+            return (
+                <View style={styles.container}>
+                    <Text style={styles.sectionTitle}>Ratings & Reviews</Text>
+                    <View style={styles.emptyContainer}>
+                        <Text style={styles.emptyText}>There are no reviews yet.</Text>
+                    </View>
+                </View>
+            );
+        }
         return null;
     }
 

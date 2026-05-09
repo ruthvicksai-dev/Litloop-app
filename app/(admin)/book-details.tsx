@@ -7,6 +7,7 @@ import { Colors, Layout, RENTAL_STATUS_LABELS, Spacing, STATUS_COLORS } from "@/
 import { useAdminBookDetailsScreen } from "@/hooks";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import AdminHeader from "@/components/admin/AdminHeader";
 import React from "react";
 import {
     Alert,
@@ -83,13 +84,7 @@ export default function AdminBookDetailsScreen() {
     if (book === null) {
         return (
             <SafeAreaView style={styles.container}>
-                <View style={styles.header}>
-                    <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                        <Ionicons name="chevron-back" size={24} color={Colors.primary} />
-                    </TouchableOpacity>
-                    <Text style={styles.headerTitle}>Book Details</Text>
-                    <View style={styles.headerSpacer} />
-                </View>
+                <AdminHeader title="Book Details" />
                 <View style={styles.center}>
                     <Ionicons name="book-outline" size={60} color={Colors.textLight} style={{ marginBottom: Spacing.md }} />
                     <Text style={styles.emptyTitle}>Book not found</Text>
@@ -106,15 +101,10 @@ export default function AdminBookDetailsScreen() {
             {/* Header */}
             <Animated.View
                 style={[
-                    styles.header,
                     { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
                 ]}
             >
-                <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                    <Ionicons name="chevron-back" size={24} color={Colors.primary} />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Book Details</Text>
-                <View style={styles.headerSpacer} />
+                <AdminHeader title="Book Details" />
             </Animated.View>
 
             <ScrollView
