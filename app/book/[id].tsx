@@ -248,6 +248,41 @@ export default function BookDetailsScreen() {
                         </View>
                     </View>
 
+                    <View style={styles.instructionsSection}>
+                        <Text style={styles.descTitle}>Rental Guidelines</Text>
+                        <View style={styles.instructionItem}>
+                            <Ionicons name="bicycle-outline" size={18} color={Colors.primary} />
+                            <Text style={styles.instructionText}>
+                                Enjoy <Text style={{fontFamily: Fonts.bold}}>free</Text> doorstep delivery and pickup.
+                            </Text>
+                        </View>
+                        <View style={styles.instructionItem}>
+                            <Ionicons name="wallet-outline" size={18} color={Colors.success} />
+                            <Text style={styles.instructionText}>
+                                Pay via <Text style={{fontFamily: Fonts.bold}}>UPI or Cash</Text>. No subscription needed.
+                            </Text>
+                        </View>
+                        <View style={styles.instructionItem}>
+                            <Ionicons name="time-outline" size={18} color={Colors.primary} />
+                            <Text style={styles.instructionText}>
+                                Late returns incur a fee of <Text style={{fontFamily: Fonts.bold}}>1.5x daily rent</Text> (Rent + half penalty).
+                            </Text>
+                        </View>
+                        <View style={styles.instructionItem}>
+                            <Ionicons name="warning-outline" size={18} color={Colors.warning} />
+                            <Text style={styles.instructionText}>
+                                Damage (stains, tears, etc.) incurs a minimum <Text style={{fontFamily: Fonts.bold}}>₹30 fee</Text> or replacement cost.
+                            </Text>
+                        </View>
+
+                        <View style={styles.instructionItem}>
+                            <Ionicons name="close-circle-outline" size={18} color={Colors.error} />
+                            <Text style={styles.instructionText}>
+                                Cancel anytime <Text style={{fontFamily: Fonts.bold}}>before delivery is scheduled</Text> by contacting support.
+                            </Text>
+                        </View>
+                    </View>
+
                     <View style={styles.ctaRow}>
                         {book.availableCopies > 0 ? (
                             <Button
@@ -478,24 +513,42 @@ const styles = StyleSheet.create({
         marginTop: Spacing.lg,
     },
     detailsList: {
-        gap: 6,
-    },
-    detailLabel: {
-        fontSize: FontSizes.body,
-        color: Colors.textSecondary,
-        fontFamily: Fonts.medium,
+        marginTop: Spacing.xs,
     },
     detailText: {
         fontSize: FontSizes.body,
-        color: Colors.textSecondary,
-        fontFamily: Fonts.regular,
-        lineHeight: 22,
+        marginBottom: Spacing.xs,
     },
-    detailValue: {
-        fontSize: FontSizes.body,
-        color: Colors.text,
+    detailLabel: {
+        color: Colors.textSecondary,
         fontFamily: Fonts.medium,
     },
+    detailValue: {
+        color: Colors.text,
+        fontFamily: Fonts.regular,
+    },
+    instructionsSection: {
+        marginTop: Spacing.lg,
+        padding: Spacing.md,
+        backgroundColor: Colors.primary + "0A",
+        borderRadius: Layout.borderRadius,
+        borderWidth: 1,
+        borderColor: Colors.primary + "1A",
+    },
+    instructionItem: {
+        flexDirection: "row",
+        alignItems: "flex-start",
+        gap: Spacing.sm,
+        marginBottom: Spacing.sm,
+    },
+    instructionText: {
+        flex: 1,
+        fontSize: FontSizes.small,
+        fontFamily: Fonts.regular,
+        color: Colors.textSecondary,
+        lineHeight: 20,
+    },
+
     ctaRow: {
         flexDirection: "row",
         alignItems: "center",

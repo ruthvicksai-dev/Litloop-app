@@ -138,7 +138,7 @@ export default function RentalRequestForm({
 
                     {zone === "College" ? (
                         <View style={styles.collegeZoneWrapper}>
-                            <View 
+                            <View
                                 style={[styles.collegeFieldsInner, !isVerifiedStudent && styles.blurredFields]}
                                 pointerEvents={!isVerifiedStudent ? "none" : "auto"}
                             >
@@ -183,7 +183,7 @@ export default function RentalRequestForm({
                                     <Text style={styles.verifyOverlaySubtitle}>
                                         You must verify your KITS student status to request delivery to the College Zone.
                                     </Text>
-                                    <TouchableOpacity 
+                                    <TouchableOpacity
                                         style={styles.verifyOverlayBtn}
                                         onPress={onVerifyPress}
                                     >
