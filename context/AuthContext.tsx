@@ -1,5 +1,6 @@
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import * as Sentry from "@sentry/react-native";
 import { useMutation, useQuery } from "convex/react";
 import * as Device from "expo-device";
 import * as SecureStore from "expo-secure-store";
@@ -257,6 +258,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     //   2. AND either: no token was found, OR the Convex query has resolved
     //      (sessionUser is not undefined — it will be null for invalid/no session, or an object for valid)
     const isLoading = !tokenLoaded || (accessToken !== null && sessionUser === undefined) || isRefreshing;
+
+    useEffect(() => {
+        if (!user) {
+            Sentry.setUser(null);
+            return;
+        }
+
+        Sentry.setUser({
+            id: user._id,
+            role: user.role,
+        });
+    }, [user]);
 
     // ─── Load session on mount ───────────────────────────────────────────
 

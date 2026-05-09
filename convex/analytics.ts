@@ -555,11 +555,16 @@ export const getDashboardAnalytics = query({
  * the analytics dashboard, ensuring consistency.
  */
 export const getDashboardRevenue = query({
-    args: {},
-    handler: async (ctx) => {
+    args: { accessToken: v.string() },
+    handler: async (ctx, args) => {
+        await assertAdmin(ctx, args.accessToken);
+
         const now = Date.now();
         const currentMonth = getMonthKey(now);
-        const stats = await ensureMonthlyAnalytics(ctx, currentMonth);
+        const stats = await ctx.db
+            .query("analytics_monthly")
+            .withIndex("by_month", (q) => q.eq("month", currentMonth))
+            .first();
 
         const monthDate = new Date(now);
         const monthLabel = monthDate.toLocaleDateString("en-US", {
@@ -568,8 +573,8 @@ export const getDashboardRevenue = query({
         });
 
         return {
-            monthlyRevenue: stats.revenue,
-            monthlyOrders: stats.rentals,
+            monthlyRevenue: stats?.revenue ?? 0,
+            monthlyOrders: stats?.rentals ?? 0,
             currentMonthLabel: monthLabel,
         };
     },

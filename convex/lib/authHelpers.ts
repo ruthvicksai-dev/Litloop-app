@@ -5,8 +5,7 @@ import { verifyToken } from "./jwt";
 
 /** Returns the secret used to sign/verify access tokens. */
 export function getAccessTokenSecret(): string {
-    // Falls back to JWT_SECRET for environments that haven't set the split key yet
-    const secret = process.env.JWT_ACCESS_SECRET ?? process.env.JWT_SECRET;
+    const secret = process.env.JWT_ACCESS_SECRET;
     if (!secret) {
         throw new Error("JWT_ACCESS_SECRET environment variable is not set.");
     }
@@ -15,8 +14,7 @@ export function getAccessTokenSecret(): string {
 
 /** Returns the secret used to sign/verify refresh tokens. */
 export function getRefreshTokenSecret(): string {
-    // Falls back to JWT_SECRET for environments that haven't set the split key yet
-    const secret = process.env.JWT_REFRESH_SECRET ?? process.env.JWT_SECRET;
+    const secret = process.env.JWT_REFRESH_SECRET;
     if (!secret) {
         throw new Error("JWT_REFRESH_SECRET environment variable is not set.");
     }

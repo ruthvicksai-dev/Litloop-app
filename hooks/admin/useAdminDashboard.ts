@@ -36,7 +36,10 @@ export function useAdminDashboard() {
     const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>("all");
 
     // Revenue from the same pre-aggregated table as the analytics page
-    const serverRevenue = useQuery(api.analytics.getDashboardRevenue);
+    const serverRevenue = useQuery(
+        api.analytics.getDashboardRevenue,
+        accessToken ? { accessToken } : "skip"
+    );
 
     const stats = useMemo(() => {
         const rentalList = rentals?.page ?? [];

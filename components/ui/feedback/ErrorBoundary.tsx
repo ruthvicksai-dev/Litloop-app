@@ -1,6 +1,7 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import * as Sentry from "@sentry/react-native";
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
@@ -27,6 +28,13 @@ export default class ErrorBoundary extends Component<Props, State> {
     componentDidCatch(error: Error, info: ErrorInfo) {
         // Log to console.error so it still surfaces in production crash reports
         console.error("[ErrorBoundary] Uncaught error:", error, info.componentStack);
+        Sentry.captureException(error, {
+            contexts: {
+                react: {
+                    componentStack: info.componentStack,
+                },
+            },
+        });
     }
 
     private handleRetry = () => {

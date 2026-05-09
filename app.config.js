@@ -1,8 +1,10 @@
-const appJson = require("./app.json");
+const sentryPluginOptions = {
+  url: process.env.SENTRY_URL || "https://sentry.io/",
+  organization: process.env.SENTRY_ORG || "litloop",
+  project: process.env.SENTRY_PROJECT || "react-native",
+};
 
-const config = appJson.expo;
-
-module.exports = {
+module.exports = ({ config }) => ({
   ...config,
   android: {
     ...config.android,
@@ -11,4 +13,8 @@ module.exports = {
       config.android?.googleServicesFile ||
       "./google-services.json",
   },
-};
+  plugins: [
+    ...(config.plugins ?? []),
+    ["@sentry/react-native/expo", sentryPluginOptions],
+  ],
+});

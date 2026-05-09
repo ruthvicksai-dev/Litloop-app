@@ -331,7 +331,7 @@ export const getAdminRecipients = internalQuery({
         const admins = await ctx.db
             .query("users")
             .withIndex("by_role", (q: any) => q.eq("role", "admin"))
-            .collect();
+            .take(20);
 
         return admins.map((admin) => ({
             userId: admin._id,
