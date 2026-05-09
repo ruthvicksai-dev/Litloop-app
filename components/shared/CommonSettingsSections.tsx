@@ -82,6 +82,9 @@ export function CommonSettingsSections() {
         await signOut();
         setIsSigningOut(false);
         showToast("Signed out successfully.", "info");
+        // Explicit redirect — don't rely on passive useEffect alone
+        if (globalRouter.canDismiss()) globalRouter.dismissAll();
+        globalRouter.replace("/(auth)/sign-in");
     };
 
     const handleDeleteAccount = async () => {

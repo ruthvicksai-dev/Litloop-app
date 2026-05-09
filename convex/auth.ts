@@ -595,6 +595,7 @@ export const getSession = query({
                 avatarUrl: user.avatarUrl,
                 role: user.role,
                 pushToken: user.pushToken,
+                isVerifiedStudent: user.isVerifiedStudent,
             };
         } catch {
             return null;

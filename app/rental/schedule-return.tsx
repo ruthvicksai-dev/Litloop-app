@@ -264,6 +264,16 @@ export default function ScheduleReturnScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
+            <View style={styles.header}>
+                <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+                    <Ionicons name="chevron-back" size={24} color={Colors.text} />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle} allowFontScaling={false}>
+                    Schedule Return
+                </Text>
+                <View style={styles.headerSpacer} />
+            </View>
+
             <KeyboardAvoidingView
                 style={styles.flex}
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -276,27 +286,18 @@ export default function ScheduleReturnScreen() {
                     showsVerticalScrollIndicator={false}
                 >
                     <View>
-                        <View style={styles.header}>
-                            <TouchableOpacity
-                                onPress={() => router.back()}
-                                style={styles.backButton}
-                                accessibilityRole="button"
-                                accessibilityLabel="Go back"
-                            >
-                                <Ionicons name="arrow-back" size={24} color={Colors.primary} />
-                            </TouchableOpacity>
-                            <View style={styles.headerText}>
-                                <Text style={styles.title}>Schedule Return</Text>
-                                <Text style={styles.subtitle}>{rental?.book?.title || "Loading..."}</Text>
+                        <View style={styles.infoCard}>
+                            <View style={{ flex: 1 }}>
+                                <Text style={styles.infoLabel}>Book</Text>
+                                <Text style={styles.infoValue}>{rental?.book?.title || "Loading..."}</Text>
                             </View>
+                            {rental?.deliveryDate ? (
+                                <View style={{ alignItems: "flex-end" }}>
+                                    <Text style={styles.infoLabel}>Delivered on</Text>
+                                    <Text style={styles.infoValue}>{rental.deliveryDate}</Text>
+                                </View>
+                            ) : null}
                         </View>
-
-                        {rental?.deliveryDate ? (
-                            <View style={styles.infoCard}>
-                                <Text style={styles.infoLabel}>Delivered on</Text>
-                                <Text style={styles.infoValue}>{rental.deliveryDate}</Text>
-                            </View>
-                        ) : null}
 
                         <SlotDatePicker
                             label="Pickup Date"
@@ -553,33 +554,30 @@ const styles = StyleSheet.create({
     scroll: {
         flexGrow: 1,
         paddingHorizontal: Spacing.lg,
-        paddingTop: Spacing.lg,
+        paddingTop: Spacing.md,
         paddingBottom: Spacing.xl * 1.5,
     },
     header: {
         flexDirection: "row",
         alignItems: "center",
-        gap: Spacing.md,
-        marginBottom: Spacing.md,
+        justifyContent: "space-between",
+        paddingHorizontal: 20,
+        paddingVertical: Spacing.sm,
     },
-    backButton: {
-        alignSelf: "flex-start",
-        padding: 4,
-        marginLeft: -4,
+    backBtn: {
+        width: 40,
+        height: 40,
+        justifyContent: "center",
+        alignItems: "center",
+        marginLeft: -8,
     },
-    headerText: {
-        flex: 1,
-    },
-    title: {
-        fontSize: FontSizes.heading,
+    headerTitle: {
+        fontSize: FontSizes.title,
         color: Colors.text,
         fontFamily: Fonts.bold,
     },
-    subtitle: {
-        fontSize: FontSizes.body,
-        color: Colors.textSecondary,
-        marginTop: 2,
-        fontFamily: Fonts.regular,
+    headerSpacer: {
+        width: 40,
     },
     infoCard: {
         backgroundColor: Colors.white,

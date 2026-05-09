@@ -250,7 +250,7 @@ export default function RequestRentalScreen() {
                     accessibilityRole="button"
                     accessibilityLabel="Go back"
                 >
-                    <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+                    <Ionicons name="chevron-back" size={24} color={Colors.text} />
                 </TouchableOpacity>
                 <View style={styles.headerText}>
                     <Text style={styles.title}>Request Rental</Text>

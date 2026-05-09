@@ -108,14 +108,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             avatarUrl: sessionUser.avatarUrl,
             role: sessionUser.role,
             pushToken: sessionUser.pushToken,
+            isVerifiedStudent: sessionUser.isVerifiedStudent,
         } as User)
         : null;
 
-    // isLoading is true until:
-    //   1. SecureStore read is complete (tokenLoaded === true)
-    //   2. AND either: no token was found, OR the Convex query has resolved
-    //      (sessionUser is not undefined — it will be null for invalid/no session, or an object for valid)
-    const isLoading = !tokenLoaded || (accessToken !== null && sessionUser === undefined);
 
     // ─── Token Helpers ───────────────────────────────────────────────────
 
@@ -201,6 +197,66 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
         [clearLocalSession, decodeTokenPayload, refreshSessionMutation]
     );
+
+    // ─── Auto-recover revoked sessions ────────────────────────────────
+    // When getSession returns null while we still have an accessToken,
+    // the session was revoked server-side. Try to silently refresh before
+    // kicking the user out.
+    const hasAttemptedRecoveryRef = useRef(false);
+
+    useEffect(() => {
+        // sessionUser === null means "query resolved, session invalid"
+        // sessionUser === undefined means "query still loading"
+        if (
+            tokenLoaded &&
+            accessToken !== null &&
+            sessionUser === null &&
+            !isRefreshing &&
+            !signOutInProgressRef.current &&
+            !hasAttemptedRecoveryRef.current
+        ) {
+            hasAttemptedRecoveryRef.current = true;
+            (async () => {
+                const storedRefresh = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
+                if (!storedRefresh || signOutInProgressRef.current) {
+                    await clearLocalSession();
+                    return;
+                }
+
+                setIsRefreshing(true);
+                try {
+                    const result = await refreshSessionMutation({
+                        refreshToken: storedRefresh,
+                    });
+
+                    if (signOutInProgressRef.current) return;
+
+                    await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, result.accessToken);
+                    await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, result.refreshToken);
+                    setAccessToken(result.accessToken);
+                    scheduleRefresh(result.accessToken);
+                } catch {
+                    // Refresh also failed — session is truly dead
+                    if (!signOutInProgressRef.current) {
+                        await clearLocalSession();
+                    }
+                } finally {
+                    setIsRefreshing(false);
+                }
+            })();
+        }
+
+        // Reset recovery flag when user successfully authenticates again
+        if (sessionUser && hasAttemptedRecoveryRef.current) {
+            hasAttemptedRecoveryRef.current = false;
+        }
+    }, [tokenLoaded, accessToken, sessionUser, isRefreshing, clearLocalSession, refreshSessionMutation, scheduleRefresh]);
+
+    // isLoading is true until:
+    //   1. SecureStore read is complete (tokenLoaded === true)
+    //   2. AND either: no token was found, OR the Convex query has resolved
+    //      (sessionUser is not undefined — it will be null for invalid/no session, or an object for valid)
+    const isLoading = !tokenLoaded || (accessToken !== null && sessionUser === undefined) || isRefreshing;
 
     // ─── Load session on mount ───────────────────────────────────────────
 

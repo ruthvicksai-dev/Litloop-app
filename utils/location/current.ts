@@ -43,7 +43,7 @@ async function getWatchPositionFix(timeoutMs = 5000): Promise<Location.LocationO
 export async function getReliableCurrentLocation(): Promise<Location.LocationObject> {
     const servicesEnabled = await Location.hasServicesEnabledAsync();
     if (!servicesEnabled) {
-        throw new Error("Please enable location services in your device settings.");
+        console.warn("[Location] hasServicesEnabledAsync returned false. Proceeding anyway to see if permission check handles it...");
     }
 
     const existingPermission = await Location.getForegroundPermissionsAsync();

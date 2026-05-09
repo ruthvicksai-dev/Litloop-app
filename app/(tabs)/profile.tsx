@@ -366,10 +366,7 @@ const styles = StyleSheet.create({
     emptyWrapper: {
         marginHorizontal: 20,
         marginTop: Spacing.xl,
-        backgroundColor: Colors.white,
-        borderRadius: 20,
-        borderWidth: 1,
-        borderColor: Colors.border + "40",
+        backgroundColor: "transparent",
     },
     center: {
         flex: 1,

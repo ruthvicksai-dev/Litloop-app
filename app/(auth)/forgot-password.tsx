@@ -161,7 +161,7 @@ export default function ForgotPasswordScreen() {
                             else router.back();
                         }}
                     >
-                        <Ionicons name="arrow-back" size={22} color={Colors.text} />
+                        <Ionicons name="chevron-back" size={22} color={Colors.text} />
                         <Text style={styles.backButtonText}>
                             {step === "email" ? "Back to Sign In" : "Back"}
                         </Text>

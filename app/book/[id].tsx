@@ -100,7 +100,7 @@ export default function BookDetailsScreen() {
             <SafeAreaView style={styles.container}>
                 <View style={styles.header}>
                     <TouchableOpacity onPress={() => router.back()} style={styles.backBtnMissing}>
-                        <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+                        <Ionicons name="chevron-back" size={24} color={Colors.text} />
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>Book Details</Text>
                     <View style={styles.headerSpacer} />
@@ -129,7 +129,7 @@ export default function BookDetailsScreen() {
                 contentContainerStyle={styles.scrollContent}
             >
                 <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-                    <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+                    <Ionicons name="chevron-back" size={24} color={Colors.text} />
                 </TouchableOpacity>
 
                 <Animated.View

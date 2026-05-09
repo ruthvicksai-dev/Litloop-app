@@ -45,6 +45,7 @@ export default function SettingsScreen() {
 
             <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
                 {/* ─── Account Section (user-specific) ─── */}
+                <Text style={styles.sectionLabel}>ACCOUNT</Text>
                 <View style={styles.section}>
                     <TouchableOpacity
                         style={styles.row}
@@ -163,8 +164,16 @@ const styles = StyleSheet.create({
         paddingTop: Spacing.md,
         paddingBottom: Spacing.xl * 2,
     },
+    sectionLabel: {
+        fontSize: FontSizes.caption,
+        fontFamily: Fonts.bold,
+        color: Colors.textSecondary,
+        letterSpacing: 0.8,
+        textTransform: "uppercase",
+        marginBottom: Spacing.sm,
+        paddingHorizontal: 4,
+    },
     section: {
-        marginBottom: Spacing.xl,
         backgroundColor: Colors.white,
         borderRadius: 16,
         paddingVertical: Spacing.xs,
