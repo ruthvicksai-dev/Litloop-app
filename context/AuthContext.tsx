@@ -1,3 +1,4 @@
+import ConfirmActionModal from "@/components/ui/feedback/ConfirmActionModal";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import * as Sentry from "@sentry/react-native";
@@ -100,12 +101,15 @@ export function useAuthActions() {
 const ACCESS_TOKEN_KEY = "litloop_access_token";
 const REFRESH_TOKEN_KEY = "litloop_refresh_token";
 
+
+
 // ─── Provider ────────────────────────────────────────────────────────────────
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [accessToken, setAccessToken] = useState<string | null>(null);
     const [tokenLoaded, setTokenLoaded] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [sessionExpired, setSessionExpired] = useState(false);
     const [pendingAuthToast, setPendingAuthToast] = useState<PendingToast | null>(null);
     const pendingAuthToastRef = useRef<PendingToast | null>(null);
     const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -211,14 +215,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     // Schedule the next refresh
                     scheduleRefresh(result.accessToken);
                 } catch {
-                    // Refresh failed — force sign out
+                    // Refresh failed — show session expired modal
                     if (!signOutInProgressRef.current) {
-                        const currentRefreshToken = await SecureStore.getItemAsync(
-                            REFRESH_TOKEN_KEY
-                        );
-                        if (currentRefreshToken === storedRefreshToken) {
-                            await clearLocalSession();
-                        }
+                        setSessionExpired(true);
                     }
                 } finally {
                     setIsRefreshing(false);
@@ -268,7 +267,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 } catch {
                     // Refresh also failed — session is truly dead
                     if (!signOutInProgressRef.current) {
-                        await clearLocalSession();
+                        setSessionExpired(true);
                     }
                 } finally {
                     setIsRefreshing(false);
@@ -343,13 +342,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                         setAccessToken(result.accessToken);
                         scheduleRefresh(result.accessToken);
                     } catch {
-                        // Refresh also failed — clean up
-                        const currentRefreshToken = await SecureStore.getItemAsync(
-                            REFRESH_TOKEN_KEY
-                        );
-                        if (currentRefreshToken === storedRefresh) {
-                            await clearLocalSession();
-                        }
+                        // Refresh also failed — show session expired modal
+                        setSessionExpired(true);
                     } finally {
                         setIsRefreshing(false);
                     }
@@ -455,6 +449,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, [clearLocalSession, signOutMutation]);
 
+    const handleSessionExpiredDismiss = useCallback(async () => {
+        setSessionExpired(false);
+        signOutInProgressRef.current = true;
+        try {
+            await clearLocalSession();
+        } finally {
+            signOutInProgressRef.current = false;
+        }
+    }, [clearLocalSession]);
+
     const consumePendingAuthToast = useCallback(() => {
         if (!pendingAuthToastRef.current) {
             return null;
@@ -494,6 +498,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         <AuthActionsContext.Provider value={authActions}>
             <AuthStateContext.Provider value={authState}>
                 {children}
+                <ConfirmActionModal
+                    visible={sessionExpired}
+                    title="Session Expired"
+                    message="Your session has expired for security reasons. Please sign in again to continue."
+                    icon="time-outline"
+                    confirmLabel="Sign In Again"
+                    cancelLabel="Dismiss"
+                    onConfirm={handleSessionExpiredDismiss}
+                    onCancel={handleSessionExpiredDismiss}
+                />
             </AuthStateContext.Provider>
         </AuthActionsContext.Provider>
     );

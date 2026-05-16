@@ -16,6 +16,7 @@ export function useSignUpScreen() {
     const [otpCode, setOtpCode] = useState("");
 
     const [loading, setLoading] = useState(false);
+    const [accountExistsError, setAccountExistsError] = useState(false);
     const { sendOtp, verifyOtp } = useAuthActions();
     const { user } = useAuthState();
     const { showToast } = useToast();
@@ -69,7 +70,11 @@ export function useSignUpScreen() {
             showToast("A verification code was sent to your email.", "success");
         } catch (error: unknown) {
             const message = error instanceof Error ? error.message : "Sign up failed.";
-            showToast(message, "error");
+            if (message.includes("User is already registered. Please sign in.")) {
+                setAccountExistsError(true);
+            } else {
+                showToast(message, "error");
+            }
         } finally {
             setLoading(false);
         }
@@ -112,6 +117,8 @@ export function useSignUpScreen() {
         otpCode,
         setOtpCode,
         loading,
+        accountExistsError,
+        setAccountExistsError,
         user,
         handleSendOtp,
         handleVerifyOtp,

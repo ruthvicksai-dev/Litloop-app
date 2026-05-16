@@ -175,6 +175,11 @@ export default function RequestRentalScreen() {
 
     const handleSubmitRequest = async () => {
         if (zone === "Home") {
+            if (!phone && !landmark.trim() && !area.trim() && !formattedAddress.trim() && latitude === undefined) {
+                showToast("Please fill in the details.", "error");
+                return;
+            }
+
             const validation = validateDeliveryAreaSelection({
                 selectedArea: area,
                 formattedAddress,
@@ -183,6 +188,11 @@ export default function RequestRentalScreen() {
             });
 
             if (!validation.isValid) {
+                if (validation.reason === "invalid_area" || validation.reason === "missing_location") {
+                    showToast(validation.message, "error");
+                    return;
+                }
+
                 if (validation.reason === "address_mismatch" && validation.detectedArea) {
                     setMismatchConfig({
                         title: "Location Mismatch",

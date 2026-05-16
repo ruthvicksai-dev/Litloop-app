@@ -4,6 +4,7 @@ import Button from "@/components/ui/core/Button";
 import InputField from "@/components/ui/core/InputField";
 import OtpCodeInput from "@/components/ui/auth/OtpCodeInput";
 import PasswordRequirements from "@/components/ui/auth/PasswordRequirements";
+import ConfirmActionModal from "@/components/ui/feedback/ConfirmActionModal";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, scale, Spacing } from "@/constants/theme";
 import { useToast } from "@/context/ToastContext";
@@ -50,6 +51,8 @@ export default function SignUpScreen() {
         otpCode,
         setOtpCode,
         loading,
+        accountExistsError,
+        setAccountExistsError,
         user,
         handleSendOtp,
         handleVerifyOtp,
@@ -135,6 +138,7 @@ export default function SignUpScreen() {
                                     value={confirmPassword}
                                     onChangeText={setConfirmPassword}
                                     secureTextEntry
+                                    showPasswordToggle={false}
                                 />
 
                                 <TouchableOpacity
@@ -214,6 +218,20 @@ export default function SignUpScreen() {
                     />
                 </ScrollView>
             </KeyboardAvoidingView>
+
+            <ConfirmActionModal
+                visible={accountExistsError}
+                title="Account Exists"
+                message="An account with this email or phone number is already registered. Would you like to sign in instead?"
+                icon="person-outline"
+                confirmLabel="Sign In"
+                cancelLabel="Cancel"
+                onConfirm={() => {
+                    setAccountExistsError(false);
+                    router.push("/(auth)/sign-in");
+                }}
+                onCancel={() => setAccountExistsError(false)}
+            />
         </SafeAreaView>
     );
 }

@@ -34,24 +34,20 @@ export function useRequestRentalScreen(bookId: string) {
     const [formattedAddress, setFormattedAddress] = useState("");
 
     const handleRequest = async () => {
+        if (!zone) {
+            showToast("Please select a delivery zone.", "error");
+            return;
+        }
+
         const normalizedPhone = normalizePhoneNumber(phone);
-        const isCompletelyEmpty =
-            !zone &&
-            !normalizedPhone &&
-            !landmark.trim() &&
-            !roomNo.trim() &&
-            !yearOfStudy.trim() &&
-            !department.trim() &&
-            !rollNo.trim() &&
-            !area.trim() &&
-            !formattedAddress.trim();
+        const isHomeEmpty = zone === "Home" && !normalizedPhone && !landmark.trim() && !area.trim() && !formattedAddress.trim();
+        const isCollegeEmpty = zone === "College" && !normalizedPhone && !roomNo.trim() && !yearOfStudy.trim() && !department.trim() && !rollNo.trim();
         const hasMissingRequiredDetails =
-            !zone ||
             !normalizedPhone ||
             (zone === "College" && (!roomNo.trim() || !rollNo.trim())) ||
             (zone === "Home" && (!area.trim() || !formattedAddress.trim()));
 
-        if (isCompletelyEmpty || hasMissingRequiredDetails) {
+        if (isHomeEmpty || isCollegeEmpty || hasMissingRequiredDetails) {
             showToast("Please fill in the details.", "error");
             return;
         }

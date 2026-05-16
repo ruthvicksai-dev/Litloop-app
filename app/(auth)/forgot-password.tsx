@@ -281,6 +281,7 @@ export default function ForgotPasswordScreen() {
                                     value={confirmNewPassword}
                                     onChangeText={setConfirmNewPassword}
                                     secureTextEntry
+                                    showPasswordToggle={false}
                                 />
                                 <Button
                                     title="Reset Password"

@@ -126,6 +126,7 @@ export default function ChangePasswordScreen() {
                             value={confirmPassword}
                             onChangeText={setConfirmPassword}
                             secureTextEntry
+                            showPasswordToggle={false}
                         />
                         <Button
                             title="Update Password"

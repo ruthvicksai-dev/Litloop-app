@@ -1,5 +1,6 @@
 import { FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing } from "@/constants/theme";
+import { usePathname } from "expo-router";
 import React, { createContext, ReactNode, useCallback, useContext, useRef, useState } from "react";
 import { Animated, Dimensions, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -26,6 +27,14 @@ const TOAST_COLORS: Record<ToastType, string> = {
 
 export function ToastProvider({ children }: { children: ReactNode }) {
     const insets = useSafeAreaInsets();
+    const pathname = usePathname();
+
+    // Only add tab bar offset when inside the (tabs) route group
+    const TAB_PATHS = ["/", "/search", "/my-rentals", "/history", "/profile"];
+    const isTabScreen = TAB_PATHS.includes(pathname);
+    const bottomOffset = insets.bottom + (isTabScreen ? Layout.tabBarHeight : 0) + Spacing.md;
+
+
 
     const [message, setMessage] = useState("");
     const [type, setType] = useState<ToastType>("info");
@@ -123,7 +132,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                                     opacity,
                                     transform: [{ translateY }],
                                     backgroundColor: TOAST_COLORS[type],
-                                    marginBottom: insets.bottom + Layout.tabBarHeight + Spacing.md,
+                                    marginBottom: bottomOffset,
 
                                 },
                             ]}

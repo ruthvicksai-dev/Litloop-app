@@ -167,7 +167,6 @@ export function CommonSettingsSections() {
             </View>
 
             {/* ─── Danger Zone ─── */}
-            <Text style={[styles.sectionLabel, { color: Colors.error }]}>DANGER ZONE</Text>
             <View style={[styles.section, styles.dangerSection]}>
                 <View style={styles.dangerContent}>
                     <Text style={styles.dangerTitle}>Delete Account</Text>
@@ -329,6 +328,7 @@ const styles = StyleSheet.create({
     dangerSection: {
         borderColor: "#FCA5A5",
         backgroundColor: "#FFF5F5",
+        marginTop: Spacing.lg,
     },
     dangerContent: {
         paddingHorizontal: 16,

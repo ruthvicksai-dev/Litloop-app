@@ -178,6 +178,11 @@ export default function ScheduleReturnScreen() {
             });
 
             if (!validation.isValid) {
+                if (validation.reason === "invalid_area" || validation.reason === "missing_location") {
+                    showToast(validation.message, "error");
+                    return;
+                }
+
                 if (validation.reason === "address_mismatch" && validation.detectedArea) {
                     setMismatchConfig({
                         title: "Location Mismatch",
@@ -202,9 +207,7 @@ export default function ScheduleReturnScreen() {
 
                 setMismatchModalVisible(true);
                 showToast(
-                    validation.reason === "missing_location"
-                        ? "Please use your current location to verify the pickup area."
-                        : "Your current location does not match the selected pickup area.",
+                    "Your current location does not match the selected pickup area.",
                     "error"
                 );
                 return;

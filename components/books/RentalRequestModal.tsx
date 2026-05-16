@@ -6,7 +6,7 @@ import MapLocationPicker from "@/components/ui/pickers/MapLocationPicker";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, FEATURE_FLAGS } from "@/constants/theme";
 import { useAuthState } from "@/context/AuthContext";
-import { useToast } from "@/context/ToastContext";
+import { useToast, ToastProvider } from "@/context/ToastContext";
 import { useFadeSlideIn, useRequestRentalScreen } from "@/hooks";
 import { 
     getReliableCurrentLocation,
@@ -26,7 +26,17 @@ interface RentalRequestModalProps {
     bookId: string;
 }
 
-export default function RentalRequestModal({
+export default function RentalRequestModal({ visible, onClose, bookId }: RentalRequestModalProps) {
+    return (
+        <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
+            <ToastProvider>
+                <RentalRequestModalContent visible={visible} onClose={onClose} bookId={bookId} />
+            </ToastProvider>
+        </Modal>
+    );
+}
+
+function RentalRequestModalContent({
     visible,
     onClose,
     bookId,
@@ -197,6 +207,11 @@ export default function RentalRequestModal({
 
     const handleSubmitRequest = async () => {
         if (zone === "Home") {
+            if (!phone && !landmark.trim() && !area.trim() && !formattedAddress.trim() && latitude === undefined) {
+                showToast("Please fill in the details.", "error");
+                return;
+            }
+
             const validation = validateDeliveryAreaSelection({
                 selectedArea: area,
                 formattedAddress,
@@ -205,6 +220,11 @@ export default function RentalRequestModal({
             });
 
             if (!validation.isValid) {
+                if (validation.reason === "invalid_area" || validation.reason === "missing_location") {
+                    showToast(validation.message, "error");
+                    return;
+                }
+
                 if (validation.reason === "address_mismatch" && validation.detectedArea) {
                     setMismatchConfig({
                         title: "Location Mismatch",
@@ -307,7 +327,6 @@ export default function RentalRequestModal({
     };
 
     return (
-        <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
             <SafeAreaView style={styles.container}>
                 <View style={styles.header}>
                     <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
@@ -360,7 +379,6 @@ export default function RentalRequestModal({
                     onCancel={() => setMismatchModalVisible(false)}
                 />
             </SafeAreaView>
-        </Modal>
     );
 }
 
