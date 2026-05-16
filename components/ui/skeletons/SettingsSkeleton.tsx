@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
         marginLeft: 4,
     },
     section: {
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         borderRadius: 16,
         paddingVertical: 2,
         borderWidth: 1,

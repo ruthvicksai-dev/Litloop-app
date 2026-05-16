@@ -3,7 +3,7 @@ import { Colors, Spacing } from "@/constants/theme";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { Ionicons } from "@expo/vector-icons";
 import NetInfo from "@react-native-community/netinfo";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Animated, Easing, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -14,11 +14,11 @@ interface OfflineBannerProps {
 export function OfflineBanner({ type = "banner" }: OfflineBannerProps) {
     const { isOnline } = useNetworkStatus();
     const insets = useSafeAreaInsets();
-    const slideAnim = useRef(new Animated.Value(-100)).current;
+    const slideAnim = useMemo(() => new Animated.Value(isOnline ? -100 : 0), [isOnline]);
 
     // Animations for fullscreen mode
-    const pulseAnim = useRef(new Animated.Value(1)).current;
-    const fadeAnim = useRef(new Animated.Value(0)).current;
+    const pulseAnim = useMemo(() => new Animated.Value(1), []);
+    const fadeAnim = useMemo(() => new Animated.Value(0), []);
     const [isChecking, setIsChecking] = useState(false);
 
     // Initial enter animation for fullscreen
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
         padding: Spacing.xl,
     },
     card: {
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         paddingHorizontal: Spacing.xl,
         paddingVertical: 40,
         borderRadius: 28,
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
         width: "100%",
         maxWidth: 400,
         // Premium shadow
-        shadowColor: "#000",
+        shadowColor: "rgba(50,30,20,0.45)",
         shadowOffset: { width: 0, height: 12 },
         shadowOpacity: 0.08,
         shadowRadius: 24,
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
         position: "absolute",
         width: 4,
         height: 60,
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         transform: [{ rotate: "45deg" }],
     },
     title: {
@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
         zIndex: 9999,
         paddingBottom: 12,
         elevation: 10,
-        shadowColor: "#000",
+        shadowColor: "rgba(50,30,20,0.45)",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.2,
         shadowRadius: 4,

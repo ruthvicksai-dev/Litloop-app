@@ -1,26 +1,36 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing, scale } from "@/constants/theme";
-import React, { useRef } from "react";
+import { Shadows, Opacity } from "@/constants/designTokens";
+import { Ionicons } from "@expo/vector-icons";
+import React from "react";
 import {
     ActivityIndicator,
-    Animated,
+    Pressable,
     StyleProp,
     StyleSheet,
     Text,
     TextStyle,
-    TouchableOpacity,
     ViewStyle,
 } from "react-native";
+import Animated, {
+    useSharedValue,
+    useAnimatedStyle,
+    withSpring,
+} from "react-native-reanimated";
+
+const SPRING_CONFIG = { damping: 15, stiffness: 400, mass: 0.8 };
 
 interface ButtonProps {
     title: string;
     onPress: () => void;
-    variant?: "primary" | "secondary" | "outline";
+    variant?: "primary" | "secondary" | "outline" | "ghost";
     loading?: boolean;
     disabled?: boolean;
     containerStyle?: StyleProp<ViewStyle>;
     style?: StyleProp<ViewStyle>;
     textStyle?: StyleProp<TextStyle>;
+    icon?: keyof typeof Ionicons.glyphMap;
+    iconSize?: number;
 }
 
 export default function Button({
@@ -32,22 +42,22 @@ export default function Button({
     containerStyle,
     style,
     textStyle,
+    icon,
+    iconSize = 18,
 }: ButtonProps) {
-    const scale = useRef(new Animated.Value(1)).current;
+    const scaleAnim = useSharedValue(1);
+
+    const animatedStyle = useAnimatedStyle(() => ({
+        transform: [{ scale: scaleAnim.value }],
+        opacity: scaleAnim.value < 1 ? 0.92 : 1,
+    }));
 
     const handlePressIn = () => {
-        Animated.spring(scale, {
-            toValue: 0.95,
-            useNativeDriver: true,
-        }).start();
+        scaleAnim.value = withSpring(0.96, SPRING_CONFIG);
     };
 
     const handlePressOut = () => {
-        Animated.spring(scale, {
-            toValue: 1,
-            friction: 3,
-            useNativeDriver: true,
-        }).start();
+        scaleAnim.value = withSpring(1, SPRING_CONFIG);
     };
 
     const buttonStyles = [
@@ -55,6 +65,7 @@ export default function Button({
         variant === "primary" && styles.primary,
         variant === "secondary" && styles.secondary,
         variant === "outline" && styles.outline,
+        variant === "ghost" && styles.ghost,
         disabled && styles.disabled,
         style,
     ];
@@ -64,45 +75,62 @@ export default function Button({
         variant === "primary" && styles.primaryText,
         variant === "secondary" && styles.secondaryText,
         variant === "outline" && styles.outlineText,
+        variant === "ghost" && styles.ghostText,
         textStyle,
     ];
 
+    const iconColor =
+        variant === "primary"
+            ? Colors.white
+            : variant === "secondary"
+              ? Colors.primaryDark
+              : Colors.primary;
+
     return (
-        <Animated.View style={[containerStyle, { transform: [{ scale }] }]}>
-            <TouchableOpacity
+        <Animated.View style={[containerStyle, animatedStyle]}>
+            <Pressable
                 style={buttonStyles}
                 onPress={onPress}
                 onPressIn={handlePressIn}
                 onPressOut={handlePressOut}
                 disabled={disabled || loading}
-                activeOpacity={0.8}
             >
                 {loading ? (
                     <ActivityIndicator
-                        color={variant === "outline" ? Colors.primary : Colors.white}
+                        color={variant === "outline" || variant === "ghost" ? Colors.primary : Colors.white}
                         size="small"
                     />
                 ) : (
-                    <Text style={textStyles}>{title}</Text>
+                    <>
+                        {icon && (
+                            <Ionicons
+                                name={icon}
+                                size={iconSize}
+                                color={iconColor}
+                                style={styles.icon}
+                            />
+                        )}
+                        <Text style={textStyles}>{title}</Text>
+                    </>
                 )}
-            </TouchableOpacity>
+            </Pressable>
         </Animated.View>
     );
 }
 
 const styles = StyleSheet.create({
     button: {
-        paddingVertical: scale(14),
+        paddingVertical: scale(13),
         paddingHorizontal: Spacing.lg,
         borderRadius: Layout.borderRadius,
         alignItems: "center",
         justifyContent: "center",
+        flexDirection: "row",
         minHeight: Layout.buttonHeight,
     },
     primary: {
         backgroundColor: Colors.primary,
-        borderWidth: 1,
-        borderColor: Colors.primaryDark + "40",
+        ...Shadows.primary,
     },
     secondary: {
         backgroundColor: Colors.primaryLight,
@@ -112,8 +140,11 @@ const styles = StyleSheet.create({
         borderWidth: 1.5,
         borderColor: Colors.primary,
     },
+    ghost: {
+        backgroundColor: "transparent",
+    },
     disabled: {
-        opacity: 0.5,
+        opacity: Opacity.disabled,
     },
     text: {
         fontSize: FontSizes.subtitle,
@@ -127,5 +158,11 @@ const styles = StyleSheet.create({
     },
     outlineText: {
         color: Colors.primary,
+    },
+    ghostText: {
+        color: Colors.primary,
+    },
+    icon: {
+        marginRight: Spacing.xs + 2,
     },
 });

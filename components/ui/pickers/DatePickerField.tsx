@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.xs,
     },
     input: {
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         borderWidth: 1,
         borderColor: Colors.border,
         borderRadius: 12,
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
     },
     pickerWrap: {
         marginTop: Spacing.sm,
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         borderRadius: 12,
         borderWidth: 1,
         borderColor: Colors.border,

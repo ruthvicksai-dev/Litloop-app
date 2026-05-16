@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
         height: scale(210),
         marginRight: Spacing.md,
         borderRadius: Layout.cardRadius,
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         borderWidth: 1,
         borderColor: "rgba(0,0,0,0.05)",
     },

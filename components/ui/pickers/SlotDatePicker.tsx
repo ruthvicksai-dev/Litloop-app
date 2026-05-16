@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: Spacing.md,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         minWidth: 80,
     },
     chipSelected: {

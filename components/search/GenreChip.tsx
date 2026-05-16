@@ -56,8 +56,8 @@ export default memo(GenreChip);
 const styles = StyleSheet.create({
     chip: {
         borderWidth: 1,
-        borderColor: Colors.border,
-        backgroundColor: Colors.white,
+        borderColor: Colors.borderSubtle,
+        backgroundColor: Colors.surfaceCard,
         borderRadius: 999,
         paddingHorizontal: Spacing.md,
         paddingVertical: 10,

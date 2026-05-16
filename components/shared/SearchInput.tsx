@@ -62,10 +62,10 @@ const styles = StyleSheet.create({
     container: {
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         borderRadius: Layout.borderRadius,
         borderWidth: 1,
-        borderColor: Colors.border,
+        borderColor: Colors.borderSubtle,
         paddingHorizontal: Spacing.md,
         gap: Spacing.sm,
         minHeight: Layout.buttonHeight,

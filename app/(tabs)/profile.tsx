@@ -10,14 +10,13 @@ import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useAuthState } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";
-import { useFadeSlideScaleIn, useProfileTabs } from "@/hooks";
+import { useProfileTabs } from "@/hooks";
 import { triggerHaptic } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    Animated,
     Dimensions,
     RefreshControl,
     ScrollView,
@@ -39,15 +38,13 @@ const TAB_OPTIONS: SegmentOption[] = [
 export default function ProfileScreen() {
     const { user, isAdmin, accessToken, isLoading } = useAuthState();
     const router = useRouter();
-    const { fadeAnim, slideAnim, scaleAnim } = useFadeSlideScaleIn();
     const [refreshing, setRefreshing] = useState(false);
 
     const {
         activeTab,
 
         handleTabChange,
-        slideAnimDist,
-        listOpacity,
+        
     } = useProfileTabs();
 
     const onRefresh = React.useCallback(() => {
@@ -144,11 +141,7 @@ export default function ProfileScreen() {
                         user={user}
                         isAdmin={true}
                         favoriteCount={0}
-                        readLaterCount={0}
-                        fadeAnim={fadeAnim}
-                        slideAnim={slideAnim}
-                        scaleAnim={scaleAnim}
-                    />
+                        readLaterCount={0}/>
 
                     <View style={{ paddingHorizontal: 20, marginTop: 10 }}>
                         <TouchableOpacity
@@ -183,15 +176,7 @@ export default function ProfileScreen() {
                     }
                 >
                     {/* Header Title */}
-                    <Animated.View
-                        style={[
-                            styles.header,
-                            {
-                                opacity: fadeAnim,
-                                transform: [{ translateY: slideAnim }],
-                            },
-                        ]}
-                    >
+                    <View style={styles.header}>
                         <Text style={styles.pageTitle} allowFontScaling={false}>
                             Profile
                         </Text>
@@ -204,26 +189,22 @@ export default function ProfileScreen() {
                         >
                             <Ionicons name="settings-outline" size={24} color={Colors.text} />
                         </TouchableOpacity>
-                    </Animated.View>
+                    </View>
 
                     {/* Premium User Card */}
                     <ProfileUserCard
                         user={user}
                         isAdmin={isAdmin ?? false}
                         favoriteCount={favoriteCount ?? 0}
-                        readLaterCount={readLaterCount ?? 0}
-                        fadeAnim={fadeAnim}
-                        slideAnim={slideAnim}
-                        scaleAnim={scaleAnim}
-                    />
+                        readLaterCount={readLaterCount ?? 0}/>
 
                     {/* Student Verification */}
                     {user?.isVerifiedStudent ? (
-                        <Animated.View style={{ opacity: fadeAnim }}>
+                        <View>
                             <VerifiedBadge variant="card" />
-                        </Animated.View>
+                        </View>
                     ) : (
-                        <Animated.View style={{ opacity: fadeAnim, paddingHorizontal: 20, marginBottom: Spacing.md }}>
+                        <View style={{ paddingHorizontal: 20, marginBottom: Spacing.md }}>
                             <TouchableOpacity
                                 style={styles.verifyLink}
                                 onPress={() => {
@@ -242,11 +223,11 @@ export default function ProfileScreen() {
                                 </View>
                                 <Ionicons name="chevron-forward" size={18} color={Colors.textLight} />
                             </TouchableOpacity>
-                        </Animated.View>
+                        </View>
                     )}
 
                     {isAdmin && (
-                        <Animated.View style={{ opacity: fadeAnim, paddingHorizontal: 20 }}>
+                        <View style={{ paddingHorizontal: 20 }}>
                             <TouchableOpacity
                                 style={styles.adminLink}
                                 onPress={() => {
@@ -261,7 +242,7 @@ export default function ProfileScreen() {
                                 </Text>
                                 <Ionicons name="arrow-forward" size={18} color={Colors.white} style={{ marginLeft: "auto" }} />
                             </TouchableOpacity>
-                        </Animated.View>
+                        </View>
                     )}
 
                     {/* Segmented Control Tabs */}
@@ -269,19 +250,10 @@ export default function ProfileScreen() {
                         options={TAB_OPTIONS}
                         activeValue={activeTab}
                         onChange={onTabChange}
-                        fadeAnim={fadeAnim}
                     />
 
                     {/* List Section */}
-                    <Animated.View
-                        style={[
-                            styles.listSection,
-                            {
-                                opacity: listOpacity,
-                                transform: [{ translateX: slideAnimDist }]
-                            }
-                        ]}
-                    >
+                    <View style={styles.listSection}>
                         {activeBooks && activeBooks.length > 0 ? (
                             <DiscoverSectionRow
                                 title={activeTab === "favorites" ? "Loved Books" : "Saved For Later"}
@@ -299,7 +271,7 @@ export default function ProfileScreen() {
                                 />
                             </View>
                         )}
-                    </Animated.View>
+                    </View>
                 </ScrollView>
             </SafeAreaView>
         </View>

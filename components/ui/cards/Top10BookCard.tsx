@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { useRef } from "react";
+import React, { useMemo } from "react";
 import {
     Animated,
     StyleSheet,
@@ -38,7 +38,7 @@ export default function Top10BookCard({
     rank,
 }: Top10BookCardProps) {
     const router = useRouter();
-    const cardScale = useRef(new Animated.Value(1)).current;
+    const cardScale = useMemo(() => new Animated.Value(1), []);
 
     const imageUri =
         coverUrls && coverUrls.length > 0 ? coverUrls[0] : coverUrl ?? undefined;

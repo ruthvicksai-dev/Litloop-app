@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { Animated } from "react-native";
 
 export type ProfileTab = "favorites" | "readLater";
@@ -8,8 +8,8 @@ export type ProfileTab = "favorites" | "readLater";
  */
 export function useProfileTabs(initialTab: ProfileTab = "favorites") {
     const [activeTab, setActiveTab] = useState<ProfileTab>(initialTab);
-    const slideAnimDist = useRef(new Animated.Value(0)).current;
-    const listOpacity = useRef(new Animated.Value(1)).current;
+    const slideAnimDist = useMemo(() => new Animated.Value(0), []);
+    const listOpacity = useMemo(() => new Animated.Value(1), []);
 
     const handleTabChange = (tab: ProfileTab) => {
         if (tab === activeTab) return;

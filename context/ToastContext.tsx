@@ -1,8 +1,8 @@
 import { FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing } from "@/constants/theme";
 import { usePathname } from "expo-router";
-import React, { createContext, ReactNode, useCallback, useContext, useRef, useState } from "react";
-import { Animated, Dimensions, StyleSheet, Text, View } from "react-native";
+import React, { createContext, ReactNode, useCallback, useContext, useRef, useState, useMemo } from "react";
+import { Animated, Dimensions, Platform, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type ToastType = "success" | "error" | "info";
@@ -39,9 +39,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     const [message, setMessage] = useState("");
     const [type, setType] = useState<ToastType>("info");
     const [isToastVisible, setIsToastVisible] = useState(false);
-    const [opacity] = useState(new Animated.Value(0));
-    const [translateY] = useState(new Animated.Value(50));
-    const timerRef = useRef<any>(null);
+    const opacity = useMemo(() => new Animated.Value(0), []);
+    const translateY = useMemo(() => new Animated.Value(50), []);
+    const timerRef = useRef<NodeJS.Timeout | undefined>(undefined);
     const isVisibleRef = useRef(false);
 
     const showToast = useCallback(
@@ -49,7 +49,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             // Cancel any pending auto-hide timer
             if (timerRef.current) {
                 clearTimeout(timerRef.current);
-                timerRef.current = null;
+                timerRef.current = undefined;
             }
 
             const startShowing = () => {
@@ -81,7 +81,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
                 timerRef.current = setTimeout(() => {
                     hide();
-                }, 3000);
+                }, 3000) as unknown as NodeJS.Timeout;
             };
 
             const hide = (callback?: () => void) => {

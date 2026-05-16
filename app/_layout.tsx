@@ -1,3 +1,4 @@
+// Animated freeze guard is no longer needed since useNonFrozen prevents freezing
 import AppGate from "@/components/AppGate";
 import { OfflineBanner } from "@/components/ui/feedback/OfflineBanner";
 import { Colors } from "@/constants/theme";
@@ -12,6 +13,12 @@ import * as SystemUI from "expo-system-ui";
 import React, { useEffect } from "react";
 import { Platform, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { enableFreeze } from "react-native-screens";
+
+// Globally disable react-freeze to prevent "Cannot add new property '_tracking'"
+// crashes with React Native 0.81 + React 19. react-freeze freezes Animated.Value
+// objects making them non-extensible, which crashes the animation system.
+enableFreeze(false);
 
 const sentryDsn = process.env.EXPO_PUBLIC_SENTRY_DSN;
 const isSentryEnabled = Boolean(sentryDsn) && !__DEV__;

@@ -494,7 +494,7 @@ const styles = StyleSheet.create({
     methodCard: {
         flex: 1,
         minWidth: 140,
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         borderRadius: 12,
         padding: Spacing.md,
         alignItems: "center",
@@ -530,7 +530,7 @@ const styles = StyleSheet.create({
     },
     // QR
     qrCard: {
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         borderRadius: 16,
         padding: Spacing.lg,
         alignItems: "center",
@@ -631,7 +631,7 @@ const styles = StyleSheet.create({
         resizeMode: "cover",
     },
     cashCard: {
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         borderRadius: 16,
         padding: Spacing.lg,
         alignItems: "center",

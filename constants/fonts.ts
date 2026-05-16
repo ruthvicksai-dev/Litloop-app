@@ -24,3 +24,18 @@ export const FontSizes = {
     hero: moderateScale(30),
     display: moderateScale(32),
 };
+
+export const LetterSpacing = {
+    tight: -0.4,
+    normal: 0,
+    wide: 0.3,
+    caps: 0.8,
+};
+
+export const LineHeights = {
+    tight: 1.2,
+    normal: 1.4,
+    relaxed: 1.6,
+    loose: 1.8,
+};
+

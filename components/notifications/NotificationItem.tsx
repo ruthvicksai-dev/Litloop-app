@@ -47,9 +47,12 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingVertical: Spacing.md,
         backgroundColor: Colors.background,
+        borderLeftWidth: 3,
+        borderLeftColor: "transparent",
     },
     itemUnread: {
-        backgroundColor: Colors.primaryLight + "55",
+        backgroundColor: `${Colors.primary}06`,
+        borderLeftColor: Colors.primary,
     },
     iconWrap: {
         width: 40,

@@ -10,9 +10,6 @@ type ProfileUserCardProps = {
     isAdmin: boolean;
     favoriteCount: number;
     readLaterCount: number;
-    fadeAnim: Animated.Value;
-    slideAnim: Animated.Value;
-    scaleAnim: Animated.Value;
 };
 
 export function ProfileUserCard({
@@ -20,19 +17,11 @@ export function ProfileUserCard({
     isAdmin,
     favoriteCount,
     readLaterCount,
-    fadeAnim,
-    slideAnim,
-    scaleAnim,
+    
 }: ProfileUserCardProps) {
     return (
-        <Animated.View
-            style={[
-                styles.userCard,
-                {
-                    opacity: fadeAnim,
-                    transform: [{ translateY: slideAnim }],
-                },
-            ]}
+        <View
+            style={styles.userCard}
         >
             <LinearGradient
                 colors={["#FFFFFF", "rgba(255,255,255,0.8)"]}
@@ -42,11 +31,8 @@ export function ProfileUserCard({
             />
 
             <View style={styles.userCardContent}>
-                <Animated.View
-                    style={[
-                        styles.avatarContainer,
-                        { transform: [{ scale: scaleAnim }] },
-                    ]}
+                <View
+                    style={styles.avatarContainer}
                 >
                     <View style={styles.avatar}>
                         <Text style={styles.avatarText} allowFontScaling={false}>
@@ -58,7 +44,7 @@ export function ProfileUserCard({
                             <Ionicons name="shield-checkmark" size={14} color={Colors.white} />
                         </View>
                     )}
-                </Animated.View>
+                </View>
 
                 <View style={styles.userInfo}>
                     <Text style={styles.name} allowFontScaling={false}>
@@ -93,7 +79,7 @@ export function ProfileUserCard({
                     </Text>
                 </View>
             </View>
-        </Animated.View>
+        </View>
     );
 }
 
@@ -104,7 +90,7 @@ const styles = StyleSheet.create({
         overflow: "hidden",
         marginBottom: Spacing.lg,
         borderWidth: 1,
-        borderColor: "rgba(0,0,0,0.05)",
+        borderColor: "rgba(0,0,0,0.04)",
     },
     userCardContent: {
         flexDirection: "row",
@@ -121,8 +107,8 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.primary,
         justifyContent: "center",
         alignItems: "center",
-        borderWidth: 3,
-        borderColor: Colors.white,
+        borderWidth: 2.5,
+        borderColor: "rgba(255,255,255,0.9)",
     },
     avatarText: {
         fontSize: FontSizes.display,

@@ -63,7 +63,7 @@ export function RentalHistoryCard({
             <View style={styles.compactCard}>
                 <LinearGradient
                     pointerEvents="none"
-                    colors={["#FFFFFF", `${Colors.primary}0D`, Colors.primaryLight]}
+                    colors={["#FFFFFF", `${Colors.primary}06`, Colors.primaryLight + "40"]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={StyleSheet.absoluteFillObject}
@@ -171,13 +171,13 @@ export function RentalHistoryCard({
 
 const styles = StyleSheet.create({
     compactCard: {
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         borderRadius: 18,
         padding: Spacing.md,
         marginBottom: Spacing.md,
         minHeight: 122,
         borderWidth: 1,
-        borderColor: "rgba(117,64,67,0.10)",
+        borderColor: "rgba(0,0,0,0.05)",
         overflow: "hidden",
     },
     cardMainRow: {
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
         paddingVertical: 3,
         borderRadius: 999,
         borderWidth: 1,
-        borderColor: Colors.border,
+        borderColor: Colors.borderSubtle,
     },
     statusDot: {
         width: 6,
@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
         marginTop: Spacing.sm,
         paddingTop: Spacing.sm + 2,
         borderTopWidth: 1,
-        borderTopColor: Colors.border,
+        borderTopColor: Colors.borderSubtle,
     },
     detailsHeaderRow: {
         flexDirection: "row",

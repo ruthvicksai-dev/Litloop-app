@@ -128,6 +128,7 @@ const styles = StyleSheet.create({
         color: Colors.text,
         fontFamily: Fonts.bold,
         fontSize: FontSizes.heading,
+        letterSpacing: -0.3,
     },
     subtitle: {
         marginTop: Spacing.xs,
@@ -151,14 +152,14 @@ const styles = StyleSheet.create({
     },
     modalOverlay: {
         flex: 1,
-        backgroundColor: "#00000066",
+        backgroundColor: "rgba(20,15,12,0.35)",
         justifyContent: "center",
         paddingHorizontal: Layout.screenPaddingWide,
     },
     modalCard: {
-        borderRadius: 18,
+        borderRadius: 22,
         padding: Spacing.md,
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         borderWidth: 1,
         borderColor: Colors.border,
     },

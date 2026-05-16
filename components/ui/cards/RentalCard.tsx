@@ -7,11 +7,18 @@ import {
     STATUS_COLORS,
     scale,
 } from "@/constants/theme";
+import { Borders, Shadows } from "@/constants/designTokens";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, {
+    useSharedValue,
+    useAnimatedStyle,
+    withSpring,
+} from "react-native-reanimated";
+
+const SPRING = { damping: 16, stiffness: 350, mass: 0.8 };
 
 interface RentalCardProps {
     bookTitle: string;
@@ -42,6 +49,11 @@ export default function RentalCard({
 }: RentalCardProps) {
     const [currentDays, setCurrentDays] = useState(0);
     const [currentRent, setCurrentRent] = useState(0);
+    const scaleAnim = useSharedValue(1);
+
+    const animatedStyle = useAnimatedStyle(() => ({
+        transform: [{ scale: scaleAnim.value }],
+    }));
 
     useEffect(() => {
         if (status === "delivered" && deliveryDate) {
@@ -64,141 +76,131 @@ export default function RentalCard({
     const statusLabel = RENTAL_STATUS_LABELS[status] || status;
 
     return (
-        <TouchableOpacity
-            style={styles.card}
-            onPress={onPress}
-            activeOpacity={0.85}
-            disabled={!onPress}
-        >
-            <LinearGradient
-                pointerEvents="none"
-                colors={["#FFFFFF", `${Colors.primary}0D`, Colors.primaryLight]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={StyleSheet.absoluteFillObject}
-            />
+        <Animated.View style={animatedStyle}>
+            <Pressable
+                style={styles.card}
+                onPress={onPress}
+                onPressIn={() => { scaleAnim.value = withSpring(0.975, SPRING); }}
+                onPressOut={() => { scaleAnim.value = withSpring(1, SPRING); }}
+                disabled={!onPress}
+            >
+                <View style={styles.cardMainRow}>
+                    {coverUrl ? (
+                        <Image
+                            source={coverUrl}
+                            style={styles.coverImage}
+                            cachePolicy="disk"
+                            contentFit="cover"
+                        />
+                    ) : (
+                        <View style={[styles.coverImage, styles.coverFallback]}>
+                            <Ionicons name="book-outline" size={scale(20)} color={Colors.textLight} />
+                        </View>
+                    )}
 
-            <View style={styles.cardMainRow}>
-                {coverUrl ? (
-                    <Image
-                        source={coverUrl}
-                        style={styles.coverImage}
-                        cachePolicy="disk"
-                        contentFit="cover"
-                    />
-                ) : (
-                    <View style={[styles.coverImage, styles.coverFallback]}>
-                        <Ionicons name="book-outline" size={scale(22)} color={Colors.textLight} />
-                    </View>
-                )}
+                    <View style={styles.cardBody}>
+                        <View style={styles.cardTopRow}>
+                            <Text numberOfLines={1} style={styles.cardTitle}>
+                                {bookTitle}
+                            </Text>
+                            <View style={[styles.statusBadge, { backgroundColor: statusColor + "12" }]}>
+                                <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
+                                <Text
+                                    style={[styles.statusText, { color: statusColor }]}
+                                    numberOfLines={1}
+                                    adjustsFontSizeToFit
+                                    minimumFontScale={0.8}
+                                >
+                                    {statusLabel}
+                                </Text>
+                            </View>
+                        </View>
 
-                <View style={styles.cardBody}>
-                    <View style={styles.cardTopRow}>
-                        <Text numberOfLines={1} style={styles.cardTitle}>
-                            {bookTitle}
+                        <Text numberOfLines={1} style={styles.cardAuthor}>
+                            {bookAuthor}
                         </Text>
-                        <View style={[styles.statusBadge, { backgroundColor: statusColor + "18" }]}>
-                            <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
-                            <Text
-                                style={[styles.statusText, { color: statusColor }]}
-                                numberOfLines={1}
-                                adjustsFontSizeToFit
-                                minimumFontScale={0.8}
-                            >
-                                {statusLabel}
-                            </Text>
-                        </View>
-                    </View>
 
-                    <Text numberOfLines={1} style={styles.cardAuthor}>
-                        {bookAuthor}
-                    </Text>
-
-                    <View style={styles.metaRow}>
-                        <View style={styles.metaPill}>
-                            <Ionicons name="location-outline" size={12} color={Colors.textSecondary} />
-                            <Text style={styles.metaPillText}>{zone}</Text>
-                        </View>
-                        {deliveryDate ? (
+                        <View style={styles.metaRow}>
                             <View style={styles.metaPill}>
-                                <Ionicons name="calendar-outline" size={12} color={Colors.textSecondary} />
-                                <Text style={styles.metaPillText}>{deliveryDate}</Text>
+                                <Ionicons name="location-outline" size={11} color={Colors.textSecondary} />
+                                <Text style={styles.metaPillText}>{zone}</Text>
+                            </View>
+                            {deliveryDate ? (
+                                <View style={styles.metaPill}>
+                                    <Ionicons name="calendar-outline" size={11} color={Colors.textSecondary} />
+                                    <Text style={styles.metaPillText}>{deliveryDate}</Text>
+                                </View>
+                            ) : null}
+                            {pickupDate ? (
+                                <View style={styles.metaPill}>
+                                    <Ionicons name="calendar-outline" size={11} color={Colors.textSecondary} />
+                                    <Text style={styles.metaPillText}>{pickupDate}</Text>
+                                </View>
+                            ) : null}
+                        </View>
+
+                        {deliveryTime && status === "delivery_scheduled" ? (
+                            <View style={styles.timeRow}>
+                                <Ionicons name="time-outline" size={12} color={Colors.primary} />
+                                <Text style={styles.timeText}>Estimated: {deliveryTime}</Text>
                             </View>
                         ) : null}
-                        {pickupDate ? (
-                            <View style={styles.metaPill}>
-                                <Ionicons name="calendar-outline" size={12} color={Colors.textSecondary} />
-                                <Text style={styles.metaPillText}>{pickupDate}</Text>
+
+                        {status === "delivery_scheduled" ? (
+                            <View style={styles.disclaimerBox}>
+                                <Ionicons name="information-circle-outline" size={12} color={Colors.textSecondary} />
+                                <Text style={styles.disclaimerText}>
+                                    Delivery time may vary based on availability.
+                                </Text>
+                            </View>
+                        ) : null}
+
+                        <View style={styles.cardFooter}>
+                            <Text style={styles.cardRate}>{`\u20B9${rentPerDay} / day`}</Text>
+                            {totalRent !== undefined && totalRent > 0 ? (
+                                <Text style={styles.totalRent}>{`Total: \u20B9 ${totalRent}`}</Text>
+                            ) : null}
+                        </View>
+
+                        {status === "delivered" && deliveryDate ? (
+                            <View style={styles.timerContainer}>
+                                <View style={styles.timerHeader}>
+                                    <Ionicons name="stopwatch-outline" size={14} color={Colors.primaryDark} />
+                                    <Text style={styles.timerLabel}>Live Timer</Text>
+                                </View>
+                                <View style={styles.timerValues}>
+                                    <Text style={styles.timerDays}>{currentDays}d</Text>
+                                    <Text style={styles.timerRent}>{`\u20B9 ${currentRent}`}</Text>
+                                </View>
                             </View>
                         ) : null}
                     </View>
-
-                    {deliveryTime && status === "delivery_scheduled" ? (
-                        <View style={styles.timeRow}>
-                            <Ionicons name="time-outline" size={12} color={Colors.primary} />
-                            <Text style={styles.timeText}>Estimated: {deliveryTime}</Text>
-                        </View>
-                    ) : null}
-
-                    {status === "delivery_scheduled" ? (
-                        <View style={styles.disclaimerBox}>
-                            <Ionicons name="information-circle-outline" size={12} color={Colors.textSecondary} />
-                            <Text style={styles.disclaimerText}>
-                                Delivery time may vary based on availability.
-                            </Text>
-                        </View>
-                    ) : null}
-
-                    <View style={styles.cardFooter}>
-                        <Text style={styles.cardRate}>{`\u20B9${rentPerDay} / day`}</Text>
-                        {totalRent !== undefined && totalRent > 0 ? (
-                            <Text style={styles.totalRent}>{`Total: \u20B9 ${totalRent}`}</Text>
-                        ) : null}
-                    </View>
-
-                    {status === "delivered" && deliveryDate ? (
-                        <View style={styles.timerContainer}>
-                            <View style={styles.timerHeader}>
-                                <Ionicons name="stopwatch-outline" size={14} color={Colors.primaryDark} />
-                                <Text style={styles.timerLabel}>Live Timer</Text>
-                            </View>
-                            <View style={styles.timerValues}>
-                                <Text style={styles.timerDays}>{currentDays}d</Text>
-                                <Text style={styles.timerRent}>{`\u20B9 ${currentRent}`}</Text>
-                            </View>
-                        </View>
-                    ) : null}
                 </View>
-            </View>
-        </TouchableOpacity>
+            </Pressable>
+        </Animated.View>
     );
 }
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         borderRadius: Layout.cardRadiusLarge,
         padding: Spacing.md,
         marginBottom: Spacing.md,
         minHeight: scale(122),
-        borderWidth: 1,
-        borderColor: "rgba(117,64,67,0.10)",
+        ...Borders.card,
+        ...Shadows.subtle,
         overflow: "hidden",
-        shadowColor: Colors.shadow,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 10,
-        elevation: 3,
     },
     cardMainRow: {
         flexDirection: "row",
-        gap: Spacing.sm,
+        gap: Spacing.sm + 2,
     },
     coverImage: {
-        width: scale(72),
-        height: scale(104),
-        borderRadius: scale(14),
-        backgroundColor: Colors.border,
+        width: scale(68),
+        height: scale(100),
+        borderRadius: scale(12),
+        backgroundColor: Colors.primaryLight,
     },
     coverFallback: {
         justifyContent: "center",
@@ -227,17 +229,17 @@ const styles = StyleSheet.create({
         alignItems: "center",
         gap: scale(4),
         paddingHorizontal: scale(7),
-        paddingVertical: scale(2),
+        paddingVertical: scale(3),
         borderRadius: 999,
         borderWidth: 1,
-        borderColor: Colors.border,
+        borderColor: Colors.borderSubtle,
         width: scale(102),
         minHeight: scale(24),
         flexShrink: 0,
     },
     statusDot: {
-        width: scale(6),
-        height: scale(6),
+        width: scale(5),
+        height: scale(5),
         borderRadius: scale(3),
     },
     statusText: {
@@ -287,7 +289,7 @@ const styles = StyleSheet.create({
     disclaimerBox: {
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: "rgba(117,64,67,0.05)",
+        backgroundColor: `${Colors.primary}06`,
         padding: scale(6),
         borderRadius: scale(8),
         marginTop: Spacing.xs,

@@ -400,14 +400,11 @@ const styles = StyleSheet.create({
 
     // Form Card
     form: {
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         borderRadius: Layout.cardRadiusLarge,
         padding: Spacing.lg,
-        shadowColor: Colors.shadow,
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.06,
-        shadowRadius: 14,
-        elevation: 3,
+        borderWidth: 1,
+        borderColor: "rgba(0,0,0,0.05)",
         width: "100%",
         maxWidth: Layout.maxContentWidth,
         alignSelf: "center",

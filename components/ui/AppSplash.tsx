@@ -1,6 +1,6 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useMemo } from "react";
 import { Animated, Easing, Image, StyleSheet, Text, View } from "react-native";
 
 type AppSplashProps = {
@@ -9,11 +9,11 @@ type AppSplashProps = {
 
 export default function AppSplash({ onAnimationComplete }: AppSplashProps) {
   const hasAnimated = useRef(false);
-  const iconOpacity = useRef(new Animated.Value(0)).current;
-  const iconScale = useRef(new Animated.Value(0.8)).current;
-  const iconRotate = useRef(new Animated.Value(0)).current;
-  const textOpacity = useRef(new Animated.Value(0)).current;
-  const textTranslateY = useRef(new Animated.Value(18)).current;
+  const iconOpacity = useMemo(() => new Animated.Value(0), []);
+  const iconScale = useMemo(() => new Animated.Value(0.8), []);
+  const iconRotate = useMemo(() => new Animated.Value(0), []);
+  const textOpacity = useMemo(() => new Animated.Value(0), []);
+  const textTranslateY = useMemo(() => new Animated.Value(18), []);
 
   useEffect(() => {
     if (hasAnimated.current) return;

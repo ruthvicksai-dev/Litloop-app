@@ -1,34 +1,32 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo } from "react";
 import { Animated } from "react-native";
 
 type UseFadeSlideInOptions = {
-    fadeFrom?: number;
     slideFrom?: number;
-    toValue?: number;
     duration?: number;
+    delay?: number;
     autoStart?: boolean;
 };
 
 export function useFadeSlideIn(options: UseFadeSlideInOptions = {}) {
-    const {
-        fadeFrom = 0,
-        slideFrom = 30,
-        toValue = 1,
-        duration = 500,
+    const { 
+        slideFrom = 20, 
+        duration = 400, 
+        delay = 0,
         autoStart = true,
     } = options;
 
-    const fadeAnim = useRef(new Animated.Value(fadeFrom)).current;
-    const slideAnim = useRef(new Animated.Value(slideFrom)).current;
+    const fadeAnim = useMemo(() => new Animated.Value(0), []);
+    const slideAnim = useMemo(() => new Animated.Value(slideFrom), [slideFrom]);
 
     useEffect(() => {
         if (!autoStart) {
             return;
         }
 
-        Animated.parallel([
+        const animation = Animated.parallel([
             Animated.timing(fadeAnim, {
-                toValue,
+                toValue: 1,
                 duration,
                 useNativeDriver: true,
             }),
@@ -37,8 +35,17 @@ export function useFadeSlideIn(options: UseFadeSlideInOptions = {}) {
                 duration,
                 useNativeDriver: true,
             }),
-        ]).start();
-    }, [autoStart, duration, fadeAnim, slideAnim, toValue]);
+        ]);
+
+        const timeoutId = setTimeout(() => {
+            animation.start();
+        }, delay);
+
+        return () => {
+            clearTimeout(timeoutId);
+            animation.stop();
+        };
+    }, [autoStart, duration, fadeAnim, slideAnim, delay]);
 
     return { fadeAnim, slideAnim };
 }

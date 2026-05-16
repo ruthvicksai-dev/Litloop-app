@@ -26,18 +26,13 @@ export default function CarouselDots({
     onIndexChange,
     style,
 }: CarouselDotsProps) {
-    const dotAnimationsRef = useRef<Animated.Value[]>([]);
-    const dotAnimations = dotAnimationsRef.current;
-
-    if (dotAnimations.length !== images.length) {
-        dotAnimationsRef.current = images.map(
-            (_, index) => dotAnimations[index] ?? new Animated.Value(index === activeIndex ? 1 : 0)
-        );
-    }
+    const dotAnimations = useRef(
+        images.map((_, index) => new Animated.Value(index === activeIndex ? 1 : 0))
+    ).current;
 
     useEffect(() => {
         Animated.parallel(
-            dotAnimationsRef.current.map((animation, index) =>
+            dotAnimations.map((animation, index) =>
                 Animated.timing(animation, {
                     toValue: index === activeIndex ? 1 : 0,
                     duration: ANIMATION_DURATION,
@@ -55,7 +50,7 @@ export default function CarouselDots({
         <View pointerEvents="box-none" style={[styles.container, style]}>
             <View style={styles.track}>
                 {images.map((_, index) => {
-                    const animation = dotAnimationsRef.current[index];
+                    const animation = dotAnimations[index];
                     const width = animation.interpolate({
                         inputRange: [0, 1],
                         outputRange: [INACTIVE_DOT_WIDTH, ACTIVE_DOT_WIDTH],

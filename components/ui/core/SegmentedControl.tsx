@@ -3,7 +3,11 @@ import { Colors, Spacing } from "@/constants/theme";
 import { triggerHaptic } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, {
+    useSharedValue,
+    useAnimatedStyle,
+} from "react-native-reanimated";
 
 export type SegmentOption = {
     label: string;
@@ -16,24 +20,51 @@ type SegmentedControlProps = {
     options: SegmentOption[];
     activeValue: string;
     onChange: (value: any) => void;
-    fadeAnim?: Animated.Value;
+    fadeAnim?: any;
 };
 
 export function SegmentedControl({
     options,
     activeValue,
     onChange,
-    fadeAnim,
-}: SegmentedControlProps) {
+    }: SegmentedControlProps) {
+    const activeIndex = options.findIndex((o) => o.value === activeValue);
+    const indicatorX = useSharedValue(activeIndex >= 0 ? activeIndex : 0);
+
+    React.useEffect(() => {
+        const idx = options.findIndex((o) => o.value === activeValue);
+        if (idx >= 0) {
+            indicatorX.value = idx;
+        }
+    }, [activeValue, options, indicatorX]);
+
+    const indicatorStyle = useAnimatedStyle(() => ({
+        transform: [
+            {
+                translateX:
+                    indicatorX.value *
+                    ((1 / options.length) * 100) *
+                    0.01 *
+                    // We compute based on layout — use percentage approach
+                    0, // Placeholder, we use left percentage below
+            },
+        ],
+        left: `${(indicatorX.value / options.length) * 100}%`,
+        width: `${100 / options.length}%`,
+    }));
+
     return (
-        <Animated.View style={[styles.tabsContainer, fadeAnim && { opacity: fadeAnim }]}>
+        <View style={styles.tabsContainer}>
             <View style={styles.tabsWrapper}>
+                {/* Sliding indicator */}
+                <Animated.View style={[styles.indicator, indicatorStyle]} />
+
                 {options.map((option) => {
                     const isActive = activeValue === option.value;
                     return (
                         <Pressable
                             key={option.value}
-                            style={[styles.tab, isActive && styles.activeTab]}
+                            style={styles.tab}
                             onPress={() => {
                                 triggerHaptic("light");
                                 onChange(option.value);
@@ -41,7 +72,7 @@ export function SegmentedControl({
                         >
                             <Ionicons
                                 name={isActive ? option.activeIcon : option.icon}
-                                size={18}
+                                size={17}
                                 color={isActive ? Colors.white : Colors.textSecondary}
                             />
                             <Text
@@ -54,7 +85,7 @@ export function SegmentedControl({
                     );
                 })}
             </View>
-        </Animated.View>
+        </View>
     );
 }
 
@@ -68,8 +99,16 @@ const styles = StyleSheet.create({
     tabsWrapper: {
         flexDirection: "row",
         backgroundColor: "rgba(0,0,0,0.04)",
-        borderRadius: 16,
-        padding: 4,
+        borderRadius: 14,
+        padding: 3,
+        position: "relative",
+    },
+    indicator: {
+        position: "absolute",
+        top: 3,
+        bottom: 3,
+        borderRadius: 11,
+        backgroundColor: Colors.primary,
     },
     tab: {
         flex: 1,
@@ -77,16 +116,9 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
         paddingVertical: 10,
-        borderRadius: 12,
+        borderRadius: 11,
         gap: 6,
-    },
-    activeTab: {
-        backgroundColor: Colors.primary,
-        shadowColor: Colors.primary,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-        elevation: 2,
+        zIndex: 1,
     },
     tabText: {
         fontFamily: Fonts.bold,

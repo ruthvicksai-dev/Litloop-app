@@ -174,16 +174,11 @@ const styles = StyleSheet.create({
         paddingHorizontal: 4,
     },
     section: {
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         borderRadius: 16,
         paddingVertical: Spacing.xs,
         borderWidth: 1,
-        borderColor: "rgba(0,0,0,0.05)",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.03,
-        shadowRadius: 12,
-        elevation: 2,
+        borderColor: "rgba(0,0,0,0.04)",
     },
     row: {
         flexDirection: "row",

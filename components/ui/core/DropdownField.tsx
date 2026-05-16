@@ -1,5 +1,6 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing } from "@/constants/theme";
+import { ModalStyles } from "@/constants/designTokens";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
@@ -40,13 +41,13 @@ export default function DropdownField({
                 <Text style={[styles.text, !value && styles.placeholder]}>
                     {value || placeholder}
                 </Text>
-                <Ionicons name="chevron-down" size={20} color={Colors.textLight} />
+                <Ionicons name="chevron-down" size={18} color={Colors.textLight} />
             </TouchableOpacity>
 
             <Modal
                 visible={modalVisible}
                 transparent
-                animationType="fade"
+                animationType="slide"
                 onRequestClose={() => setModalVisible(false)}
             >
                 <Pressable
@@ -54,27 +55,34 @@ export default function DropdownField({
                     onPress={() => setModalVisible(false)}
                 >
                     <Pressable style={styles.modalContent}>
+                        <View style={styles.handle} />
                         <View style={styles.modalHeader}>
                             <Text style={styles.modalTitle}>{label}</Text>
-                            <TouchableOpacity onPress={() => setModalVisible(false)}>
-                                <Ionicons name="close" size={24} color={Colors.text} />
+                            <TouchableOpacity
+                                onPress={() => setModalVisible(false)}
+                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                            >
+                                <Ionicons name="close" size={22} color={Colors.text} />
                             </TouchableOpacity>
                         </View>
                         <ScrollView
                             showsVerticalScrollIndicator={false}
                             contentContainerStyle={styles.list}
+                            bounces={false}
                         >
-                            {options.map((option) => (
+                            {options.map((option, index) => (
                                 <TouchableOpacity
                                     key={option}
                                     style={[
                                         styles.option,
                                         value === option && styles.optionSelected,
+                                        index === options.length - 1 && styles.optionLast,
                                     ]}
                                     onPress={() => {
                                         onSelect(option);
                                         setModalVisible(false);
                                     }}
+                                    activeOpacity={0.7}
                                 >
                                     <View style={styles.optionContent}>
                                         <Text
@@ -108,23 +116,22 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.md,
     },
     label: {
-        fontSize: FontSizes.small,
-        color: Colors.textSecondary,
-        marginBottom: 6,
-        fontFamily: Fonts.medium,
-        letterSpacing: 0.3,
-        textTransform: "uppercase",
+        fontSize: FontSizes.body,
+        fontFamily: Fonts.bold,
+        color: Colors.text,
+        marginBottom: Spacing.xs + 2,
+        letterSpacing: 0.1,
     },
     field: {
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         borderWidth: 1,
         borderColor: Colors.border,
-        borderRadius: 12,
+        borderRadius: Layout.borderRadius,
         paddingHorizontal: Spacing.md,
-        height: 48,
+        height: Layout.buttonHeight,
     },
     text: {
         fontSize: FontSizes.body,
@@ -136,24 +143,32 @@ const styles = StyleSheet.create({
         color: Colors.textLight,
     },
     modalOverlay: {
-        flex: 1,
-        backgroundColor: "rgba(0, 0, 0, 0.4)",
-        justifyContent: "flex-end",
+        ...ModalStyles.bottomOverlay,
     },
     modalContent: {
-        backgroundColor: Colors.white,
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
-        maxHeight: "80%",
-        paddingBottom: Layout.screenPaddingWide,
+        backgroundColor: Colors.surfaceCard,
+        borderTopLeftRadius: Layout.cardRadiusLarge + 4,
+        borderTopRightRadius: Layout.cardRadiusLarge + 4,
+        maxHeight: "70%",
+        paddingBottom: Spacing.xl,
+    },
+    handle: {
+        width: 36,
+        height: 4,
+        borderRadius: 2,
+        backgroundColor: Colors.border,
+        alignSelf: "center",
+        marginTop: Spacing.sm + 2,
+        marginBottom: Spacing.xs,
     },
     modalHeader: {
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        padding: Spacing.md,
+        paddingHorizontal: Spacing.md + 4,
+        paddingVertical: Spacing.md,
         borderBottomWidth: 1,
-        borderBottomColor: Colors.border,
+        borderBottomColor: Colors.borderSubtle,
     },
     modalTitle: {
         fontSize: FontSizes.title,
@@ -165,9 +180,12 @@ const styles = StyleSheet.create({
     },
     option: {
         paddingVertical: 14,
-        paddingHorizontal: Spacing.sm,
+        paddingHorizontal: Spacing.sm + 4,
         borderBottomWidth: 1,
-        borderBottomColor: Colors.border + "50",
+        borderBottomColor: Colors.borderSubtle,
+    },
+    optionLast: {
+        borderBottomWidth: 0,
     },
     optionContent: {
         flexDirection: "row",
@@ -175,8 +193,8 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     optionSelected: {
-        backgroundColor: Colors.primary + "10",
-        borderRadius: 8,
+        backgroundColor: `${Colors.primary}0A`,
+        borderRadius: 10,
         borderBottomWidth: 0,
     },
     optionText: {

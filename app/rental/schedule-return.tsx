@@ -583,7 +583,7 @@ const styles = StyleSheet.create({
         width: 40,
     },
     infoCard: {
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         borderRadius: 12,
         padding: Spacing.md,
         flexDirection: "row",
@@ -601,13 +601,13 @@ const styles = StyleSheet.create({
         color: Colors.text,
     },
     estimateCard: {
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         borderRadius: 12,
         padding: Spacing.md,
         marginTop: Spacing.md,
     },
     ratingCard: {
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         borderRadius: 12,
         padding: Spacing.md,
         marginTop: Spacing.md,
@@ -709,7 +709,7 @@ const styles = StyleSheet.create({
     },
     customAddressSection: {
         marginTop: Spacing.sm,
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         padding: Spacing.md,
         borderRadius: 12,
         gap: 2,
@@ -762,7 +762,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: Spacing.sm,
         paddingVertical: Spacing.xs,
         borderRadius: 999,
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         borderWidth: 1,
         borderColor: Colors.primary + "30",
     },

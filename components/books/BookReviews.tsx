@@ -406,7 +406,7 @@ const styles = StyleSheet.create({
     },
     summaryRow: {
         flexDirection: "row",
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         borderRadius: Layout.cardRadiusLarge,
         padding: Spacing.md,
         borderWidth: 1,
@@ -468,7 +468,7 @@ const styles = StyleSheet.create({
         marginLeft: 4,
     },
     reviewCard: {
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         borderRadius: Layout.cardRadius,
         padding: Spacing.md,
         marginBottom: Spacing.sm,
@@ -503,7 +503,7 @@ const styles = StyleSheet.create({
         justifyContent: "flex-end",
     },
     editCard: {
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
         padding: Spacing.lg,

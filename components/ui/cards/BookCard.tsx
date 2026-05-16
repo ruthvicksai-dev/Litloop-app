@@ -1,18 +1,25 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
+import { Shadows, Borders } from "@/constants/designTokens";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useRef } from "react";
+import React from "react";
 import {
-    Animated,
+    Pressable,
     StyleProp,
     StyleSheet,
     Text,
-    TouchableOpacity,
     View,
     ViewStyle,
 } from "react-native";
+import Animated, {
+    useSharedValue,
+    useAnimatedStyle,
+    withSpring,
+} from "react-native-reanimated";
+
+const SPRING = { damping: 16, stiffness: 350, mass: 0.8 };
 
 interface BookCardProps {
     title: string;
@@ -49,28 +56,24 @@ export default function BookCard({
     top10Position,
     onViewReviews,
 }: BookCardProps) {
-    const scale = useRef(new Animated.Value(1)).current;
+    const scaleAnim = useSharedValue(1);
+
+    const animatedCardStyle = useAnimatedStyle(() => ({
+        transform: [{ scale: scaleAnim.value }],
+    }));
 
     const handlePressIn = () => {
-        Animated.spring(scale, {
-            toValue: 0.97,
-            useNativeDriver: true,
-        }).start();
+        scaleAnim.value = withSpring(0.975, SPRING);
     };
 
     const handlePressOut = () => {
-        Animated.spring(scale, {
-            toValue: 1,
-            friction: 3,
-            useNativeDriver: true,
-        }).start();
+        scaleAnim.value = withSpring(1, SPRING);
     };
 
     return (
-        <Animated.View style={[styles.card, style, { transform: [{ scale }] }]}>
-            <TouchableOpacity
+        <Animated.View style={[styles.card, style, animatedCardStyle]}>
+            <Pressable
                 style={styles.touchable}
-                activeOpacity={0.9}
                 onPress={onViewDetails}
                 onPressIn={handlePressIn}
                 onPressOut={handlePressOut}
@@ -85,7 +88,7 @@ export default function BookCard({
                         />
                     ) : (
                         <View style={[styles.cover, styles.placeholder]}>
-                            <Ionicons name="book-outline" size={32} color={Colors.primary} />
+                            <Ionicons name="book-outline" size={28} color={Colors.primary} />
                         </View>
                     )}
 
@@ -125,11 +128,11 @@ export default function BookCard({
                     </View>
                 </View>
                 <View style={styles.actions}>
-                    <TouchableOpacity style={styles.detailsBtn} onPress={onViewDetails}>
+                    <Pressable style={styles.detailsBtn} onPress={onViewDetails}>
                         <Text style={styles.detailsBtnText}>{viewDetailsLabel}</Text>
-                    </TouchableOpacity>
+                    </Pressable>
                     {showRequestButton ? (
-                        <TouchableOpacity
+                        <Pressable
                             style={[
                                 styles.requestBtn,
                                 isRequestDestructive && styles.destructiveBtn,
@@ -139,29 +142,29 @@ export default function BookCard({
                             disabled={availableCopies === 0 && !isRequestDestructive}
                         >
                             <Text style={styles.requestBtnText}>{requestLabel}</Text>
-                        </TouchableOpacity>
+                        </Pressable>
                     ) : null}
                     {onViewReviews && (
-                        <TouchableOpacity style={styles.reviewsBtn} onPress={onViewReviews}>
-                            <Ionicons name="chatbubbles-outline" size={16} color={Colors.primary} />
+                        <Pressable style={styles.reviewsBtn} onPress={onViewReviews}>
+                            <Ionicons name="chatbubbles-outline" size={15} color={Colors.primary} />
                             <Text style={styles.reviewsBtnText}>Reviews</Text>
-                        </TouchableOpacity>
+                        </Pressable>
                     )}
                 </View>
-            </TouchableOpacity>
+            </Pressable>
         </Animated.View>
     );
 }
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: Colors.white,
-        borderRadius: 16,
+        backgroundColor: Colors.surfaceCard,
+        borderRadius: 18,
         padding: Spacing.md,
         marginBottom: Spacing.md,
         height: "100%",
-        borderWidth: 1,
-        borderColor: Colors.border + "40",
+        ...Borders.card,
+        ...Shadows.subtle,
     },
     touchable: {
         flex: 1,
@@ -176,7 +179,7 @@ const styles = StyleSheet.create({
         maxWidth: 96,
         minWidth: 72,
         aspectRatio: 2 / 3,
-        borderRadius: 8,
+        borderRadius: 10,
         backgroundColor: Colors.primaryLight,
         position: "relative",
     },
@@ -186,7 +189,7 @@ const styles = StyleSheet.create({
         left: 6,
         paddingHorizontal: 6,
         paddingVertical: 2,
-        borderRadius: 4,
+        borderRadius: 5,
         borderWidth: 1,
         borderColor: "rgba(255,255,255,0.3)",
     },
@@ -200,10 +203,6 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
     },
-    placeholderText: {
-        fontSize: FontSizes.display,
-        fontFamily: Fonts.regular,
-    },
     info: {
         flex: 1,
         marginLeft: Spacing.md,
@@ -216,7 +215,7 @@ const styles = StyleSheet.create({
         lineHeight: FontSizes.title,
         fontFamily: Fonts.bold,
         color: Colors.text,
-        marginBottom: 2,
+        marginBottom: 3,
     },
     author: {
         fontSize: FontSizes.body,
@@ -240,7 +239,7 @@ const styles = StyleSheet.create({
     },
     actions: {
         flexDirection: "row",
-        marginTop: Spacing.sm,
+        marginTop: Spacing.sm + 2,
         gap: Spacing.sm,
         flexWrap: "wrap",
     },
@@ -248,7 +247,7 @@ const styles = StyleSheet.create({
         flex: 1,
         minWidth: 120,
         paddingVertical: 10,
-        borderRadius: 8,
+        borderRadius: 10,
         borderWidth: 1,
         borderColor: Colors.primary,
         alignItems: "center",
@@ -262,7 +261,7 @@ const styles = StyleSheet.create({
         flex: 1,
         minWidth: 120,
         paddingVertical: 10,
-        borderRadius: 8,
+        borderRadius: 10,
         backgroundColor: Colors.primary,
         alignItems: "center",
     },
@@ -281,12 +280,12 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
-        gap: 6,
+        gap: 5,
         paddingVertical: 8,
         paddingHorizontal: 12,
-        borderRadius: 8,
+        borderRadius: 10,
         borderWidth: 1,
-        borderColor: Colors.primary + "40",
+        borderColor: `${Colors.primary}25`,
         minWidth: 100,
     },
     reviewsBtnText: {

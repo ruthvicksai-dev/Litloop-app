@@ -30,7 +30,7 @@ export const RentalHistorySkeleton = () => {
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         borderRadius: 18,
         padding: Spacing.md,
         marginBottom: Spacing.md,

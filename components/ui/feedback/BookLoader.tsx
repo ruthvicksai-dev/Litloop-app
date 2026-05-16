@@ -1,7 +1,7 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useMemo } from "react";
 import { Animated, Easing, StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
 
 type BookLoaderProps = {
@@ -13,8 +13,8 @@ export default function BookLoader({
     label = "Loading...",
     containerStyle,
 }: BookLoaderProps) {
-    const scale = useRef(new Animated.Value(0.92)).current;
-    const opacity = useRef(new Animated.Value(0.65)).current;
+    const scale = useMemo(() => new Animated.Value(0.92), []);
+    const opacity = useMemo(() => new Animated.Value(0.65), []);
 
     useEffect(() => {
         const animation = Animated.loop(

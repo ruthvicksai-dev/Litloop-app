@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: Spacing.md - 2,
         paddingVertical: Spacing.sm + 2,
         borderRadius: Layout.borderRadius * 2,
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         borderWidth: 1,
         borderColor: Colors.border,
     },

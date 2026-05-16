@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
         width: 120,
         aspectRatio: 2 / 3,
         marginRight: Spacing.sm,
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
     },
     previewTapArea: {
         flex: 1,

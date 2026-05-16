@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
     },
     carouselSection: {
         width: "100%",
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
     },
     info: {
         paddingHorizontal: Spacing.lg,
@@ -438,6 +438,7 @@ const styles = StyleSheet.create({
         lineHeight: 34,
         marginBottom: 6,
         fontFamily: Fonts.bold,
+        letterSpacing: -0.3,
     },
     author: {
         fontSize: FontSizes.title,
@@ -448,7 +449,7 @@ const styles = StyleSheet.create({
         width: Layout.touchSize,
         height: Layout.touchSize,
         borderRadius: Layout.touchSize / 2,
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         alignItems: "center",
         justifyContent: "center",
         borderWidth: 1,
@@ -456,7 +457,7 @@ const styles = StyleSheet.create({
     },
     statsContainer: {
         flexDirection: "row",
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         borderRadius: Layout.cardRadiusLarge,
         paddingVertical: Spacing.md,
         alignItems: "center",
@@ -485,7 +486,7 @@ const styles = StyleSheet.create({
     statDivider: {
         width: 1,
         height: 30,
-        backgroundColor: Colors.border,
+        backgroundColor: Colors.borderSubtle,
         opacity: 0.6,
     },
     descTitle: {
@@ -582,7 +583,7 @@ const styles = StyleSheet.create({
         borderRadius: Layout.borderRadius + 4,
         borderWidth: 1.5,
         borderColor: Colors.primary,
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         alignItems: "center",
         justifyContent: "center",
     },

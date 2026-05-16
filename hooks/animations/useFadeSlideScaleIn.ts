@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo } from "react";
 import { Animated } from "react-native";
 
 type UseFadeSlideScaleInOptions = {
@@ -16,12 +16,12 @@ export function useFadeSlideScaleIn(
         duration = 500,
     } = options;
 
-    const fadeAnim = useRef(new Animated.Value(0)).current;
-    const slideAnim = useRef(new Animated.Value(slideFrom)).current;
-    const scaleAnim = useRef(new Animated.Value(scaleFrom)).current;
+    const fadeAnim = useMemo(() => new Animated.Value(0), []);
+    const slideAnim = useMemo(() => new Animated.Value(slideFrom), [slideFrom]);
+    const scaleAnim = useMemo(() => new Animated.Value(scaleFrom), [scaleFrom]);
 
     useEffect(() => {
-        Animated.parallel([
+        const animation = Animated.parallel([
             Animated.timing(fadeAnim, {
                 toValue: 1,
                 duration,
@@ -38,7 +38,13 @@ export function useFadeSlideScaleIn(
                 tension: 60,
                 useNativeDriver: true,
             }),
-        ]).start();
+        ]);
+
+        animation.start();
+
+        return () => {
+            animation.stop();
+        };
     }, [duration, fadeAnim, scaleAnim, slideAnim]);
 
     return { fadeAnim, slideAnim, scaleAnim };

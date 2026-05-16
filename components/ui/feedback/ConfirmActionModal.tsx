@@ -1,6 +1,7 @@
 import Button from "@/components/ui/core/Button";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
+import { ModalStyles, Shadows } from "@/constants/designTokens";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Modal, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
@@ -91,32 +92,28 @@ export default function ConfirmActionModal({
 
 const styles = StyleSheet.create({
     overlay: {
-        flex: 1,
-        backgroundColor: "rgba(28, 25, 23, 0.32)",
-        justifyContent: "center",
-        paddingHorizontal: Spacing.lg,
+        ...ModalStyles.overlay,
     },
     sheet: {
-        backgroundColor: Colors.white,
-        borderRadius: 20,
+        backgroundColor: Colors.surfaceCard,
+        borderRadius: 24,
         padding: Spacing.xl,
-        shadowColor: Colors.shadow,
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.18,
-        shadowRadius: 24,
-        elevation: 10,
+        ...Shadows.elevated,
     },
     iconWrap: {
         width: 48,
         height: 48,
         borderRadius: 24,
-        backgroundColor: Colors.primaryLight,
+        backgroundColor: `${Colors.primary}0C`,
         alignItems: "center",
         justifyContent: "center",
         marginBottom: Spacing.md,
+        borderWidth: 1,
+        borderColor: `${Colors.primary}12`,
     },
     iconWrapDanger: {
-        backgroundColor: Colors.error + "18",
+        backgroundColor: `${Colors.error}0C`,
+        borderColor: `${Colors.error}12`,
     },
     title: {
         fontSize: FontSizes.titleLarge,

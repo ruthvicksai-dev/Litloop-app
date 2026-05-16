@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
 
     // Pending detail card
     pendingCard: {
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         borderRadius: 16,
         padding: Spacing.md,
         width: "100%",
@@ -395,7 +395,7 @@ const styles = StyleSheet.create({
         width: 32,
         height: 32,
         borderRadius: 16,
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         justifyContent: "center",
         alignItems: "center",
     },
@@ -481,7 +481,7 @@ const styles = StyleSheet.create({
         marginTop: Spacing.md,
     },
     input: {
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         borderWidth: 1,
         borderColor: Colors.border,
         borderRadius: 12,
@@ -500,7 +500,7 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.sm,
     },
     uploadArea: {
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         borderWidth: 2,
         borderColor: Colors.border,
         borderStyle: "dashed",

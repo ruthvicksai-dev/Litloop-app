@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
         justifyContent: "flex-end",
     },
     card: {
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
         padding: Spacing.xl,

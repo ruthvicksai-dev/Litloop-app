@@ -25,22 +25,22 @@ const { width } = Dimensions.get("window");
 const TAB_BAR_MARGIN = 0;
 const TAB_BAR_WIDTH = width;
 const TAB_BAR_HEIGHT = 75;
-const CIRCLE_SIZE = 54;
+const CIRCLE_SIZE = 52;
 // We'll drop the circle slightly so its center aligns with the curve
 const CIRCLE_TOP_OFFSET = -CIRCLE_SIZE / 2 + 5;
 
 // The SVG background shape logic
 const SVG_WIDTH = 3000;
 const CENTER = SVG_WIDTH / 2;
-// Adjust the curve properties here
-const DIP_W = 42;
-const DIP_D = 42;
+// Adjust the curve properties here — softer dip
+const DIP_W = 40;
+const DIP_D = 38;
 
 const pathStr = `
   M 0 0
   L ${CENTER - DIP_W} 0
-  C ${CENTER - 22} 0, ${CENTER - 28} ${DIP_D}, ${CENTER} ${DIP_D}
-  C ${CENTER + 28} ${DIP_D}, ${CENTER + 22} 0, ${CENTER + DIP_W} 0
+  C ${CENTER - 20} 0, ${CENTER - 26} ${DIP_D}, ${CENTER} ${DIP_D}
+  C ${CENTER + 26} ${DIP_D}, ${CENTER + 20} 0, ${CENTER + DIP_W} 0
   L ${SVG_WIDTH} 0
   L ${SVG_WIDTH} ${TAB_BAR_HEIGHT}
   L 0 ${TAB_BAR_HEIGHT}
@@ -77,7 +77,7 @@ export default function AnimatedTabBar({
             // Offset by half a tab width to center precisely on the tab icon
             const centerOfTab = renderIndex * TAB_WIDTH + TAB_WIDTH / 2;
             tabPositionX.value = withTiming(centerOfTab, {
-                duration: 380,
+                duration: 350,
                 easing: Easing.out(Easing.cubic),
             });
         }
@@ -155,15 +155,12 @@ function TabItem({ route, options, isFocused, navigation }: any) {
     };
 
     // Upwards shift inside the floating badge
-    // Tab height is 65. Center is at 32.5. We want the icon to move up to the center of the circle.
-    // Circle top is CIRCLE_TOP_OFFSET (e.g., -20), its center is CIRCLE_TOP_OFFSET + CIRCLE_SIZE/2 (e.g., 5).
-    // Icon offset = (Center of circle Y) - (Center of tab Y) = 5 - 32.5 = -27.5.
     const shiftOffset = CIRCLE_TOP_OFFSET + (CIRCLE_SIZE / 2) - (TAB_BAR_HEIGHT / 2);
 
     const iconStyle = {
         transform: [
             { translateY: isFocused ? shiftOffset : 0 },
-            { scale: isFocused ? 1.1 : 1 },
+            { scale: isFocused ? 1.08 : 1 },
         ],
     };
 
@@ -189,7 +186,7 @@ function TabItem({ route, options, isFocused, navigation }: any) {
             <View style={[styles.iconContainer, iconStyle]}>
                 <Ionicons
                     name={iconName}
-                    size={24}
+                    size={23}
                     color={isFocused ? Colors.white : Colors.textSecondary}
                 />
             </View>
@@ -202,17 +199,17 @@ const styles = StyleSheet.create({
         position: "absolute",
         left: TAB_BAR_MARGIN,
         right: TAB_BAR_MARGIN,
-        elevation: 20,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: -4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 10,
+        elevation: 8,
+        shadowColor: "rgba(40,25,15,0.3)",
+        shadowOffset: { width: 0, height: -2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
         zIndex: 100,
     },
     pillContainer: {
         ...StyleSheet.absoluteFillObject,
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
+        borderTopLeftRadius: 22,
+        borderTopRightRadius: 22,
         overflow: "hidden", // bounds the massive SVG
         backgroundColor: "transparent",
     },
@@ -224,11 +221,11 @@ const styles = StyleSheet.create({
         borderRadius: CIRCLE_SIZE / 2,
         backgroundColor: Colors.primary,
         zIndex: 2, // ABOVE the pill
-        // Shadow for the floating circle
-        elevation: 8,
+        // Softer shadow for the floating circle
+        elevation: 4,
         shadowColor: Colors.primaryDark,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.18,
         shadowRadius: 6,
     },
     tabsContainer: {

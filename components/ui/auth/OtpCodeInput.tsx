@@ -27,7 +27,7 @@ export default function OtpCodeInput({
 }: OtpCodeInputProps) {
     const inputRef = React.useRef<TextInput | null>(null);
     const [isFocused, setIsFocused] = React.useState(false);
-    const caretOpacity = React.useRef(new Animated.Value(1)).current;
+    const caretOpacity = React.useMemo(() => new Animated.Value(1), []);
 
     const sanitizedValue = React.useMemo(
         () => value.replace(/[^0-9]/g, "").slice(0, length),
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         borderWidth: 1,
         borderColor: Colors.border,
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         alignItems: "center",
         justifyContent: "center",
     },

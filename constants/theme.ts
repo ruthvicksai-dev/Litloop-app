@@ -9,20 +9,25 @@ export const moderateScale = (size: number, factor = 0.5) =>
   size + (scale(size) - size) * factor;
 
 export const Colors = {
-  primary: "#754043",
-  primaryDark: "#754043",
-  primaryLight: "#eadbc3ff",
+  primary: "#6D3A3D",
+  primaryDark: "#5A2F32",
+  primaryLight: "#EBD9C0",
+  primaryAccent: "#D4886A",
   white: "#FFFFFF",
-  background: "#F9EEDC",
-  card: "#754043",
-  text: "#1C1917",
-  textSecondary: "#78716C",
-  textLight: "#A8A29E",
-  border: "#E7E5E4",
-  error: "#EF4444",
-  success: "#22C55E",
-  warning: "#F59E0B",
-  shadow: "#000000",
+  background: "#F8EDDA",
+  surfaceCard: "#FFFFFF",
+  surfaceSecondary: "rgba(255,255,255,0.72)",
+  surfacePressed: "rgba(0,0,0,0.03)",
+  card: "#6D3A3D",
+  text: "#1A1714",
+  textSecondary: "#6E6862",
+  textLight: "#A39E98",
+  border: "#E5E0DB",
+  borderSubtle: "rgba(0,0,0,0.05)",
+  error: "#E5453A",
+  success: "#1DAA54",
+  warning: "#E89B0C",
+  shadow: "rgba(50,30,20,0.45)",
 };
 
 export const Fonts = {

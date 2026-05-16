@@ -79,6 +79,7 @@ export default function AppGate({ fontsLoaded }: { fontsLoaded: boolean }) {
               headerShown: false,
               animation: "slide_from_right",
               contentStyle: { backgroundColor: Colors.background },
+              freezeOnBlur: false,
             }}
           >
             <Stack.Screen name="index" />

@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
         borderRadius: 6,
         borderWidth: 1,
         borderColor: Colors.border,
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         alignItems: "center",
         justifyContent: "center",
     },
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
         borderColor: Colors.border,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
     },
     positionChipActive: {
         backgroundColor: Colors.primary,
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         borderWidth: 1,
         borderColor: Colors.border,
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
     },
     seriesChipActive: {
         backgroundColor: Colors.primary,

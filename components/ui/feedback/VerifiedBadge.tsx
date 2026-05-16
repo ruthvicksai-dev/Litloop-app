@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         justifyContent: "center",
         alignItems: "center",
     },

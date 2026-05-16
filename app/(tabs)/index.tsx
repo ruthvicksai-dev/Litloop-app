@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: Layout.screenPaddingWide,
     paddingTop: Spacing.sm,
-    paddingBottom: Spacing.sm,
+    paddingBottom: Spacing.md,
   },
   headerTop: {
     flexDirection: "row",
@@ -175,13 +175,16 @@ const styles = StyleSheet.create({
   loginBtn: {
     width: Layout.touchSize,
     height: Layout.touchSize,
+    borderRadius: Layout.touchSize / 2,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: Colors.primary + "08",
   },
   notifBtn: {
     width: Layout.touchSize,
     height: Layout.touchSize,
-    borderRadius: Layout.borderRadius,
+    borderRadius: Layout.touchSize / 2,
+    backgroundColor: Colors.primary + "08",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -194,21 +197,22 @@ const styles = StyleSheet.create({
     borderRadius: Layout.badgeSize / 2,
     backgroundColor: Colors.error,
     borderWidth: 2,
-    borderColor: Colors.white,
+    borderColor: Colors.background,
   },
   greeting: {
     fontSize: FontSizes.body,
     color: Colors.textSecondary,
-    marginBottom: Spacing.xs,
+    marginBottom: 3,
     fontFamily: Fonts.regular,
   },
   pageTitle: {
     fontSize: FontSizes.heading,
     color: Colors.text,
     fontFamily: Fonts.bold,
+    letterSpacing: -0.3,
   },
   scroll: {
-    paddingTop: Spacing.md,
+    paddingTop: Spacing.sm,
     paddingBottom: Layout.tabBarHeight + Spacing.lg,
   },
 });

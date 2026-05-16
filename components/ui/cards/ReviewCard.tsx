@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
     },
     reviewCard: {
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.surfaceCard,
         borderRadius: Layout.cardRadius,
         padding: Spacing.md,
         marginBottom: Spacing.sm,

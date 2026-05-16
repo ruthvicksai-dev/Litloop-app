@@ -1,13 +1,13 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo } from "react";
 import { Animated } from "react-native";
-import { useFadeSlideIn } from "@/hooks/animations/useFadeSlideIn";
 
 export function useHomeEntrance() {
-    const { fadeAnim, slideAnim } = useFadeSlideIn({ autoStart: false });
-    const searchFade = useRef(new Animated.Value(0)).current;
+    const fadeAnim = useMemo(() => new Animated.Value(0), []);
+    const slideAnim = useMemo(() => new Animated.Value(30), []);
+    const searchFade = useMemo(() => new Animated.Value(0), []);
 
     useEffect(() => {
-        Animated.stagger(150, [
+        const animation = Animated.stagger(150, [
             Animated.parallel([
                 Animated.timing(fadeAnim, {
                     toValue: 1,
@@ -25,7 +25,13 @@ export function useHomeEntrance() {
                 duration: 400,
                 useNativeDriver: true,
             }),
-        ]).start();
+        ]);
+
+        animation.start();
+
+        return () => {
+            animation.stop();
+        };
     }, [fadeAnim, searchFade, slideAnim]);
 
     return {
