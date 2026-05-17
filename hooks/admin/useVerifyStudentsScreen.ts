@@ -4,6 +4,10 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 
+/**
+ * Loads admin verification queues and wraps approve/reject mutations with
+ * toast feedback for the manual College Zone review workflow.
+ */
 export function useVerifyStudentsScreen() {
     const { accessToken } = useAuthState();
     const { showToast } = useToast();

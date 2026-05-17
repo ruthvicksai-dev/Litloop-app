@@ -19,6 +19,10 @@ export function useRootRedirect() {
     }, [isLoading, isRefreshing, router, user]);
 }
 
+/**
+ * Keeps admin accounts out of the customer tab shell after session hydration.
+ * Guest users intentionally remain in tabs because browsing is allowed.
+ */
 export function useTabsRouteGuard() {
     const { user, isLoading, isRefreshing } = useAuthState();
     const router = useRouter();
@@ -34,6 +38,10 @@ export function useTabsRouteGuard() {
     }, [isLoading, isRefreshing, router, user]);
 }
 
+/**
+ * Protects the admin route group at the navigation layer.
+ * Convex functions still perform the authoritative server-side admin checks.
+ */
 export function useAdminRouteGuard() {
     const { user, isLoading, isAdmin, isRefreshing } = useAuthState();
     const router = useRouter();

@@ -41,6 +41,15 @@ export const generateUploadUrl = mutation({
 
 // ─── Submit Verification ─────────────────────────────────────────────────────
 
+/**
+ * Submits a student ID for verification to access the College Zone.
+ * Enforces rate limits (3 per day), file size limits (1MB), and a 24-hour
+ * cooldown period after a rejection.
+ * 
+ * @param studentIdNumber - The ID number printed on the card.
+ * @param fullNameOnId - The exact name printed on the card.
+ * @param idCardImageId - The Convex Storage ID of the uploaded image.
+ */
 export const submitVerification = mutation({
     args: {
         accessToken: v.string(),
@@ -251,6 +260,12 @@ export const getVerificationHistory = query({
 
 // ─── Admin: Approve ──────────────────────────────────────────────────────────
 
+/**
+ * Admin Action: Approves a pending student verification request.
+ * Sets the user's `isVerifiedStudent` flag to true and triggers a success notification.
+ * 
+ * @param verificationId - The ID of the student_verifications document.
+ */
 export const approveVerification = mutation({
     args: {
         accessToken: v.string(),
@@ -303,6 +318,13 @@ export const approveVerification = mutation({
 
 // ─── Admin: Reject ───────────────────────────────────────────────────────────
 
+/**
+ * Admin Action: Rejects a pending student verification request.
+ * Enforces a 24-hour cooldown before the user can submit a new request.
+ * 
+ * @param verificationId - The ID of the student_verifications document.
+ * @param rejectionReason - Optional custom reason provided to the user.
+ */
 export const rejectVerification = mutation({
     args: {
         accessToken: v.string(),

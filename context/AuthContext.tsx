@@ -105,6 +105,11 @@ const REFRESH_TOKEN_KEY = "litloop_refresh_token";
 
 // ─── Provider ────────────────────────────────────────────────────────────────
 
+/**
+ * Provider component that wraps the application to manage authentication state.
+ * Handles automatic session recovery, silent token refresh, and synchronization
+ * between local SecureStore and the Convex backend.
+ */
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [accessToken, setAccessToken] = useState<string | null>(null);
     const [tokenLoaded, setTokenLoaded] = useState(false);
@@ -172,7 +177,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setAccessToken(null);
     }, []);
 
-    /** Schedule automatic refresh before the access token expires. */
+    /** 
+     * Schedules an automatic background refresh of the session token.
+     * Fires 2 minutes before the token's expiration time.
+     */
     const scheduleRefresh = useCallback(
         (token: string) => {
             // Clear any existing timer
@@ -426,6 +434,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         [googleSignInMutation, queuePendingAuthToast, scheduleRefresh]
     );
 
+    /**
+     * Signs the user out by clearing local secure storage immediately
+     * to prevent UI flashing, then tells the backend to revoke the session.
+     */
     const signOut = useCallback(async () => {
         signOutInProgressRef.current = true;
         try {
