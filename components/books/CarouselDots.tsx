@@ -40,7 +40,7 @@ export default function CarouselDots({
                 })
             )
         ).start();
-    }, [activeIndex, images.length]);
+    }, [activeIndex, images.length, dotAnimations]);
 
     if (images.length <= 1) {
         return null;
