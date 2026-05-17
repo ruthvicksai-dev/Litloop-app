@@ -5,6 +5,8 @@ LitLoop deploys through two systems:
 - Convex for backend functions, database schema, storage, crons, and HTTP routes.
 - Expo Application Services (EAS) for native Android/iOS builds and updates.
 
+Related diagram: [Deployment Flow](./diagrams/deployment-flow.md).
+
 ## Environments
 
 Recommended environment separation:

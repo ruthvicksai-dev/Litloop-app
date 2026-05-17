@@ -2,6 +2,8 @@
 
 LitLoop uses a custom Convex-backed authentication layer with email OTP signup, password login, Google sign-in, JWT access tokens, refresh token rotation, and client-side SecureStore persistence.
 
+Related diagram: [Auth Flow](./diagrams/auth-flow.md).
+
 ## Providers
 
 Supported providers:

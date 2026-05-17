@@ -2,6 +2,8 @@
 
 LitLoop is an Expo Router app backed by Convex. The frontend owns native UI, navigation, local auth token storage, and form orchestration. Convex owns durable data, authorization, realtime synchronization, file storage, scheduled jobs, and server-side integrations.
 
+Related diagrams: [System Architecture](./diagrams/system-architecture.md), [Convex Data Model](./diagrams/convex-data-model.md), [Rental Lifecycle](./diagrams/rental-lifecycle.md).
+
 ## System Overview
 
 ```text

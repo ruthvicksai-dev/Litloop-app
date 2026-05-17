@@ -259,6 +259,7 @@ Add production screenshots here after the next release.
 - [Deployment](./docs/deployment.md)
 - [Security](./docs/security.md)
 - [API Reference](./docs/api-reference.md)
+- [Mermaid Diagrams](./docs/diagrams/README.md)
 
 ## Roadmap
 

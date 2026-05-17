@@ -2,6 +2,8 @@
 
 Student verification controls access to the College Zone rental flow. The current implementation is a manual review workflow for KITS students, using Convex Storage for ID images and Convex mutations for request submission and admin review.
 
+Related diagram: [Student Verification](./diagrams/student-verification.md).
+
 ## User Upload Workflow
 
 ```text
