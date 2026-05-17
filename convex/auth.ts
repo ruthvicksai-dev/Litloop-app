@@ -127,6 +127,17 @@ async function createSessionTokens(
 
 // ─── Sign Up ─────────────────────────────────────────────────────────────────
 
+/**
+ * Initiates the signup process by validating user details, checking rate limits,
+ * and sending a secure 6-digit OTP to the user's email address.
+ * 
+ * @param name - The full name of the user.
+ * @param email - The email address (must be unique).
+ * @param phone - The phone number (must be unique).
+ * @param password - The raw password to hash.
+ * @param acceptedTerms - Must be true to proceed.
+ * @returns An object containing the status and email.
+ */
 export const sendSignupOTP = mutation({
     args: {
         name: v.string(),
@@ -237,6 +248,13 @@ export const sendSignupOTP = mutation({
     },
 });
 
+/**
+ * Verifies the OTP sent during signup and creates the user account and session.
+ * 
+ * @param email - The email address of the user.
+ * @param otpCode - The 6-digit code received via email.
+ * @returns The newly created `userId`, `accessToken`, and `refreshToken`.
+ */
 export const verifySignupOTP = mutation({
     args: {
         email: v.string(),
@@ -453,6 +471,14 @@ export const resetPasswordWithOTP = mutation({
 
 // ─── Sign In ─────────────────────────────────────────────────────────────────
 
+/**
+ * Authenticates an existing user using email and password.
+ * Evaluates DB-backed rate limits before checking credentials.
+ * 
+ * @param email - The user's email address.
+ * @param password - The plaintext password to verify.
+ * @returns The authenticated `userId`, `role`, and session tokens.
+ */
 export const signIn = mutation({
     args: {
         email: v.string(),
@@ -616,6 +642,13 @@ export const getSession = query({
 
 // ─── Refresh Session ─────────────────────────────────────────────────────────
 
+/**
+ * Rotates an existing session using a valid refresh token.
+ * Prevents replay attacks by checking if the session was revoked or replaced.
+ * 
+ * @param refreshToken - The valid, unexpired refresh token.
+ * @returns A new pair of `accessToken` and `refreshToken`.
+ */
 export const refreshSession = mutation({
     args: { refreshToken: v.string() },
     handler: async (ctx, args) => {
@@ -764,6 +797,11 @@ export const revokeAllSessions = mutation({
 
 // ─── Sign Out ────────────────────────────────────────────────────────────────
 
+/**
+ * Safely terminates a session by revoking the refresh token in the database.
+ * 
+ * @param refreshToken - The refresh token to revoke.
+ */
 export const signOut = mutation({
     args: { refreshToken: v.string() },
     handler: async (ctx, args) => {

@@ -77,6 +77,16 @@ function safeRatingRollback(
     };
 }
 
+/**
+ * Initiates a new book rental request.
+ * Validates availability, checks for duplicate active rentals, and validates
+ * the delivery location based on the selected zone (Home vs College).
+ * 
+ * @param bookId - The ID of the book to rent.
+ * @param zone - The delivery zone ('Home' or 'College').
+ * @param deliveryLocation - An object containing address and contact details.
+ * @returns The new `rentalId`.
+ */
 export const requestRental = mutation({
     args: {
         bookId: v.id("books"),
@@ -225,6 +235,14 @@ export const requestRental = mutation({
     },
 });
 
+/**
+ * Admin Action: Schedules a delivery for a requested rental.
+ * Validates that the delivery date is not in the past and is within 5 days.
+ * 
+ * @param rentalId - The ID of the rental.
+ * @param deliveryDate - The scheduled delivery date (YYYY-MM-DD).
+ * @param deliveryTime - The selected time slot.
+ */
 export const scheduleDelivery = mutation({
     args: {
         rentalId: v.id("rentals"),
@@ -280,6 +298,11 @@ export const scheduleDelivery = mutation({
     },
 });
 
+/**
+ * Admin Action: Marks a scheduled rental as successfully delivered to the user.
+ * 
+ * @param rentalId - The ID of the rental.
+ */
 export const markDelivered = mutation({
     args: { rentalId: v.id("rentals"), accessToken: v.string() },
     handler: async (ctx, args) => {
@@ -303,6 +326,16 @@ export const markDelivered = mutation({
     },
 });
 
+/**
+ * Schedules a pickup for a delivered book.
+ * Calculates the total rent based on the days between delivery and pickup,
+ * and allows the user to submit a rating and review simultaneously.
+ * 
+ * @param rentalId - The ID of the active rental.
+ * @param pickupDate - The requested pickup date.
+ * @param pickupTime - The requested pickup time slot.
+ * @param userRating - The 1-5 star rating given to the book.
+ */
 export const schedulePickup = mutation({
     args: {
         rentalId: v.id("rentals"),
@@ -466,6 +499,12 @@ export const schedulePickup = mutation({
     },
 });
 
+/**
+ * Cancels a scheduled pickup.
+ * Safely rolls back the book's average rating calculation to remove the user's rating.
+ * 
+ * @param rentalId - The ID of the rental to cancel pickup for.
+ */
 export const cancelPickup = mutation({
     args: {
         rentalId: v.id("rentals"),

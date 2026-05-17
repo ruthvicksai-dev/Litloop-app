@@ -10,6 +10,10 @@ import { useState } from "react";
 /** Max upload size for student ID cards: 1 MB */
 const MAX_ID_CARD_SIZE = 1 * 1024 * 1024;
 
+/**
+ * Coordinates the student verification screen: local form state, client-side
+ * image checks, Convex Storage upload, and verification request submission.
+ */
 export function useStudentVerification() {
     const { accessToken, user } = useAuthState();
     const { showToast } = useToast();
