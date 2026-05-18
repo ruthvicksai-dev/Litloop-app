@@ -124,6 +124,18 @@ Native rebuild required when changing:
 9. Upload AAB to Google Play internal/closed testing.
 10. Monitor Sentry and Convex logs after rollout.
 
+## Store Listing Links
+
+Use these public URLs for launch metadata:
+
+| Item | URL |
+| --- | --- |
+| Marketing website | `https://litloop.in` |
+| Privacy Policy | `https://litloop.in/privacy-policy` |
+| Terms of Service | `https://litloop.in/terms-of-service` |
+
+Google Play requires a privacy policy URL for apps that handle sensitive user/device data and for the Data safety form. LitLoop also has in-app account deletion; if Play Console asks for a public account deletion URL, add a dedicated page on `litloop.in` that explains the in-app deletion path and support contact.
+
 ## Production Checklist
 
 - `EXPO_PUBLIC_CONVEX_URL` points to production Convex.
@@ -135,6 +147,8 @@ Native rebuild required when changing:
 - Google Maps API key is restricted to the app/platform.
 - `google-services.json` is available through EAS secret file.
 - Sentry DSN and auth token are configured for release monitoring/source maps.
+- Privacy Policy URL is set to `https://litloop.in/privacy-policy`.
+- Terms/support links are available from `https://litloop.in`.
 - Android permissions are justified and store listing disclosures match app behavior.
 - Payment UPI settings are configured in the admin UI.
 - At least one admin account exists.

@@ -217,6 +217,18 @@ Build iOS production artifact:
 eas build --profile production --platform ios
 ```
 
+## Launch Links
+
+Public product and legal pages:
+
+| Page | URL |
+| --- | --- |
+| Website | `https://litloop.in` |
+| Privacy Policy | `https://litloop.in/privacy-policy` |
+| Terms of Service | `https://litloop.in/terms-of-service` |
+
+Use the Privacy Policy URL in Google Play Console and App Store Connect. If a store review asks for a dedicated account deletion URL, publish a public deletion-instructions page and add it here.
+
 ## EAS Build Notes
 
 The project uses `eas.json` profiles:
