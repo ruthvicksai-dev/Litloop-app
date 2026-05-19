@@ -33,7 +33,7 @@ Admin maintenance:
 - `backfillLegacySessions`
 - `backfillUsers`
 
-## Books (`convex/books.ts`)
+## Books (`convex/books/`)
 
 | Function | Type | Params | Returns |
 | --- | --- | --- | --- |
@@ -58,7 +58,7 @@ Admin:
 
 Section queries also exist for direct reads: `getTopPicks`, `getTop10Books`, `getTrendingBooks`, `getFamousBooks`, `getSeriesBooks`, `getNewlyAddedBooks`.
 
-## Rentals (`convex/rentals.ts`)
+## Rentals (`convex/rentals/`)
 
 | Function | Type | Params | Returns |
 | --- | --- | --- | --- |
@@ -83,7 +83,7 @@ Internal:
 
 - `autoCancelPickup`: cancels unpaid pickup after expiry.
 
-## Payments (`convex/payments.ts`)
+## Payments (`convex/payments/`)
 
 | Function | Type | Params | Returns |
 | --- | --- | --- | --- |
@@ -98,7 +98,7 @@ Notes:
 - UPI submissions validate UTR format, duplicate UTR usage, image type, and screenshot size.
 - Approval moves rental to `paid`; rejection returns it to `pickup_scheduled`.
 
-## Student Verification (`convex/verifications.ts`)
+## Student Verification (`convex/verifications/`)
 
 | Function | Type | Params | Returns |
 | --- | --- | --- | --- |
@@ -111,7 +111,7 @@ Notes:
 | `rejectVerification` | mutation | `accessToken`, `verificationId`, `rejectionReason?` | void |
 | `getPendingVerificationCount` | query | `accessToken` | number |
 
-## Users (`convex/users.ts`)
+## Users (`convex/users/`)
 
 | Function | Type | Params | Returns |
 | --- | --- | --- | --- |
@@ -120,7 +120,7 @@ Notes:
 | `updateUser` | mutation | `accessToken`, `name`, `phone` | `true` |
 | `deleteAccount` | mutation | `accessToken`, `confirmText: "DELETE"` | `{ success: true }` |
 
-## Notifications (`convex/notifications.ts`)
+## Notifications (`convex/notifications/`)
 
 | Function | Type | Params | Returns |
 | --- | --- | --- | --- |
@@ -134,7 +134,7 @@ Notes:
 
 Internal actions/mutations send push notifications, notify admins, notify subscribers, clean old notifications, and reconcile inventory.
 
-## Reviews (`convex/reviews.ts`)
+## Reviews (`convex/reviews/`)
 
 | Function | Type | Params | Returns |
 | --- | --- | --- | --- |
@@ -153,7 +153,7 @@ Admin:
 - `unflagReview`
 - `rebuildBookReviewCounters`
 
-## Payment Settings (`convex/paymentSettings.ts`)
+## Payment Settings (`convex/paymentSettings/`)
 
 | Function | Type | Params | Returns |
 | --- | --- | --- | --- |
@@ -165,7 +165,7 @@ Admin:
 | `removeUpiId` | mutation | `settingId`, `accessToken` | void |
 | `toggleQrEnabled` | mutation | `settingId`, `qrEnabled`, `accessToken` | void |
 
-## Analytics (`convex/analytics.ts`)
+## Analytics (`convex/analytics/`)
 
 Important admin functions:
 
@@ -175,7 +175,7 @@ Important admin functions:
 
 Analytics functions aggregate users, rentals, revenue, book stats, and genre stats for admin dashboards.
 
-## Series (`convex/series.ts`)
+## Series (`convex/series/`)
 
 | Function | Type | Params | Returns |
 | --- | --- | --- | --- |

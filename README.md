@@ -44,15 +44,18 @@ Litloop/
 |   |-- profile/verify.tsx        Student verification UI
 |   `-- rental/                   Rental request, payment, return scheduling
 |-- components/                   Reusable UI, domain, admin, auth, and rental components
+|   |-- admin/                    Domain-driven admin UI (dashboard, rentals, verifications)
+|   |-- rental/form/              Modularized rental request form fields
+|   `-- ...
 |-- constants/                    Theme, fonts, genres, feature flags, pagination
 |-- context/                      Auth, network, and toast providers
 |-- convex/                       Backend schema, queries, mutations, actions, crons
 |   |-- schema.ts                 Convex table definitions and indexes
 |   |-- auth.ts                   OTP, local auth, Google auth, sessions
-|   |-- books.ts                  Catalog and admin book operations
-|   |-- rentals.ts                Rental lifecycle
-|   |-- payments.ts               Payment submission and admin verification
-|   |-- verifications.ts          Student verification workflow
+|   |-- books/                    Modularized catalog and admin operations
+|   |-- rentals/                  Modularized rental lifecycle queries and mutations
+|   |-- payments/                 Modularized payment submission and admin verification
+|   |-- verifications/            Modularized student verification workflow
 |   |-- lib/                      Backend helpers for auth, JWT, audit, books, rates
 |   `-- _generated/               Convex generated API/data model files
 |-- docs/                         Engineering documentation

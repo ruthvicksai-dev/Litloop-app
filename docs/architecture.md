@@ -38,17 +38,17 @@ Screens should stay thin. If a screen needs async behavior, form state, or Conve
 
 ## Backend Structure
 
-Convex modules are grouped by domain:
+Convex modules are highly modularized, utilizing a directory-based pattern for complex domains. Each domain directory (e.g., `books/`, `rentals/`, `users/`) internally separates logic into `read.ts`, `write.ts`, and `helpers.ts`, exposing the public API through an `index.ts` aggregator to maintain frontend compatibility.
 
 - `auth.ts`: OTP signup, local sign-in, Google sign-in, JWT sessions, password reset, session revocation.
-- `books.ts`: catalog reads, search, admin book CRUD, cover upload URLs, discover data.
-- `rentals.ts`: rental request, delivery scheduling, pickup scheduling, returns, rental history.
-- `payments.ts`: UPI/cash payment submission, screenshot validation, admin verification.
-- `verifications.ts`: student ID upload URLs, verification submission, admin approval/rejection.
-- `notifications.ts`: push token updates, in-app notifications, internal push actions.
-- `reviews.ts`: reviews, moderation, votes, reports, rating counters.
-- `analytics.ts`: dashboard counters, revenue, daily/monthly aggregations.
-- `paymentSettings.ts`: admin-managed UPI settings.
+- `books/`: catalog reads, search, admin book CRUD, cover upload URLs, discover data.
+- `rentals/`: rental request, delivery scheduling, pickup scheduling, returns, rental history.
+- `payments/`: UPI/cash payment submission, screenshot validation, admin verification.
+- `verifications/`: student ID upload URLs, verification submission, admin approval/rejection.
+- `notifications/`: push token updates, in-app notifications, internal push actions.
+- `reviews/`: reviews, moderation, votes, reports, rating counters.
+- `analytics/`: dashboard counters, revenue, daily/monthly aggregations.
+- `paymentSettings/`: admin-managed UPI settings.
 - `lib/`: shared backend helpers for auth, JWT, audit logs, book mapping, rate limits, and review counters.
 
 ## Data Flow
