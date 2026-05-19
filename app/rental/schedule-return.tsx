@@ -1,18 +1,18 @@
 import BookLoader from "@/components/ui/feedback/BookLoader";
 import Button from "@/components/ui/core/Button";
 import ConfirmActionModal from "@/components/ui/feedback/ConfirmActionModal";
-import DropdownField from "@/components/ui/core/DropdownField";
-import InputField from "@/components/ui/core/InputField";
 import MapLocationPicker from "@/components/ui/pickers/MapLocationPicker";
 import SlotDatePicker from "@/components/ui/pickers/SlotDatePicker";
 import SlotTimePicker from "@/components/ui/pickers/SlotTimePicker";
+import ReturnAddressForm from "@/components/rental/return/ReturnAddressForm";
+import ReturnRatingForm from "@/components/rental/return/ReturnRatingForm";
+import ReturnEstimateCard from "@/components/rental/return/ReturnEstimateCard";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useToast } from "@/context/ToastContext";
 import { useScheduleReturnScreen } from "@/hooks";
 import { 
     getReliableCurrentLocation,
-    ALLOWED_AREAS,
     resolveDeliveryAreaFromLocation,
     validateDeliveryAreaSelection,
     formatDateString,
@@ -24,13 +24,11 @@ import * as Location from "expo-location";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
-    ActivityIndicator,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
     StyleSheet,
     Text,
-    TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
@@ -317,191 +315,64 @@ export default function ScheduleReturnScreen() {
                             emptyMessage="No slots available for this date. Please select another date."
                         />
 
-                        <View style={styles.sectionDivider}>
-                            <Text style={styles.sectionTitle}>Pickup Address</Text>
-                            <TouchableOpacity
-                                style={styles.checkboxRow}
-                                onPress={() => setUseSameAddress(!useSameAddress)}
-                            >
-                                <View style={[styles.checkbox, useSameAddress && styles.checkboxActive]}>
-                                    {useSameAddress && <Ionicons name="checkmark" size={12} color={Colors.white} />}
-                                </View>
-                                <Text style={styles.checkboxLabel}>Same as delivery address</Text>
-                            </TouchableOpacity>
-                        </View>
+                        <ReturnAddressForm
+                            zone={rental.zone}
+                            useSameAddress={useSameAddress}
+                            setUseSameAddress={setUseSameAddress}
+                            phone={phone}
+                            setPhone={setPhone}
+                            landmark={landmark}
+                            setLandmark={setLandmark}
+                            roomNo={roomNo}
+                            setRoomNo={setRoomNo}
+                            yearOfStudy={yearOfStudy}
+                            setYearOfStudy={setYearOfStudy}
+                            department={department}
+                            setDepartment={setDepartment}
+                            rollNo={rollNo}
+                            setRollNo={setRollNo}
+                            area={area}
+                            handleAreaChange={handleAreaChange}
+                            latitude={latitude}
+                            longitude={longitude}
+                            formattedAddress={formattedAddress}
+                            isLocating={isLocating}
+                            onLocatePress={async () => {
+                                try {
+                                    setIsLocating(true);
+                                    const location = await getReliableCurrentLocation();
 
-                        {!useSameAddress && (
-                            <View style={styles.customAddressSection}>
-                                {rental.zone === "College" ? (
-                                    <>
-                                        <InputField
-                                            label="Room No"
-                                            placeholder="e.g. 205"
-                                            value={roomNo}
-                                            onChangeText={setRoomNo}
-                                        />
-                                        <View style={styles.row}>
-                                            <View style={styles.halfColumn}>
-                                                <InputField
-                                                    label="Year of Study"
-                                                    placeholder="e.g. 3rd"
-                                                    value={yearOfStudy}
-                                                    onChangeText={setYearOfStudy}
-                                                />
-                                            </View>
-                                            <View style={styles.halfColumn}>
-                                                <InputField
-                                                    label="Department"
-                                                    placeholder="e.g. CSE"
-                                                    value={department}
-                                                    onChangeText={setDepartment}
-                                                />
-                                            </View>
-                                        </View>
-                                        <InputField
-                                            label="Roll No"
-                                            placeholder="e.g. 21K61A0501"
-                                            value={rollNo}
-                                            onChangeText={setRollNo}
-                                        />
-                                    </>
-                                ) : (
-                                    <>
-                                        <TouchableOpacity
-                                            style={styles.locationBtn}
-                                            disabled={isLocating}
-                                            onPress={async () => {
-                                                try {
-                                                    setIsLocating(true);
-                                                    const location = await getReliableCurrentLocation();
+                                    await updateAddressFromCoords(
+                                        location.coords.latitude,
+                                        location.coords.longitude
+                                    );
+                                    showToast("Location updated!", "success");
+                                } catch (error) {
+                                    showToast(
+                                        error instanceof Error
+                                            ? error.message
+                                            : "Failed to fetch location. Please try again.",
+                                        "error"
+                                    );
+                                } finally {
+                                    setIsLocating(false);
+                                }
+                            }}
+                            onAdjustMapPress={() => setIsMapPickerVisible(true)}
+                        />
 
-                                                    await updateAddressFromCoords(
-                                                        location.coords.latitude,
-                                                        location.coords.longitude
-                                                    );
-                                                    showToast("Location updated!", "success");
-                                                } catch (error) {
-                                                    showToast(
-                                                        error instanceof Error
-                                                            ? error.message
-                                                            : "Failed to fetch location. Please try again.",
-                                                        "error"
-                                                    );
-                                                } finally {
-                                                    setIsLocating(false);
-                                                }
-                                            }}
-                                        >
-                                            <View style={styles.locationBtnContent}>
-                                                {isLocating ? (
-                                                    <ActivityIndicator size="small" color={Colors.primary} />
-                                                ) : (
-                                                    <Ionicons name="location" size={18} color={Colors.primary} />
-                                                )}
-                                                <Text style={styles.locationBtnText}>
-                                                    {isLocating ? "Locating..." : "Use Current Location"}
-                                                </Text>
-                                            </View>
-                                        </TouchableOpacity>
-                                        {formattedAddress ? (
-                                            <View style={styles.addressDisplay}>
-                                                <Text style={styles.addressText}>{formattedAddress}</Text>
-                                                {latitude !== undefined && longitude !== undefined ? (
-                                                    <TouchableOpacity
-                                                        style={styles.adjustLocationButton}
-                                                        onPress={() => setIsMapPickerVisible(true)}
-                                                    >
-                                                        <Ionicons
-                                                            name="map-outline"
-                                                            size={16}
-                                                            color={Colors.primary}
-                                                        />
-                                                        <Text style={styles.adjustLocationText}>
-                                                            Adjust on map
-                                                        </Text>
-                                                    </TouchableOpacity>
-                                                ) : null}
-                                            </View>
-                                        ) : null}
-                                        <DropdownField
-                                            label="Pickup Area"
-                                            value={area}
-                                            options={ALLOWED_AREAS}
-                                            onSelect={handleAreaChange}
-                                            placeholder="Select a pickup area"
-                                        />
-                                        <InputField
-                                            label="Landmark / Area"
-                                            placeholder="e.g. Near Temple"
-                                            value={landmark}
-                                            onChangeText={setLandmark}
-                                        />
-                                    </>
-                                )}
-                                <InputField
-                                    label="Pickup Contact"
-                                    placeholder="Phone number"
-                                    value={phone}
-                                    onChangeText={setPhone}
-                                    keyboardType="phone-pad"
-                                />
-                            </View>
-                        )}
+                        <ReturnRatingForm
+                            userRating={userRating}
+                            setUserRating={setUserRating}
+                            reviewText={reviewText}
+                            setReviewText={setReviewText}
+                        />
 
-                        <View style={styles.ratingCard}>
-                            <Text style={styles.ratingTitle}>Rate this book</Text>
-                            <Text style={styles.ratingSubtitle}>
-                                Your rating will be shown to other readers in book cards.
-                            </Text>
-                            <View style={styles.starsRow}>
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                    <TouchableOpacity
-                                        key={star}
-                                        onPress={() => setUserRating(star)}
-                                        activeOpacity={0.8}
-                                        style={styles.starButton}
-                                    >
-                                        <Ionicons
-                                            name={userRating >= star ? "star" : "star-outline"}
-                                            size={30}
-                                            color={userRating >= star ? Colors.warning : Colors.textLight}
-                                        />
-                                    </TouchableOpacity>
-                                ))}
-                            </View>
-                            <TextInput
-                                style={styles.reviewInput}
-                                placeholder="Share your experience with this book (optional)"
-                                placeholderTextColor={Colors.textLight}
-                                value={reviewText}
-                                onChangeText={setReviewText}
-                                multiline
-                                numberOfLines={3}
-                                maxLength={500}
-                                textAlignVertical="top"
-                            />
-                            {reviewText.length > 0 && (
-                                <Text style={styles.charCount}>{reviewText.length}/500</Text>
-                            )}
-                        </View>
-
-                        {estimatedDays > 0 ? (
-                            <View style={styles.estimateCard}>
-                                <Text style={styles.estimateTitle}>Rent Estimate</Text>
-                                <View style={styles.estimateRow}>
-                                    <Text style={styles.estimateLabel}>Days</Text>
-                                    <Text style={styles.estimateValue}>{estimatedDays}</Text>
-                                </View>
-                                <View style={styles.estimateRow}>
-                                    <Text style={styles.estimateLabel}>Rate</Text>
-                                    <Text style={styles.estimateValue}>₹{rental?.rentPerDay}/day</Text>
-                                </View>
-                                <View style={[styles.estimateRow, styles.totalRow]}>
-                                    <Text style={[styles.estimateLabel, styles.totalLabel]}>Total</Text>
-                                    <Text style={styles.totalValue}>₹{estimatedRent}</Text>
-                                </View>
-                            </View>
-                        ) : null}
+                        <ReturnEstimateCard
+                            estimatedDays={estimatedDays}
+                            rentPerDay={rental?.rentPerDay}
+                            estimatedRent={estimatedRent}
+                        />
 
                         <Button
                             title="Schedule Pickup"
@@ -600,194 +471,10 @@ const styles = StyleSheet.create({
         fontFamily: Fonts.medium,
         color: Colors.text,
     },
-    estimateCard: {
-        backgroundColor: Colors.surfaceCard,
-        borderRadius: 12,
-        padding: Spacing.md,
-        marginTop: Spacing.md,
-    },
-    ratingCard: {
-        backgroundColor: Colors.surfaceCard,
-        borderRadius: 12,
-        padding: Spacing.md,
-        marginTop: Spacing.md,
-    },
-    ratingTitle: {
-        fontSize: FontSizes.subtitle,
-        fontFamily: Fonts.bold,
-        color: Colors.text,
-    },
-    ratingSubtitle: {
-        fontSize: FontSizes.body,
-        color: Colors.textSecondary,
-        fontFamily: Fonts.regular,
-        marginTop: 4,
-    },
-    starsRow: {
-        flexDirection: "row",
-        marginTop: Spacing.sm,
-        gap: 8,
-    },
-    starButton: {
-        paddingVertical: 4,
-    },
-    estimateTitle: {
-        fontSize: FontSizes.subtitle,
-        fontFamily: Fonts.bold,
-        color: Colors.text,
-        marginBottom: Spacing.sm,
-    },
-    estimateRow: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        marginBottom: 4,
-    },
-    estimateLabel: {
-        fontSize: FontSizes.body,
-        color: Colors.textSecondary,
-        fontFamily: Fonts.regular,
-    },
-    estimateValue: {
-        fontSize: FontSizes.body,
-        fontFamily: Fonts.medium,
-        color: Colors.text,
-    },
-    totalRow: {
-        borderTopWidth: 1,
-        borderTopColor: Colors.border,
-        paddingTop: 8,
-        marginTop: 4,
-    },
-    totalLabel: {
-        fontFamily: Fonts.bold,
-    },
-    totalValue: {
-        fontSize: FontSizes.title,
-        fontFamily: Fonts.bold,
-        color: Colors.primary,
-    },
     center: {
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
         backgroundColor: Colors.background,
-    },
-    sectionDivider: {
-        marginTop: Spacing.lg,
-        paddingTop: Spacing.md,
-        borderTopWidth: 1,
-        borderTopColor: Colors.border,
-    },
-    sectionTitle: {
-        fontSize: FontSizes.subtitle,
-        fontFamily: Fonts.bold,
-        color: Colors.text,
-        marginBottom: Spacing.sm,
-    },
-    checkboxRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginBottom: Spacing.sm,
-    },
-    checkbox: {
-        width: 20,
-        height: 20,
-        borderRadius: 4,
-        borderWidth: 2,
-        borderColor: Colors.primary,
-        marginRight: 10,
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    checkboxActive: {
-        backgroundColor: Colors.primary,
-    },
-    checkboxLabel: {
-        fontSize: FontSizes.body,
-        fontFamily: Fonts.medium,
-        color: Colors.text,
-    },
-    customAddressSection: {
-        marginTop: Spacing.sm,
-        backgroundColor: Colors.surfaceCard,
-        padding: Spacing.md,
-        borderRadius: 12,
-        gap: 2,
-    },
-    row: {
-        flexDirection: "row",
-        gap: Spacing.sm,
-    },
-    halfColumn: {
-        flex: 1,
-        minWidth: 0,
-    },
-    locationBtn: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: Spacing.md,
-        borderWidth: 1,
-        borderColor: Colors.primary,
-        borderRadius: 8,
-        marginBottom: Spacing.md,
-    },
-    locationBtnContent: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 8,
-    },
-    locationBtnText: {
-        color: Colors.primary,
-        fontFamily: Fonts.bold,
-        fontSize: FontSizes.body,
-    },
-    addressDisplay: {
-        backgroundColor: Colors.background,
-        padding: Spacing.sm,
-        borderRadius: 8,
-        marginBottom: Spacing.md,
-    },
-    addressText: {
-        fontSize: FontSizes.small,
-        fontFamily: Fonts.regular,
-        color: Colors.text,
-    },
-    adjustLocationButton: {
-        flexDirection: "row",
-        alignItems: "center",
-        alignSelf: "flex-start",
-        gap: 6,
-        marginTop: Spacing.sm,
-        paddingHorizontal: Spacing.sm,
-        paddingVertical: Spacing.xs,
-        borderRadius: 999,
-        backgroundColor: Colors.surfaceCard,
-        borderWidth: 1,
-        borderColor: Colors.primary + "30",
-    },
-    adjustLocationText: {
-        fontSize: FontSizes.small,
-        fontFamily: Fonts.medium,
-        color: Colors.primary,
-    },
-    reviewInput: {
-        marginTop: Spacing.sm,
-        borderWidth: 1,
-        borderColor: Colors.border,
-        borderRadius: 8,
-        padding: Spacing.sm,
-        fontSize: FontSizes.body,
-        fontFamily: Fonts.regular,
-        color: Colors.text,
-        minHeight: 80,
-        backgroundColor: Colors.background,
-    },
-    charCount: {
-        fontSize: FontSizes.caption,
-        color: Colors.textLight,
-        textAlign: "right",
-        marginTop: 2,
-        fontFamily: Fonts.regular,
     },
 });
