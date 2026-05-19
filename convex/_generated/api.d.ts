@@ -10,7 +10,16 @@
 
 import type * as analytics from "../analytics.js";
 import type * as auth from "../auth.js";
+import type * as auth_helpers from "../auth/helpers.js";
+import type * as auth_password from "../auth/password.js";
+import type * as auth_session from "../auth/session.js";
+import type * as auth_signin from "../auth/signin.js";
+import type * as auth_signup from "../auth/signup.js";
 import type * as books from "../books.js";
+import type * as books_helpers from "../books/helpers.js";
+import type * as books_internal from "../books/internal.js";
+import type * as books_read from "../books/read.js";
+import type * as books_write from "../books/write.js";
 import type * as crons from "../crons.js";
 import type * as email from "../email.js";
 import type * as favorites from "../favorites.js";
@@ -41,7 +50,16 @@ import type {
 declare const fullApi: ApiFromModules<{
   analytics: typeof analytics;
   auth: typeof auth;
+  "auth/helpers": typeof auth_helpers;
+  "auth/password": typeof auth_password;
+  "auth/session": typeof auth_session;
+  "auth/signin": typeof auth_signin;
+  "auth/signup": typeof auth_signup;
   books: typeof books;
+  "books/helpers": typeof books_helpers;
+  "books/internal": typeof books_internal;
+  "books/read": typeof books_read;
+  "books/write": typeof books_write;
   crons: typeof crons;
   email: typeof email;
   favorites: typeof favorites;
