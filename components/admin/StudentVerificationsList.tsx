@@ -1,7 +1,8 @@
 import Button from "@/components/ui/core/Button";
+import { EmptyState } from "@/components/ui/feedback/EmptyState";
 import SummaryStat from "@/components/admin/SummaryStat";
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Spacing, scale } from "@/constants/theme";
+import { Colors, Spacing } from "@/constants/theme";
 import { useVerifyStudentsScreen } from "@/hooks";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -99,15 +100,11 @@ export default function StudentVerificationsList() {
                     </View>
                 }
                 ListEmptyComponent={
-                    <View style={styles.emptyState}>
-                        <View style={styles.emptyIconWrap}>
-                            <Ionicons name="checkmark-circle-outline" size={28} color={Colors.success} />
-                        </View>
-                        <Text style={styles.emptyTitle}>All students are verified</Text>
-                        <Text style={styles.emptyText}>
-                            There are no pending student verifications at the moment.
-                        </Text>
-                    </View>
+                    <EmptyState 
+                        icon="checkmark-circle-outline"
+                        title="All students are verified"
+                        subtitle="There are no pending student verifications at the moment."
+                    />
                 }
                 renderItem={({ item }) => (
                     <View style={styles.requestCard}>
@@ -309,35 +306,7 @@ const styles = StyleSheet.create({
         borderTopWidth: 1,
         borderTopColor: "rgba(0,0,0,0.05)",
     },
-    emptyState: {
-        alignItems: "center",
-        justifyContent: "center",
-        paddingHorizontal: Spacing.xl,
-        paddingVertical: Spacing.xl * 2,
-    },
-    emptyIconWrap: {
-        width: scale(68),
-        height: scale(68),
-        borderRadius: scale(22),
-        backgroundColor: Colors.white,
-        alignItems: "center",
-        justifyContent: "center",
-        marginBottom: Spacing.md,
-    },
-    emptyTitle: {
-        fontSize: FontSizes.subtitle,
-        color: Colors.text,
-        fontFamily: Fonts.bold,
-        textAlign: "center",
-    },
-    emptyText: {
-        fontSize: FontSizes.body,
-        color: Colors.textSecondary,
-        fontFamily: Fonts.regular,
-        textAlign: "center",
-        lineHeight: scale(22),
-        marginTop: Spacing.sm,
-    },
+
     requestCard: {
         backgroundColor: Colors.white,
         borderRadius: 20,

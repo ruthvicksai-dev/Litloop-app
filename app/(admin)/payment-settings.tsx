@@ -111,56 +111,6 @@ export default function PaymentSettingsScreen() {
                                         <Ionicons name="ellipsis-vertical" size={18} color={Colors.textSecondary} />
                                     </TouchableOpacity>
 
-                                    {/* Dropdown menu */}
-                                    {menuTarget === setting._id && (
-                                        <View style={styles.menuDropdown}>
-                                            <TouchableOpacity
-                                                style={styles.menuItem}
-                                                onPress={() => {
-                                                    setMenuTarget(null);
-                                                    triggerHaptic("light");
-                                                    handleToggleActive(setting._id as any);
-                                                }}
-                                            >
-                                                <Ionicons
-                                                    name={setting.active ? "pause-circle-outline" : "checkmark-circle-outline"}
-                                                    size={18}
-                                                    color={setting.active ? Colors.error : Colors.success}
-                                                />
-                                                <Text style={[styles.menuItemText, setting.active && { color: Colors.error }]}>
-                                                    {setting.active ? "Deactivate" : "Activate"}
-                                                </Text>
-                                            </TouchableOpacity>
-                                            <View style={styles.menuDivider} />
-                                            <TouchableOpacity
-                                                style={styles.menuItem}
-                                                onPress={() => {
-                                                    setMenuTarget(null);
-                                                    triggerHaptic("light");
-                                                    setEditTarget({
-                                                        id: setting._id,
-                                                        upiId: setting.upiId,
-                                                        merchantName: setting.merchantName,
-                                                    });
-                                                }}
-                                            >
-                                                <Ionicons name="pencil-outline" size={18} color={Colors.primary} />
-                                                <Text style={styles.menuItemText}>Edit</Text>
-                                            </TouchableOpacity>
-                                            <View style={styles.menuDivider} />
-                                            <TouchableOpacity
-                                                style={styles.menuItem}
-                                                onPress={() => {
-                                                    setMenuTarget(null);
-                                                    triggerHaptic("medium");
-                                                    setRemoveTarget(setting._id);
-                                                }}
-                                            >
-                                                <Ionicons name="trash-outline" size={18} color={Colors.error} />
-                                                <Text style={[styles.menuItemText, { color: Colors.error }]}>Remove</Text>
-                                            </TouchableOpacity>
-                                        </View>
-                                    )}
                                 </View>
                             </React.Fragment>
                         ))
@@ -202,6 +152,85 @@ export default function PaymentSettingsScreen() {
                 {/* ─── Shared: Notifications, Legal, Danger, Sign Out ─── */}
                 <CommonSettingsSections />
             </ScrollView>
+
+            {/* ─── Manage UPI Menu Modal ─── */}
+            <Modal
+                visible={!!menuTarget}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setMenuTarget(null)}
+            >
+                <TouchableOpacity 
+                    style={styles.menuModalOverlay}
+                    activeOpacity={1}
+                    onPress={() => setMenuTarget(null)}
+                >
+                    <View style={styles.menuModalCard}>
+                        {(() => {
+                            const setting = allSettings?.find((s) => s._id === menuTarget);
+                            if (!setting) return null;
+                            return (
+                                <>
+                                    <View style={styles.menuModalHeader}>
+                                        <Text style={styles.menuModalTitle} numberOfLines={1}>{setting.upiId}</Text>
+                                        <Text style={styles.menuModalSubtitle}>Manage Payment Method</Text>
+                                    </View>
+                                    
+                                    <TouchableOpacity
+                                        style={styles.menuModalItem}
+                                        onPress={() => {
+                                            setMenuTarget(null);
+                                            triggerHaptic("light");
+                                            handleToggleActive(setting._id as any);
+                                        }}
+                                    >
+                                        <Ionicons
+                                            name={setting.active ? "pause-circle-outline" : "checkmark-circle-outline"}
+                                            size={20}
+                                            color={setting.active ? Colors.error : Colors.success}
+                                        />
+                                        <Text style={[styles.menuModalItemText, setting.active && { color: Colors.error }]}>
+                                            {setting.active ? "Deactivate" : "Activate"}
+                                        </Text>
+                                    </TouchableOpacity>
+                                    
+                                    <View style={styles.menuDivider} />
+                                    
+                                    <TouchableOpacity
+                                        style={styles.menuModalItem}
+                                        onPress={() => {
+                                            setMenuTarget(null);
+                                            triggerHaptic("light");
+                                            setEditTarget({
+                                                id: setting._id,
+                                                upiId: setting.upiId,
+                                                merchantName: setting.merchantName,
+                                            });
+                                        }}
+                                    >
+                                        <Ionicons name="pencil-outline" size={20} color={Colors.primary} />
+                                        <Text style={styles.menuModalItemText}>Edit Settings</Text>
+                                    </TouchableOpacity>
+                                    
+                                    <View style={styles.menuDivider} />
+                                    
+                                    <TouchableOpacity
+                                        style={styles.menuModalItem}
+                                        onPress={() => {
+                                            setMenuTarget(null);
+                                            triggerHaptic("medium");
+                                            setRemoveTarget(setting._id);
+                                        }}
+                                    >
+                                        <Ionicons name="trash-outline" size={20} color={Colors.error} />
+                                        <Text style={[styles.menuModalItemText, { color: Colors.error }]}>Remove Method</Text>
+                                    </TouchableOpacity>
+                                </>
+                            );
+                        })()}
+                    </View>
+                </TouchableOpacity>
+            </Modal>
 
             {/* ─── Add UPI Modal ─── */}
             <Modal
@@ -484,39 +513,51 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center",
     },
-    menuDropdown: {
-        position: "absolute",
-        right: 16,
-        top: 44,
-        backgroundColor: Colors.white,
-        borderRadius: 12,
-        paddingVertical: 4,
-        minWidth: 160,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.12,
-        shadowRadius: 12,
-        elevation: 20,
-        borderWidth: 1,
-        borderColor: "rgba(0,0,0,0.06)",
-        zIndex: 100,
-    },
-    menuItem: {
-        flexDirection: "row",
-        alignItems: "center",
-        paddingHorizontal: 14,
-        paddingVertical: 10,
-        gap: 10,
-    },
-    menuItemText: {
-        fontSize: FontSizes.body,
-        fontFamily: Fonts.medium,
-        color: Colors.text,
-    },
     menuDivider: {
         height: 1,
         backgroundColor: Colors.border + "40",
-        marginHorizontal: 10,
+    },
+    menuModalOverlay: {
+        flex: 1,
+        backgroundColor: "rgba(0,0,0,0.45)",
+        justifyContent: "flex-end",
+    },
+    menuModalCard: {
+        backgroundColor: Colors.white,
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        paddingBottom: Spacing.xl * 2,
+        paddingTop: Spacing.sm,
+    },
+    menuModalHeader: {
+        paddingHorizontal: Spacing.xl,
+        paddingVertical: Spacing.md,
+        borderBottomWidth: 1,
+        borderBottomColor: Colors.border + "40",
+        marginBottom: Spacing.xs,
+    },
+    menuModalTitle: {
+        fontSize: FontSizes.body,
+        fontFamily: Fonts.bold,
+        color: Colors.text,
+    },
+    menuModalSubtitle: {
+        fontSize: FontSizes.caption,
+        fontFamily: Fonts.regular,
+        color: Colors.textSecondary,
+        marginTop: 2,
+    },
+    menuModalItem: {
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: Spacing.xl,
+        paddingVertical: Spacing.lg,
+        gap: 12,
+    },
+    menuModalItemText: {
+        fontSize: FontSizes.body,
+        fontFamily: Fonts.medium,
+        color: Colors.text,
     },
 
     // ─── Add UPI modal ───
