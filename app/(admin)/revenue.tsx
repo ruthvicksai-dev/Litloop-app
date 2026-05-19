@@ -1,6 +1,6 @@
-import AdminAnalyticsBars from "@/components/admin/AdminAnalyticsBars";
-import AdminDonutChart from "@/components/admin/AdminDonutChart";
-import AdminStackedBarChart from "@/components/admin/AdminStackedBarChart";
+import AdminAnalyticsBars from "@/components/admin/dashboard/AdminAnalyticsBars";
+import AdminDonutChart from "@/components/admin/dashboard/AdminDonutChart";
+import AdminStackedBarChart from "@/components/admin/dashboard/AdminStackedBarChart";
 import BookLoader from "@/components/ui/feedback/BookLoader";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { RENTALS_PAGINATION_OPTS } from "@/constants/pagination";
@@ -15,7 +15,7 @@ import {
     formatCurrency,
 } from "@/utils";
 import { useQuery } from "convex/react";
-import AdminHeader from "@/components/admin/AdminHeader";
+import AdminHeader from "@/components/admin/core/AdminHeader";
 import React, { useMemo, useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";

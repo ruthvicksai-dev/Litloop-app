@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import SummaryStat from "@/components/admin/SummaryStat";
+import SummaryStat from "@/components/admin/dashboard/SummaryStat";
 import { Colors, Spacing, scale } from "@/constants/theme";
 import { Fonts, FontSizes } from "@/constants/fonts";
 

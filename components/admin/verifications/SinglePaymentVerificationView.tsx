@@ -4,7 +4,7 @@ import { Image as ExpoImage } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import Button from "@/components/ui/core/Button";
-import DetailRow from "@/components/admin/DetailRow";
+import DetailRow from "@/components/admin/core/DetailRow";
 import { formatCurrency, getBookCoverUri } from "@/utils";
 import { Colors, Layout, Spacing, scale } from "@/constants/theme";
 import { Fonts, FontSizes } from "@/constants/fonts";

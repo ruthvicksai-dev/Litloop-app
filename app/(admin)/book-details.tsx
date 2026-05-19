@@ -6,7 +6,7 @@ import { Colors, Layout, Spacing } from "@/constants/theme";
 import { useAdminBookDetailsScreen } from "@/hooks";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import AdminHeader from "@/components/admin/AdminHeader";
+import AdminHeader from "@/components/admin/core/AdminHeader";
 import AdminBookHero from "@/components/admin/book-details/AdminBookHero";
 import AdminBookDescription from "@/components/admin/book-details/AdminBookDescription";
 import AdminBookInventory from "@/components/admin/book-details/AdminBookInventory";

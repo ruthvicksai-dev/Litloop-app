@@ -1,6 +1,6 @@
 import Button from "@/components/ui/core/Button";
 import { EmptyState } from "@/components/ui/feedback/EmptyState";
-import SummaryStat from "@/components/admin/SummaryStat";
+import SummaryStat from "@/components/admin/dashboard/SummaryStat";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useVerifyStudentsScreen } from "@/hooks";

@@ -1,4 +1,4 @@
-import AdminAnalyticsDashboard from "@/components/admin/AdminAnalyticsDashboard";
+import AdminAnalyticsDashboard from "@/components/admin/dashboard/AdminAnalyticsDashboard";
 
 export default function AnalyticsScreen() {
     return <AdminAnalyticsDashboard />;

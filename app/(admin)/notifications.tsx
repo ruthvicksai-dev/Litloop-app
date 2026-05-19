@@ -10,7 +10,7 @@ import { useMutation, useQuery } from "convex/react";
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
-import AdminHeader from "@/components/admin/AdminHeader";
+import AdminHeader from "@/components/admin/core/AdminHeader";
 import React from "react";
 import {
     ActivityIndicator,

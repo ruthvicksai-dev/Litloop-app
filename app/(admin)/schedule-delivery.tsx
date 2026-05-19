@@ -8,7 +8,7 @@ import { useScheduleDeliveryScreen } from "@/hooks";
 import { formatDateString, getValidDates, getValidTimeSlots } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
-import AdminHeader from "@/components/admin/AdminHeader";
+import AdminHeader from "@/components/admin/core/AdminHeader";
 import React from "react";
 import {
     RefreshControl,

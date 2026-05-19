@@ -1,5 +1,5 @@
-import StudentVerificationsList from "@/components/admin/StudentVerificationsList";
-import AdminHeader from "@/components/admin/AdminHeader";
+import StudentVerificationsList from "@/components/admin/verifications/StudentVerificationsList";
+import AdminHeader from "@/components/admin/core/AdminHeader";
 import BookLoader from "@/components/ui/feedback/BookLoader";
 import { EmptyState } from "@/components/ui/feedback/EmptyState";
 import { SegmentedControl, SegmentOption } from "@/components/ui/core/SegmentedControl";
@@ -22,10 +22,10 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import RejectReasonModal from "@/components/admin/RejectReasonModal";
-import PaymentVerificationCard from "@/components/admin/PaymentVerificationCard";
-import SinglePaymentVerificationView from "@/components/admin/SinglePaymentVerificationView";
-import PaymentVerificationListHeader from "@/components/admin/PaymentVerificationListHeader";
+import RejectReasonModal from "@/components/admin/verifications/RejectReasonModal";
+import PaymentVerificationCard from "@/components/admin/verifications/PaymentVerificationCard";
+import SinglePaymentVerificationView from "@/components/admin/verifications/SinglePaymentVerificationView";
+import PaymentVerificationListHeader from "@/components/admin/verifications/PaymentVerificationListHeader";
 
 const TAB_OPTIONS: SegmentOption[] = [
     { label: "Payments", value: "payments", icon: "cash-outline", activeIcon: "cash" },

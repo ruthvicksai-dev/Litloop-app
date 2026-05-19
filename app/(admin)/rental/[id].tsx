@@ -11,7 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery } from "convex/react";
 import { Image as ExpoImage } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import AdminHeader from "@/components/admin/AdminHeader";
+import AdminHeader from "@/components/admin/core/AdminHeader";
 import React, { useState } from "react";
 import {
     Image,

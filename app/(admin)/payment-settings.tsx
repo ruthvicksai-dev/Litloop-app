@@ -8,7 +8,7 @@ import { Colors, Layout, Spacing, scale } from "@/constants/theme";
 import { usePaymentSettings } from "@/hooks";
 import { triggerHaptic } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
-import AdminHeader from "@/components/admin/AdminHeader";
+import AdminHeader from "@/components/admin/core/AdminHeader";
 import React, { useState } from "react";
 import {
     Modal,

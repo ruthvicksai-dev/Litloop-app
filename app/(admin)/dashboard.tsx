@@ -1,7 +1,7 @@
-import AdminDashboardHeader from "@/components/admin/AdminDashboardHeader";
-import AdminDashboardStats from "@/components/admin/AdminDashboardStats";
-import AdminRentalCard from "@/components/admin/AdminRentalCard";
-import AdminStatusFilters from "@/components/admin/AdminStatusFilters";
+import AdminDashboardHeader from "@/components/admin/dashboard/AdminDashboardHeader";
+import AdminDashboardStats from "@/components/admin/dashboard/AdminDashboardStats";
+import AdminRentalCard from "@/components/admin/rentals/AdminRentalCard";
+import AdminStatusFilters from "@/components/admin/rentals/AdminStatusFilters";
 import BookLoader from "@/components/ui/feedback/BookLoader";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";

@@ -11,7 +11,7 @@ import { Colors, Spacing } from "@/constants/theme";
 import { useEditBookScreen, useFadeSlideIn } from "@/hooks";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import AdminHeader from "@/components/admin/AdminHeader";
+import AdminHeader from "@/components/admin/core/AdminHeader";
 import React from "react";
 import {
     Animated,

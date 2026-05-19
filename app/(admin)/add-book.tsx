@@ -3,7 +3,7 @@ import CoverGalleryField from "@/components/books/CoverGalleryField";
 import FeaturedSectionsFields from "@/components/books/FeaturedSectionsFields";
 import FormSectionHeader from "@/components/books/FormSectionHeader";
 import GenreSelector from "@/components/books/GenreSelector";
-import AdminHeader from "@/components/admin/AdminHeader";
+import AdminHeader from "@/components/admin/core/AdminHeader";
 import Button from "@/components/ui/core/Button";
 import InputField from "@/components/ui/core/InputField";
 import { Colors, Spacing } from "@/constants/theme";

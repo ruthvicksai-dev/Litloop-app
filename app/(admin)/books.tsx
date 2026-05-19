@@ -4,7 +4,7 @@ import ReviewCard from "@/components/ui/cards/ReviewCard";
 import BookLoader from "@/components/ui/feedback/BookLoader";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
-import AdminHeader from "@/components/admin/AdminHeader";
+import AdminHeader from "@/components/admin/core/AdminHeader";
 import { useAdminBooksScreen, useFadeSlideIn } from "@/hooks";
 import { useRouter } from "expo-router";
 import React from "react";
