@@ -15,9 +15,10 @@ import {
     ScrollView,
     StyleSheet,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function AddBookScreen() {
+    const insets = useSafeAreaInsets();
     const {
         title,
         setTitle,
@@ -73,7 +74,7 @@ export default function AddBookScreen() {
                 keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
             >
                 <ScrollView
-                    contentContainerStyle={styles.scroll}
+                    contentContainerStyle={[styles.scroll, { paddingBottom: Math.max(100, 60 + insets.bottom) }]}
                     keyboardShouldPersistTaps="handled"
                     keyboardDismissMode="on-drag"
                 >
@@ -190,9 +191,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     scroll: {
-        flexGrow: 1,
         paddingHorizontal: Spacing.lg,
-        paddingBottom: Spacing.xl,
     },
     fetchInfoBtn: {
         marginBottom: Spacing.md,

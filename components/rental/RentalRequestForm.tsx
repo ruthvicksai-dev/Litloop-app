@@ -10,6 +10,7 @@ import {
     StyleSheet,
     Text,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import DeliveryZoneSelector from "@/components/rental/form/DeliveryZoneSelector";
 import CollegeZoneFields from "@/components/rental/form/CollegeZoneFields";
 import HomeZoneFields from "@/components/rental/form/HomeZoneFields";
@@ -78,6 +79,8 @@ export default function RentalRequestForm({
     isVerifiedStudent,
     onVerifyPress,
 }: RentalRequestFormProps) {
+    const insets = useSafeAreaInsets();
+
     return (
         <KeyboardAvoidingView
             style={styles.flex}
@@ -85,7 +88,10 @@ export default function RentalRequestForm({
             keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
         >
             <ScrollView
-                contentContainerStyle={styles.scroll}
+                contentContainerStyle={[
+                    styles.scroll,
+                    { paddingBottom: Math.max(120, 80 + insets.bottom) },
+                ]}
                 keyboardShouldPersistTaps="handled"
                 showsVerticalScrollIndicator={false}
             >
@@ -161,10 +167,8 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     scroll: {
-        flexGrow: 1,
         paddingHorizontal: 20,
         paddingTop: Spacing.sm,
-        paddingBottom: 100,
     },
     sectionTitle: {
         fontSize: FontSizes.subtitle,

@@ -20,7 +20,7 @@ import {
     Modal,
     Text,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import RejectReasonModal from "@/components/admin/verifications/RejectReasonModal";
 import PaymentVerificationCard from "@/components/admin/verifications/PaymentVerificationCard";
@@ -37,6 +37,7 @@ export default function VerifyPaymentScreen() {
     const [selectedImage, setSelectedImage] = React.useState<string | null>(null);
     const params = useLocalSearchParams<{ rentalId?: string }>();
     const router = useRouter();
+    const insets = useSafeAreaInsets();
     const [refreshing, setRefreshing] = React.useState(false);
     const { pendingPayments, singleRental, handleVerify } = useVerifyPaymentScreen(
         params.rentalId
@@ -97,7 +98,7 @@ export default function VerifyPaymentScreen() {
             <SafeAreaView style={styles.container}>
                 <AdminHeader title="Verify Payment" />
                 <ScrollView
-                    contentContainerStyle={styles.singleScroll}
+                    contentContainerStyle={[styles.singleScroll, { paddingBottom: Math.max(100, 60 + insets.bottom) }]}
                     showsVerticalScrollIndicator={false}
                     refreshControl={
                         <RefreshControl
@@ -229,9 +230,7 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.background,
     },
     singleScroll: {
-        flexGrow: 1,
         paddingHorizontal: Layout.screenPaddingWide,
-        paddingBottom: Spacing.xl * 1.5,
     },
     screenSubtitle: {
         fontSize: FontSizes.body,

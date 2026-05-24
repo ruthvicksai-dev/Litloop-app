@@ -23,11 +23,12 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function EditBookScreen() {
     const { bookId } = useLocalSearchParams<{ bookId: string }>();
     const router = useRouter();
+    const insets = useSafeAreaInsets();
     const { fadeAnim } = useFadeSlideIn({ slideFrom: 0, duration: 400 });
     const {
         book,
@@ -126,7 +127,7 @@ export default function EditBookScreen() {
                 keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
             >
                 <ScrollView
-                    contentContainerStyle={styles.scroll}
+                    contentContainerStyle={[styles.scroll, { paddingBottom: Math.max(100, 60 + insets.bottom) }]}
                     keyboardShouldPersistTaps="handled"
                     keyboardDismissMode="on-drag"
                 >
@@ -273,10 +274,8 @@ const styles = StyleSheet.create({
         marginBottom: 24,
     },
     scroll: {
-        flexGrow: 1,
         paddingHorizontal: 20,
         paddingTop: Spacing.md,
-        paddingBottom: Spacing.xl,
     },
     fetchInfoBtn: {
         marginBottom: Spacing.md,

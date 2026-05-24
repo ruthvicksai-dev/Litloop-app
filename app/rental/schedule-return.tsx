@@ -32,12 +32,13 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function ScheduleReturnScreen() {
     const { rentalId } = useLocalSearchParams<{ rentalId: string }>();
     const router = useRouter();
     const { showToast } = useToast();
+    const insets = useSafeAreaInsets();
     const {
         rental,
         pickupDate,
@@ -281,7 +282,7 @@ export default function ScheduleReturnScreen() {
                 keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
             >
                 <ScrollView
-                    contentContainerStyle={styles.scroll}
+                    contentContainerStyle={[styles.scroll, { paddingBottom: Math.max(100, 60 + insets.bottom) }]}
                     keyboardShouldPersistTaps="handled"
                     keyboardDismissMode="on-drag"
                     showsVerticalScrollIndicator={false}
@@ -426,10 +427,8 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     scroll: {
-        flexGrow: 1,
         paddingHorizontal: Spacing.lg,
         paddingTop: Spacing.md,
-        paddingBottom: Spacing.xl * 1.5,
     },
     header: {
         flexDirection: "row",

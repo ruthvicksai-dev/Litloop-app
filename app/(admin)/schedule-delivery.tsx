@@ -17,10 +17,11 @@ import {
     Text,
     View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function ScheduleDeliveryScreen() {
     const { rentalId } = useLocalSearchParams<{ rentalId: string }>();
+    const insets = useSafeAreaInsets();
     const [refreshing, setRefreshing] = React.useState(false);
     const {
         rental,
@@ -79,7 +80,7 @@ export default function ScheduleDeliveryScreen() {
         <SafeAreaView style={styles.container}>
             <AdminHeader title="Schedule Delivery" />
             <ScrollView
-                contentContainerStyle={styles.scroll}
+                contentContainerStyle={[styles.scroll, { paddingBottom: Math.max(80, 40 + insets.bottom) }]}
                 keyboardShouldPersistTaps="handled"
                 refreshControl={
                     <RefreshControl
@@ -163,7 +164,6 @@ const styles = StyleSheet.create({
     scroll: {
         paddingHorizontal: Spacing.lg,
         paddingTop: Spacing.lg,
-        paddingBottom: Spacing.xl,
     },
     header: {
         flexDirection: "row",

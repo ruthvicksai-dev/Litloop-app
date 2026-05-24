@@ -19,10 +19,11 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function ChangePasswordScreen() {
     const router = useRouter();
+    const insets = useSafeAreaInsets();
     const { user, accessToken, isLoading } = useAuthState();
     const { showToast } = useToast();
     const changePasswordMutation = useMutation(api.auth.changePassword);
@@ -95,7 +96,7 @@ export default function ChangePasswordScreen() {
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
             >
                 <ScrollView
-                    contentContainerStyle={styles.content}
+                    contentContainerStyle={[styles.content, { paddingBottom: Math.max(100, 60 + insets.bottom) }]}
                     keyboardShouldPersistTaps="handled"
                     keyboardDismissMode="on-drag"
                     showsVerticalScrollIndicator={false}
@@ -171,10 +172,8 @@ const styles = StyleSheet.create({
         width: 40,
     },
     content: {
-        flexGrow: 1,
         paddingHorizontal: Layout.screenPaddingWide,
         paddingTop: Spacing.md,
-        paddingBottom: Spacing.xl * 1.5,
         gap: Spacing.lg,
     },
     card: {

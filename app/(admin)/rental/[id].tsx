@@ -26,11 +26,12 @@ import {
     Text,
     View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function AdminRentalDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const router = useRouter();
+    const insets = useSafeAreaInsets();
     const { accessToken } = useAuthState();
     const rental = useQuery(api.rentals.getRental, accessToken ? { accessToken, rentalId: id as Id<"rentals"> } : "skip");
     const markDelivered = useMutation(api.rentals.markDelivered);
@@ -109,7 +110,7 @@ export default function AdminRentalDetailScreen() {
             <AdminHeader title="Order Details" />
 
             <ScrollView
-                contentContainerStyle={styles.scroll}
+                contentContainerStyle={[styles.scroll, { paddingBottom: Math.max(80, 40 + insets.bottom) }]}
                 showsVerticalScrollIndicator={false}
                 refreshControl={
                     <RefreshControl
@@ -210,6 +211,6 @@ export default function AdminRentalDetailScreen() {
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: Colors.background },
     center: { flex: 1, justifyContent: "center", alignItems: "center" },
-    scroll: { paddingBottom: 40 },
+    scroll: { },
     errorText: { fontSize: FontSizes.body, color: Colors.error, fontFamily: Fonts.bold },
 });

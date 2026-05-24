@@ -19,10 +19,11 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function VerifyStudentScreen() {
     const router = useRouter();
+    const insets = useSafeAreaInsets();
     const {
         verification,
         isVerified,
@@ -132,7 +133,7 @@ export default function VerifyStudentScreen() {
                 style={{ flex: 1 }}
             >
                 <ScrollView
-                    contentContainerStyle={styles.scrollContent}
+                    contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(80, 40 + insets.bottom) }]}
                     showsVerticalScrollIndicator={false}
                     keyboardShouldPersistTaps="handled"
                 >
@@ -296,7 +297,6 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.background,
     },
     scrollContent: {
-        paddingBottom: 40,
     },
     header: {
         flexDirection: "row",

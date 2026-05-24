@@ -14,12 +14,12 @@ import AdminBookBorrowRecords from "@/components/admin/book-details/AdminBookBor
 import AdminBookActions from "@/components/admin/book-details/AdminBookActions";
 import React from "react";
 import { Alert, Animated, ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function AdminBookDetailsScreen() {
     const { bookId } = useLocalSearchParams<{ bookId: string }>();
     const router = useRouter();
-
+    const insets = useSafeAreaInsets();
     const {
         book,
         reviews,
@@ -103,7 +103,7 @@ export default function AdminBookDetailsScreen() {
 
             <ScrollView
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.scrollContent}
+                contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(80, 40 + insets.bottom) }]}
             >
                 {/* Hero Section */}
                 {/* Hero Section */}
@@ -221,7 +221,6 @@ const styles = StyleSheet.create({
         width: 28,
     },
     scrollContent: {
-        paddingBottom: Spacing.xl + 40,
     },
     contentSections: {
         paddingHorizontal: Spacing.md,
