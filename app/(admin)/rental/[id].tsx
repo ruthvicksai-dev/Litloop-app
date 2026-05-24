@@ -12,6 +12,7 @@ import ConfirmActionModal from "@/components/ui/feedback/ConfirmActionModal";
 import { FontSizes, Fonts } from "@/constants/fonts";
 import { Colors, RENTAL_STATUS_LABELS, STATUS_COLORS } from "@/constants/theme";
 import { useAuthState } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { triggerHaptic } from "@/utils";
@@ -34,6 +35,7 @@ export default function AdminRentalDetailScreen() {
     const rental = useQuery(api.rentals.getRental, accessToken ? { accessToken, rentalId: id as Id<"rentals"> } : "skip");
     const markDelivered = useMutation(api.rentals.markDelivered);
     const markReturned = useMutation(api.rentals.markReturned);
+    const { showToast } = useToast();
 
     const [loading, setLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
@@ -90,7 +92,8 @@ export default function AdminRentalDetailScreen() {
             await actionModal.action();
             setActionModal((prev) => ({ ...prev, visible: false }));
         } catch (error) {
-            console.error("Action failed:", error);
+            const message = error instanceof Error ? error.message : "Action failed. Please try again.";
+            showToast(message, "error");
         } finally {
             setLoading(false);
         }

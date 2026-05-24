@@ -1,12 +1,14 @@
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useAuthState } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
 import { useFadeSlideIn } from "@/hooks/animations/useFadeSlideIn";
 import { useMutation, useQuery } from "convex/react";
 import { useState, useMemo } from "react";
 
 export function useAdminBookDetailsScreen(bookId: string) {
     const { accessToken } = useAuthState();
+    const { showToast } = useToast();
     const { fadeAnim, slideAnim } = useFadeSlideIn({ slideFrom: 20, duration: 400 });
 
     const [reviewsLimit, setReviewsLimit] = useState(3);
@@ -52,7 +54,9 @@ export function useAdminBookDetailsScreen(bookId: string) {
             await removeBook({ accessToken, bookId: deleteTarget.id as Id<"books"> });
             setDeleteTarget(null);
             return true; // Signal success so page can navigate back
-        } catch {
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Failed to delete book.";
+            showToast(message, "error");
             setDeleting(false);
             return false;
         }
@@ -76,7 +80,9 @@ export function useAdminBookDetailsScreen(bookId: string) {
             });
             setInventoryValue("");
             return true;
-        } catch {
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Failed to update inventory.";
+            showToast(message, "error");
             return false;
         } finally {
             setUpdatingInventory(false);
