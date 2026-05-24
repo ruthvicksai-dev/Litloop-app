@@ -1,5 +1,6 @@
 import { GuestView } from "@/components/profile/GuestProfileView";
 import BookLoader from "@/components/ui/feedback/BookLoader";
+import { EmptyState } from "@/components/ui/feedback/EmptyState";
 import RentalCard from "@/components/ui/cards/RentalCard";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing } from "@/constants/theme";
@@ -133,18 +134,12 @@ export default function MyRentalsScreen() {
                 contentContainerStyle={styles.list}
                 showsVerticalScrollIndicator={false}
                 ListEmptyComponent={
-                    <View style={styles.emptyWrapper}>
-                        <Ionicons
-                            name="clipboard-outline"
-                            size={48}
-                            color={Colors.textLight}
-                            style={styles.emptyIcon}
-                        />
-                        <Text style={styles.emptyTitle}>No active rentals</Text>
-                        <TouchableOpacity style={styles.browseBtn} onPress={() => router.push("/(tabs)")}>
-                            <Text style={styles.browseLink}>Browse Books</Text>
-                        </TouchableOpacity>
-                    </View>
+                    <EmptyState
+                        icon="clipboard-outline"
+                        title="No active rentals"
+                        actionLabel="Browse Books"
+                        onAction={() => router.push("/(tabs)")}
+                    />
                 }
             />
         </SafeAreaView>
@@ -182,15 +177,6 @@ const styles = StyleSheet.create({
         flexGrow: 1,
         paddingHorizontal: Layout.screenPaddingWide,
         paddingBottom: Layout.touchSize * 2,
-    },
-    emptyWrapper: {
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-        paddingHorizontal: 24,
-    },
-    emptyIcon: {
-        marginBottom: Spacing.md,
     },
     emptyTitle: {
         fontSize: FontSizes.subtitle,

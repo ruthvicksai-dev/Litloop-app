@@ -50,7 +50,7 @@ export function GuestView({
 
             <View style={styles.content}>
                 <View style={styles.iconContainer}>
-                    <Ionicons name={icon as any} size={100} color={Colors.primary} />
+                    <Ionicons name={icon as any} size={80} color={Colors.primary} />
                 </View>
 
                 <Text style={styles.title} allowFontScaling={false}>
@@ -114,8 +114,8 @@ const styles = StyleSheet.create({
         paddingBottom: 60,
     },
     iconContainer: {
-        width: 160,
-        height: 160,
+        width: 130,
+        height: 130,
         borderRadius: 80,
         backgroundColor: Colors.primary + "10",
         alignItems: "center",
@@ -138,8 +138,9 @@ const styles = StyleSheet.create({
         lineHeight: 22,
     },
     button: {
-        width: "100%",
+        width: 220,
         borderRadius: 16,
+        marginTop: Spacing.sm,
     },
 });
 
