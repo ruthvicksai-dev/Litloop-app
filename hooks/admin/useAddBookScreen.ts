@@ -13,9 +13,14 @@ import {
 } from "@/utils";
 import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "expo-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-export function useAddBookScreen() {
+export type AddBookPrefillParams = {
+    scannedIsbn?: string;
+    manual?: string;
+};
+
+export function useAddBookScreen(params?: AddBookPrefillParams) {
     const { showToast } = useToast();
     const { accessToken } = useAuthState();
     const router = useRouter();
@@ -24,6 +29,9 @@ export function useAddBookScreen() {
 
     const [title, setTitle] = useState("");
     const [author, setAuthor] = useState("");
+    const [isbn, setIsbn] = useState("");
+    const [isManualLookupVisible, setIsManualLookupVisible] = useState(false);
+    const [hasFetchedBookInfo, setHasFetchedBookInfo] = useState(false);
     const [description, setDescription] = useState("");
     const [rentPerDay, setRentPerDay] = useState("");
     const [totalCopies, setTotalCopies] = useState("");
@@ -41,6 +49,9 @@ export function useAddBookScreen() {
     const [isFetchingBookInfo, setIsFetchingBookInfo] = useState(false);
     const [loading, setLoading] = useState(false);
 
+    const prefillApplied = useRef(false);
+    const shouldAutoFetchCover = useRef(false);
+
     const seriesList = useQuery(api.series.list, {
         paginationOpts: SERIES_PAGINATION_OPTS,
     });
@@ -48,9 +59,69 @@ export function useAddBookScreen() {
     const coverManager = useBookCoverManager({
         title,
         author,
+        isbn,
         onError: (message) => showToast(message, "error"),
         onSuccess: (message) => showToast(message, "success"),
     });
+
+    // Auto-fetch metadata when arriving from scan page with ISBN
+    useEffect(() => {
+        if (prefillApplied.current) return;
+
+        if (params?.scannedIsbn) {
+            prefillApplied.current = true;
+            setIsbn(params.scannedIsbn);
+            setIsFetchingBookInfo(true);
+
+            fetchBookMetadataExtended("", "", params.scannedIsbn)
+                .then((metadata) => {
+                    applyMetadataToBookForm(
+                        metadata,
+                        {
+                            setTitle,
+                            setAuthor,
+                            setDescription,
+                            setSelectedGenres,
+                            setPageCount,
+                            setPublishedYear,
+                            setPublisher,
+                            setIsbn,
+                        },
+                        { currentTitle: "", currentAuthor: "" }
+                    );
+                    if (metadata.descriptionRejectedReason) {
+                        showToast(
+                            `Book info fetched, but description was skipped: ${metadata.descriptionRejectedReason}`,
+                            "error"
+                        );
+                    } else {
+                        showToast("Book info fetched successfully.", "success");
+                    }
+                    setHasFetchedBookInfo(true);
+                    shouldAutoFetchCover.current = true;
+                })
+                .catch((error: unknown) => {
+                    const message =
+                        error instanceof Error ? error.message : "Failed to fetch book info.";
+                    showToast(message, "error");
+                })
+                .finally(() => {
+                    setIsFetchingBookInfo(false);
+                });
+        } else if (params?.manual === "true") {
+            setIsManualLookupVisible(true);
+            setHasFetchedBookInfo(true);
+            prefillApplied.current = true;
+        }
+    }, [params, showToast]);
+
+    // Auto-fetch cover after metadata state has been applied
+    useEffect(() => {
+        if (shouldAutoFetchCover.current && (title.trim() || isbn.trim())) {
+            shouldAutoFetchCover.current = false;
+            void coverManager.fetchCover();
+        }
+    }, [title, isbn, coverManager]);
 
     const toggleGenre = (genre: string) => {
         setSelectedGenres((current) =>
@@ -88,26 +159,30 @@ export function useAddBookScreen() {
         });
     };
 
-    const handleFetchBookInfo = async () => {
-        if (!title.trim()) {
-            showToast("Please enter a title to fetch book info.", "error");
+    const fetchBookInfo = async (isbnOverride?: string) => {
+        const lookupIsbn = isbnOverride ?? isbn;
+
+        if (!lookupIsbn.trim() && (!title.trim() || !author.trim())) {
+            showToast("Enter ISBN, or enter title and author to fetch book details.", "error");
             return;
         }
 
         setIsFetchingBookInfo(true);
         try {
-            const metadata = await fetchBookMetadataExtended(title, author);
+            const metadata = await fetchBookMetadataExtended(title, author, lookupIsbn);
             applyMetadataToBookForm(
                 metadata,
                 {
+                    setTitle,
                     setAuthor,
                     setDescription,
                     setSelectedGenres,
                     setPageCount,
                     setPublishedYear,
                     setPublisher,
+                    setIsbn,
                 },
-                { currentAuthor: author }
+                { currentTitle: title, currentAuthor: author }
             );
 
             if (metadata.descriptionRejectedReason) {
@@ -118,6 +193,7 @@ export function useAddBookScreen() {
             } else {
                 showToast("Book info fetched successfully.", "success");
             }
+            setHasFetchedBookInfo(true);
         } catch (error: unknown) {
             const message =
                 error instanceof Error ? error.message : "Failed to fetch book info.";
@@ -125,6 +201,13 @@ export function useAddBookScreen() {
         } finally {
             setIsFetchingBookInfo(false);
         }
+    };
+
+    const handleFetchBookInfo = () => fetchBookInfo();
+
+    const handleUseManualMethod = () => {
+        setIsManualLookupVisible(true);
+        setHasFetchedBookInfo(true);
     };
 
     const handleAddBook = async () => {
@@ -187,6 +270,7 @@ export function useAddBookScreen() {
                 pageCount: parsed.pageCount,
                 publishedYear: parsed.publishedYear,
                 publisher: publisher.trim() || undefined,
+                isbn: isbn.trim() || undefined,
                 isTop10,
                 top10Position: parsed.top10Position,
                 isFamous,
@@ -212,6 +296,12 @@ export function useAddBookScreen() {
         setTitle,
         author,
         setAuthor,
+        isbn,
+        setIsbn,
+        isManualLookupVisible,
+        setIsManualLookupVisible,
+        hasFetchedBookInfo,
+        isBookFormVisible: isManualLookupVisible || hasFetchedBookInfo,
         description,
         setDescription,
         rentPerDay,
@@ -249,6 +339,7 @@ export function useAddBookScreen() {
         toggleGenre,
         loading,
         handleFetchBookInfo,
+        handleUseManualMethod,
         handleAddBook,
         ...coverManager,
     };

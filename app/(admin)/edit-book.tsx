@@ -65,7 +65,6 @@ export default function EditBookScreen() {
         seriesId,
         setSeriesId,
         seriesList,
-        isFetchingBookInfo,
         toggleGenre,
         coverUris,
         isFetchingCover,
@@ -74,7 +73,6 @@ export default function EditBookScreen() {
         removeCover,
         loading,
         deleting,
-        handleFetchBookInfo,
         handleSave,
         handleDelete,
     } = useEditBookScreen(bookId);
@@ -111,12 +109,22 @@ export default function EditBookScreen() {
     return (
         <SafeAreaView style={styles.container}>
             <Animated.View style={{ opacity: fadeAnim }}>
-                <AdminHeader 
-                    title="Edit Book" 
+                <AdminHeader
+                    title="Edit Book"
                     rightComponent={
-                        <TouchableOpacity onPress={handleDelete} disabled={deleting}>
-                            <Ionicons name="trash-outline" size={22} color={Colors.error} />
-                        </TouchableOpacity>
+                        <View style={styles.headerActions}>
+                            <TouchableOpacity
+                                onPress={() => router.push({ pathname: "/(admin)/scan-book", params: { source: "edit-book" } })}
+                                style={styles.headerIconBtn}
+                                accessibilityRole="button"
+                                accessibilityLabel="Scan ISBN"
+                            >
+                                <Ionicons name="barcode-outline" size={22} color={Colors.text} />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={handleDelete} disabled={deleting}>
+                                <Ionicons name="trash-outline" size={22} color={Colors.error} />
+                            </TouchableOpacity>
+                        </View>
                     }
                 />
             </Animated.View>
@@ -132,18 +140,17 @@ export default function EditBookScreen() {
                     keyboardDismissMode="on-drag"
                 >
                     <Animated.View style={{ opacity: fadeAnim }}>
-                        <FormSectionHeader
-                            title="Book Basics"
-                            subtitle="Core details and pricing."
+                        <InputField
+                            label="Title"
+                            value={title}
+                            onChangeText={setTitle}
+                            placeholder="Book title"
                         />
-                        <InputField label="Title" value={title} onChangeText={setTitle} />
-                        <InputField label="Author" value={author} onChangeText={setAuthor} />
-                        <Button
-                            title="Fetch Book Info"
-                            onPress={handleFetchBookInfo}
-                            loading={isFetchingBookInfo}
-                            style={styles.fetchInfoBtn}
-                            variant="secondary"
+                        <InputField
+                            label="Author"
+                            value={author}
+                            onChangeText={setAuthor}
+                            placeholder="Author name"
                         />
 
                         <CoverGalleryField
@@ -277,8 +284,13 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingTop: Spacing.md,
     },
-    fetchInfoBtn: {
-        marginBottom: Spacing.md,
+    headerActions: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: Spacing.md,
+    },
+    headerIconBtn: {
+        padding: 2,
     },
     statsRow: {
         flexDirection: "row",

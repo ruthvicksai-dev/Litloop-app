@@ -8,6 +8,7 @@ const SERP_API_KEY = process.env.EXPO_PUBLIC_SERPAPI_KEY;
 type UseBookCoverManagerOptions = {
     title: string;
     author: string;
+    isbn?: string;
     initialCoverUris?: string[];
     onError: (message: string) => void;
     onSuccess: (message: string) => void;
@@ -34,6 +35,15 @@ type GoogleBooksResponse = {
     items?: GoogleBooksItem[];
 };
 
+type OpenLibrarySearchDoc = {
+    cover_i?: number;
+    isbn?: string[];
+};
+
+type OpenLibrarySearchResponse = {
+    docs?: OpenLibrarySearchDoc[];
+};
+
 type SerpImageResult = {
     original?: string;
     original_width?: number;
@@ -47,6 +57,7 @@ type SerpApiResponse = {
 export function useBookCoverManager({
     title,
     author,
+    isbn,
     initialCoverUris = [],
     onError,
     onSuccess,
@@ -74,15 +85,42 @@ export function useBookCoverManager({
         return toLimitedUniqueUrls([...existing, ...incoming]);
     };
 
+    const normalizedIsbn = isbn?.replace(/[-\s]/g, "").trim().toUpperCase() || "";
+
     const fetchGoogleBooksData = async () => {
-        const query = `intitle:${encodeURIComponent(title.trim())}`;
+        const query = normalizedIsbn
+            ? `isbn:${encodeURIComponent(normalizedIsbn)}`
+            : `intitle:${encodeURIComponent(title.trim())}`;
         const authorQuery = author.trim()
             ? `+inauthor:${encodeURIComponent(author.trim())}`
             : "";
-        const url = `https://www.googleapis.com/books/v1/volumes?q=${query}${authorQuery}`;
+        const url = `https://www.googleapis.com/books/v1/volumes?q=${query}${normalizedIsbn ? "" : authorQuery}`;
 
         const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error("Google Books cover request failed.");
+        }
         return (await response.json()) as GoogleBooksResponse;
+    };
+
+    const fetchOpenLibrarySearchData = async () => {
+        if (normalizedIsbn) {
+            const response = await fetch(`https://openlibrary.org/search.json?isbn=${encodeURIComponent(normalizedIsbn)}`);
+            if (!response.ok) {
+                throw new Error("OpenLibrary ISBN cover search failed.");
+            }
+            return (await response.json()) as OpenLibrarySearchResponse;
+        }
+
+        const titleQuery = `title=${encodeURIComponent(title.trim())}`;
+        const authorQuery = author.trim()
+            ? `&author=${encodeURIComponent(author.trim())}`
+            : "";
+        const response = await fetch(`https://openlibrary.org/search.json?${titleQuery}${authorQuery}`);
+        if (!response.ok) {
+            throw new Error("OpenLibrary cover search failed.");
+        }
+        return (await response.json()) as OpenLibrarySearchResponse;
     };
 
     const getIsbnFromBookInfo = (bookInfo?: GoogleBooksItem["volumeInfo"]) => {
@@ -98,6 +136,13 @@ export function useBookCoverManager({
         );
 
         return isbn13?.identifier || isbn10?.identifier || "";
+    };
+
+    const getIsbnFromOpenLibraryDoc = (doc?: OpenLibrarySearchDoc) => {
+        if (!doc?.isbn) {
+            return "";
+        }
+        return doc.isbn.find((value) => value.length === 13) || doc.isbn[0] || "";
     };
 
     const getGoogleCoverCandidates = (
@@ -135,12 +180,65 @@ export function useBookCoverManager({
         return [];
     };
 
+    const fetchOpenLibraryCoverById = async (coverId?: number) => {
+        if (!coverId) {
+            return [];
+        }
+
+        const largeCoverUrl = `https://covers.openlibrary.org/b/id/${coverId}-L.jpg?default=false`;
+
+        try {
+            const response = await fetch(largeCoverUrl);
+            if (response.ok) {
+                return [largeCoverUrl.replace("?default=false", "")];
+            }
+        } catch (error) {
+            console.log("OpenLibrary cover id fetch skipped", error);
+        }
+
+        return [];
+    };
+
+    const fetchOpenLibrarySearchCovers = async () => {
+        try {
+            const data = await fetchOpenLibrarySearchData();
+            let fetchedUrls: string[] = [];
+
+            for (const doc of data.docs || []) {
+                fetchedUrls = appendCandidates(
+                    fetchedUrls,
+                    await fetchOpenLibraryCoverById(doc.cover_i)
+                );
+
+                if (fetchedUrls.length >= MAX_COVERS) {
+                    break;
+                }
+
+                fetchedUrls = appendCandidates(
+                    fetchedUrls,
+                    await fetchOpenLibraryCovers(getIsbnFromOpenLibraryDoc(doc))
+                );
+
+                if (fetchedUrls.length >= MAX_COVERS) {
+                    break;
+                }
+            }
+
+            return fetchedUrls;
+        } catch (error) {
+            console.log("OpenLibrary cover search skipped", error);
+            return [];
+        }
+    };
+
     const fetchHdSearchResults = async () => {
         if (!SERP_API_KEY) {
             return [];
         }
 
-        const query = `${title.trim()} ${author.trim()} book cover`.trim();
+        const query = normalizedIsbn
+            ? `${normalizedIsbn} book cover`
+            : `${title.trim()} ${author.trim()} book cover`.trim();
         if (!query) {
             return [];
         }
@@ -154,6 +252,9 @@ export function useBookCoverManager({
                 safe: "active",
             });
             const response = await fetch(`https://serpapi.com/search.json?${params.toString()}`);
+            if (!response.ok) {
+                throw new Error("HD image search request failed.");
+            }
             const data = (await response.json()) as SerpApiResponse;
 
             const urls = (data.images_results || [])
@@ -171,38 +272,56 @@ export function useBookCoverManager({
     };
 
     const fetchCover = async () => {
-        if (!title.trim()) {
-            onError("Please enter a title to fetch cover.");
+        if (!normalizedIsbn && (!title.trim() || !author.trim())) {
+            onError("Enter ISBN, or enter title and author to fetch book covers.");
             return;
         }
 
         setIsFetchingCover(true);
         try {
             let fetchedUrls: string[] = [];
-            const data = await fetchGoogleBooksData();
-            const items = data.items || [];
+            try {
+                const data = await fetchGoogleBooksData();
+                const items = data.items || [];
 
-            for (const item of items) {
-                const bookInfo = item.volumeInfo;
-
-                fetchedUrls = appendCandidates(
-                    fetchedUrls,
-                    getGoogleCoverCandidates(bookInfo)
-                );
-
-                if (fetchedUrls.length >= MAX_COVERS) {
-                    break;
+                if (normalizedIsbn) {
+                    fetchedUrls = appendCandidates(
+                        fetchedUrls,
+                        await fetchOpenLibraryCovers(normalizedIsbn)
+                    );
                 }
 
-                const isbn = getIsbnFromBookInfo(bookInfo);
+                for (const item of items) {
+                    const bookInfo = item.volumeInfo;
+
+                    fetchedUrls = appendCandidates(
+                        fetchedUrls,
+                        getGoogleCoverCandidates(bookInfo)
+                    );
+
+                    if (fetchedUrls.length >= MAX_COVERS) {
+                        break;
+                    }
+
+                    const isbn = getIsbnFromBookInfo(bookInfo);
+                    fetchedUrls = appendCandidates(
+                        fetchedUrls,
+                        await fetchOpenLibraryCovers(isbn)
+                    );
+
+                    if (fetchedUrls.length >= MAX_COVERS) {
+                        break;
+                    }
+                }
+            } catch (error) {
+                console.log("Google Books cover fetch skipped", error);
+            }
+
+            if (fetchedUrls.length < MAX_COVERS) {
                 fetchedUrls = appendCandidates(
                     fetchedUrls,
-                    await fetchOpenLibraryCovers(isbn)
+                    await fetchOpenLibrarySearchCovers()
                 );
-
-                if (fetchedUrls.length >= MAX_COVERS) {
-                    break;
-                }
             }
 
             if (fetchedUrls.length < MAX_COVERS) {
@@ -220,7 +339,8 @@ export function useBookCoverManager({
             }
 
             onError("No cover found. Please upload manually.");
-        } catch {
+        } catch (error) {
+            console.log("Cover fetch failed", error);
             onError("Failed to fetch cover. Check your connection.");
         } finally {
             setIsFetchingCover(false);

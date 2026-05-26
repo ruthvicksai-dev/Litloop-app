@@ -44,6 +44,7 @@ export const add = mutation({
         pageCount: v.optional(v.number()),
         publishedYear: v.optional(v.number()),
         publisher: v.optional(v.string()),
+        isbn: v.optional(v.string()),
         isTop10: v.optional(v.boolean()),
         top10Position: v.optional(v.number()),
         isFamous: v.optional(v.boolean()),
@@ -61,6 +62,7 @@ export const add = mutation({
         const title = args.title.trim();
         const author = args.author.trim();
         const description = args.description.trim();
+        const isbn = args.isbn?.replace(/[-\s]/g, "").trim().toUpperCase() || undefined;
 
         if (!title) throw new Error("Title is required.");
         if (!author) throw new Error("Author is required.");
@@ -112,6 +114,7 @@ export const add = mutation({
             pageCount,
             publishedYear,
             publisher: args.publisher?.trim() || undefined,
+            isbn,
             isTop10,
             top10Position,
             isFamous: Boolean(args.isFamous),
@@ -121,6 +124,7 @@ export const add = mutation({
             searchText: buildSearchText({
                 title,
                 author,
+                isbn,
                 genre: primaryGenre,
                 genres: normalizedGenres,
             }),
@@ -153,6 +157,7 @@ export const update = mutation({
         pageCount: v.optional(v.number()),
         publishedYear: v.optional(v.number()),
         publisher: v.optional(v.string()),
+        isbn: v.optional(v.string()),
         isTop10: v.optional(v.boolean()),
         top10Position: v.optional(v.number()),
         isFamous: v.optional(v.boolean()),
@@ -226,6 +231,9 @@ export const update = mutation({
         if (args.publisher !== undefined) {
             updates.publisher = args.publisher.trim() || undefined;
         }
+        if (args.isbn !== undefined) {
+            updates.isbn = args.isbn.replace(/[-\s]/g, "").trim().toUpperCase() || undefined;
+        }
         if (args.isTop10 !== undefined || args.top10Position !== undefined) {
             const nextIsTop10 = args.isTop10 ?? Boolean(book.isTop10);
             updates.isTop10 = nextIsTop10;
@@ -277,12 +285,14 @@ export const update = mutation({
         if (
             args.title !== undefined ||
             args.author !== undefined ||
+            args.isbn !== undefined ||
             args.genre !== undefined ||
             args.genres !== undefined
         ) {
             updates.searchText = buildSearchText({
                 title: (updates.title as string | undefined) ?? book.title,
                 author: (updates.author as string | undefined) ?? book.author,
+                isbn: (updates.isbn as string | undefined) ?? book.isbn,
                 genre: (updates.genre as string | undefined) ?? book.genre,
                 genres: (updates.genres as string[] | undefined) ?? (book.genres ?? []),
             });
@@ -382,6 +392,7 @@ export const backfillSearchFields = mutation({
             const searchText = buildSearchText({
                 title: book.title,
                 author: book.author,
+                isbn: book.isbn,
                 genre,
                 genres: normalizedGenres,
             });

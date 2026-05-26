@@ -88,12 +88,14 @@ export function normalizeSingleGenre(genre: string | undefined): string | undefi
 export function buildSearchText(input: {
     title: string;
     author: string;
+    isbn?: string;
     genre?: string;
     genres?: string[];
 }) {
     const tokens = [
         input.title,
         input.author,
+        input.isbn ?? "",
         input.genre ?? "",
         ...(input.genres ?? []),
     ]

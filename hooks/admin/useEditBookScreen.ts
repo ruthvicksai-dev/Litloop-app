@@ -28,6 +28,9 @@ export function useEditBookScreen(bookId: string) {
 
     const [title, setTitle] = useState("");
     const [author, setAuthor] = useState("");
+    const [isbn, setIsbn] = useState("");
+    const [isManualLookupVisible, setIsManualLookupVisible] = useState(false);
+    const [hasFetchedBookInfo, setHasFetchedBookInfo] = useState(false);
     const [description, setDescription] = useState("");
     const [rentPerDay, setRentPerDay] = useState("");
     const [totalCopies, setTotalCopies] = useState("");
@@ -63,6 +66,7 @@ export function useEditBookScreen(bookId: string) {
     } = useBookCoverManager({
         title,
         author,
+        isbn,
         onError: (message) => showToast(message, "error"),
         onSuccess: (message) => showToast(message, "success"),
     });
@@ -105,6 +109,7 @@ export function useEditBookScreen(bookId: string) {
 
         setTitle(book.title);
         setAuthor(book.author);
+        setIsbn(book.isbn ?? "");
         setDescription(book.description);
         setRentPerDay(book.rentPerDay.toString());
         setTotalCopies(book.totalCopies.toString());
@@ -127,29 +132,34 @@ export function useEditBookScreen(bookId: string) {
                     : []
         );
         setNewImagesSelected(false);
+        setHasFetchedBookInfo(true);
         setInitialized(true);
     }, [book, initialized, setCoverUris, setNewImagesSelected]);
 
-    const handleFetchBookInfo = async () => {
-        if (!title.trim()) {
-            showToast("Please enter a title to fetch book info.", "error");
+    const fetchBookInfo = async (isbnOverride?: string) => {
+        const lookupIsbn = isbnOverride ?? isbn;
+
+        if (!lookupIsbn.trim() && (!title.trim() || !author.trim())) {
+            showToast("Enter ISBN, or enter title and author to fetch book details.", "error");
             return;
         }
 
         setIsFetchingBookInfo(true);
         try {
-            const metadata = await fetchBookMetadataExtended(title, author);
+            const metadata = await fetchBookMetadataExtended(title, author, lookupIsbn);
             applyMetadataToBookForm(
                 metadata,
                 {
+                    setTitle,
                     setAuthor,
                     setDescription,
                     setSelectedGenres,
                     setPageCount,
                     setPublishedYear,
                     setPublisher,
+                    setIsbn,
                 },
-                { currentAuthor: author }
+                { currentTitle: title, currentAuthor: author }
             );
 
             if (metadata.descriptionRejectedReason) {
@@ -160,6 +170,7 @@ export function useEditBookScreen(bookId: string) {
             } else {
                 showToast("Book info refreshed successfully.", "success");
             }
+            setHasFetchedBookInfo(true);
         } catch (error: unknown) {
             const message =
                 error instanceof Error ? error.message : "Failed to fetch book info.";
@@ -167,6 +178,18 @@ export function useEditBookScreen(bookId: string) {
         } finally {
             setIsFetchingBookInfo(false);
         }
+    };
+
+    const handleFetchBookInfo = () => fetchBookInfo();
+
+    const handleScannedIsbn = (scannedIsbn: string) => {
+        setIsbn(scannedIsbn);
+        void fetchBookInfo(scannedIsbn);
+    };
+
+    const handleUseManualMethod = () => {
+        setIsManualLookupVisible(true);
+        setHasFetchedBookInfo(true);
     };
 
     const handleSave = async () => {
@@ -225,6 +248,7 @@ export function useEditBookScreen(bookId: string) {
                 pageCount: parsed.pageCount,
                 publishedYear: parsed.publishedYear,
                 publisher: publisher.trim() || undefined,
+                isbn: isbn.trim() || undefined,
                 isTop10,
                 top10Position: parsed.top10Position,
                 isFamous,
@@ -288,6 +312,12 @@ export function useEditBookScreen(bookId: string) {
         setTitle,
         author,
         setAuthor,
+        isbn,
+        setIsbn,
+        isManualLookupVisible,
+        setIsManualLookupVisible,
+        hasFetchedBookInfo,
+        isBookFormVisible: isManualLookupVisible || hasFetchedBookInfo,
         description,
         setDescription,
         rentPerDay,
@@ -326,6 +356,8 @@ export function useEditBookScreen(bookId: string) {
         loading,
         deleting,
         handleFetchBookInfo,
+        handleScannedIsbn,
+        handleUseManualMethod,
         handleSave,
         handleDelete,
         coverUris,

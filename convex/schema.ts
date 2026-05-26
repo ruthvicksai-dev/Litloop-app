@@ -116,6 +116,7 @@ export default defineSchema({
         pageCount: v.optional(v.number()),
         publishedYear: v.optional(v.number()),
         publisher: v.optional(v.string()),
+        isbn: v.optional(v.string()),
         isTop10: v.optional(v.boolean()),
         top10Position: v.optional(v.number()),
         isFamous: v.optional(v.boolean()),

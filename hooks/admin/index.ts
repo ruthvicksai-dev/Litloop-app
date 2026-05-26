@@ -7,3 +7,4 @@ export * from "./useScheduleDeliveryScreen";
 export * from "./useVerifyPaymentScreen";
 export * from "./useVerifyStudentsScreen";
 export * from "./usePaymentSettings";
+export * from "./useScanBookScreen";

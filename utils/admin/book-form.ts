@@ -62,17 +62,24 @@ export function parseBookNumericFields(input: {
 export function applyMetadataToBookForm(
     metadata: BookMetadataExtended,
     setters: {
+        setTitle?: (value: string) => void;
         setAuthor: (value: string) => void;
         setDescription: (value: string) => void;
         setSelectedGenres: (genres: string[]) => void;
         setPageCount: (value: string) => void;
         setPublishedYear: (value: string) => void;
         setPublisher: (value: string) => void;
+        setIsbn?: (value: string) => void;
     },
     options: {
+        currentTitle?: string;
         currentAuthor: string;
     }
 ) {
+    if (!options.currentTitle?.trim() && metadata.title?.trim()) {
+        setters.setTitle?.(metadata.title.trim());
+    }
+
     if (!options.currentAuthor.trim() && metadata.author.trim()) {
         setters.setAuthor(metadata.author.trim());
     }
@@ -95,5 +102,9 @@ export function applyMetadataToBookForm(
 
     if (metadata.publisher) {
         setters.setPublisher(metadata.publisher);
+    }
+
+    if (metadata.isbn) {
+        setters.setIsbn?.(metadata.isbn);
     }
 }

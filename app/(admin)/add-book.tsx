@@ -1,29 +1,38 @@
+import AdminHeader from "@/components/admin/core/AdminHeader";
 import BookMetadataFields from "@/components/books/BookMetadataFields";
 import CoverGalleryField from "@/components/books/CoverGalleryField";
 import FeaturedSectionsFields from "@/components/books/FeaturedSectionsFields";
 import FormSectionHeader from "@/components/books/FormSectionHeader";
 import GenreSelector from "@/components/books/GenreSelector";
-import AdminHeader from "@/components/admin/core/AdminHeader";
 import Button from "@/components/ui/core/Button";
 import InputField from "@/components/ui/core/InputField";
+import BookLoader from "@/components/ui/feedback/BookLoader";
 import { Colors, Spacing } from "@/constants/theme";
 import { useAddBookScreen } from "@/hooks";
+import type { AddBookPrefillParams } from "@/hooks/admin/useAddBookScreen";
+import { Ionicons } from "@expo/vector-icons";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
     KeyboardAvoidingView,
     Platform,
     ScrollView,
     StyleSheet,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function AddBookScreen() {
     const insets = useSafeAreaInsets();
+    const router = useRouter();
+    const params = useLocalSearchParams<AddBookPrefillParams>();
     const {
         title,
         setTitle,
         author,
         setAuthor,
+        hasFetchedBookInfo,
         description,
         setDescription,
         rentPerDay,
@@ -63,22 +72,49 @@ export default function AddBookScreen() {
         loading,
         handleFetchBookInfo,
         handleAddBook,
-    } = useAddBookScreen();
+    } = useAddBookScreen(params);
+
+    // Show full-screen loader when fetching after scan
+    const isLoadingFromScan = isFetchingBookInfo && !hasFetchedBookInfo;
+
+    if (isLoadingFromScan) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <AdminHeader title="Add New Book" />
+                <View style={styles.center}>
+                    <BookLoader label="Fetching book details..." />
+                </View>
+            </SafeAreaView>
+        );
+    }
 
     return (
         <SafeAreaView style={styles.container}>
-            <AdminHeader title="Add New Book" />
+            <AdminHeader
+                title="Add New Book"
+                rightComponent={
+                    <TouchableOpacity
+                        onPress={() => router.replace("/(admin)/scan-book")}
+                        accessibilityRole="button"
+                        accessibilityLabel="Scan ISBN"
+                    >
+                        <Ionicons name="barcode-outline" size={22} color={Colors.text} />
+                    </TouchableOpacity>
+                }
+            />
             <KeyboardAvoidingView
                 style={styles.flex}
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
                 keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
             >
                 <ScrollView
-                    contentContainerStyle={[styles.scroll, { paddingBottom: Math.max(100, 60 + insets.bottom) }]}
+                    contentContainerStyle={[
+                        styles.scroll,
+                        { paddingBottom: Math.max(100, 60 + insets.bottom) },
+                    ]}
                     keyboardShouldPersistTaps="handled"
                     keyboardDismissMode="on-drag"
                 >
-
                     <InputField
                         label="Title"
                         placeholder="Book title"
@@ -122,7 +158,7 @@ export default function AddBookScreen() {
                         helperText="Choose up to 3 main genres."
                     />
                     <InputField
-                        label="Rent Per Day ₹"
+                        label="Rent Per Day (INR)"
                         placeholder="e.g. 10"
                         value={rentPerDay}
                         onChangeText={setRentPerDay}
@@ -136,9 +172,7 @@ export default function AddBookScreen() {
                         keyboardType="numeric"
                     />
 
-                    <FormSectionHeader
-                        title="More Details"
-                    />
+                    <FormSectionHeader title="More Details" />
                     <BookMetadataFields
                         pageCount={pageCount}
                         publishedYear={publishedYear}
@@ -189,6 +223,11 @@ const styles = StyleSheet.create({
     },
     flex: {
         flex: 1,
+    },
+    center: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
     },
     scroll: {
         paddingHorizontal: Spacing.lg,

@@ -20,6 +20,7 @@ export default function AdminLayout() {
             <Stack.Screen name="books" />
             <Stack.Screen name="book-details" />
             <Stack.Screen name="edit-book" />
+            <Stack.Screen name="scan-book" />
             <Stack.Screen name="schedule-delivery" />
             <Stack.Screen name="verify-payment" />
             <Stack.Screen name="payment-settings" />

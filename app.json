@@ -11,7 +11,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.ruthvicksai.litloop",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Litloop needs your location to provide accurate book delivery to your doorstep."
+        "NSLocationWhenInUseUsageDescription": "Litloop needs your location to provide accurate book delivery to your doorstep.",
+        "NSCameraUsageDescription": "Litloop needs camera access to scan book ISBN barcodes."
       }
     },
     "android": {
@@ -26,6 +27,7 @@
       "package": "com.ruthvicksai.litloop",
       "permissions": [
         "POST_NOTIFICATIONS",
+        "CAMERA",
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION"
       ],
@@ -55,6 +57,12 @@
         }
       ],
       "expo-notifications",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Litloop needs camera access to scan book ISBN barcodes."
+        }
+      ],
       "@react-native-community/datetimepicker",
       "expo-secure-store",
       "expo-location",

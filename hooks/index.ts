@@ -7,6 +7,7 @@ export * from "./admin/useScheduleDeliveryScreen";
 export * from "./admin/useVerifyPaymentScreen";
 export * from "./admin/useVerifyStudentsScreen";
 export * from "./admin/usePaymentSettings";
+export * from "./admin/useScanBookScreen";
 export * from "./animations/useFadeSlideIn";
 export * from "./animations/useFadeSlideScaleIn";
 export * from "./auth/useAuthRedirect";
