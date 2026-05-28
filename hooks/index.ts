@@ -25,6 +25,7 @@ export * from "./home/useHomeEntrance";
 export * from "./home/useHomeScreen";
 export * from "./profile/useProfileTabs";
 export * from "./rental/usePaymentScreen";
+export * from "./rental/usePreviousAddresses";
 export * from "./rental/useRentalFilters";
 export * from "./rental/useRequestRentalScreen";
 export * from "./rental/useScheduleReturnScreen";

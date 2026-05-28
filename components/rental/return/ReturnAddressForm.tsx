@@ -6,9 +6,12 @@ import { Colors, Spacing } from "@/constants/theme";
 import InputField from "@/components/ui/core/InputField";
 import DropdownField from "@/components/ui/core/DropdownField";
 import { ALLOWED_AREAS } from "@/utils/location/areas";
+import DeliveryZoneSelector from "@/components/rental/form/DeliveryZoneSelector";
 
 interface ReturnAddressFormProps {
     zone: string;
+    setZone: (val: string) => void;
+    isVerifiedStudent: boolean;
     useSameAddress: boolean;
     setUseSameAddress: (val: boolean) => void;
     phone: string;
@@ -30,10 +33,13 @@ interface ReturnAddressFormProps {
     formattedAddress: string;
     isLocating: boolean;
     onLocatePress: () => void;
+    deliveryLocation?: any;
 }
 
 export default function ReturnAddressForm({
     zone,
+    setZone,
+    isVerifiedStudent,
     useSameAddress,
     setUseSameAddress,
     phone,
@@ -55,6 +61,7 @@ export default function ReturnAddressForm({
     formattedAddress,
     isLocating,
     onLocatePress,
+    deliveryLocation,
 }: ReturnAddressFormProps) {
     return (
         <View>
@@ -71,8 +78,35 @@ export default function ReturnAddressForm({
                 </TouchableOpacity>
             </View>
 
+            {useSameAddress && deliveryLocation && (
+                <View style={styles.readOnlyCard}>
+                    <View style={styles.readOnlyIcon}>
+                        <Ionicons
+                            name={zone === "Home" ? "home" : "school"}
+                            size={18}
+                            color={Colors.primary}
+                        />
+                    </View>
+                    <View style={styles.readOnlyContent}>
+                        <Text style={styles.readOnlyTitle}>
+                            {zone === "Home"
+                                ? [deliveryLocation.area, deliveryLocation.landmark].filter(Boolean).join(" · ") || "No details"
+                                : [deliveryLocation.department, `Room ${deliveryLocation.roomNo}`].filter(Boolean).join(" · ") || "No details"}
+                        </Text>
+                        <Text style={styles.readOnlySubtitle} numberOfLines={1}>
+                            Phone: {deliveryLocation.phone}
+                        </Text>
+                    </View>
+                </View>
+            )}
+
             {!useSameAddress && (
                 <View style={styles.customAddressSection}>
+                    <DeliveryZoneSelector 
+                        zone={zone} 
+                        setZone={setZone} 
+                        isVerifiedStudent={isVerifiedStudent} 
+                    />
                     {zone === "College" ? (
                         <>
                             <InputField
@@ -238,5 +272,39 @@ const styles = StyleSheet.create({
         fontSize: FontSizes.small,
         fontFamily: Fonts.regular,
         color: Colors.text,
+    },
+    readOnlyCard: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: Colors.surfaceCard,
+        borderRadius: 12,
+        padding: Spacing.sm + 2,
+        borderWidth: 1,
+        borderColor: Colors.border,
+        marginTop: Spacing.xs,
+        marginBottom: Spacing.sm,
+    },
+    readOnlyIcon: {
+        width: 36,
+        height: 36,
+        borderRadius: 10,
+        backgroundColor: Colors.primary + "10",
+        justifyContent: "center",
+        alignItems: "center",
+        marginRight: Spacing.sm,
+    },
+    readOnlyContent: {
+        flex: 1,
+    },
+    readOnlyTitle: {
+        fontSize: FontSizes.body,
+        fontFamily: Fonts.bold,
+        color: Colors.text,
+        marginBottom: 2,
+    },
+    readOnlySubtitle: {
+        fontSize: FontSizes.small,
+        fontFamily: Fonts.regular,
+        color: Colors.textSecondary,
     },
 });

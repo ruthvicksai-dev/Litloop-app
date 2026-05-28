@@ -6,14 +6,17 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 interface DeliveryZoneSelectorProps {
     zone: string;
     setZone: (zone: string) => void;
+    isVerifiedStudent?: boolean;
 }
 
-export default function DeliveryZoneSelector({ zone, setZone }: DeliveryZoneSelectorProps) {
+export default function DeliveryZoneSelector({ zone, setZone, isVerifiedStudent = false }: DeliveryZoneSelectorProps) {
+    const availableZones = isVerifiedStudent ? ZONES : ZONES.filter(z => z === "Home");
+
     return (
         <>
             <Text style={styles.sectionTitle}>Delivery Zone</Text>
             <View style={styles.zoneGrid}>
-                {ZONES.map((item) => (
+                {availableZones.map((item) => (
                     <TouchableOpacity
                         key={item}
                         style={[

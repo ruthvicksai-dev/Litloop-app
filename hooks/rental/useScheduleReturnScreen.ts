@@ -6,7 +6,7 @@ import { getPhoneValidationError, normalizePhoneNumber } from "@/utils";
 import { TIME_SLOTS } from "@/utils";
 import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "expo-router";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 export function useScheduleReturnScreen(rentalId: string) {
     const { accessToken } = useAuthState();
@@ -26,6 +26,7 @@ export function useScheduleReturnScreen(rentalId: string) {
 
     // Pickup Address States
     const [useSameAddress, setUseSameAddress] = useState(true);
+    const [pickupZone, setPickupZone] = useState("Home");
     const [phone, setPhone] = useState("");
     const [area, setArea] = useState("");
     const [landmark, setLandmark] = useState("");
@@ -36,6 +37,13 @@ export function useScheduleReturnScreen(rentalId: string) {
     const [latitude, setLatitude] = useState<number | undefined>(undefined);
     const [longitude, setLongitude] = useState<number | undefined>(undefined);
     const [formattedAddress, setFormattedAddress] = useState("");
+
+    // Initialize pickupZone from rental zone once it loads
+    useEffect(() => {
+        if (rental?.zone) {
+            setPickupZone(rental.zone);
+        }
+    }, [rental?.zone]);
 
     const estimatedDays = useMemo(() => {
         if (!rental?.deliveryDate || !pickupDate) {
@@ -94,7 +102,7 @@ export function useScheduleReturnScreen(rentalId: string) {
                 showToast(phoneError, "error");
                 return;
             }
-            if (rental?.zone === "Home" && !area.trim()) {
+            if (pickupZone === "Home" && !area.trim()) {
                 showToast("Please select your pickup area.", "error");
                 return;
             }
@@ -155,6 +163,8 @@ export function useScheduleReturnScreen(rentalId: string) {
         // New Address Props
         useSameAddress,
         setUseSameAddress,
+        pickupZone,
+        setPickupZone,
         phone,
         setPhone,
         landmark,

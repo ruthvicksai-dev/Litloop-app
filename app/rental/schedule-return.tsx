@@ -34,11 +34,16 @@ import {
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useAuthState } from "@/context/AuthContext";
+
 export default function ScheduleReturnScreen() {
     const { rentalId } = useLocalSearchParams<{ rentalId: string }>();
     const router = useRouter();
     const { showToast } = useToast();
     const insets = useSafeAreaInsets();
+    const { user } = useAuthState();
+    const isVerifiedStudent = user?.isVerifiedStudent || false;
+    
     const {
         rental,
         pickupDate,
@@ -55,6 +60,8 @@ export default function ScheduleReturnScreen() {
         handleSchedule,
         useSameAddress,
         setUseSameAddress,
+        pickupZone,
+        setPickupZone,
         phone,
         setPhone,
         landmark,
@@ -329,7 +336,9 @@ export default function ScheduleReturnScreen() {
                         />
 
                         <ReturnAddressForm
-                            zone={rental.zone}
+                            zone={pickupZone}
+                            setZone={setPickupZone}
+                            isVerifiedStudent={isVerifiedStudent}
                             useSameAddress={useSameAddress}
                             setUseSameAddress={setUseSameAddress}
                             phone={phone}
@@ -350,6 +359,7 @@ export default function ScheduleReturnScreen() {
                             longitude={longitude}
                             formattedAddress={formattedAddress}
                             isLocating={isLocating}
+                            deliveryLocation={rental?.deliveryLocation}
                             onLocatePress={async () => {
                                 try {
                                     setIsLocating(true);

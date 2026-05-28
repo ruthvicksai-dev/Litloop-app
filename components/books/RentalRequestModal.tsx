@@ -7,7 +7,8 @@ import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, FEATURE_FLAGS } from "@/constants/theme";
 import { useAuthState } from "@/context/AuthContext";
 import { useToast, ToastProvider } from "@/context/ToastContext";
-import { useFadeSlideIn, useRequestRentalScreen } from "@/hooks";
+import { useFadeSlideIn, useRequestRentalScreen, usePreviousAddresses } from "@/hooks";
+import { AddressTemplate } from "@/components/rental/form/PreviousAddressCard";
 import { 
     getReliableCurrentLocation,
     resolveDeliveryAreaFromLocation,
@@ -16,8 +17,8 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
-import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import React, { useState, useEffect } from "react";
+import { BackHandler, Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 interface RentalRequestModalProps {
@@ -28,7 +29,7 @@ interface RentalRequestModalProps {
 
 export default function RentalRequestModal({ visible, onClose, bookId }: RentalRequestModalProps) {
     return (
-        <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
+        <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={() => {}}>
             <ToastProvider>
                 <RentalRequestModalContent visible={visible} onClose={onClose} bookId={bookId} />
             </ToastProvider>
@@ -75,6 +76,15 @@ function RentalRequestModalContent({
     const { showToast } = useToast();
     const [isLocating, setIsLocating] = useState(false);
     const [isMapPickerVisible, setIsMapPickerVisible] = useState(false);
+    const { addresses: previousAddresses, isLoading: previousAddressesLoading } = usePreviousAddresses();
+    const [selectedPreviousAddress, setSelectedPreviousAddress] = useState<AddressTemplate | null>(null);
+    const [verifyingAddressId, setVerifyingAddressId] = useState<string | null>(null);
+    const [exitConfirmVisible, setExitConfirmVisible] = useState(false);
+
+    const handleZoneChange = (newZone: string) => {
+        setZone(newZone);
+        setSelectedPreviousAddress(null);
+    };
     const [mismatchModalVisible, setMismatchModalVisible] = useState(false);
     const [mismatchConfig, setMismatchConfig] = useState({
         title: "",
@@ -255,6 +265,99 @@ function RentalRequestModalContent({
         await handleRequest();
     };
 
+    const handleSelectPreviousAddress = async (template: AddressTemplate) => {
+        if (template.zone === "Home") {
+            // Immediately verify GPS against the saved area
+            setVerifyingAddressId(template.id);
+            try {
+                const location = await getReliableCurrentLocation();
+                const { latitude: lat, longitude: lng } = location.coords;
+
+                // Validate current GPS against the saved area
+                const validation = validateDeliveryAreaSelection({
+                    selectedArea: template.area ?? "",
+                    latitude: lat,
+                    longitude: lng,
+                });
+
+                if (!validation.isValid && validation.reason !== "missing_location") {
+                    showToast(
+                        "You're not currently in the saved delivery area. Please use a different address.",
+                        "error"
+                    );
+                    return;
+                }
+
+                // GPS valid — fill everything including live coords
+                setZone(template.zone);
+                setPhone(template.phone);
+                setArea(template.area ?? "");
+                setLandmark(template.landmark ?? "");
+                setLatitude(lat);
+                setLongitude(lng);
+
+                // Reverse geocode the current position for the formatted address
+                const address = await Location.reverseGeocodeAsync({ latitude: lat, longitude: lng });
+                if (address?.[0]) {
+                    const addr = address[0];
+                    setFormattedAddress(
+                        [addr.name, addr.street, addr.district, addr.city, addr.region, addr.postalCode]
+                            .filter(Boolean)
+                            .join(", ")
+                    );
+                }
+
+                setSelectedPreviousAddress(template);
+                showToast("Location verified! Ready to submit.", "success");
+            } catch (error) {
+                showToast(
+                    error instanceof Error ? error.message : "Failed to verify location.",
+                    "error"
+                );
+            } finally {
+                setVerifyingAddressId(null);
+            }
+        } else {
+            // College: check student verification
+            if (!user?.isVerifiedStudent) {
+                showToast("You must verify your student status first.", "error");
+                return;
+            }
+            setZone(template.zone);
+            setPhone(template.phone);
+            setRoomNo(template.roomNo ?? "");
+            setYearOfStudy(template.yearOfStudy ?? "");
+            setDepartment(template.department ?? "");
+            setRollNo(template.rollNo ?? "");
+            setSelectedPreviousAddress(template);
+            showToast("Address selected! Ready to submit.", "success");
+        }
+    };
+
+    const handleClearPreviousAddress = () => {
+        setSelectedPreviousAddress(null);
+    };
+
+    const isBusy = loading || verifyingAddressId !== null || isLocating;
+
+    const handleClose = () => {
+        if (isBusy) {
+            setExitConfirmVisible(true);
+        } else {
+            onClose();
+        }
+    };
+
+    // Intercept Android hardware back button
+    useEffect(() => {
+        if (!visible) return;
+        const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+            handleClose();
+            return true; // prevent default back
+        });
+        return () => sub.remove();
+    }, [visible, isBusy]);
+
     const renderContent = () => {
         if (isAuthLoading) {
             return (
@@ -289,7 +392,7 @@ function RentalRequestModalContent({
                 fadeAnim={fadeAnim}
                 slideAnim={slideAnim}
                 zone={zone}
-                setZone={setZone}
+                setZone={handleZoneChange}
                 roomNo={roomNo}
                 setRoomNo={setRoomNo}
                 yearOfStudy={yearOfStudy}
@@ -322,6 +425,12 @@ function RentalRequestModalContent({
                     onClose();
                     router.push("/profile/verify");
                 }}
+                previousAddresses={previousAddresses}
+                previousAddressesLoading={previousAddressesLoading}
+                onSelectPreviousAddress={handleSelectPreviousAddress}
+                selectedPreviousAddress={selectedPreviousAddress}
+                onClearPreviousAddress={handleClearPreviousAddress}
+                verifyingAddressId={verifyingAddressId}
             />
         );
     };
@@ -329,7 +438,7 @@ function RentalRequestModalContent({
     return (
             <SafeAreaView style={styles.container} edges={["top"]}>
                 <View style={styles.header}>
-                    <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+                    <TouchableOpacity onPress={handleClose} style={styles.closeBtn}>
                         <Ionicons name="close" size={24} color={Colors.text} />
                     </TouchableOpacity>
                     <View style={styles.headerText}>
@@ -377,6 +486,20 @@ function RentalRequestModalContent({
                     stackActions
                     onConfirm={mismatchConfig.onConfirm}
                     onCancel={() => setMismatchModalVisible(false)}
+                />
+
+                <ConfirmActionModal
+                    visible={exitConfirmVisible}
+                    title="Are you sure?"
+                    message="A process is still running. Are you sure you want to go back?"
+                    confirmLabel="Yes, Go Back"
+                    cancelLabel="Stay"
+                    stackActions
+                    onConfirm={() => {
+                        setExitConfirmVisible(false);
+                        onClose();
+                    }}
+                    onCancel={() => setExitConfirmVisible(false)}
                 />
             </SafeAreaView>
     );
