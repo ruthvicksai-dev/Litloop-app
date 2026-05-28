@@ -239,7 +239,7 @@ export default function SeriesManagementScreen() {
             >
                 <KeyboardAvoidingView
                     style={styles.modalOverlay}
-                    behavior={Platform.OS === "ios" ? "padding" : "height"}
+                    behavior={Platform.OS === "ios" ? "padding" : undefined}
                 >
                     <ScrollView
                         contentContainerStyle={styles.modalScroll}

@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
     },
     content: {
         flexGrow: 1,
-        paddingBottom: 100,
+        paddingBottom: 80,
     },
     header: {
         flexDirection: "row",
@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
     },
     listSection: {
         paddingTop: Spacing.md,
-        minHeight: height * 0.5,
+        minHeight: height * 0.25,
         backgroundColor: "transparent",
     },
     emptyWrapper: {

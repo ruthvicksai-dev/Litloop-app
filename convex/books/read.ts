@@ -91,14 +91,25 @@ export const searchBooks = query({
             const results = await ctx.db
                 .query("books")
                 .withSearchIndex("search_books", (q) => {
-                    const searched = q.search("searchText", normalizedSearch);
-                    return selectedGenre ? searched.eq("genres", selectedGenre as any) : searched;
+                    return q.search("searchText", normalizedSearch);
                 })
                 .paginate(args.paginationOpts);
 
+            const filteredPage = selectedGenre
+                ? results.page.filter((book) => {
+                    const bookGenres = [
+                        ...(book.genre ? [book.genre] : []),
+                        ...(book.genres ?? []),
+                    ];
+                    return bookGenres.some(
+                        (g) => g.toLowerCase() === selectedGenre.toLowerCase()
+                    );
+                })
+                : results.page;
+
             return {
                 ...results,
-                page: await Promise.all(results.page.map((book) => mapBookForClient(ctx, book))),
+                page: await Promise.all(filteredPage.map((book) => mapBookForClient(ctx, book))),
             };
         }
 

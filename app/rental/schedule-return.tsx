@@ -1,7 +1,6 @@
 import BookLoader from "@/components/ui/feedback/BookLoader";
 import Button from "@/components/ui/core/Button";
 import ConfirmActionModal from "@/components/ui/feedback/ConfirmActionModal";
-import MapLocationPicker from "@/components/ui/pickers/MapLocationPicker";
 import SlotDatePicker from "@/components/ui/pickers/SlotDatePicker";
 import SlotTimePicker from "@/components/ui/pickers/SlotTimePicker";
 import ReturnAddressForm from "@/components/rental/return/ReturnAddressForm";
@@ -22,8 +21,9 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
+    Keyboard,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -76,7 +76,6 @@ export default function ScheduleReturnScreen() {
         formattedAddress,
         setFormattedAddress,
     } = useScheduleReturnScreen(rentalId);
-    const [isMapPickerVisible, setIsMapPickerVisible] = React.useState(false);
     const [isLocating, setIsLocating] = React.useState(false);
     const [mismatchModalVisible, setMismatchModalVisible] = React.useState(false);
     const [mismatchConfig, setMismatchConfig] = React.useState({
@@ -256,6 +255,22 @@ export default function ScheduleReturnScreen() {
         }
     }, [availableTimeSlots, pickupTime, setPickupTime]);
 
+    const scrollRef = useRef<ScrollView>(null);
+
+    // Android adjustResize bug: view stays shrunken after keyboard dismisses.
+    useEffect(() => {
+        if (Platform.OS !== "android") return;
+        const sub = Keyboard.addListener("keyboardDidHide", () => {
+            setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: false }), 100);
+        });
+        return () => sub.remove();
+    }, []);
+
+    const Wrapper = Platform.OS === "ios" ? KeyboardAvoidingView : View;
+    const wrapperProps = Platform.OS === "ios"
+        ? { behavior: "padding" as const, keyboardVerticalOffset: 0 }
+        : {};
+
     if (rental === undefined) {
         return (
             <View style={styles.center}>
@@ -265,7 +280,7 @@ export default function ScheduleReturnScreen() {
     }
 
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
                     <Ionicons name="chevron-back" size={24} color={Colors.text} />
@@ -276,12 +291,9 @@ export default function ScheduleReturnScreen() {
                 <View style={styles.headerSpacer} />
             </View>
 
-            <KeyboardAvoidingView
-                style={styles.flex}
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
-                keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
-            >
+            <Wrapper style={styles.flex} {...wrapperProps}>
                 <ScrollView
+                    ref={scrollRef}
                     contentContainerStyle={[styles.scroll, { paddingBottom: Math.max(100, 60 + insets.bottom) }]}
                     keyboardShouldPersistTaps="handled"
                     keyboardDismissMode="on-drag"
@@ -359,7 +371,6 @@ export default function ScheduleReturnScreen() {
                                     setIsLocating(false);
                                 }
                             }}
-                            onAdjustMapPress={() => setIsMapPickerVisible(true)}
                         />
 
                         <ReturnRatingForm
@@ -383,27 +394,8 @@ export default function ScheduleReturnScreen() {
                         />
                     </View>
                 </ScrollView>
-            </KeyboardAvoidingView>
-            {latitude !== undefined && longitude !== undefined ? (
-                <MapLocationPicker
-                    visible={isMapPickerVisible}
-                    latitude={latitude}
-                    longitude={longitude}
-                    title="Adjust Pickup Location"
-                    subtitle="Drag the pin or tap the map, then confirm the exact pickup point."
-                    onClose={() => setIsMapPickerVisible(false)}
-                    onConfirm={async (coords) => {
-                        try {
-                            await updateAddressFromCoords(coords.latitude, coords.longitude);
-                            showToast("Location adjusted successfully!", "success");
-                        } catch {
-                            showToast("Failed to update the selected location.", "error");
-                        } finally {
-                            setIsMapPickerVisible(false);
-                        }
-                    }}
-                />
-            ) : null}
+            </Wrapper>
+
             <ConfirmActionModal
                 visible={mismatchModalVisible}
                 title={mismatchConfig.title}

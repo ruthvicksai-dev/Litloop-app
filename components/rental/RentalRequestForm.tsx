@@ -1,14 +1,16 @@
 import Button from "@/components/ui/core/Button";
 import InputField from "@/components/ui/core/InputField";
 import { Spacing, Colors } from "@/constants/theme";
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
     Animated,
+    Keyboard,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
     StyleSheet,
     Text,
+    View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import DeliveryZoneSelector from "@/components/rental/form/DeliveryZoneSelector";
@@ -80,14 +82,28 @@ export default function RentalRequestForm({
     onVerifyPress,
 }: RentalRequestFormProps) {
     const insets = useSafeAreaInsets();
+    const scrollRef = useRef<ScrollView>(null);
+
+    // Android Modal + adjustResize bug: view stays shrunken after keyboard dismisses.
+    // Force a re-layout by nudging the ScrollView on keyboardDidHide.
+    useEffect(() => {
+        if (Platform.OS !== "android") return;
+        const sub = Keyboard.addListener("keyboardDidHide", () => {
+            // Tiny timeout lets the native resize settle before we re-measure
+            setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: false }), 100);
+        });
+        return () => sub.remove();
+    }, []);
+
+    const Wrapper = Platform.OS === "ios" ? KeyboardAvoidingView : View;
+    const wrapperProps = Platform.OS === "ios"
+        ? { behavior: "padding" as const, keyboardVerticalOffset: 0 }
+        : {};
 
     return (
-        <KeyboardAvoidingView
-            style={styles.flex}
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
-        >
+        <Wrapper style={styles.flex} {...wrapperProps}>
             <ScrollView
+                ref={scrollRef}
                 contentContainerStyle={[
                     styles.scroll,
                     { paddingBottom: Math.max(120, 80 + insets.bottom) },
@@ -158,7 +174,7 @@ export default function RentalRequestForm({
                     />
                 </Animated.View>
             </ScrollView>
-        </KeyboardAvoidingView>
+        </Wrapper>
     );
 }
 

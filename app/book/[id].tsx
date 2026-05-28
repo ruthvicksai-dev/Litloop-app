@@ -1,10 +1,10 @@
 import BookImageCarousel from "@/components/books/BookImageCarousel";
 import BookReviews from "@/components/books/BookReviews";
 import RentalRequestModal from "@/components/books/RentalRequestModal";
-import BookLoader from "@/components/ui/feedback/BookLoader";
-import Button from "@/components/ui/core/Button";
-import ConfirmActionModal from "@/components/ui/feedback/ConfirmActionModal";
 import DiscoverBookCard from "@/components/ui/cards/DiscoverBookCard";
+import Button from "@/components/ui/core/Button";
+import BookLoader from "@/components/ui/feedback/BookLoader";
+import ConfirmActionModal from "@/components/ui/feedback/ConfirmActionModal";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing } from "@/constants/theme";
 import { useAuthState } from "@/context/AuthContext";
@@ -200,6 +200,18 @@ export default function BookDetailsScreen() {
                         </TouchableOpacity>
                     </View>
 
+                    {/* Genre Tags */}
+                    {(book.genres?.length || book.genre) ? (
+                        <View style={styles.genreRow}>
+                            {(book.genres?.length ? book.genres : book.genre ? [book.genre] : []).map((g: string) => (
+                                <View key={g} style={styles.genrePill}>
+                                    <Ionicons name="pricetags-outline" size={12} color={Colors.primary} style={{ marginRight: 4 }} />
+                                    <Text style={styles.genrePillText}>{g}</Text>
+                                </View>
+                            ))}
+                        </View>
+                    ) : null}
+
                     <View style={styles.statsContainer}>
                         <View style={styles.statItem}>
                             <Ionicons name="pricetag-outline" size={20} color={Colors.primary} />
@@ -264,32 +276,32 @@ export default function BookDetailsScreen() {
                         <View style={styles.instructionItem}>
                             <Ionicons name="bicycle-outline" size={18} color={Colors.primary} />
                             <Text style={styles.instructionText}>
-                                Enjoy <Text style={{fontFamily: Fonts.bold}}>free</Text> doorstep delivery and pickup.
+                                Enjoy <Text style={{ fontFamily: Fonts.bold }}>free</Text> doorstep delivery and pickup.
                             </Text>
                         </View>
                         <View style={styles.instructionItem}>
                             <Ionicons name="wallet-outline" size={18} color={Colors.success} />
                             <Text style={styles.instructionText}>
-                                Pay via <Text style={{fontFamily: Fonts.bold}}>UPI or Cash</Text>. No subscription needed.
+                                Pay via <Text style={{ fontFamily: Fonts.bold }}>UPI or Cash</Text>. No subscription needed.
                             </Text>
                         </View>
                         <View style={styles.instructionItem}>
                             <Ionicons name="time-outline" size={18} color={Colors.primary} />
                             <Text style={styles.instructionText}>
-                                Late returns incur a fee of <Text style={{fontFamily: Fonts.bold}}>1.5x daily rent</Text> (Rent + half penalty).
+                                Late returns incur a fee of <Text style={{ fontFamily: Fonts.bold }}>1.5x daily rent</Text> (Rent + half penalty).
                             </Text>
                         </View>
                         <View style={styles.instructionItem}>
                             <Ionicons name="warning-outline" size={18} color={Colors.warning} />
                             <Text style={styles.instructionText}>
-                                Damage (stains, tears, etc.) incurs a minimum <Text style={{fontFamily: Fonts.bold}}>₹30 fee</Text> or replacement cost.
+                                Damage (stains, tears, etc.) incurs a minimum <Text style={{ fontFamily: Fonts.bold }}>₹30 fee</Text> or replacement cost.
                             </Text>
                         </View>
 
                         <View style={styles.instructionItem}>
                             <Ionicons name="close-circle-outline" size={18} color={Colors.error} />
                             <Text style={styles.instructionText}>
-                                Cancel anytime <Text style={{fontFamily: Fonts.bold}}>before delivery is scheduled</Text> by contacting support.
+                                Cancel anytime <Text style={{ fontFamily: Fonts.bold }}>before delivery is scheduled</Text> by contacting support.
                             </Text>
                         </View>
                     </View>
@@ -445,7 +457,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "flex-start",
         gap: Spacing.sm,
-        marginBottom: Spacing.lg,
+        marginBottom: Spacing.sm,
     },
     titleContent: {
         flex: 1,
@@ -482,6 +494,28 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: "rgba(0,0,0,0.05)",
         marginBottom: Spacing.xl,
+    },
+    genreRow: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        gap: Spacing.xs,
+        marginBottom: Spacing.md,
+    },
+    genrePill: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: Colors.primary + "14",
+        paddingHorizontal: Spacing.sm + 2,
+        paddingVertical: Spacing.xs,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: Colors.primary + "25",
+    },
+    genrePillText: {
+        fontSize: FontSizes.caption,
+        fontFamily: Fonts.medium,
+        color: Colors.primary,
+        letterSpacing: 0.2,
     },
     statItem: {
         flex: 1,

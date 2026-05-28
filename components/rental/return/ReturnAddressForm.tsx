@@ -30,7 +30,6 @@ interface ReturnAddressFormProps {
     formattedAddress: string;
     isLocating: boolean;
     onLocatePress: () => void;
-    onAdjustMapPress: () => void;
 }
 
 export default function ReturnAddressForm({
@@ -56,7 +55,6 @@ export default function ReturnAddressForm({
     formattedAddress,
     isLocating,
     onLocatePress,
-    onAdjustMapPress,
 }: ReturnAddressFormProps) {
     return (
         <View>
@@ -129,21 +127,6 @@ export default function ReturnAddressForm({
                             {formattedAddress ? (
                                 <View style={styles.addressDisplay}>
                                     <Text style={styles.addressText}>{formattedAddress}</Text>
-                                    {latitude !== undefined && longitude !== undefined ? (
-                                        <TouchableOpacity
-                                            style={styles.adjustLocationButton}
-                                            onPress={onAdjustMapPress}
-                                        >
-                                            <Ionicons
-                                                name="map-outline"
-                                                size={16}
-                                                color={Colors.primary}
-                                            />
-                                            <Text style={styles.adjustLocationText}>
-                                                Adjust on map
-                                            </Text>
-                                        </TouchableOpacity>
-                                    ) : null}
                                 </View>
                             ) : null}
                             <DropdownField
@@ -255,23 +238,5 @@ const styles = StyleSheet.create({
         fontSize: FontSizes.small,
         fontFamily: Fonts.regular,
         color: Colors.text,
-    },
-    adjustLocationButton: {
-        flexDirection: "row",
-        alignItems: "center",
-        alignSelf: "flex-start",
-        gap: 6,
-        marginTop: Spacing.sm,
-        paddingHorizontal: Spacing.sm,
-        paddingVertical: Spacing.xs,
-        borderRadius: 999,
-        backgroundColor: Colors.surfaceCard,
-        borderWidth: 1,
-        borderColor: Colors.primary + "30",
-    },
-    adjustLocationText: {
-        fontSize: FontSizes.small,
-        fontFamily: Fonts.medium,
-        color: Colors.primary,
     },
 });

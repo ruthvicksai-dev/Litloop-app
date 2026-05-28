@@ -327,7 +327,7 @@ function RentalRequestModalContent({
     };
 
     return (
-            <SafeAreaView style={styles.container}>
+            <SafeAreaView style={styles.container} edges={["top"]}>
                 <View style={styles.header}>
                     <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
                         <Ionicons name="close" size={24} color={Colors.text} />

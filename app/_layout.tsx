@@ -83,22 +83,18 @@ function RootLayout() {
   });
 
   const customizeSystemUI = async () => {
-  try {
-    if (Platform.OS === "android") {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const Constants = require("expo-constants").default;
-      const isExpoGo = Constants?.executionEnvironment === "storeClient";
-
-      if (!isExpoGo) {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const NavigationBar = require("expo-navigation-bar");
-
-        await NavigationBar.setButtonStyleAsync("light");
+    try {
+      if (Platform.OS === "android") {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
+          const NavigationBar = require("expo-navigation-bar");
+          await NavigationBar.setBackgroundColorAsync(Colors.background);
+          await NavigationBar.setButtonStyleAsync("dark");
+        } catch {}
       }
-    }
-    await SystemUI.setBackgroundColorAsync(Colors.background);
-  } catch {}
-};
+      await SystemUI.setBackgroundColorAsync(Colors.background);
+    } catch {}
+  };
 
   useEffect(() => {
     if (fontsLoaded) {

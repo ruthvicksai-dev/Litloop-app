@@ -94,7 +94,7 @@ export default function EditProfileScreen() {
 
             <KeyboardAvoidingView
                 style={styles.flex}
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                behavior={Platform.OS === "ios" ? "padding" : undefined}
             >
                 <ScrollView
                     contentContainerStyle={[styles.content, { paddingBottom: Math.max(100, 60 + insets.bottom) }]}

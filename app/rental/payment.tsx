@@ -122,7 +122,7 @@ export default function PaymentScreen() {
         <SafeAreaView style={styles.container}>
             <KeyboardAvoidingView
                 style={styles.flex}
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                behavior={Platform.OS === "ios" ? "padding" : undefined}
                 keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
             >
                 <ScrollView

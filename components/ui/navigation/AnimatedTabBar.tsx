@@ -9,9 +9,9 @@ import {
     View,
 } from "react-native";
 import Animated, {
+    Easing,
     useAnimatedStyle,
     useSharedValue,
-    Easing,
     withTiming,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -187,7 +187,7 @@ function TabItem({ route, options, isFocused, navigation }: any) {
                 <Ionicons
                     name={iconName}
                     size={23}
-                    color={isFocused ? Colors.white : Colors.textSecondary}
+                    color={isFocused ? Colors.white : Colors.text}
                 />
             </View>
         </TouchableOpacity>
@@ -205,6 +205,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.06,
         shadowRadius: 8,
         zIndex: 100,
+        backgroundColor: Colors.background,
     },
     pillContainer: {
         ...StyleSheet.absoluteFillObject,
