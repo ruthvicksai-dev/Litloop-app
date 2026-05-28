@@ -26,17 +26,22 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+
+const STICKY_CTA_HEIGHT = 80;
 
 export default function BookDetailsScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const router = useRouter();
     const { userId, accessToken } = useAuthState();
     const { showToast } = useToast();
+    const insets = useSafeAreaInsets();
     const subscribeToBook = useMutation(api.notifications.subscribeToBook);
     const [isSubscribing, setIsSubscribing] = useState(false);
     const [isRentalModalVisible, setIsRentalModalVisible] = useState(false);
     const [showSignInPrompt, setShowSignInPrompt] = useState(false);
+
+
 
     const {
         book,
@@ -58,6 +63,8 @@ export default function BookDetailsScreen() {
         slideAnim,
         scaleAnim,
     } = useBookDetailsScreen(id);
+
+
 
     const handleNotifyMe = async () => {
         if (!userId) {
@@ -127,7 +134,10 @@ export default function BookDetailsScreen() {
         <SafeAreaView style={styles.container}>
             <ScrollView
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.scrollContent}
+                contentContainerStyle={[
+                    styles.scrollContent,
+                    { paddingBottom: STICKY_CTA_HEIGHT + insets.bottom + Spacing.md },
+                ]}
             >
                 <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
                     <Ionicons name="chevron-back" size={24} color={Colors.text} />
@@ -284,42 +294,6 @@ export default function BookDetailsScreen() {
                         </View>
                     </View>
 
-                    <View style={styles.ctaRow}>
-                        {book.availableCopies > 0 ? (
-                            <Button
-                                title="Rent Now"
-                                onPress={handleRentNowPress}
-                                style={styles.primaryCta}
-                            />
-                        ) : (
-                            <TouchableOpacity
-                                style={[styles.notifyMeBtn, isSubscribing && styles.notifyMeBtnDisabled]}
-                                onPress={handleNotifyMe}
-                                disabled={isSubscribing}
-                                activeOpacity={0.8}
-                            >
-                                <Ionicons name="notifications-outline" size={18} color={Colors.white} style={{ marginRight: 6 }} />
-                                <Text style={styles.notifyMeBtnText}>
-                                    {isSubscribing ? "Subscribing..." : "Notify Me When Available"}
-                                </Text>
-                            </TouchableOpacity>
-                        )}
-                        <TouchableOpacity
-                            style={[
-                                styles.addButton,
-                                isReadLater && styles.addButtonActive,
-                            ]}
-                            onPress={handleReadLaterPress}
-                            activeOpacity={0.85}
-                        >
-                            <Ionicons
-                                name={isReadLater ? "bookmark" : "bookmark-outline"}
-                                size={22}
-                                color={isReadLater ? Colors.white : Colors.primary}
-                            />
-                        </TouchableOpacity>
-                    </View>
-
                     <BookReviews bookId={id} />
 
                     {relatedBooks && relatedBooks.length > 0 ? (
@@ -351,6 +325,50 @@ export default function BookDetailsScreen() {
                     ) : null}
                 </Animated.View>
             </ScrollView>
+
+            {/* Sticky Bottom CTA */}
+            <View
+                style={[
+                    styles.stickyCtaContainer,
+                    { paddingBottom: Math.max(insets.bottom, Spacing.sm) },
+                ]}
+            >
+                <View style={styles.stickyCtaRow}>
+                    {book.availableCopies > 0 ? (
+                        <Button
+                            title="Rent Now"
+                            onPress={handleRentNowPress}
+                            style={styles.primaryCta}
+                        />
+                    ) : (
+                        <TouchableOpacity
+                            style={[styles.notifyMeBtn, isSubscribing && styles.notifyMeBtnDisabled]}
+                            onPress={handleNotifyMe}
+                            disabled={isSubscribing}
+                            activeOpacity={0.8}
+                        >
+                            <Ionicons name="notifications-outline" size={18} color={Colors.white} style={{ marginRight: 6 }} />
+                            <Text style={styles.notifyMeBtnText}>
+                                {isSubscribing ? "Subscribing..." : "Notify Me When Available"}
+                            </Text>
+                        </TouchableOpacity>
+                    )}
+                    <TouchableOpacity
+                        style={[
+                            styles.addButton,
+                            isReadLater && styles.addButtonActive,
+                        ]}
+                        onPress={handleReadLaterPress}
+                        activeOpacity={0.85}
+                    >
+                        <Ionicons
+                            name={isReadLater ? "bookmark" : "bookmark-outline"}
+                            size={22}
+                            color={isReadLater ? Colors.white : Colors.primary}
+                        />
+                    </TouchableOpacity>
+                </View>
+            </View>
 
             <RentalRequestModal
                 visible={isRentalModalVisible}
@@ -550,12 +568,21 @@ const styles = StyleSheet.create({
         color: Colors.textSecondary,
         lineHeight: 20,
     },
-
-    ctaRow: {
+    stickyCtaContainer: {
+        position: "absolute",
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: "rgba(248, 237, 218, 0.95)",
+        paddingTop: Spacing.sm + 4,
+        paddingHorizontal: Spacing.lg,
+        borderTopWidth: StyleSheet.hairlineWidth,
+        borderTopColor: "rgba(109, 58, 61, 0.08)",
+    },
+    stickyCtaRow: {
         flexDirection: "row",
         alignItems: "center",
         gap: Spacing.sm,
-        marginTop: Spacing.lg,
     },
     primaryCta: {
         flex: 1,
