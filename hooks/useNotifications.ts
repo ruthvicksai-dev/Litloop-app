@@ -30,15 +30,38 @@ export function useNotifications(
         accessToken: string;
         pushToken: string;
     } | null>(null);
+    // Holds a notification response received before auth was ready (cold-start)
+    const pendingNotificationRef = useRef<Record<string, unknown> | null>(null);
     const router = useRouter();
     const updateTokenMutation = useMutation(api.notifications.updatePushToken);
     const clearTokenMutation = useMutation(api.notifications.clearPushToken);
+    const markReadMutation = useMutation(api.notifications.markRead);
 
     const handleNotificationClick = useCallback(
         (data: Record<string, unknown>) => {
+            if (!userId || !accessToken) {
+                // Auth not ready yet — stash for later
+                pendingNotificationRef.current = data;
+                return;
+            }
+
+            // Mark the in-app notification as read so it doesn't appear unread
+            // in the notifications screen after tapping the system notification.
+            if (data.notificationId && accessToken) {
+                markReadMutation({
+                    accessToken,
+                    notificationId: data.notificationId as Id<"user_notifications">,
+                }).catch(() => {
+                    // Non-critical — ignore errors
+                });
+            }
+
             if (data.type === "rental") {
                 if (userRole === "admin" && data.rentalId) {
                     router.push(`/(admin)/rental/${data.rentalId}` as any);
+                } else if (data.rentalId) {
+                    // Deep-link users to the specific rental (matches in-app notification behavior)
+                    router.push(`/(tabs)/my-rentals` as any);
                 } else {
                     router.push("/(tabs)/my-rentals" as any);
                 }
@@ -46,8 +69,18 @@ export function useNotifications(
                 router.push(`/book/${data.bookId}` as any);
             }
         },
-        [router, userRole]
+        [accessToken, markReadMutation, router, userId, userRole]
     );
+
+    // Process any pending notification once the user is authenticated
+    useEffect(() => {
+        if (userId && accessToken && pendingNotificationRef.current) {
+            const data = pendingNotificationRef.current;
+            pendingNotificationRef.current = null;
+            // Small delay to ensure navigation stack is ready after auth
+            setTimeout(() => handleNotificationClick(data), 300);
+        }
+    }, [userId, accessToken, handleNotificationClick]);
 
     useEffect(() => {
         const previousRegistration = tokenRegistrationRef.current;
@@ -103,6 +136,16 @@ export function useNotifications(
                 handleNotificationClick(data);
             }
         );
+
+        // Cold-start: check if the app was opened by tapping a notification
+        // while it was killed. getLastNotificationResponseAsync returns the
+        // notification that launched the app, if any.
+        Notifications.getLastNotificationResponseAsync().then((response) => {
+            if (response) {
+                const data = response.notification.request.content.data as Record<string, unknown>;
+                handleNotificationClick(data);
+            }
+        });
 
         return () => {
             notificationListener.current?.remove();

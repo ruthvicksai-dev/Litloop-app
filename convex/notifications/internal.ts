@@ -19,7 +19,7 @@ async function saveAndPushToRecipient(
         return;
     }
 
-    await ctx.runMutation(internal.notifications.internal.saveNotificationRecord, {
+    const notificationId = await ctx.runMutation(internal.notifications.internal.saveNotificationRecord, {
         userId: recipient.userId,
         title,
         body,
@@ -30,7 +30,11 @@ async function saveAndPushToRecipient(
     if (recipient.pushToken) {
         const data = dataJson
             ? (JSON.parse(dataJson) as Record<string, string>)
-            : undefined;
+            : ({} as Record<string, string>);
+        // Include the DB record ID so the client can mark it as read on tap
+        if (notificationId) {
+            data.notificationId = notificationId;
+        }
         await sendPush(recipient.pushToken, title, body, data);
     }
 }
@@ -44,7 +48,7 @@ export const saveNotificationRecord = internalMutation({
         dataJson: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
-        await ctx.db.insert("user_notifications", {
+        const id = await ctx.db.insert("user_notifications", {
             userId: args.userId,
             title: args.title,
             body: args.body,
@@ -53,6 +57,7 @@ export const saveNotificationRecord = internalMutation({
             isRead: false,
             createdAt: Date.now(),
         });
+        return id;
     },
 });
 

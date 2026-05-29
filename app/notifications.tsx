@@ -83,11 +83,8 @@ export default function NotificationsScreen() {
             if (data.type === "rental") {
                 if (isAdmin && data.rentalId) {
                     router.push(`/(admin)/rental/${data.rentalId}` as any);
-                } else if (data.rentalId) {
-                    // M4 FIX: Deep-link users to the specific rental screen, not just the list
-                    router.push(`/rental/${data.rentalId}` as any);
                 } else {
-                    // Fallback: no rentalId in data
+                    // Navigate to the rentals list (no user-facing rental detail route exists)
                     router.push("/(tabs)/my-rentals" as any);
                 }
             } else if (data.type === "book" && data.bookId) {
