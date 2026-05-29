@@ -73,6 +73,10 @@ export async function createSessionTokens(
     const accessExpiryMs = getAccessTokenExpiryMs();
     const refreshExpiryMs = getRefreshTokenExpiryMs();
 
+    // Fetch user's role to embed in the access token for instant client-side routing
+    const user = await ctx.db.get(userId);
+    const role = user?.role ?? "user";
+
     const sessionId = await ctx.db.insert("sessions", {
         userId,
         refreshTokenHash: "pending",
@@ -84,7 +88,7 @@ export async function createSessionTokens(
     });
 
     const accessToken = await createToken(
-        { sub: userId, sid: sessionId, type: "access" },
+        { sub: userId, sid: sessionId, type: "access", role },
         accessSecret,
         accessExpiryMs
     );

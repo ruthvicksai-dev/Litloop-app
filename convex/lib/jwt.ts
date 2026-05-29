@@ -75,6 +75,8 @@ export interface JwtPayload {
     sid: string;
     /** Token type: "access" or "refresh" */
     type: "access" | "refresh";
+    /** User role embedded in access tokens for instant client-side routing */
+    role?: string;
     /** Issued-at timestamp (ms) */
     iat: number;
     /** Expiration timestamp (ms) */
@@ -92,7 +94,7 @@ export interface JwtPayload {
  * @returns Signed JWT string (header.payload.signature)
  */
 export async function createToken(
-    payload: { sub: string; sid: string; type: "access" | "refresh" },
+    payload: { sub: string; sid: string; type: "access" | "refresh"; role?: string },
     secret: string,
     expiresInMs: number
 ): Promise<string> {

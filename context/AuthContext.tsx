@@ -116,6 +116,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [sessionExpired, setSessionExpired] = useState(false);
     const [pendingAuthToast, setPendingAuthToast] = useState<PendingToast | null>(null);
+    // Optimistic user object decoded from JWT immediately after sign-in,
+    // used to skip the network round-trip wait for getSession.
+    const [optimisticUser, setOptimisticUser] = useState<User | null>(null);
     const pendingAuthToastRef = useRef<PendingToast | null>(null);
     const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const signOutInProgressRef = useRef(false);
@@ -138,7 +141,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         accessToken ? { accessToken } : "skip"
     );
 
-    const user = sessionUser
+    // Use the server-resolved user when available, otherwise fall back to
+    // the optimistic user decoded from the JWT (instant, no network wait).
+    const resolvedUser = sessionUser
         ? ({
             _id: sessionUser._id,
             name: sessionUser.name,
@@ -150,6 +155,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             isVerifiedStudent: sessionUser.isVerifiedStudent,
         } as User)
         : null;
+
+    const user = resolvedUser ?? optimisticUser;
 
 
     // ─── Token Helpers ───────────────────────────────────────────────────
@@ -172,6 +179,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             refreshTimerRef.current = null;
         }
 
+        setOptimisticUser(null);
         await SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY);
         await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
         setAccessToken(null);
@@ -291,9 +299,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // isLoading is true until:
     //   1. SecureStore read is complete (tokenLoaded === true)
-    //   2. AND either: no token was found, OR the Convex query has resolved
-    //      (sessionUser is not undefined — it will be null for invalid/no session, or an object for valid)
-    const isLoading = !tokenLoaded || (accessToken !== null && sessionUser === undefined) || isRefreshing;
+    //   2. AND either: no token was found, OR we have a user (optimistic or server-resolved)
+    //      When optimisticUser is set (post-login), isLoading clears instantly
+    //      without waiting for the Convex getSession round-trip.
+    const isLoading = !tokenLoaded || (accessToken !== null && sessionUser === undefined && optimisticUser === null) || isRefreshing;
+
+    // Once the server-resolved user arrives, clear the optimistic stub
+    // so the full profile (name, avatar, etc.) takes over.
+    useEffect(() => {
+        if (resolvedUser && optimisticUser) {
+            setOptimisticUser(null);
+        }
+    }, [resolvedUser, optimisticUser]);
 
     useEffect(() => {
         if (!user) {
@@ -378,13 +395,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // L5 FIX: Pass deviceInfo so sessions show meaningful device names
             const deviceInfo = `${Device.modelName ?? "Unknown Device"} (${Device.osName ?? ""} ${Device.osVersion ?? ""})`;
             const result = await signInMutation({ email, password, deviceInfo });
-            await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, result.accessToken);
-            await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, result.refreshToken);
+
+            // Immediately set optimistic user from JWT so isLoading clears
+            // without waiting for the Convex getSession network round-trip.
+            const payload = decodeTokenPayload(result.accessToken);
+            if (payload) {
+                setOptimisticUser({
+                    _id: payload.sub as Id<"users">,
+                    name: "",
+                    email,
+                    role: (payload as any).role ?? "user",
+                } as User);
+            }
+
+            // Persist tokens in parallel (don't await sequentially)
+            await Promise.all([
+                SecureStore.setItemAsync(ACCESS_TOKEN_KEY, result.accessToken),
+                SecureStore.setItemAsync(REFRESH_TOKEN_KEY, result.refreshToken),
+            ]);
             setAccessToken(result.accessToken);
             queuePendingAuthToast({ message: "Welcome back!", type: "success" });
             scheduleRefresh(result.accessToken);
         },
-        [queuePendingAuthToast, signInMutation, scheduleRefresh]
+        [decodeTokenPayload, queuePendingAuthToast, signInMutation, scheduleRefresh]
     );
 
     const sendOtp = useCallback(
@@ -412,12 +445,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const verifyOtp = useCallback(
         async (email: string, otpCode: string) => {
             const result = await verifySignupOTPMutation({ email, otpCode });
-            await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, result.accessToken);
-            await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, result.refreshToken);
+
+            // Optimistic user for instant navigation
+            const payload = decodeTokenPayload(result.accessToken);
+            if (payload) {
+                setOptimisticUser({
+                    _id: payload.sub as Id<"users">,
+                    name: "",
+                    email,
+                    role: (payload as any).role ?? "user",
+                } as User);
+            }
+
+            await Promise.all([
+                SecureStore.setItemAsync(ACCESS_TOKEN_KEY, result.accessToken),
+                SecureStore.setItemAsync(REFRESH_TOKEN_KEY, result.refreshToken),
+            ]);
             setAccessToken(result.accessToken);
             scheduleRefresh(result.accessToken);
         },
-        [verifySignupOTPMutation, scheduleRefresh]
+        [decodeTokenPayload, verifySignupOTPMutation, scheduleRefresh]
     );
 
     const signInWithGoogle = useCallback(
@@ -425,13 +472,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // L5 FIX: Pass deviceInfo so sessions show meaningful device names
             const deviceInfo = `${Device.modelName ?? "Unknown Device"} (${Device.osName ?? ""} ${Device.osVersion ?? ""})`;
             const result = await googleSignInMutation({ idToken, deviceInfo });
-            await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, result.accessToken);
-            await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, result.refreshToken);
+
+            // Immediately set optimistic user from JWT so isLoading clears instantly.
+            const payload = decodeTokenPayload(result.accessToken);
+            if (payload) {
+                setOptimisticUser({
+                    _id: payload.sub as Id<"users">,
+                    name: "",
+                    email: "",
+                    role: (payload as any).role ?? "user",
+                } as User);
+            }
+
+            // Persist tokens in parallel
+            await Promise.all([
+                SecureStore.setItemAsync(ACCESS_TOKEN_KEY, result.accessToken),
+                SecureStore.setItemAsync(REFRESH_TOKEN_KEY, result.refreshToken),
+            ]);
             setAccessToken(result.accessToken);
             queuePendingAuthToast({ message: "Welcome back!", type: "success" });
             scheduleRefresh(result.accessToken);
         },
-        [googleSignInMutation, queuePendingAuthToast, scheduleRefresh]
+        [decodeTokenPayload, googleSignInMutation, queuePendingAuthToast, scheduleRefresh]
     );
 
     /**
@@ -447,8 +509,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // and unmount before the server officially revokes the session.
             await clearLocalSession();
 
+            // Fire-and-forget: revoke the session server-side without blocking the UI.
+            // The local session is already cleared, so the user sees instant sign-out.
             if (storedRefresh) {
-                await signOutMutation({ refreshToken: storedRefresh });
+                signOutMutation({ refreshToken: storedRefresh }).catch(() => {
+                    // Ignore backend errors on sign-out
+                });
             }
         } catch {
             // Ignore backend errors on sign-out
