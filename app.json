@@ -25,7 +25,6 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.ruthvicksai.litloop",
-      "versionCode": 1,
       "permissions": [
         "POST_NOTIFICATIONS",
         "CAMERA",
