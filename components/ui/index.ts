@@ -21,7 +21,6 @@ export { AnimatedPressable } from "./core/AnimatedPressable";
 export { default as BookLoader } from "./feedback/BookLoader";
 export { default as LoadingOverlay } from "./feedback/LoadingOverlay";
 export { EmptyState } from "./feedback/EmptyState";
-export { default as ErrorBoundary } from "./feedback/ErrorBoundary";
 export { default as ConfirmActionModal } from "./feedback/ConfirmActionModal";
 export { NotificationPermissionModal, useNotificationRationale } from "./feedback/NotificationPermissionModal";
 export { OfflineBanner } from "./feedback/OfflineBanner";

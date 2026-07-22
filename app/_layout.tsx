@@ -61,7 +61,9 @@ const convexLogger = {
   logVerbose: isProd ? noop : (...args: unknown[]) => console.log(...args),
 };
 
-const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!, {
+const convexUrl = process.env.EXPO_PUBLIC_CONVEX_URL || "https://dummy.convex.cloud";
+
+const convex = new ConvexReactClient(convexUrl, {
   unsavedChangesWarning: false,
   logger: convexLogger,
 });

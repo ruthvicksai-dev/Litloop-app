@@ -10,7 +10,7 @@ import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
 import { Stack } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { StatusBar } from "react-native";
+import { StatusBar, StyleSheet, View } from "react-native";
 
 let hasCompletedStartupSplash = false;
 
@@ -70,29 +70,31 @@ export default function AppGate({ fontsLoaded }: { fontsLoaded: boolean }) {
         barStyle={showSplash ? "light-content" : "dark-content"}
         backgroundColor={showSplash ? "#0F2027" : Colors.background}
       />
-      {showSplash ? (
-        <AppSplash onAnimationComplete={handleSplashComplete} />
-      ) : (
-        <ErrorBoundary>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              animation: "slide_from_right",
-              contentStyle: { backgroundColor: Colors.background },
-              freezeOnBlur: false,
-            }}
-          >
-            <Stack.Screen name="index" />
-            <Stack.Screen name="(auth)" />
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="(admin)" />
-            <Stack.Screen name="book/[id]" />
-            <Stack.Screen name="notifications" />
-            <Stack.Screen name="section-books" />
-            <Stack.Screen name="profile/edit" />
-            <Stack.Screen name="rental" />
-          </Stack>
-        </ErrorBoundary>
+      <ErrorBoundary>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            animation: "slide_from_right",
+            contentStyle: { backgroundColor: Colors.background },
+            freezeOnBlur: false,
+          }}
+        >
+          <Stack.Screen name="index" />
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="(admin)" />
+          <Stack.Screen name="book/[id]" />
+          <Stack.Screen name="notifications" />
+          <Stack.Screen name="section-books" />
+          <Stack.Screen name="profile/edit" />
+          <Stack.Screen name="rental" />
+        </Stack>
+      </ErrorBoundary>
+
+      {showSplash && (
+        <View style={StyleSheet.absoluteFill}>
+          <AppSplash onAnimationComplete={handleSplashComplete} />
+        </View>
       )}
 
       {/* P4: Notification permission rationale — shown once per install after login */}
