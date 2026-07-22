@@ -77,6 +77,23 @@ export async function createSessionTokens(
     const user = await ctx.db.get(userId);
     const role = user?.role ?? "user";
 
+    // S-08 FIX: Cap concurrent active sessions at 10 per user
+    const MAX_SESSIONS = 10;
+    const activeSessions = await ctx.db
+        .query("sessions")
+        .withIndex("by_userId_active", (q: any) => q.eq("userId", userId).eq("isRevoked", false))
+        .collect();
+
+    if (activeSessions.length >= MAX_SESSIONS) {
+        // Sort by creation time ascending (oldest first)
+        activeSessions.sort((a: any, b: any) => a.createdAt - b.createdAt);
+        // Revoke the oldest sessions to make room for the new one
+        const sessionsToRevoke = activeSessions.slice(0, activeSessions.length - MAX_SESSIONS + 1);
+        for (const session of sessionsToRevoke) {
+            await ctx.db.patch(session._id, { isRevoked: true });
+        }
+    }
+
     const sessionId = await ctx.db.insert("sessions", {
         userId,
         refreshTokenHash: "pending",

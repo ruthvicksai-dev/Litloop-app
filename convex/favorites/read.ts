@@ -9,7 +9,7 @@ export const getUserFavoriteIds = query({
     handler: async (ctx, args) => {
         let userId: Id<"users">;
         try {
-            userId = await getUserIdFromAccessToken(args.accessToken);
+            userId = await getUserIdFromAccessToken(ctx, args.accessToken);
         } catch {
             return [];
         }
@@ -29,7 +29,7 @@ export const getUserFavoriteBooks = query({
     handler: async (ctx, args) => {
         let userId: Id<"users">;
         try {
-            userId = await getUserIdFromAccessToken(args.accessToken);
+            userId = await getUserIdFromAccessToken(ctx, args.accessToken);
         } catch {
             return [];
         }
@@ -59,7 +59,7 @@ export const getUserFavoriteCount = query({
     handler: async (ctx, args) => {
         let userId: Id<"users">;
         try {
-            userId = await getUserIdFromAccessToken(args.accessToken);
+            userId = await getUserIdFromAccessToken(ctx, args.accessToken);
         } catch {
             return 0;
         }

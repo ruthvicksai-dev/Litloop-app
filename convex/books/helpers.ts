@@ -22,6 +22,12 @@ export const BOOK_RATE_LIMITS = {
         windowMs: 15 * 60 * 1000,
         message: "Too many upload requests. Please try again later.",
     },
+    // S-02 FIX: Rate limit for incrementBookViews — prevents view-count inflation
+    incrementViews: {
+        limit: 30,
+        windowMs: 60 * 60 * 1000,
+        message: "Too many view requests. Please try again later.",
+    },
 } as const;
 
 export const GENRE_KEYWORDS: Record<string, string[]> = {

@@ -21,14 +21,20 @@ import {
 } from "./helpers";
 
 export const incrementBookViews = mutation({
-    args: { bookId: v.id("books") },
+    args: { bookId: v.id("books"), ipAddress: v.optional(v.string()) },
     handler: async (ctx, args) => {
+        // S-02 FIX: Rate limit by bookId + IP to prevent view-count inflation.
+        // Uses bookId as the primary key so a single device can't inflate one book.
+        const viewKey = buildRateLimitKey("book", "view", args.bookId, args.ipAddress);
+        await assertRateLimit(ctx, viewKey, BOOK_RATE_LIMITS.incrementViews);
+
         await ctx.scheduler.runAfter(0, internal.books.internal.internalIncrementBookViews, {
             bookId: args.bookId,
         });
         return true;
     },
 });
+
 
 export const add = mutation({
     args: {

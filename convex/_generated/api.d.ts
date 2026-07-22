@@ -61,6 +61,7 @@ import type * as rentals_internal from "../rentals/internal.js";
 import type * as rentals_read from "../rentals/read.js";
 import type * as rentals_write from "../rentals/write.js";
 import type * as reviews from "../reviews.js";
+import type * as reviews_helpers from "../reviews/helpers.js";
 import type * as reviews_read from "../reviews/read.js";
 import type * as reviews_write from "../reviews/write.js";
 import type * as series from "../series.js";
@@ -135,6 +136,7 @@ declare const fullApi: ApiFromModules<{
   "rentals/read": typeof rentals_read;
   "rentals/write": typeof rentals_write;
   reviews: typeof reviews;
+  "reviews/helpers": typeof reviews_helpers;
   "reviews/read": typeof reviews_read;
   "reviews/write": typeof reviews_write;
   series: typeof series;

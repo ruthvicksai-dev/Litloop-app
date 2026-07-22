@@ -116,7 +116,7 @@ export const getUserSessions = query({
     handler: async (ctx, args) => {
         let userId: Id<"users">;
         try {
-            userId = await getUserIdFromAccessToken(args.accessToken);
+            userId = await getUserIdFromAccessToken(ctx, args.accessToken);
         } catch {
             return [];
         }
@@ -146,7 +146,7 @@ export const revokeSession = mutation({
     handler: async (ctx, args) => {
         let userId: Id<"users">;
         try {
-            userId = await getUserIdFromAccessToken(args.accessToken);
+            userId = await getUserIdFromAccessToken(ctx, args.accessToken);
         } catch {
             throw new Error("Unauthenticated");
         }

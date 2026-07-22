@@ -262,6 +262,11 @@ export const schedulePickup = mutation({
             throw new Error("Unauthorized");
         }
 
+        // S-06 FIX: Validate rating bounds to prevent aggregate corruption
+        if (!Number.isFinite(args.userRating) || args.userRating < 1 || args.userRating > 5) {
+            throw new Error("Rating must be between 1 and 5.");
+        }
+
         if (args.pickupLocation && rental.zone === "Home") {
             const selectedArea = args.pickupLocation.area?.trim() ?? "";
             if (!selectedArea) {

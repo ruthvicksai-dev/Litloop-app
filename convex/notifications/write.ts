@@ -14,7 +14,7 @@ export const updatePushToken = mutation({
             return;
         }
 
-        const userId = await getUserIdFromAccessToken(args.accessToken);
+        const userId = await getUserIdFromAccessToken(ctx, args.accessToken);
 
         // M1 FIX: Use by_pushToken index instead of a full table scan.
         // Previously used by_email with an open range which read ALL users.
@@ -44,7 +44,7 @@ export const clearPushToken = mutation({
             return;
         }
 
-        const userId = await getUserIdFromAccessToken(args.accessToken);
+        const userId = await getUserIdFromAccessToken(ctx, args.accessToken);
         const user = await ctx.db.get(userId);
         if (!user || user.pushToken !== args.pushToken) {
             return;
@@ -64,7 +64,7 @@ export const subscribeToBook = mutation({
         deviceInfo: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
-        const userId = await getUserIdFromAccessToken(args.accessToken);
+        const userId = await getUserIdFromAccessToken(ctx, args.accessToken);
         const subscribeKey = buildRateLimitKey(
             "notification",
             "subscribeToBook",
@@ -99,7 +99,7 @@ export const markRead = mutation({
         notificationId: v.id("user_notifications"),
     },
     handler: async (ctx, args) => {
-        const userId = await getUserIdFromAccessToken(args.accessToken);
+        const userId = await getUserIdFromAccessToken(ctx, args.accessToken);
         const notification = await ctx.db.get(args.notificationId);
         if (!notification || notification.userId !== userId) {
             throw new Error("Notification not found.");

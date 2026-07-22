@@ -25,9 +25,14 @@ export function getRefreshTokenSecret(): string {
 
 /**
  * Verifies an access token and returns the user ID.
- * Throws if token is invalid, expired, or wrong type.
+ * Throws if token is invalid, expired, wrong type, or session is revoked.
+ *
+ * S-07 FIX: Now requires `ctx` and checks the session in the DB,
+ * closing the revocation gap where a signed-out user could still
+ * call endpoints with an unexpired access token for up to 30 minutes.
  */
 export async function getUserIdFromAccessToken(
+    ctx: { db: any },
     accessToken: string
 ): Promise<Id<"users">> {
     const secret = getAccessTokenSecret();
@@ -35,6 +40,14 @@ export async function getUserIdFromAccessToken(
     if (payload.type !== "access") {
         throw new Error("Invalid token type.");
     }
+
+    // S-07: Verify the session is still active in the DB
+    const sid = payload.sid as Id<"sessions">;
+    const session = await ctx.db.get(sid);
+    if (!session || session.isRevoked === true || session.expiresAt < Date.now()) {
+        throw new Error("Session has been revoked or expired. Please sign in again.");
+    }
+
     return payload.sub as Id<"users">;
 }
 

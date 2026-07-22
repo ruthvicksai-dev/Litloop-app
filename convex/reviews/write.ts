@@ -2,11 +2,13 @@ import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { mutation } from "../_generated/server";
 import { assertAdmin, getAuthenticatedUser } from "../lib/authHelpers";
+import { assertRateLimit, buildRateLimitKey } from "../lib/rateLimit";
 import {
     getRatingCountField,
     incrementRatingCountPatch,
     moveRatingCountPatch,
 } from "../lib/reviewCounters";
+import { REVIEW_RATE_LIMITS } from "./helpers";
 
 export const reportReview = mutation({
     args: {
@@ -21,6 +23,10 @@ export const reportReview = mutation({
         } catch (error) {
             throw new Error("Must be logged in to report a review.");
         }
+
+        // S-03 FIX: Rate limit reports to prevent spam
+        const reportKey = buildRateLimitKey("review", "report", caller._id);
+        await assertRateLimit(ctx, reportKey, REVIEW_RATE_LIMITS.report);
 
         const review = await ctx.db.get(args.reviewId);
         if (!review) throw new Error("Review not found");
@@ -62,6 +68,11 @@ export const updateReview = mutation({
     },
     handler: async (ctx, args) => {
         const user = await getAuthenticatedUser(ctx, args.accessToken);
+
+        // S-06 FIX: Validate rating bounds to prevent aggregate corruption
+        if (!Number.isFinite(args.rating) || args.rating < 1 || args.rating > 5) {
+            throw new Error("Rating must be between 1 and 5.");
+        }
         
         const review = await ctx.db.get(args.reviewId);
         if (!review) throw new Error("Review not found");
@@ -320,6 +331,10 @@ export const voteReview = mutation({
     },
     handler: async (ctx, args) => {
         const user = await getAuthenticatedUser(ctx, args.accessToken);
+
+        // S-03 FIX: Rate limit votes to prevent rapid-fire voting across reviews
+        const voteKey = buildRateLimitKey("review", "vote", user._id);
+        await assertRateLimit(ctx, voteKey, REVIEW_RATE_LIMITS.vote);
 
         const review = await ctx.db.get(args.reviewId);
         if (!review) throw new Error("Review not found");

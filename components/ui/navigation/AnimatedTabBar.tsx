@@ -26,21 +26,21 @@ const TAB_BAR_MARGIN = 0;
 const TAB_BAR_WIDTH = width;
 const TAB_BAR_HEIGHT = 75;
 const CIRCLE_SIZE = 52;
-// We'll drop the circle slightly so its center aligns with the curve
-const CIRCLE_TOP_OFFSET = -CIRCLE_SIZE / 2 + 5;
+// We'll drop the circle down so it sits lower inside the curve
+const CIRCLE_TOP_OFFSET = -CIRCLE_SIZE / 2 + 14;
 
 // The SVG background shape logic
 const SVG_WIDTH = 3000;
 const CENTER = SVG_WIDTH / 2;
-// Adjust the curve properties here — softer dip
-const DIP_W = 40;
-const DIP_D = 38;
+// Adjust the curve properties here — fitted dip for lowered circle
+const DIP_W = 36;
+const DIP_D = 28;
 
 const pathStr = `
   M 0 0
   L ${CENTER - DIP_W} 0
-  C ${CENTER - 20} 0, ${CENTER - 26} ${DIP_D}, ${CENTER} ${DIP_D}
-  C ${CENTER + 26} ${DIP_D}, ${CENTER + 20} 0, ${CENTER + DIP_W} 0
+  C ${CENTER - 18} 0, ${CENTER - 24} ${DIP_D}, ${CENTER} ${DIP_D}
+  C ${CENTER + 24} ${DIP_D}, ${CENTER + 18} 0, ${CENTER + DIP_W} 0
   L ${SVG_WIDTH} 0
   L ${SVG_WIDTH} ${TAB_BAR_HEIGHT}
   L 0 ${TAB_BAR_HEIGHT}
@@ -107,7 +107,12 @@ export default function AnimatedTabBar({
             <View style={[styles.pillContainer, { paddingBottom: insets.bottom }]}>
                 {/* Massive SVG background sliding inside (keeps the fixed 65 height for the curve) */}
                 <AnimatedSvg width={SVG_WIDTH} height={TAB_BAR_HEIGHT} style={svgStyle}>
-                    <Path d={pathStr} fill={Colors.background} />
+                    <Path
+                        d={pathStr}
+                        fill={Colors.background}
+                        stroke="rgba(110, 104, 98, 0.35)"
+                        strokeWidth={1.5}
+                    />
                 </AnimatedSvg>
                 {/* Fill the remainder of the safe area below the curve */}
                 <View style={{ flex: 1, backgroundColor: Colors.background }} />
