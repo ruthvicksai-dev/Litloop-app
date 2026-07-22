@@ -1,7 +1,7 @@
 import DiscoverSectionRow from "@/components/ui/cards/DiscoverSectionRow";
 import { HomeSkeleton } from "@/components/ui/skeletons/HomeSkeleton";
 import SeriesSectionRow from "@/components/ui/cards/SeriesSectionRow";
-import { Fonts, FontSizes } from "@/constants/fonts";
+import { Fonts } from "@/constants/fonts";
 import { Colors, Layout, Spacing } from "@/constants/theme";
 import { useAuthState } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";

@@ -3,5 +3,9 @@
     "source.fixAll": "explicit",
     "source.organizeImports": "explicit",
     "source.sortMembers": "explicit"
-  }
+  },
+  "java.project.exclusionFilters": [
+    "**/node_modules/**",
+    "**/.expo/**"
+  ]
 }

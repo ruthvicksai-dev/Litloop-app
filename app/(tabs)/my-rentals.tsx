@@ -7,7 +7,6 @@ import { Colors, Layout, Spacing } from "@/constants/theme";
 import { useAuthState } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";
 import { useFadeSlideIn } from "@/hooks";
-import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import React from "react";

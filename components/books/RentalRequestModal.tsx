@@ -17,7 +17,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { BackHandler, Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -340,13 +340,13 @@ function RentalRequestModalContent({
 
     const isBusy = loading || verifyingAddressId !== null || isLocating;
 
-    const handleClose = () => {
+    const handleClose = useCallback(() => {
         if (isBusy) {
             setExitConfirmVisible(true);
         } else {
             onClose();
         }
-    };
+    }, [isBusy, onClose]);
 
     // Intercept Android hardware back button
     useEffect(() => {
@@ -356,7 +356,7 @@ function RentalRequestModalContent({
             return true; // prevent default back
         });
         return () => sub.remove();
-    }, [visible, isBusy]);
+    }, [visible, handleClose]);
 
     const renderContent = () => {
         if (isAuthLoading) {
