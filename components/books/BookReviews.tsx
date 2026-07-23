@@ -10,6 +10,7 @@ import React, { useState } from "react";
 import { Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Button from "../ui/core/Button";
 import ConfirmActionModal from "../ui/feedback/ConfirmActionModal";
+import KeyboardAwareScrollView from "../ui/core/KeyboardAwareScrollView";
 import ReviewCard from "../ui/cards/ReviewCard";
 
 interface Props {
@@ -248,7 +249,12 @@ export default function BookReviews({ bookId, limit, hasMore, onLoadMore, isAdmi
                 animationType="slide"
                 onRequestClose={() => setEditingReview(null)}
             >
-                <View style={styles.modalOverlay}>
+                <KeyboardAwareScrollView
+                    style={{ flex: 1 }}
+                    contentContainerStyle={styles.modalOverlay}
+                    keyboardShouldPersistTaps="handled"
+                    keyboardDismissMode="on-drag"
+                >
                     <View style={styles.editCard}>
                         <View style={styles.modalHeader}>
                             <Text style={styles.modalTitle}>Edit Review</Text>
@@ -299,7 +305,7 @@ export default function BookReviews({ bookId, limit, hasMore, onLoadMore, isAdmi
                             />
                         </View>
                     </View>
-                </View>
+                </KeyboardAwareScrollView>
             </Modal>
 
             {/* Report Review Modal */}
@@ -309,7 +315,12 @@ export default function BookReviews({ bookId, limit, hasMore, onLoadMore, isAdmi
                 animationType="slide"
                 onRequestClose={() => setReportingReviewId(null)}
             >
-                <View style={styles.modalOverlay}>
+                <KeyboardAwareScrollView
+                    style={{ flex: 1 }}
+                    contentContainerStyle={styles.modalOverlay}
+                    keyboardShouldPersistTaps="handled"
+                    keyboardDismissMode="on-drag"
+                >
                     <View style={styles.editCard}>
                         <View style={styles.modalHeader}>
                             <Text style={styles.modalTitle}>Report Review</Text>
@@ -374,7 +385,7 @@ export default function BookReviews({ bookId, limit, hasMore, onLoadMore, isAdmi
                             />
                         </View>
                     </View>
-                </View>
+                </KeyboardAwareScrollView>
             </Modal>
 
             <ConfirmActionModal
@@ -498,7 +509,7 @@ const styles = StyleSheet.create({
         marginTop: Spacing.sm,
     },
     modalOverlay: {
-        flex: 1,
+        flexGrow: 1,
         backgroundColor: "rgba(0,0,0,0.5)",
         justifyContent: "flex-end",
     },

@@ -2,6 +2,7 @@ import BookLoader from "@/components/ui/feedback/BookLoader";
 import Button from "@/components/ui/core/Button";
 import ConfirmActionModal from "@/components/ui/feedback/ConfirmActionModal";
 import InputField from "@/components/ui/core/InputField";
+import KeyboardAwareScrollView from "@/components/ui/core/KeyboardAwareScrollView";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, scale, Spacing } from "@/constants/theme";
 import { useToast } from "@/context/ToastContext";
@@ -13,10 +14,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
     Image,
-    KeyboardAvoidingView,
     Linking,
-    Platform,
-    ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -120,13 +118,9 @@ export default function PaymentScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
-            <KeyboardAvoidingView
-                style={styles.flex}
-                behavior={Platform.OS === "ios" ? "padding" : undefined}
-                keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
-            >
-                <ScrollView
-                    contentContainerStyle={[styles.scroll, { paddingBottom: Math.max(100, 60 + insets.bottom) }]}
+            <View style={styles.flex}>
+                <KeyboardAwareScrollView
+                    contentContainerStyle={[styles.scroll, { paddingBottom: Math.max(140, 90 + insets.bottom) }]}
                     keyboardShouldPersistTaps="handled"
                     keyboardDismissMode="on-drag"
                     showsVerticalScrollIndicator={false}
@@ -361,8 +355,8 @@ export default function PaymentScreen() {
                             />
                         </View>
                     ) : null}
-                </ScrollView>
-            </KeyboardAvoidingView>
+                </KeyboardAwareScrollView>
+            </View>
 
             <ConfirmActionModal
                 visible={isCancelModalVisible}

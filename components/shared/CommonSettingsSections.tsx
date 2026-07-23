@@ -1,5 +1,6 @@
 import Button from "@/components/ui/core/Button";
 import InputField from "@/components/ui/core/InputField";
+import KeyboardAwareScrollView from "@/components/ui/core/KeyboardAwareScrollView";
 import ConfirmActionModal from "@/components/ui/feedback/ConfirmActionModal";
 import LoadingOverlay from "@/components/ui/feedback/LoadingOverlay";
 import { Fonts, FontSizes } from "@/constants/fonts";
@@ -227,7 +228,12 @@ export function CommonSettingsSections() {
                 animationType="fade"
                 onRequestClose={() => setShowDeleteModal(false)}
             >
-                <View style={styles.modalOverlay}>
+                <KeyboardAwareScrollView
+                    style={{ flex: 1 }}
+                    contentContainerStyle={styles.modalOverlay}
+                    keyboardShouldPersistTaps="handled"
+                    keyboardDismissMode="on-drag"
+                >
                     <View style={styles.modalCard}>
                         <Ionicons name="warning-outline" size={36} color={Colors.error} />
                         <Text style={styles.modalTitle}>Delete Account</Text>
@@ -263,7 +269,7 @@ export function CommonSettingsSections() {
                             />
                         </View>
                     </View>
-                </View>
+                </KeyboardAwareScrollView>
             </Modal>
 
             <LoadingOverlay visible={isSigningOut} />
@@ -386,7 +392,7 @@ const styles = StyleSheet.create({
         letterSpacing: 0.2,
     },
     modalOverlay: {
-        flex: 1,
+        flexGrow: 1,
         backgroundColor: "rgba(20,15,12,0.35)",
         justifyContent: "center",
         alignItems: "center",

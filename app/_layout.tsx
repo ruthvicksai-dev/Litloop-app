@@ -12,6 +12,7 @@ import * as Sentry from "@sentry/react-native";
 import * as SystemUI from "expo-system-ui";
 import React, { useEffect } from "react";
 import { Platform, View } from "react-native";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { enableFreeze } from "react-native-screens";
 
@@ -153,18 +154,20 @@ function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <View style={{ flex: 1, backgroundColor: Colors.background }}>
-        <ConvexProvider client={convexClient}>
-          <NetworkProvider>
-            <AuthProvider>
-              <ToastProvider>
-                <OfflineBanner type="fullscreen" />
-                <AppGate fontsLoaded={fontsLoaded} />
-              </ToastProvider>
-            </AuthProvider>
-          </NetworkProvider>
-        </ConvexProvider>
-      </View>
+      <KeyboardProvider>
+        <View style={{ flex: 1, backgroundColor: Colors.background }}>
+          <ConvexProvider client={convexClient}>
+            <NetworkProvider>
+              <AuthProvider>
+                <ToastProvider>
+                  <OfflineBanner type="fullscreen" />
+                  <AppGate fontsLoaded={fontsLoaded} />
+                </ToastProvider>
+              </AuthProvider>
+            </NetworkProvider>
+          </ConvexProvider>
+        </View>
+      </KeyboardProvider>
     </SafeAreaProvider>
   );
 }
@@ -175,4 +178,3 @@ const WrappedRootLayout = Sentry && typeof Sentry.wrap === "function"
   : RootLayout;
 
 export default WrappedRootLayout;
-

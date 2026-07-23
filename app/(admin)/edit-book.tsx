@@ -6,6 +6,7 @@ import GenreSelector from "@/components/books/GenreSelector";
 import BookLoader from "@/components/ui/feedback/BookLoader";
 import Button from "@/components/ui/core/Button";
 import InputField from "@/components/ui/core/InputField";
+import KeyboardAwareScrollView from "@/components/ui/core/KeyboardAwareScrollView";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useEditBookScreen, useFadeSlideIn } from "@/hooks";
@@ -15,9 +16,6 @@ import AdminHeader from "@/components/admin/core/AdminHeader";
 import React from "react";
 import {
     Animated,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -129,13 +127,9 @@ export default function EditBookScreen() {
                 />
             </Animated.View>
 
-            <KeyboardAvoidingView
-                style={styles.flex}
-                behavior={Platform.OS === "ios" ? "padding" : undefined}
-                keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
-            >
-                <ScrollView
-                    contentContainerStyle={[styles.scroll, { paddingBottom: Math.max(100, 60 + insets.bottom) }]}
+            <View style={styles.flex}>
+                <KeyboardAwareScrollView
+                    contentContainerStyle={[styles.scroll, { paddingBottom: Math.max(140, 80 + insets.bottom) }]}
                     keyboardShouldPersistTaps="handled"
                     keyboardDismissMode="on-drag"
                 >
@@ -242,8 +236,8 @@ export default function EditBookScreen() {
                             style={styles.saveBtn}
                         />
                     </Animated.View>
-                </ScrollView>
-            </KeyboardAvoidingView>
+                </KeyboardAwareScrollView>
+            </View>
         </SafeAreaView>
     );
 }

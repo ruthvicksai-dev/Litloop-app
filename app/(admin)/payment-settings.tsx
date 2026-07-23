@@ -2,6 +2,7 @@ import { AdminSettingsSkeleton } from "@/components/ui/skeletons/SettingsSkeleto
 import Button from "@/components/ui/core/Button";
 import ConfirmActionModal from "@/components/ui/feedback/ConfirmActionModal";
 import InputField from "@/components/ui/core/InputField";
+import KeyboardAwareScrollView from "@/components/ui/core/KeyboardAwareScrollView";
 import { CommonSettingsSections } from "@/components/shared/CommonSettingsSections";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing, scale } from "@/constants/theme";
@@ -239,41 +240,47 @@ export default function PaymentSettingsScreen() {
                 animationType="fade"
                 onRequestClose={() => setShowAddModal(false)}
             >
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalCard}>
-                        <Text style={styles.modalTitle}>Add UPI ID</Text>
-                        <Text style={styles.modalSubtitle}>
-                            Add a UPI ID for receiving payments. You can have up to 2 IDs.
-                        </Text>
-                        <InputField
-                            label="UPI ID"
-                            placeholder="merchant@upi"
-                            value={newUpiId}
-                            onChangeText={setNewUpiId}
-                            autoCapitalize="none"
-                            keyboardType="email-address"
-                        />
-                        <InputField
-                            label="Merchant Name"
-                            placeholder="Lit Loop"
-                            value={newMerchantName}
-                            onChangeText={setNewMerchantName}
-                        />
-                        <View style={styles.modalActions}>
-                            <TouchableOpacity
-                                style={styles.cancelButton}
-                                onPress={() => setShowAddModal(false)}
-                            >
-                                <Text style={styles.cancelText}>Cancel</Text>
-                            </TouchableOpacity>
-                            <Button
-                                title="Add"
-                                onPress={onAddSubmit}
-                                loading={saving}
-                                containerStyle={{ flex: 1 }}
+                <View style={{ flex: 1 }}>
+                    <KeyboardAwareScrollView
+                        contentContainerStyle={styles.modalOverlay}
+                        keyboardShouldPersistTaps="handled"
+                        keyboardDismissMode="on-drag"
+                    >
+                        <View style={styles.modalCard}>
+                            <Text style={styles.modalTitle}>Add UPI ID</Text>
+                            <Text style={styles.modalSubtitle}>
+                                Add a UPI ID for receiving payments. You can have up to 2 IDs.
+                            </Text>
+                            <InputField
+                                label="UPI ID"
+                                placeholder="merchant@upi"
+                                value={newUpiId}
+                                onChangeText={setNewUpiId}
+                                autoCapitalize="none"
+                                keyboardType="email-address"
                             />
+                            <InputField
+                                label="Merchant Name"
+                                placeholder="Lit Loop"
+                                value={newMerchantName}
+                                onChangeText={setNewMerchantName}
+                            />
+                            <View style={styles.modalActions}>
+                                <TouchableOpacity
+                                    style={styles.cancelButton}
+                                    onPress={() => setShowAddModal(false)}
+                                >
+                                    <Text style={styles.cancelText}>Cancel</Text>
+                                </TouchableOpacity>
+                                <Button
+                                    title="Add"
+                                    onPress={onAddSubmit}
+                                    loading={saving}
+                                    containerStyle={{ flex: 1 }}
+                                />
+                            </View>
                         </View>
-                    </View>
+                    </KeyboardAwareScrollView>
                 </View>
             </Modal>
 
@@ -284,51 +291,57 @@ export default function PaymentSettingsScreen() {
                 animationType="fade"
                 onRequestClose={() => setEditTarget(null)}
             >
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalCard}>
-                        <Text style={styles.modalTitle}>Edit UPI ID</Text>
-                        <InputField
-                            label="UPI ID"
-                            placeholder="merchant@upi"
-                            value={editTarget?.upiId ?? ""}
-                            onChangeText={(text) =>
-                                setEditTarget((prev) => prev ? { ...prev, upiId: text } : null)
-                            }
-                            autoCapitalize="none"
-                            keyboardType="email-address"
-                        />
-                        <InputField
-                            label="Merchant Name"
-                            placeholder="Lit Loop"
-                            value={editTarget?.merchantName ?? ""}
-                            onChangeText={(text) =>
-                                setEditTarget((prev) => prev ? { ...prev, merchantName: text } : null)
-                            }
-                        />
-                        <View style={styles.modalActions}>
-                            <TouchableOpacity
-                                style={styles.cancelButton}
-                                onPress={() => setEditTarget(null)}
-                            >
-                                <Text style={styles.cancelText}>Cancel</Text>
-                            </TouchableOpacity>
-                            <Button
-                                title="Save"
-                                onPress={async () => {
-                                    if (editTarget) {
-                                        await handleEditUpiId(
-                                            editTarget.id as any,
-                                            editTarget.upiId,
-                                            editTarget.merchantName
-                                        );
-                                        setEditTarget(null);
-                                    }
-                                }}
-                                loading={saving}
-                                containerStyle={{ flex: 1 }}
+                <View style={{ flex: 1 }}>
+                    <KeyboardAwareScrollView
+                        contentContainerStyle={styles.modalOverlay}
+                        keyboardShouldPersistTaps="handled"
+                        keyboardDismissMode="on-drag"
+                    >
+                        <View style={styles.modalCard}>
+                            <Text style={styles.modalTitle}>Edit UPI ID</Text>
+                            <InputField
+                                label="UPI ID"
+                                placeholder="merchant@upi"
+                                value={editTarget?.upiId ?? ""}
+                                onChangeText={(text) =>
+                                    setEditTarget((prev) => prev ? { ...prev, upiId: text } : null)
+                                }
+                                autoCapitalize="none"
+                                keyboardType="email-address"
                             />
+                            <InputField
+                                label="Merchant Name"
+                                placeholder="Lit Loop"
+                                value={editTarget?.merchantName ?? ""}
+                                onChangeText={(text) =>
+                                    setEditTarget((prev) => prev ? { ...prev, merchantName: text } : null)
+                                }
+                            />
+                            <View style={styles.modalActions}>
+                                <TouchableOpacity
+                                    style={styles.cancelButton}
+                                    onPress={() => setEditTarget(null)}
+                                >
+                                    <Text style={styles.cancelText}>Cancel</Text>
+                                </TouchableOpacity>
+                                <Button
+                                    title="Save"
+                                    onPress={async () => {
+                                        if (editTarget) {
+                                            await handleEditUpiId(
+                                                editTarget.id as any,
+                                                editTarget.upiId,
+                                                editTarget.merchantName
+                                            );
+                                            setEditTarget(null);
+                                        }
+                                    }}
+                                    loading={saving}
+                                    containerStyle={{ flex: 1 }}
+                                />
+                            </View>
                         </View>
-                    </View>
+                    </KeyboardAwareScrollView>
                 </View>
             </Modal>
 
@@ -562,7 +575,7 @@ const styles = StyleSheet.create({
 
     // ─── Add UPI modal ───
     modalOverlay: {
-        flex: 1,
+        flexGrow: 1,
         backgroundColor: "rgba(0,0,0,0.55)",
         justifyContent: "center",
         alignItems: "center",

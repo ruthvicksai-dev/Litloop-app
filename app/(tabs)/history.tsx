@@ -287,6 +287,9 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingTop: Spacing.sm,
         paddingBottom: Spacing.md,
+        backgroundColor: Colors.background,
+        borderBottomWidth: 1,
+        borderBottomColor: "rgba(109, 58, 61, 0.08)",
     },
     headerTopRow: {
         flexDirection: "row",
@@ -372,6 +375,7 @@ const styles = StyleSheet.create({
     list: {
         flexGrow: 1,
         paddingHorizontal: 20,
+        paddingTop: Spacing.md,
         paddingBottom: 90,
     },
 });

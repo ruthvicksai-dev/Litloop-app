@@ -1,5 +1,6 @@
 import VerifiedBadge from "@/components/ui/feedback/VerifiedBadge";
 import Button from "@/components/ui/core/Button";
+import KeyboardAwareScrollView from "@/components/ui/core/KeyboardAwareScrollView";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useStudentVerification } from "@/hooks";
@@ -10,9 +11,6 @@ import React from "react";
 import {
     ActivityIndicator,
     Image,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
     StyleSheet,
     Text,
     TextInput,
@@ -128,14 +126,12 @@ export default function VerifyStudentScreen() {
     // ─── Submission Form ─────────────────────────────────────────────────
     return (
         <SafeAreaView style={styles.container}>
-            <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : undefined}
-                style={{ flex: 1 }}
-            >
-                <ScrollView
-                    contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(80, 40 + insets.bottom) }]}
+            <View style={{ flex: 1 }}>
+                <KeyboardAwareScrollView
+                    contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(120, 80 + insets.bottom) }]}
                     showsVerticalScrollIndicator={false}
                     keyboardShouldPersistTaps="handled"
+                    keyboardDismissMode="on-drag"
                 >
                     <View style={styles.header}>
                         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
@@ -263,8 +259,8 @@ export default function VerifyStudentScreen() {
                             style={styles.submitButton}
                         />
                     </View>
-                </ScrollView>
-            </KeyboardAvoidingView>
+                </KeyboardAwareScrollView>
+            </View>
         </SafeAreaView>
     );
 }

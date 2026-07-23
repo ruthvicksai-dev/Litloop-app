@@ -47,6 +47,14 @@ const pathStr = `
   Z
 `;
 
+const topStrokePathStr = `
+  M 0 0
+  L ${CENTER - DIP_W} 0
+  C ${CENTER - 18} 0, ${CENTER - 24} ${DIP_D}, ${CENTER} ${DIP_D}
+  C ${CENTER + 24} ${DIP_D}, ${CENTER + 18} 0, ${CENTER + DIP_W} 0
+  L ${SVG_WIDTH} 0
+`;
+
 export default function AnimatedTabBar({
     state,
     descriptors,
@@ -110,6 +118,10 @@ export default function AnimatedTabBar({
                     <Path
                         d={pathStr}
                         fill={Colors.background}
+                    />
+                    <Path
+                        d={topStrokePathStr}
+                        fill="none"
                         stroke="rgba(110, 104, 98, 0.35)"
                         strokeWidth={1.5}
                     />
@@ -204,11 +216,6 @@ const styles = StyleSheet.create({
         position: "absolute",
         left: TAB_BAR_MARGIN,
         right: TAB_BAR_MARGIN,
-        elevation: 8,
-        shadowColor: "rgba(40,25,15,0.3)",
-        shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.06,
-        shadowRadius: 8,
         zIndex: 100,
         backgroundColor: Colors.background,
     },

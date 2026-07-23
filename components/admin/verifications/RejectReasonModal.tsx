@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, TextInput, StyleSheet } from "react-native";
 import Button from "@/components/ui/core/Button";
+import KeyboardAwareScrollView from "@/components/ui/core/KeyboardAwareScrollView";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing, scale } from "@/constants/theme";
 
@@ -23,7 +24,12 @@ export default function RejectReasonModal({
     if (!visible) return null;
 
     return (
-        <View style={rejectStyles.overlay}>
+        <KeyboardAwareScrollView
+            style={StyleSheet.absoluteFillObject}
+            contentContainerStyle={rejectStyles.overlay}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+        >
             <View style={rejectStyles.card}>
                 <Text style={rejectStyles.title}>Reject Payment</Text>
                 <Text style={rejectStyles.subtitle}>
@@ -55,13 +61,13 @@ export default function RejectReasonModal({
                     />
                 </View>
             </View>
-        </View>
+        </KeyboardAwareScrollView>
     );
 }
 
 const rejectStyles = StyleSheet.create({
     overlay: {
-        ...StyleSheet.absoluteFillObject,
+        flexGrow: 1,
         backgroundColor: "rgba(0,0,0,0.45)",
         justifyContent: "center",
         alignItems: "center",

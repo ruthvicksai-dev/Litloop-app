@@ -1,9 +1,10 @@
 import AuthFooter from "@/components/auth/AuthFooter";
 import AuthHeader from "@/components/auth/AuthHeader";
-import Button from "@/components/ui/core/Button";
-import InputField from "@/components/ui/core/InputField";
 import OtpCodeInput from "@/components/ui/auth/OtpCodeInput";
 import PasswordRequirements from "@/components/ui/auth/PasswordRequirements";
+import Button from "@/components/ui/core/Button";
+import InputField from "@/components/ui/core/InputField";
+import KeyboardAwareScrollView from "@/components/ui/core/KeyboardAwareScrollView";
 import ConfirmActionModal from "@/components/ui/feedback/ConfirmActionModal";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, scale, Spacing } from "@/constants/theme";
@@ -15,18 +16,16 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
+    Linking,
     StyleSheet,
     Text,
     TouchableOpacity,
     View,
-    Linking,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function SignUpScreen() {
+    const insets = useSafeAreaInsets();
     const router = useRouter();
     const { fadeAnim, slideAnim, scaleAnim } = useFadeSlideScaleIn({
         slideFrom: 40,
@@ -77,16 +76,15 @@ export default function SignUpScreen() {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <KeyboardAvoidingView
-                style={styles.flex}
-                behavior={Platform.OS === "ios" ? "padding" : undefined}
-                keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
-            >
-                <ScrollView
-                    contentContainerStyle={styles.container}
+            <View style={styles.flex}>
+                <KeyboardAwareScrollView
+                    contentContainerStyle={[
+                        styles.container,
+                        { paddingBottom: Math.max(Spacing.xl, insets.bottom + 20) },
+                    ]}
                     keyboardShouldPersistTaps="handled"
+                    keyboardDismissMode="on-drag"
                     showsVerticalScrollIndicator={false}
-                    bounces={false}
                 >
                     <AuthHeader
                         title="Create Account"
@@ -216,8 +214,8 @@ export default function SignUpScreen() {
                         linkLabel="Sign In"
                         onPress={() => router.push("/(auth)/sign-in")}
                     />
-                </ScrollView>
-            </KeyboardAvoidingView>
+                </KeyboardAwareScrollView>
+            </View>
 
             <ConfirmActionModal
                 visible={accountExistsError}
@@ -247,9 +245,8 @@ const styles = StyleSheet.create({
     container: {
         flexGrow: 1,
         paddingHorizontal: Layout.screenPaddingWide,
-        paddingTop: scale(32),
+        paddingTop: scale(24),
         paddingBottom: scale(28),
-        justifyContent: "center",
         width: "100%",
         alignSelf: "center",
     },

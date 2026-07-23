@@ -23,6 +23,7 @@ import type * as books_helpers from "../books/helpers.js";
 import type * as books_internal from "../books/internal.js";
 import type * as books_read from "../books/read.js";
 import type * as books_write from "../books/write.js";
+import type * as createDemoUser from "../createDemoUser.js";
 import type * as crons from "../crons.js";
 import type * as email from "../email.js";
 import type * as email_helpers from "../email/helpers.js";
@@ -98,6 +99,7 @@ declare const fullApi: ApiFromModules<{
   "books/internal": typeof books_internal;
   "books/read": typeof books_read;
   "books/write": typeof books_write;
+  createDemoUser: typeof createDemoUser;
   crons: typeof crons;
   email: typeof email;
   "email/helpers": typeof email_helpers;

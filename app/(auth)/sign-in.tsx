@@ -3,6 +3,7 @@ import AuthHeader from "@/components/auth/AuthHeader";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import Button from "@/components/ui/core/Button";
 import InputField from "@/components/ui/core/InputField";
+import KeyboardAwareScrollView from "@/components/ui/core/KeyboardAwareScrollView";
 import LoadingOverlay from "@/components/ui/feedback/LoadingOverlay";
 import { isGoogleSignInEnabled } from "@/constants/features";
 import { Fonts, FontSizes } from "@/constants/fonts";
@@ -13,18 +14,16 @@ import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
+    Linking,
     StyleSheet,
     Text,
     TouchableOpacity,
     View,
-    Linking,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function SignInScreen() {
+    const insets = useSafeAreaInsets();
     const router = useRouter();
     const { fadeAnim, slideAnim, scaleAnim } = useFadeSlideScaleIn({
         slideFrom: 40,
@@ -56,16 +55,18 @@ export default function SignInScreen() {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <KeyboardAvoidingView
-                style={styles.flex}
-                behavior={Platform.OS === "ios" ? "padding" : undefined}
-                keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
-            >
-                <ScrollView
-                    contentContainerStyle={styles.container}
+            <View style={styles.flex}>
+                <KeyboardAwareScrollView
+                    contentContainerStyle={[
+                        styles.container,
+                        {
+                            paddingTop: scale(28),
+                            paddingBottom: Math.max(scale(28), insets.bottom + Spacing.md),
+                        },
+                    ]}
                     keyboardShouldPersistTaps="handled"
+                    keyboardDismissMode="on-drag"
                     showsVerticalScrollIndicator={false}
-                    bounces={false}
                 >
                     <AuthHeader
                         title="LitLoop"
@@ -149,8 +150,8 @@ export default function SignInScreen() {
                         linkLabel="Sign Up"
                         onPress={() => router.push("/(auth)/sign-up")}
                     />
-                </ScrollView>
-            </KeyboardAvoidingView>
+                </KeyboardAwareScrollView>
+            </View>
 
             <LoadingOverlay visible={loading} />
         </SafeAreaView>
@@ -168,8 +169,6 @@ const styles = StyleSheet.create({
     container: {
         flexGrow: 1,
         paddingHorizontal: Layout.screenPaddingWide,
-        paddingTop: scale(40),
-        paddingBottom: scale(28),
         justifyContent: "center",
         width: "100%",
         alignSelf: "center",

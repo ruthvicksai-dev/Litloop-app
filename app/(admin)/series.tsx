@@ -1,5 +1,7 @@
+import AdminHeader from "@/components/admin/core/AdminHeader";
 import Button from "@/components/ui/core/Button";
 import InputField from "@/components/ui/core/InputField";
+import KeyboardAwareScrollView from "@/components/ui/core/KeyboardAwareScrollView";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { SERIES_PAGINATION_OPTS } from "@/constants/pagination";
 import { Colors, Spacing } from "@/constants/theme";
@@ -11,16 +13,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery } from "convex/react";
 import { Image as ExpoImage } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
-import AdminHeader from "@/components/admin/core/AdminHeader";
 import React, { useState } from "react";
 import {
     ActivityIndicator,
     FlatList,
-    KeyboardAvoidingView,
     Modal,
-    Platform,
     RefreshControl,
-    ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -198,8 +196,8 @@ export default function SeriesManagementScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
-            <AdminHeader 
-                title="Book Series" 
+            <AdminHeader
+                title="Book Series"
                 rightComponent={
                     <TouchableOpacity onPress={() => handleOpenModal()} style={styles.addBtn}>
                         <Ionicons name="add" size={28} color={Colors.primary} />
@@ -237,11 +235,8 @@ export default function SeriesManagementScreen() {
                 transparent
                 onRequestClose={() => setModalVisible(false)}
             >
-                <KeyboardAvoidingView
-                    style={styles.modalOverlay}
-                    behavior={Platform.OS === "ios" ? "padding" : undefined}
-                >
-                    <ScrollView
+                <View style={styles.modalOverlay}>
+                    <KeyboardAwareScrollView
                         contentContainerStyle={styles.modalScroll}
                         keyboardShouldPersistTaps="handled"
                         keyboardDismissMode="on-drag"
@@ -294,8 +289,8 @@ export default function SeriesManagementScreen() {
                                 />
                             </View>
                         </View>
-                    </ScrollView>
-                </KeyboardAvoidingView>
+                    </KeyboardAwareScrollView>
+                </View>
             </Modal>
         </SafeAreaView>
     );

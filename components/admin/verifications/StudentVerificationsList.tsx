@@ -1,4 +1,5 @@
 import Button from "@/components/ui/core/Button";
+import KeyboardAwareScrollView from "@/components/ui/core/KeyboardAwareScrollView";
 import { EmptyState } from "@/components/ui/feedback/EmptyState";
 import SummaryStat from "@/components/admin/dashboard/SummaryStat";
 import { Fonts, FontSizes } from "@/constants/fonts";
@@ -215,7 +216,12 @@ export default function StudentVerificationsList() {
 function RejectModal({ visible, reason, setReason, loading, onConfirm, onCancel }: any) {
     if (!visible) return null;
     return (
-        <View style={styles.modalOverlay}>
+        <KeyboardAwareScrollView
+            style={StyleSheet.absoluteFillObject}
+            contentContainerStyle={styles.modalOverlay}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+        >
             <View style={styles.modalCard}>
                 <Text style={styles.modalTitle}>Reject Verification</Text>
                 <Text style={styles.modalSubtitle}>
@@ -235,7 +241,7 @@ function RejectModal({ visible, reason, setReason, loading, onConfirm, onCancel 
                     <Button title="Reject" onPress={onConfirm} loading={loading} style={{ flex: 1, backgroundColor: Colors.error }} />
                 </View>
             </View>
-        </View>
+        </KeyboardAwareScrollView>
     );
 }
 
@@ -486,7 +492,7 @@ const styles = StyleSheet.create({
         fontSize: FontSizes.small,
     },
     modalOverlay: {
-        ...StyleSheet.absoluteFillObject,
+        flexGrow: 1,
         backgroundColor: "rgba(0,0,0,0.45)",
         justifyContent: "center",
         alignItems: "center",

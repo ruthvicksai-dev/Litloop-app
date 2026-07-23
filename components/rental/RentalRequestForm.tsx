@@ -1,13 +1,10 @@
 import Button from "@/components/ui/core/Button";
 import InputField from "@/components/ui/core/InputField";
+import KeyboardAwareScrollView from "@/components/ui/core/KeyboardAwareScrollView";
 import { Spacing, Colors } from "@/constants/theme";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import {
     Animated,
-    Keyboard,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -98,7 +95,6 @@ export default function RentalRequestForm({
     verifyingAddressId = null,
 }: RentalRequestFormProps) {
     const insets = useSafeAreaInsets();
-    const scrollRef = useRef<ScrollView>(null);
     const [showManualEntry, setShowManualEntry] = React.useState(false);
 
     // Reset manual entry state when zone changes
@@ -106,26 +102,9 @@ export default function RentalRequestForm({
         setShowManualEntry(false);
     }, [zone]);
 
-    // Android Modal + adjustResize bug: view stays shrunken after keyboard dismisses.
-    // Force a re-layout by nudging the ScrollView on keyboardDidHide.
-    useEffect(() => {
-        if (Platform.OS !== "android") return;
-        const sub = Keyboard.addListener("keyboardDidHide", () => {
-            // Tiny timeout lets the native resize settle before we re-measure
-            setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: false }), 100);
-        });
-        return () => sub.remove();
-    }, []);
-
-    const Wrapper = Platform.OS === "ios" ? KeyboardAvoidingView : View;
-    const wrapperProps = Platform.OS === "ios"
-        ? { behavior: "padding" as const, keyboardVerticalOffset: 0 }
-        : {};
-
     return (
-        <Wrapper style={styles.flex} {...wrapperProps}>
-            <ScrollView
-                ref={scrollRef}
+        <View style={styles.flex}>
+            <KeyboardAwareScrollView
                 contentContainerStyle={[
                     styles.scroll,
                     { paddingBottom: Math.max(120, 80 + insets.bottom) },
@@ -276,8 +255,8 @@ export default function RentalRequestForm({
                         </>
                     ) : null}
                 </Animated.View>
-            </ScrollView>
-        </Wrapper>
+            </KeyboardAwareScrollView>
+        </View>
     );
 }
 

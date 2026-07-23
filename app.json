@@ -2,7 +2,7 @@
   "expo": {
     "name": "LitLoop",
     "slug": "litloop",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "litloop",
@@ -15,9 +15,10 @@
         "NSCameraUsageDescription": "Litloop needs camera access to scan book ISBN barcodes."
       }
     },
-    "android": {
-      "googleServicesFile": "./google-services.json",
-      "adaptiveIcon": {
+      "android": {
+        "softwareKeyboardLayoutMode": "resize",
+        "googleServicesFile": "./google-services.json",
+        "adaptiveIcon": {
         "backgroundColor": "#1C1917",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
@@ -25,7 +26,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.ruthvicksai.litloop",
-      "versionCode": 4,
+      "versionCode": 1,
       "permissions": [
         "POST_NOTIFICATIONS",
         "CAMERA",

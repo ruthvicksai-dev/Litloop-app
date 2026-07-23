@@ -6,6 +6,7 @@ import FormSectionHeader from "@/components/books/FormSectionHeader";
 import GenreSelector from "@/components/books/GenreSelector";
 import Button from "@/components/ui/core/Button";
 import InputField from "@/components/ui/core/InputField";
+import KeyboardAwareScrollView from "@/components/ui/core/KeyboardAwareScrollView";
 import BookLoader from "@/components/ui/feedback/BookLoader";
 import { Colors, Spacing } from "@/constants/theme";
 import { useAddBookScreen } from "@/hooks";
@@ -14,9 +15,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
     StyleSheet,
     TouchableOpacity,
     View,
@@ -102,15 +100,11 @@ export default function AddBookScreen() {
                     </TouchableOpacity>
                 }
             />
-            <KeyboardAvoidingView
-                style={styles.flex}
-                behavior={Platform.OS === "ios" ? "padding" : undefined}
-                keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
-            >
-                <ScrollView
+            <View style={styles.flex}>
+                <KeyboardAwareScrollView
                     contentContainerStyle={[
                         styles.scroll,
-                        { paddingBottom: Math.max(100, 60 + insets.bottom) },
+                        { paddingBottom: Math.max(140, 80 + insets.bottom) },
                     ]}
                     keyboardShouldPersistTaps="handled"
                     keyboardDismissMode="on-drag"
@@ -210,8 +204,8 @@ export default function AddBookScreen() {
                         loading={loading}
                         style={{ marginTop: Spacing.md }}
                     />
-                </ScrollView>
-            </KeyboardAvoidingView>
+                </KeyboardAwareScrollView>
+            </View>
         </SafeAreaView>
     );
 }

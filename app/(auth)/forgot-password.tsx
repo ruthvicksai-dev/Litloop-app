@@ -1,8 +1,9 @@
-import Button from "@/components/ui/core/Button";
-import InputField from "@/components/ui/core/InputField";
-import LoadingOverlay from "@/components/ui/feedback/LoadingOverlay";
 import OtpCodeInput from "@/components/ui/auth/OtpCodeInput";
 import PasswordRequirements from "@/components/ui/auth/PasswordRequirements";
+import Button from "@/components/ui/core/Button";
+import InputField from "@/components/ui/core/InputField";
+import KeyboardAwareScrollView from "@/components/ui/core/KeyboardAwareScrollView";
+import LoadingOverlay from "@/components/ui/feedback/LoadingOverlay";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, scale, Spacing } from "@/constants/theme";
 import { useToast } from "@/context/ToastContext";
@@ -14,20 +15,18 @@ import { useMutation } from "convex/react";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
     View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 const STEPS = ["email", "otp", "newPassword"] as const;
 type Step = (typeof STEPS)[number];
 
 export default function ForgotPasswordScreen() {
+    const insets = useSafeAreaInsets();
     const router = useRouter();
 
     const [step, setStep] = useState<Step>("email");
@@ -141,16 +140,18 @@ export default function ForgotPasswordScreen() {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <KeyboardAvoidingView
-                style={styles.flex}
-                behavior={Platform.OS === "ios" ? "padding" : undefined}
-                keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
-            >
-                <ScrollView
-                    contentContainerStyle={styles.container}
+            <View style={styles.flex}>
+                <KeyboardAwareScrollView
+                    contentContainerStyle={[
+                        styles.container,
+                        {
+                            paddingTop: scale(24),
+                            paddingBottom: Math.max(scale(60), insets.bottom + 60),
+                        },
+                    ]}
                     keyboardShouldPersistTaps="handled"
+                    keyboardDismissMode="on-drag"
                     showsVerticalScrollIndicator={false}
-                    bounces={false}
                 >
                     {/* Back Button */}
                     <TouchableOpacity
@@ -293,8 +294,8 @@ export default function ForgotPasswordScreen() {
                             </>
                         )}
                     </View>
-                </ScrollView>
-            </KeyboardAvoidingView>
+                </KeyboardAwareScrollView>
+            </View>
 
             <LoadingOverlay visible={loading} />
         </SafeAreaView>
@@ -312,8 +313,6 @@ const styles = StyleSheet.create({
     container: {
         flexGrow: 1,
         paddingHorizontal: Layout.screenPaddingWide,
-        paddingTop: scale(24),
-        paddingBottom: scale(28),
         width: "100%",
         alignSelf: "center",
     },

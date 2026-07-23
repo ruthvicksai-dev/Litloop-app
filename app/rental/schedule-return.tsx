@@ -6,6 +6,7 @@ import SlotTimePicker from "@/components/ui/pickers/SlotTimePicker";
 import ReturnAddressForm from "@/components/rental/return/ReturnAddressForm";
 import ReturnRatingForm from "@/components/rental/return/ReturnRatingForm";
 import ReturnEstimateCard from "@/components/rental/return/ReturnEstimateCard";
+import KeyboardAwareScrollView from "@/components/ui/core/KeyboardAwareScrollView";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { useToast } from "@/context/ToastContext";
@@ -21,12 +22,8 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import {
-    Keyboard,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -262,22 +259,6 @@ export default function ScheduleReturnScreen() {
         }
     }, [availableTimeSlots, pickupTime, setPickupTime]);
 
-    const scrollRef = useRef<ScrollView>(null);
-
-    // Android adjustResize bug: view stays shrunken after keyboard dismisses.
-    useEffect(() => {
-        if (Platform.OS !== "android") return;
-        const sub = Keyboard.addListener("keyboardDidHide", () => {
-            setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: false }), 100);
-        });
-        return () => sub.remove();
-    }, []);
-
-    const Wrapper = Platform.OS === "ios" ? KeyboardAvoidingView : View;
-    const wrapperProps = Platform.OS === "ios"
-        ? { behavior: "padding" as const, keyboardVerticalOffset: 0 }
-        : {};
-
     if (rental === undefined) {
         return (
             <View style={styles.center}>
@@ -298,10 +279,9 @@ export default function ScheduleReturnScreen() {
                 <View style={styles.headerSpacer} />
             </View>
 
-            <Wrapper style={styles.flex} {...wrapperProps}>
-                <ScrollView
-                    ref={scrollRef}
-                    contentContainerStyle={[styles.scroll, { paddingBottom: Math.max(100, 60 + insets.bottom) }]}
+            <View style={styles.flex}>
+                <KeyboardAwareScrollView
+                    contentContainerStyle={[styles.scroll, { paddingBottom: Math.max(120, 80 + insets.bottom) }]}
                     keyboardShouldPersistTaps="handled"
                     keyboardDismissMode="on-drag"
                     showsVerticalScrollIndicator={false}
@@ -403,8 +383,8 @@ export default function ScheduleReturnScreen() {
                             style={{ marginTop: Spacing.md }}
                         />
                     </View>
-                </ScrollView>
-            </Wrapper>
+                </KeyboardAwareScrollView>
+            </View>
 
             <ConfirmActionModal
                 visible={mismatchModalVisible}

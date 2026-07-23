@@ -1,5 +1,6 @@
 import Button from "@/components/ui/core/Button";
 import InputField from "@/components/ui/core/InputField";
+import KeyboardAwareScrollView from "@/components/ui/core/KeyboardAwareScrollView";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing } from "@/constants/theme";
 import { useAuthState } from "@/context/AuthContext";
@@ -11,9 +12,6 @@ import { useMutation } from "convex/react";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -92,12 +90,9 @@ export default function EditProfileScreen() {
                 <View style={styles.headerSpacer} />
             </View>
 
-            <KeyboardAvoidingView
-                style={styles.flex}
-                behavior={Platform.OS === "ios" ? "padding" : undefined}
-            >
-                <ScrollView
-                    contentContainerStyle={[styles.content, { paddingBottom: Math.max(100, 60 + insets.bottom) }]}
+            <View style={styles.flex}>
+                <KeyboardAwareScrollView
+                    contentContainerStyle={[styles.content, { paddingBottom: Math.max(120, 80 + insets.bottom) }]}
                     keyboardShouldPersistTaps="handled"
                     keyboardDismissMode="on-drag"
                     showsVerticalScrollIndicator={false}
@@ -150,8 +145,8 @@ export default function EditProfileScreen() {
                             For password and account security changes, head to Settings.
                         </Text>
                     </View>
-                </ScrollView>
-            </KeyboardAvoidingView>
+                </KeyboardAwareScrollView>
+            </View>
         </SafeAreaView>
     );
 }

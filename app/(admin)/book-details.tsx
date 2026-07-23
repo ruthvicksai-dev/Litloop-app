@@ -12,8 +12,9 @@ import AdminBookDescription from "@/components/admin/book-details/AdminBookDescr
 import AdminBookInventory from "@/components/admin/book-details/AdminBookInventory";
 import AdminBookBorrowRecords from "@/components/admin/book-details/AdminBookBorrowRecords";
 import AdminBookActions from "@/components/admin/book-details/AdminBookActions";
+import KeyboardAwareScrollView from "@/components/ui/core/KeyboardAwareScrollView";
 import React from "react";
-import { Alert, Animated, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Animated, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function AdminBookDetailsScreen() {
@@ -101,7 +102,7 @@ export default function AdminBookDetailsScreen() {
                 <AdminHeader title="Book Details" />
             </Animated.View>
 
-            <ScrollView
+            <KeyboardAwareScrollView
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(80, 40 + insets.bottom) }]}
             >
@@ -167,7 +168,7 @@ export default function AdminBookDetailsScreen() {
                         onDeletePress={handleDeletePress}
                     />
                 </Animated.View>
-            </ScrollView>
+            </KeyboardAwareScrollView>
 
             {/* Delete Confirmation — reuses existing ConfirmActionModal */}
             <ConfirmActionModal
