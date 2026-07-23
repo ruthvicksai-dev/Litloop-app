@@ -20,15 +20,21 @@ import { enableFreeze } from "react-native-screens";
 // objects making them non-extensible, which crashes the animation system.
 enableFreeze(false);
 
-const sentryDsn = process.env.EXPO_PUBLIC_SENTRY_DSN;
-const isSentryEnabled = Boolean(sentryDsn) && !__DEV__;
-
-Sentry.init({
-  dsn: sentryDsn,
-  enabled: isSentryEnabled,
-  tracesSampleRate: 0,
-  environment: __DEV__ ? "development" : "production",
-});
+// Safe Sentry Initialization
+try {
+  const sentryDsn = process.env.EXPO_PUBLIC_SENTRY_DSN;
+  const isSentryEnabled = Boolean(sentryDsn) && !__DEV__;
+  if (isSentryEnabled) {
+    Sentry.init({
+      dsn: sentryDsn,
+      enabled: true,
+      tracesSampleRate: 0,
+      environment: "production",
+    });
+  }
+} catch (e) {
+  console.warn("[Sentry] Failed to initialize:", e);
+}
 
 const shouldSuppressConvexLog = (args: unknown[]) => {
   const message = args
@@ -44,8 +50,6 @@ const shouldSuppressConvexLog = (args: unknown[]) => {
   );
 };
 
-// L4 FIX: Suppress verbose Convex logs in production builds.
-// console.error is still active in production for critical failures.
 const isProd = process.env.NODE_ENV === "production";
 const noop = () => { };
 
@@ -61,23 +65,31 @@ const convexLogger = {
   logVerbose: isProd ? noop : (...args: unknown[]) => console.log(...args),
 };
 
-const convexUrl = process.env.EXPO_PUBLIC_CONVEX_URL || "https://dummy.convex.cloud";
+// Lazy singleton instantiation for Convex client to prevent startup throws
+let convexClientInstance: ConvexReactClient | null = null;
+function getConvexClient(): ConvexReactClient {
+  if (!convexClientInstance) {
+    const convexUrl = process.env.EXPO_PUBLIC_CONVEX_URL || "https://dummy.convex.cloud";
+    convexClientInstance = new ConvexReactClient(convexUrl, {
+      unsavedChangesWarning: false,
+      logger: convexLogger,
+    });
+  }
+  return convexClientInstance;
+}
 
-const convex = new ConvexReactClient(convexUrl, {
-  unsavedChangesWarning: false,
-  logger: convexLogger,
-});
+try {
+  SplashScreen.preventAutoHideAsync();
+} catch {}
 
-SplashScreen.preventAutoHideAsync();
 function RootLayout() {
+  const convexClient = React.useMemo(() => getConvexClient(), []);
+
   const [fontsLoaded] = useFonts({
     "Lato-Light": require("../assets/fonts/Lato/Lato-Light.ttf"),
     "Lato-LightItalic": require("../assets/fonts/Lato/Lato-LightItalic.ttf"),
     "Lato-Regular": require("../assets/fonts/Lato/Lato-Regular.ttf"),
     "Lato-Italic": require("../assets/fonts/Lato/Lato-Italic.ttf"),
-    // L1 FIX: Lato has no "Medium" weight. Map Lato-Medium to Regular (400)
-    // so components using Fonts.medium render at the correct weight,
-    // not incorrectly at Bold (700).
     "Lato-Medium": require("../assets/fonts/Lato/Lato-Regular.ttf"),
     "Lato-MediumItalic": require("../assets/fonts/Lato/Lato-Italic.ttf"),
     "Lato-Bold": require("../assets/fonts/Lato/Lato-Bold.ttf"),
@@ -105,11 +117,10 @@ function RootLayout() {
     customizeSystemUI();
   }, [fontsLoaded]);
 
-
   return (
     <SafeAreaProvider>
       <View style={{ flex: 1, backgroundColor: Colors.background }}>
-        <ConvexProvider client={convex}>
+        <ConvexProvider client={convexClient}>
           <NetworkProvider>
             <AuthProvider>
               <ToastProvider>
@@ -124,4 +135,10 @@ function RootLayout() {
   );
 }
 
-export default Sentry.wrap(RootLayout);
+// Safely wrap with Sentry without breaking default export shape
+const WrappedRootLayout = Sentry && typeof Sentry.wrap === "function" 
+  ? Sentry.wrap(RootLayout) 
+  : RootLayout;
+
+export default WrappedRootLayout;
+
