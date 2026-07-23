@@ -65,12 +65,46 @@ const convexLogger = {
   logVerbose: isProd ? noop : (...args: unknown[]) => console.log(...args),
 };
 
-// Lazy singleton instantiation for Convex client to prevent startup throws
+// Lazy singleton instantiation for Convex client
 let convexClientInstance: ConvexReactClient | null = null;
 function getConvexClient(): ConvexReactClient {
   if (!convexClientInstance) {
-    const convexUrl = process.env.EXPO_PUBLIC_CONVEX_URL || "https://dummy.convex.cloud";
-    convexClientInstance = new ConvexReactClient(convexUrl, {
+    const rawConvexUrl = process.env.EXPO_PUBLIC_CONVEX_URL;
+
+    console.log("[Convex Client Init] Diagnostic details:");
+    console.log("  - NODE_ENV:", process.env.NODE_ENV);
+    console.log("  - EXPO_PUBLIC_CONVEX_URL:", rawConvexUrl);
+    console.log("  - typeof EXPO_PUBLIC_CONVEX_URL:", typeof rawConvexUrl);
+    console.log(
+      "  - Length:",
+      typeof rawConvexUrl === "string" ? rawConvexUrl.length : "N/A"
+    );
+
+    if (
+      !rawConvexUrl ||
+      typeof rawConvexUrl !== "string" ||
+      rawConvexUrl.trim() === ""
+    ) {
+      throw new Error(
+        `[Convex Error] EXPO_PUBLIC_CONVEX_URL is missing or empty. Got: ${JSON.stringify(
+          rawConvexUrl
+        )}`
+      );
+    }
+
+    if (rawConvexUrl.startsWith("$") || rawConvexUrl.includes("EXPO_PUBLIC_")) {
+      throw new Error(
+        `[Convex Error] EXPO_PUBLIC_CONVEX_URL was not substituted at build time and holds a raw placeholder: "${rawConvexUrl}". Ensure your EAS build environment variable is properly set.`
+      );
+    }
+
+    if (!/^https?:\/\//i.test(rawConvexUrl)) {
+      throw new Error(
+        `[Convex Error] EXPO_PUBLIC_CONVEX_URL is not a valid absolute URL (missing http:// or https:// protocol). Value: "${rawConvexUrl}"`
+      );
+    }
+
+    convexClientInstance = new ConvexReactClient(rawConvexUrl, {
       unsavedChangesWarning: false,
       logger: convexLogger,
     });
