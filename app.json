@@ -2,7 +2,7 @@
   "expo": {
     "name": "LitLoop",
     "slug": "litloop",
-    "version": "1.0.3",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "litloop",
@@ -26,7 +26,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.ruthvicksai.litloop",
-      "versionCode": 1,
+      "versionCode": 5,
       "permissions": [
         "POST_NOTIFICATIONS",
         "CAMERA",
