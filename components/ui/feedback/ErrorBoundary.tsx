@@ -43,6 +43,28 @@ export default class ErrorBoundary extends Component<Props, State> {
 
     render() {
         if (this.state.hasError) {
+            const isAuthError =
+                this.state.error?.message?.includes("Session invalid") ||
+                this.state.error?.message?.includes("Session expired") ||
+                this.state.error?.message?.includes("Please sign in");
+
+            if (isAuthError) {
+                return (
+                    <View style={styles.container}>
+                        <Ionicons
+                            name="time-outline"
+                            size={56}
+                            color={Colors.primary}
+                            style={{ marginBottom: Spacing.md }}
+                        />
+                        <Text style={styles.title}>Session Expired</Text>
+                        <Text style={styles.subtitle}>
+                            Your session has expired. Redirecting to sign in...
+                        </Text>
+                    </View>
+                );
+            }
+
             return (
                 <View style={styles.container}>
                     <Ionicons

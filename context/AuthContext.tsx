@@ -5,6 +5,7 @@ import * as Sentry from "@sentry/react-native";
 import { useMutation, useQuery } from "convex/react";
 import * as Device from "expo-device";
 import * as SecureStore from "expo-secure-store";
+import { router as globalRouter } from "expo-router";
 import React, {
     createContext,
     ReactNode,
@@ -265,6 +266,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 const storedRefresh = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
                 if (!storedRefresh || signOutInProgressRef.current) {
                     await clearLocalSession();
+                    setSessionExpired(true);
                     return;
                 }
 
@@ -281,8 +283,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     setAccessToken(result.accessToken);
                     scheduleRefresh(result.accessToken);
                 } catch {
-                    // Refresh also failed — session is truly dead
+                    // Refresh also failed — session is truly dead. Clear local tokens immediately.
                     if (!signOutInProgressRef.current) {
+                        await clearLocalSession();
                         setSessionExpired(true);
                     }
                 } finally {
@@ -367,7 +370,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                         setAccessToken(result.accessToken);
                         scheduleRefresh(result.accessToken);
                     } catch {
-                        // Refresh also failed — show session expired modal
+                        // Refresh also failed — session is truly dead. Clear local tokens immediately.
+                        await clearLocalSession();
                         setSessionExpired(true);
                     } finally {
                         setIsRefreshing(false);
@@ -534,6 +538,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             await clearLocalSession();
         } finally {
             signOutInProgressRef.current = false;
+            if (globalRouter.canDismiss()) globalRouter.dismissAll();
+            globalRouter.replace("/(auth)/sign-in");
         }
     }, [clearLocalSession]);
 

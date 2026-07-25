@@ -2,8 +2,8 @@ import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { Id } from "../_generated/dataModel";
 import { mutation } from "../_generated/server";
-import { getUserIdFromAccessToken, hashPassword, verifyPassword } from "../lib/authHelpers";
-import { sha256 } from "../lib/jwt";
+import { getAccessTokenSecret, getUserIdFromAccessToken, hashPassword, verifyPassword } from "../lib/authHelpers";
+import { sha256, verifyToken } from "../lib/jwt";
 import { assertRateLimit, buildRateLimitKey, clearRateLimit } from "../lib/rateLimit";
 import { AUTH_RATE_LIMITS } from "./helpers";
 
@@ -192,12 +192,25 @@ export const changePassword = mutation({
             passwordHash: newPasswordHash,
         });
 
+        let currentSid: Id<"sessions"> | undefined;
+        try {
+            const secret = getAccessTokenSecret();
+            const payload = await verifyToken(args.accessToken, secret);
+            if (payload.sid) {
+                currentSid = payload.sid as Id<"sessions">;
+            }
+        } catch {
+            // Ignore token decode errors if sid is unreadable
+        }
+
         const activeSessions = await ctx.db
             .query("sessions")
             .withIndex("by_userId_active", (q) => q.eq("userId", userId).eq("isRevoked", false))
             .collect();
         for (const s of activeSessions) {
-            await ctx.db.patch(s._id, { isRevoked: true });
+            if (!currentSid || s._id !== currentSid) {
+                await ctx.db.patch(s._id, { isRevoked: true });
+            }
         }
 
         await clearRateLimit(ctx, changePasswordKey);

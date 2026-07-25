@@ -251,7 +251,7 @@ describe("signOut", () => {
 // ─── Password Change ─────────────────────────────────────────────────────────
 
 describe("changePassword", () => {
-  it("changes password and revokes sessions", async () => {
+  it("changes password and keeps current session active while revoking other sessions", async () => {
     const t = convexTest(schema);
     const signup = await createUserViaOTP(t, "pwchange@example.com", "oldpassword123", "8888888888");
 
@@ -262,11 +262,12 @@ describe("changePassword", () => {
     });
     await t.finishAllScheduledFunctions(vi.runAllTimers);
 
-    // Old access token should be rejected (session revoked)
+    // Current session access token should remain active
     const session = await t.query(api.auth.getSession, {
       accessToken: signup.accessToken,
     });
-    expect(session).toBeNull();
+    expect(session).not.toBeNull();
+    expect(session?.email).toBe("pwchange@example.com");
   });
 
   it("rejects short new password", async () => {
