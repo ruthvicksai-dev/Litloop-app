@@ -38,7 +38,7 @@ export function useStudentVerification() {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             quality: 0.7,
-            allowsEditing: true,
+            allowsEditing: false,
         });
 
         if (result.canceled || !result.assets?.length) return;
@@ -153,6 +153,7 @@ export function useStudentVerification() {
 
         // Actions
         pickImage,
+        clearImage: () => setImageUri(null),
         handleSubmit,
         submitting,
     };

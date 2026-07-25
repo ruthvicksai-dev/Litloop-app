@@ -35,6 +35,7 @@ export default function VerifyStudentScreen() {
         setYear,
         imageUri,
         pickImage,
+        clearImage,
         handleSubmit,
         submitting,
     } = useStudentVerification();
@@ -128,7 +129,7 @@ export default function VerifyStudentScreen() {
         <SafeAreaView style={styles.container}>
             <View style={{ flex: 1 }}>
                 <KeyboardAwareScrollView
-                    contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(120, 80 + insets.bottom) }]}
+                    contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(Spacing.xl, insets.bottom + 20) }]}
                     showsVerticalScrollIndicator={false}
                     keyboardShouldPersistTaps="handled"
                     keyboardDismissMode="on-drag"
@@ -236,11 +237,19 @@ export default function VerifyStudentScreen() {
                         </Text>
                         <TouchableOpacity
                             style={[styles.uploadArea, isCoolingDown && styles.uploadDisabled]}
-                            onPress={isCoolingDown ? undefined : pickImage}
-                            activeOpacity={isCoolingDown ? 1 : 0.7}
+                            onPress={isCoolingDown || submitting ? undefined : pickImage}
+                            activeOpacity={isCoolingDown || submitting ? 1 : 0.7}
                         >
                             {imageUri ? (
-                                <Image source={{ uri: imageUri }} style={styles.uploadPreview} />
+                                <View style={{ width: "100%", height: 220, justifyContent: "center", alignItems: "center" }}>
+                                    <Image source={{ uri: imageUri }} style={styles.uploadPreview} />
+                                    {submitting && (
+                                        <View style={styles.uploadingOverlay}>
+                                            <ActivityIndicator size="small" color={Colors.white} />
+                                            <Text style={styles.uploadingText}>Uploading ID card...</Text>
+                                        </View>
+                                    )}
+                                </View>
                             ) : (
                                 <View style={styles.uploadPlaceholder}>
                                     <Ionicons name="cloud-upload-outline" size={32} color={Colors.primary} />
@@ -250,6 +259,17 @@ export default function VerifyStudentScreen() {
                                 </View>
                             )}
                         </TouchableOpacity>
+
+                        {imageUri && !submitting && !isCoolingDown && (
+                            <TouchableOpacity
+                                style={styles.removeLink}
+                                onPress={clearImage}
+                                activeOpacity={0.6}
+                            >
+                                <Ionicons name="trash-outline" size={14} color={Colors.textSecondary} />
+                                <Text style={styles.removeLinkText}>Remove photo</Text>
+                            </TouchableOpacity>
+                        )}
 
                         <Button
                             title={isCoolingDown ? `Wait ${cooldownHours}h to Resubmit` : "Submit for Verification"}
@@ -523,6 +543,34 @@ const styles = StyleSheet.create({
         width: "100%",
         height: 220,
         resizeMode: "contain",
+    },
+    uploadingOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: "rgba(0,0,0,0.65)",
+        justifyContent: "center",
+        alignItems: "center",
+        flexDirection: "row",
+        gap: Spacing.xs,
+        borderRadius: 14,
+    },
+    uploadingText: {
+        fontSize: FontSizes.small,
+        fontFamily: Fonts.medium,
+        color: Colors.white,
+    },
+    removeLink: {
+        flexDirection: "row",
+        alignItems: "center",
+        alignSelf: "flex-end",
+        gap: 4,
+        marginTop: Spacing.xs,
+        paddingVertical: 4,
+        paddingHorizontal: 4,
+    },
+    removeLinkText: {
+        fontSize: FontSizes.caption,
+        fontFamily: Fonts.medium,
+        color: Colors.textSecondary,
     },
     submitButton: {
         marginTop: Spacing.lg,
