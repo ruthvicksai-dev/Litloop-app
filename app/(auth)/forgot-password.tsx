@@ -283,6 +283,16 @@ export default function ForgotPasswordScreen() {
                                     onChangeText={setConfirmNewPassword}
                                     secureTextEntry
                                     showPasswordToggle={false}
+                                    error={
+                                        confirmNewPassword.length > 0 && confirmNewPassword !== newPassword
+                                            ? "Passwords do not match"
+                                            : undefined
+                                    }
+                                    successText={
+                                        confirmNewPassword.length > 0 && confirmNewPassword === newPassword
+                                            ? "Passwords match"
+                                            : undefined
+                                    }
                                 />
                                 <Button
                                     title="Reset Password"

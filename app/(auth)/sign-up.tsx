@@ -137,6 +137,16 @@ export default function SignUpScreen() {
                                     onChangeText={setConfirmPassword}
                                     secureTextEntry
                                     showPasswordToggle={false}
+                                    error={
+                                        confirmPassword.length > 0 && confirmPassword !== password
+                                            ? "Passwords do not match"
+                                            : undefined
+                                    }
+                                    successText={
+                                        confirmPassword.length > 0 && confirmPassword === password
+                                            ? "Passwords match"
+                                            : undefined
+                                    }
                                 />
 
                                 <TouchableOpacity

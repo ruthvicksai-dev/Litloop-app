@@ -25,6 +25,7 @@ const AnimatedView = Animated.View;
 interface InputFieldProps extends TextInputProps {
     label: string;
     error?: string;
+    successText?: string;
     helperText?: string;
     containerStyle?: ViewStyle;
     inputStyle?: StyleProp<TextStyle>;
@@ -34,6 +35,7 @@ interface InputFieldProps extends TextInputProps {
 export default function InputField({
     label,
     error,
+    successText,
     helperText,
     containerStyle,
     inputStyle,
@@ -112,7 +114,15 @@ export default function InputField({
                 )}
             </AnimatedView>
             {error ? (
-                <Text style={styles.errorText}>{error}</Text>
+                <View style={styles.messageRow}>
+                    <Ionicons name="close-circle" size={14} color={Colors.error} />
+                    <Text style={styles.errorText}>{error}</Text>
+                </View>
+            ) : successText ? (
+                <View style={styles.messageRow}>
+                    <Ionicons name="checkmark-circle" size={14} color={Colors.success} />
+                    <Text style={styles.successText}>{successText}</Text>
+                </View>
             ) : helperText ? (
                 <Text style={styles.helperText}>{helperText}</Text>
             ) : null}
@@ -163,16 +173,26 @@ const styles = StyleSheet.create({
         alignItems: "center",
         paddingHorizontal: Spacing.xs,
     },
+    messageRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 4,
+        marginTop: Spacing.xs,
+    },
     helperText: {
         fontSize: FontSizes.caption,
         fontFamily: Fonts.regular,
         color: Colors.textSecondary,
         marginTop: Spacing.xs,
     },
+    successText: {
+        fontSize: FontSizes.caption,
+        fontFamily: Fonts.medium,
+        color: Colors.success,
+    },
     errorText: {
         fontSize: FontSizes.caption,
         fontFamily: Fonts.medium,
         color: Colors.error,
-        marginTop: Spacing.xs,
     },
 });
