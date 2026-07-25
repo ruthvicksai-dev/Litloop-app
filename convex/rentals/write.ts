@@ -6,7 +6,7 @@ import { assertAdmin, getAuthenticatedUser } from "../lib/authHelpers";
 import { assertRateLimit, buildRateLimitKey } from "../lib/rateLimit";
 import { incrementRatingCountPatch } from "../lib/reviewCounters";
 import { ALLOWED_AREAS, getDeliveryAreaByName, validateDeliveryAreaSelection } from "../../utils/location/areas";
-import { LATE_FEE_PER_DAY, RENTAL_RATE_LIMITS, VALID_SLOTS, daysBetween, safeRatingRollback } from "./helpers";
+import { LATE_FEE_PER_DAY, RENTAL_RATE_LIMITS, VALID_SLOTS, daysBetween, safeRatingRollback, rollbackRentalRatingAndReview } from "./helpers";
 
 export const requestRental = mutation({
     args: {
@@ -267,24 +267,35 @@ export const schedulePickup = mutation({
             throw new Error("Rating must be between 1 and 5.");
         }
 
-        if (args.pickupLocation && rental.zone === "Home") {
-            const selectedArea = args.pickupLocation.area?.trim() ?? "";
-            if (!selectedArea) {
-                throw new Error("Please select your pickup area.");
-            }
-            if (!(ALLOWED_AREAS as readonly string[]).includes(selectedArea) || !getDeliveryAreaByName(selectedArea)) {
-                throw new Error("Service not available in your area. Please select a valid delivery area in Guntur.");
-            }
+        if (args.pickupLocation) {
+            const isCollegePickup = Boolean(args.pickupLocation.roomNo || args.pickupLocation.rollNo);
 
-            const areaValidation = validateDeliveryAreaSelection({
-                selectedArea,
-                formattedAddress: args.pickupLocation.formattedAddress,
-                latitude: args.pickupLocation.latitude,
-                longitude: args.pickupLocation.longitude,
-            });
+            if (isCollegePickup) {
+                if (!args.pickupLocation.roomNo?.trim()) {
+                    throw new Error("Room number is required for College pickup.");
+                }
+                if (!args.pickupLocation.rollNo?.trim()) {
+                    throw new Error("Roll number is required for College pickup.");
+                }
+            } else {
+                const selectedArea = args.pickupLocation.area?.trim() ?? "";
+                if (!selectedArea) {
+                    throw new Error("Please select your pickup area.");
+                }
+                if (!(ALLOWED_AREAS as readonly string[]).includes(selectedArea) || !getDeliveryAreaByName(selectedArea)) {
+                    throw new Error("Service not available in your area. Please select a valid delivery area in Guntur.");
+                }
 
-            if (!areaValidation.isValid) {
-                throw new Error(areaValidation.message);
+                const areaValidation = validateDeliveryAreaSelection({
+                    selectedArea,
+                    formattedAddress: args.pickupLocation.formattedAddress,
+                    latitude: args.pickupLocation.latitude,
+                    longitude: args.pickupLocation.longitude,
+                });
+
+                if (!areaValidation.isValid) {
+                    throw new Error(areaValidation.message);
+                }
             }
         }
 
@@ -363,10 +374,12 @@ export const schedulePickup = mutation({
         });
 
         const expiresAt = Date.now() + 60 * 60 * 1000;
+        const finalPickupLocation = args.pickupLocation ?? rental.deliveryLocation;
+
         await ctx.db.patch(args.rentalId, {
             pickupDate: args.pickupDate,
             pickupTime: args.pickupTime,
-            pickupLocation: args.pickupLocation,
+            pickupLocation: finalPickupLocation,
             totalRent,
             userRating: args.userRating,
             ratedAt: Date.now(),
@@ -411,23 +424,7 @@ export const cancelPickup = mutation({
         if (rental.status !== "pickup_scheduled")
             throw new Error("Rental must be 'pickup_scheduled' to cancel pickup.");
 
-        if (rental.userRating) {
-            const book = await ctx.db.get(rental.bookId);
-            if (book) {
-                const { rating, ratingCount, avgRating, totalReviews } = safeRatingRollback(
-                    book.rating,
-                    book.ratingCount,
-                    rental.userRating
-                );
-                await ctx.db.patch(rental.bookId, { 
-                    rating, 
-                    ratingCount,
-                    avgRating,
-                    totalReviews,
-                    ...incrementRatingCountPatch(book, rental.userRating, -1),
-                });
-            }
-        }
+        await rollbackRentalRatingAndReview(ctx, rental);
 
         await ctx.db.patch(args.rentalId, {
             pickupDate: undefined,

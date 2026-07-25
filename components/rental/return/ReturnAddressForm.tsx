@@ -11,6 +11,7 @@ import DeliveryZoneSelector from "@/components/rental/form/DeliveryZoneSelector"
 interface ReturnAddressFormProps {
     zone: string;
     setZone: (val: string) => void;
+    rentalZone?: string;
     isVerifiedStudent: boolean;
     useSameAddress: boolean;
     setUseSameAddress: (val: boolean) => void;
@@ -39,6 +40,7 @@ interface ReturnAddressFormProps {
 export default function ReturnAddressForm({
     zone,
     setZone,
+    rentalZone,
     isVerifiedStudent,
     useSameAddress,
     setUseSameAddress,
@@ -63,6 +65,10 @@ export default function ReturnAddressForm({
     onLocatePress,
     deliveryLocation,
 }: ReturnAddressFormProps) {
+    const isHomeDelivery = rentalZone
+        ? rentalZone === "Home"
+        : Boolean(deliveryLocation?.area || deliveryLocation?.landmark || deliveryLocation?.formattedAddress);
+
     return (
         <View>
             <View style={styles.sectionDivider}>
@@ -82,16 +88,16 @@ export default function ReturnAddressForm({
                 <View style={styles.readOnlyCard}>
                     <View style={styles.readOnlyIcon}>
                         <Ionicons
-                            name={zone === "Home" ? "home" : "school"}
+                            name={isHomeDelivery ? "home" : "school"}
                             size={18}
                             color={Colors.primary}
                         />
                     </View>
                     <View style={styles.readOnlyContent}>
                         <Text style={styles.readOnlyTitle}>
-                            {zone === "Home"
-                                ? [deliveryLocation.area, deliveryLocation.landmark].filter(Boolean).join(" · ") || "No details"
-                                : [deliveryLocation.department, `Room ${deliveryLocation.roomNo}`].filter(Boolean).join(" · ") || "No details"}
+                            {isHomeDelivery
+                                ? [deliveryLocation.area, deliveryLocation.landmark, deliveryLocation.formattedAddress].filter(Boolean).join(" · ") || "Home Address"
+                                : [deliveryLocation.department, deliveryLocation.roomNo ? `Room ${deliveryLocation.roomNo}` : null, deliveryLocation.rollNo].filter(Boolean).join(" · ") || "College Address"}
                         </Text>
                         <Text style={styles.readOnlySubtitle} numberOfLines={1}>
                             Phone: {deliveryLocation.phone}

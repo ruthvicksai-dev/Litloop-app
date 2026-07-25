@@ -171,7 +171,7 @@ export default function ScheduleReturnScreen() {
     };
 
     const handleSubmitPickup = async () => {
-        if (!useSameAddress && rental?.zone === "Home") {
+        if (!useSameAddress && pickupZone === "Home") {
             const validation = validateDeliveryAreaSelection({
                 selectedArea: area,
                 formattedAddress,
@@ -318,6 +318,7 @@ export default function ScheduleReturnScreen() {
                         <ReturnAddressForm
                             zone={pickupZone}
                             setZone={setPickupZone}
+                            rentalZone={rental?.zone}
                             isVerifiedStudent={isVerifiedStudent}
                             useSameAddress={useSameAddress}
                             setUseSameAddress={setUseSameAddress}

@@ -1,8 +1,7 @@
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { internalMutation } from "../_generated/server";
-import { incrementRatingCountPatch } from "../lib/reviewCounters";
-import { safeRatingRollback } from "./helpers";
+import { rollbackRentalRatingAndReview } from "./helpers";
 
 export const autoCancelPickup = internalMutation({
     args: { rentalId: v.id("rentals") },
@@ -10,23 +9,7 @@ export const autoCancelPickup = internalMutation({
         const rental = await ctx.db.get(args.rentalId);
         if (!rental || rental.status !== "pickup_scheduled") return;
 
-        if (rental.userRating) {
-            const book = await ctx.db.get(rental.bookId);
-            if (book) {
-                const { rating, ratingCount, avgRating, totalReviews } = safeRatingRollback(
-                    book.rating,
-                    book.ratingCount,
-                    rental.userRating
-                );
-                await ctx.db.patch(rental.bookId, { 
-                    rating, 
-                    ratingCount,
-                    avgRating,
-                    totalReviews,
-                    ...incrementRatingCountPatch(book, rental.userRating, -1),
-                });
-            }
-        }
+        await rollbackRentalRatingAndReview(ctx, rental);
 
         await ctx.db.patch(args.rentalId, {
             pickupDate: undefined,

@@ -45,6 +45,25 @@ export function useScheduleReturnScreen(rentalId: string) {
         }
     }, [rental?.zone]);
 
+    const handleSetUseSameAddress = (val: boolean) => {
+        setUseSameAddress(val);
+        if (val) {
+            if (rental?.zone) {
+                setPickupZone(rental.zone);
+            }
+            setPhone("");
+            setArea("");
+            setLandmark("");
+            setRoomNo("");
+            setYearOfStudy("");
+            setDepartment("");
+            setRollNo("");
+            setLatitude(undefined);
+            setLongitude(undefined);
+            setFormattedAddress("");
+        }
+    };
+
     const estimatedDays = useMemo(() => {
         if (!rental?.deliveryDate || !pickupDate) {
             return 0;
@@ -106,18 +125,28 @@ export function useScheduleReturnScreen(rentalId: string) {
                 showToast("Please select your pickup area.", "error");
                 return;
             }
+            if (pickupZone === "College") {
+                if (!roomNo.trim()) {
+                    showToast("Room number is required for College pickup.", "error");
+                    return;
+                }
+                if (!rollNo.trim()) {
+                    showToast("Roll number is required for College pickup.", "error");
+                    return;
+                }
+            }
 
             pickupLocation = {
                 phone: normalizePhoneNumber(phone),
-                area: area.trim(),
-                landmark: landmark.trim(),
-                roomNo: roomNo.trim(),
-                yearOfStudy: yearOfStudy.trim(),
-                department: department.trim(),
-                rollNo: rollNo.trim(),
-                latitude,
-                longitude,
-                formattedAddress: formattedAddress.trim(),
+                area: pickupZone === "Home" ? area.trim() : undefined,
+                landmark: landmark.trim() || undefined,
+                roomNo: pickupZone === "College" ? roomNo.trim() : undefined,
+                yearOfStudy: pickupZone === "College" ? yearOfStudy.trim() : undefined,
+                department: pickupZone === "College" ? department.trim() : undefined,
+                rollNo: pickupZone === "College" ? rollNo.trim() : undefined,
+                latitude: pickupZone === "Home" ? latitude : undefined,
+                longitude: pickupZone === "Home" ? longitude : undefined,
+                formattedAddress: formattedAddress.trim() || undefined,
             };
         }
 
@@ -162,7 +191,7 @@ export function useScheduleReturnScreen(rentalId: string) {
         handleSchedule,
         // New Address Props
         useSameAddress,
-        setUseSameAddress,
+        setUseSameAddress: handleSetUseSameAddress,
         pickupZone,
         setPickupZone,
         phone,

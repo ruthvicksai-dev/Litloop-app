@@ -1,3 +1,5 @@
+import { incrementRatingCountPatch } from "../lib/reviewCounters";
+
 export const VALID_SLOTS: Record<string, number> = {
     "Morning (9 AM - 12 PM)": 9,
     "Midday (12 PM - 3 PM)": 12,
@@ -55,4 +57,55 @@ export function safeRatingRollback(
         avgRating: Number.isFinite(nextRating) ? Math.max(0, nextRating) : 0,
         totalReviews: nextCount,
     };
+}
+
+export async function rollbackRentalRatingAndReview(
+    ctx: { db: any },
+    rental: { _id: any; bookId: any; userRating?: number }
+) {
+    if (rental.userRating) {
+        const book = await ctx.db.get(rental.bookId);
+        if (book) {
+            const { rating, ratingCount, avgRating, totalReviews } = safeRatingRollback(
+                book.rating,
+                book.ratingCount,
+                rental.userRating
+            );
+            await ctx.db.patch(rental.bookId, {
+                rating,
+                ratingCount,
+                avgRating,
+                totalReviews,
+                ...incrementRatingCountPatch(book, rental.userRating, -1),
+            });
+        }
+    }
+
+    // Delete any review submitted for this rental
+    const review = await ctx.db
+        .query("reviews")
+        .withIndex("by_rentalId", (q: any) => q.eq("rentalId", rental._id))
+        .first();
+
+    if (review) {
+        // Clean up review votes
+        const votes = await ctx.db
+            .query("review_votes")
+            .withIndex("by_reviewId", (q: any) => q.eq("reviewId", review._id))
+            .take(100);
+        for (const vote of votes) {
+            await ctx.db.delete(vote._id);
+        }
+
+        // Clean up reports for this review
+        const reports = await ctx.db
+            .query("reports")
+            .withIndex("by_targetId", (q: any) => q.eq("targetId", review._id))
+            .take(100);
+        for (const report of reports) {
+            await ctx.db.delete(report._id);
+        }
+
+        await ctx.db.delete(review._id);
+    }
 }
