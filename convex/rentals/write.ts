@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { mutation } from "../_generated/server";
 import { recordRentalCreated, recordRentalReturned, recordUserActivity } from "../analytics";
+import { insertAuditLog } from "../lib/auditLog";
 import { assertAdmin, getAuthenticatedUser } from "../lib/authHelpers";
 import { assertRateLimit, buildRateLimitKey } from "../lib/rateLimit";
 import { incrementRatingCountPatch } from "../lib/reviewCounters";
@@ -388,6 +389,13 @@ export const schedulePickup = mutation({
             paymentExpiresAt: expiresAt,
         });
 
+        await insertAuditLog(ctx, "pickup_scheduled", user._id, args.rentalId, "rental", {
+            pickupDate: args.pickupDate,
+            pickupTime: args.pickupTime,
+            totalRent,
+            userRating: args.userRating,
+        });
+
         await ctx.scheduler.runAfter(0, internal.notifications.notifyAdminsOfPickupScheduled, {
             rentalId: args.rentalId,
             bookTitle: book?.title ?? "A book",
@@ -436,6 +444,10 @@ export const cancelPickup = mutation({
             paymentStatus: undefined,
             paymentExpiresAt: undefined,
             status: "delivered",
+        });
+
+        await insertAuditLog(ctx, "pickup_cancelled", user._id, args.rentalId, "rental", {
+            previousStatus: rental.status,
         });
 
         const book = await ctx.db.get(rental.bookId);

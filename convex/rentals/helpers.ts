@@ -63,29 +63,32 @@ export async function rollbackRentalRatingAndReview(
     ctx: { db: any },
     rental: { _id: any; bookId: any; userRating?: number }
 ) {
-    if (rental.userRating) {
+    // Locate any review submitted for this rental
+    const review = await ctx.db
+        .query("reviews")
+        .withIndex("by_rentalId", (q: any) => q.eq("rentalId", rental._id))
+        .first();
+
+    const ratingToRollback = rental.userRating ?? review?.rating;
+
+    if (ratingToRollback) {
         const book = await ctx.db.get(rental.bookId);
         if (book) {
             const { rating, ratingCount, avgRating, totalReviews } = safeRatingRollback(
                 book.rating,
                 book.ratingCount,
-                rental.userRating
+                ratingToRollback
             );
             await ctx.db.patch(rental.bookId, {
                 rating,
                 ratingCount,
                 avgRating,
                 totalReviews,
-                ...incrementRatingCountPatch(book, rental.userRating, -1),
+                ...incrementRatingCountPatch(book, ratingToRollback, -1),
+                ...(review?.isFlagged ? { flaggedCount: Math.max(0, (book.flaggedCount ?? 0) - 1) } : {}),
             });
         }
     }
-
-    // Delete any review submitted for this rental
-    const review = await ctx.db
-        .query("reviews")
-        .withIndex("by_rentalId", (q: any) => q.eq("rentalId", rental._id))
-        .first();
 
     if (review) {
         // Clean up review votes

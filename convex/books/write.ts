@@ -444,7 +444,7 @@ export const backfillSearchFields = mutation({
 export const setBannerImage = mutation({
     args: { accessToken: v.string(), storageId: v.id("_storage"), title: v.optional(v.string()) },
     handler: async (ctx, args) => {
-        await assertAdmin(ctx, args.accessToken);
+        const admin = await assertAdmin(ctx, args.accessToken);
 
         const existing = await ctx.db
             .query("banner")
@@ -463,5 +463,9 @@ export const setBannerImage = mutation({
                 updatedAt: Date.now(),
             });
         }
+
+        await insertAuditLog(ctx, "banner_updated", admin._id, args.storageId, "banner", {
+            title: args.title,
+        });
     },
 });
