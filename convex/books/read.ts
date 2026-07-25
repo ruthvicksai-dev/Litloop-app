@@ -327,6 +327,15 @@ export const getDiscoverData = query({
             return { ...s, coverUrl, books: mappedBooks };
         }));
 
+        // Banner image from banner table
+        const bannerRecord = await ctx.db
+            .query("banner")
+            .order("desc")
+            .first();
+        const bannerImageUrl = bannerRecord?.bannerImage
+            ? await ctx.storage.getUrl(bannerRecord.bannerImage)
+            : null;
+
         // Map all simple sections in parallel
         const [topPicks, top10Books, trendingBooks, famousBooks, newlyAddedBooks] =
             await Promise.all([
@@ -343,6 +352,7 @@ export const getDiscoverData = query({
             trendingBooks,
             famousBooks,
             newlyAddedBooks,
+            bannerImageUrl,
             seriesBooks: seriesWithBooks.filter((s) => s.books.length > 0),
         };
     },

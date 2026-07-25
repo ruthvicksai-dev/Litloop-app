@@ -440,3 +440,28 @@ export const backfillSearchFields = mutation({
         };
     },
 });
+
+export const setBannerImage = mutation({
+    args: { accessToken: v.string(), storageId: v.id("_storage"), title: v.optional(v.string()) },
+    handler: async (ctx, args) => {
+        await assertAdmin(ctx, args.accessToken);
+
+        const existing = await ctx.db
+            .query("banner")
+            .first();
+
+        if (existing) {
+            await ctx.db.patch(existing._id, {
+                bannerImage: args.storageId,
+                title: args.title,
+                updatedAt: Date.now(),
+            });
+        } else {
+            await ctx.db.insert("banner", {
+                bannerImage: args.storageId,
+                title: args.title,
+                updatedAt: Date.now(),
+            });
+        }
+    },
+});

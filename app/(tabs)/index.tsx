@@ -1,13 +1,16 @@
 import DiscoverSectionRow from "@/components/ui/cards/DiscoverSectionRow";
 import { HomeSkeleton } from "@/components/ui/skeletons/HomeSkeleton";
 import SeriesSectionRow from "@/components/ui/cards/SeriesSectionRow";
-import { Fonts } from "@/constants/fonts";
-import { Colors, Layout, Spacing } from "@/constants/theme";
+import { Fonts, FontSizes } from "@/constants/fonts";
+import { Shadows } from "@/constants/designTokens";
+import { Colors, Layout, Spacing, scale } from "@/constants/theme";
 import { useAuthState } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";
 import { useDiscoverSections, useHomeEntrance } from "@/hooks";
 import { triggerHaptic } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import React from "react";
@@ -22,12 +25,21 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+/* ─── Helpers ──────────────────────────────────────────────────────────── */
+
+function formatRatingCount(count: number): string {
+  if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
+  return String(count);
+}
+
+/* ─── Screen ───────────────────────────────────────────────────────────── */
+
 export default function HomeScreen() {
   const { user, accessToken } = useAuthState();
   const router = useRouter();
   const [refreshing, setRefreshing] = React.useState(false);
   const { fadeAnim, slideAnim } = useHomeEntrance();
-  const { topPicks, top10Books, trendingBooks, famousBooks, seriesBooks, newlyAddedBooks } = useDiscoverSections();
+  const { topPicks, top10Books, trendingBooks, famousBooks, seriesBooks, newlyAddedBooks, bannerImageUrl } = useDiscoverSections();
   const unreadCount = useQuery(
     api.notifications.getUnreadCount,
     accessToken ? { accessToken } : "skip"
@@ -39,6 +51,22 @@ export default function HomeScreen() {
     // Simulate refresh
     setTimeout(() => setRefreshing(false), 1000);
   }, []);
+
+  const greeting = React.useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return "Good Morning,";
+    if (hour >= 12 && hour < 17) return "Good Afternoon,";
+    return "Good Evening,";
+  }, []);
+
+  const featuredBook = topPicks?.[0];
+
+  const featuredImageUri = React.useMemo(() => {
+    if (!featuredBook) return undefined;
+    return featuredBook.coverUrls && featuredBook.coverUrls.length > 0
+      ? featuredBook.coverUrls[0]
+      : featuredBook.coverUrl ?? undefined;
+  }, [featuredBook]);
 
   const isLoading =
     topPicks === undefined &&
@@ -53,56 +81,103 @@ export default function HomeScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Animated.View
-        style={[
-          styles.header,
-          {
-            opacity: fadeAnim,
-            transform: [{ translateY: slideAnim }],
-          },
-        ]}
+    <View style={styles.container}>
+      {/* ─── Premium Hero Header ──────────────────────────────────────── */}
+      <LinearGradient
+        colors={[Colors.primaryDark, Colors.primary]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.heroHeader}
       >
-        <View style={styles.headerTop}>
-          <View>
-            <Text style={styles.greeting} allowFontScaling={false}>
-              {user ? (user.role === "admin" ? "Hello, Admin" : `Hello, ${user.name.split(" ")[0]}`) : "Hello, Reader"}
-            </Text>
-            <Text style={styles.pageTitle} allowFontScaling={false}>
+        {/* Decorative background shapes */}
+        <View style={styles.heroDecor} pointerEvents="none">
+          <View style={styles.heroDecorShape1} />
+          <View style={styles.heroDecorShape2} />
+          <View style={styles.heroDecorShape3} />
+        </View>
+
+        <SafeAreaView edges={["top"]} style={styles.heroSafeArea}>
+          <Animated.View
+            style={[
+              styles.heroContent,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
+            {/* Top Row: Avatar + Greeting | Notification */}
+            <View style={styles.heroTopRow}>
+              <View style={styles.heroLeft}>
+                <View style={styles.avatarWrap}>
+                  {user?.avatarUrl ? (
+                    <Image
+                      source={user.avatarUrl}
+                      style={styles.avatar}
+                      contentFit="cover"
+                    />
+                  ) : (
+                    <View style={[styles.avatar, styles.avatarPlaceholder]}>
+                      <Ionicons name="person" size={scale(20)} color={Colors.primary} />
+                    </View>
+                  )}
+                </View>
+                <View>
+                  <Text style={styles.heroGreeting} allowFontScaling={false}>
+                    {greeting}
+                  </Text>
+                  <Text style={styles.heroName} allowFontScaling={false}>
+                    {user ? (user.role === "admin" ? "Admin" : user.name.split(" ")[0]) : "Reader"} 👋
+                  </Text>
+                </View>
+              </View>
+
+              {user ? (
+                user.role !== "admin" ? (
+                  <TouchableOpacity
+                    style={styles.heroNotifBtn}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      triggerHaptic("light");
+                      router.push("/notifications" as any);
+                    }}
+                  >
+                    <Ionicons name={unreadCount > 0 ? "notifications" : "notifications-outline"} size={scale(22)} color={Colors.primary} />
+                    {unreadCount > 0 && (
+                      <View style={styles.heroNotifBadge}>
+                        <Text style={styles.heroNotifBadgeText} allowFontScaling={false}>
+                          {unreadCount > 9 ? "9+" : unreadCount}
+                        </Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                ) : null
+              ) : (
+                <TouchableOpacity
+                  style={styles.heroNotifBtn}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    triggerHaptic("light");
+                    router.push("/(auth)/sign-in");
+                  }}
+                >
+                  <Ionicons name="log-in-outline" size={scale(24)} color={Colors.primary} />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {/* Title & Subtitle */}
+            <Text style={styles.heroTitle} allowFontScaling={false}>
               Discover Books
             </Text>
-          </View>
+            <Text style={styles.heroSubtitle} allowFontScaling={false}>
+              Great stories. Anytime, anywhere.
+            </Text>
+          </Animated.View>
+        </SafeAreaView>
+      </LinearGradient>
 
-          {user ? (
-            user.role !== "admin" ? (
-              <TouchableOpacity
-                style={styles.notifBtn}
-                activeOpacity={0.7}
-                onPress={() => {
-                  triggerHaptic("light");
-                  router.push("/notifications" as any);
-                }}
-              >
-                <Ionicons name={unreadCount > 0 ? "notifications" : "notifications-outline"} size={24} color={Colors.primary} />
-                {unreadCount > 0 && <View style={styles.notifBadge} />}
-              </TouchableOpacity>
-            ) : null
-          ) : (
-            <TouchableOpacity
-              style={styles.loginBtn}
-              activeOpacity={0.7}
-              onPress={() => {
-                triggerHaptic("light");
-                router.push("/(auth)/sign-in");
-              }}
-            >
-              <Ionicons name="log-in-outline" size={26} color={Colors.primary} />
-            </TouchableOpacity>
-          )}
-        </View>
-      </Animated.View>
-
-
+      {/* ─── Scrollable Content ───────────────────────────────────────── */}
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scroll}
@@ -110,6 +185,81 @@ export default function HomeScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />
         }
       >
+        {/* ─── Book of the Week Banner ────────────────────────────────── */}
+        {bannerImageUrl ? (
+          <View style={styles.bannerOuter}>
+            <View style={styles.bannerImageContainer}>
+              <Image
+                source={bannerImageUrl}
+                style={styles.fullBannerImage}
+                contentFit="cover"
+                cachePolicy="disk"
+              />
+            </View>
+          </View>
+        ) : featuredBook ? (
+          <View style={styles.bannerOuter}>
+            <View style={styles.banner}>
+              {/* Left — Info */}
+              <View style={styles.bannerLeft}>
+                <View style={styles.bannerBadge}>
+                  <Text style={styles.bannerBadgeText} allowFontScaling={false}>
+                    ★ BOOK OF THE WEEK
+                  </Text>
+                </View>
+
+                <Text style={styles.bannerTitle} numberOfLines={3} allowFontScaling={false}>
+                  {featuredBook.title}
+                </Text>
+
+                {featuredBook.description ? (
+                  <Text style={styles.bannerDesc} numberOfLines={2} allowFontScaling={false}>
+                    {featuredBook.description}
+                  </Text>
+                ) : null}
+
+                <View style={styles.bannerRatingRow}>
+                  <Ionicons name="star" size={scale(14)} color={Colors.warning} />
+                  <Text style={styles.bannerRatingValue} allowFontScaling={false}>
+                    {(featuredBook.rating ?? 0).toFixed(1)}
+                  </Text>
+                  <Text style={styles.bannerRatingCount} allowFontScaling={false}>
+                    ({formatRatingCount(featuredBook.ratingCount ?? 0)} ratings)
+                  </Text>
+                </View>
+
+                {/* Decorative-only button */}
+                <View style={styles.bannerCta}>
+                  <Text style={styles.bannerCtaText} allowFontScaling={false}>
+                    Rent Now
+                  </Text>
+                  <Ionicons name="arrow-forward" size={scale(14)} color={Colors.white} />
+                </View>
+              </View>
+
+              {/* Right — Cover */}
+              <View style={styles.bannerRight}>
+                <View style={styles.bannerDecorCircle1} />
+                <View style={styles.bannerDecorCircle2} />
+                <View style={styles.bannerCoverWrap}>
+                  {featuredImageUri ? (
+                    <Image
+                      source={featuredImageUri}
+                      style={styles.bannerCoverImg}
+                      contentFit="cover"
+                      cachePolicy="disk"
+                    />
+                  ) : (
+                    <View style={[styles.bannerCoverImg, styles.bannerCoverFallback]}>
+                      <Ionicons name="book" size={scale(32)} color={Colors.primary} />
+                    </View>
+                  )}
+                </View>
+              </View>
+            </View>
+          </View>
+        ) : null}
+
         <DiscoverSectionRow
           title="Top Picks For You"
           subtitle="Highly rated books curated for readers"
@@ -147,85 +297,298 @@ export default function HomeScreen() {
           series={seriesBooks ?? []}
         />
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
+/* ─── Constants ────────────────────────────────────────────────────────── */
+
+const AVATAR_SIZE = scale(44);
+const BANNER_HEIGHT = scale(190);
+const BANNER_COVER_W = scale(110);
+const BANNER_COVER_H = scale(150);
+
+/* ─── Styles ───────────────────────────────────────────────────────────── */
+
 const styles = StyleSheet.create({
+  /* ── Layout ──────────────────────────────────────────────────────────── */
   container: {
     flex: 1,
     backgroundColor: Colors.background,
   },
-  header: {
-    paddingHorizontal: Layout.screenPaddingWide,
-    paddingTop: Spacing.xs,
-    paddingBottom: Spacing.sm + 2,
-    backgroundColor: Colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(109, 58, 61, 0.08)",
-    zIndex: 10,
+  scroll: {
+    paddingTop: Spacing.md,
+    paddingBottom: Layout.tabBarHeight + Spacing.lg,
   },
-  headerTop: {
+
+  /* ── Hero Header ─────────────────────────────────────────────────────── */
+  heroHeader: {
+    borderBottomLeftRadius: Layout.cardRadiusLarge + scale(8),
+    borderBottomRightRadius: Layout.cardRadiusLarge + scale(8),
+    overflow: "hidden",
+    ...Shadows.elevated,
+  },
+  heroSafeArea: {
+    // SafeAreaView handles the top inset
+  },
+  heroContent: {
+    paddingHorizontal: Layout.screenPaddingWide,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.lg + Spacing.xs,
+  },
+
+  /* Hero — decorative background */
+  heroDecor: {
+    ...StyleSheet.absoluteFillObject,
+    overflow: "hidden",
+  },
+  heroDecorShape1: {
+    position: "absolute",
+    width: scale(180),
+    height: scale(180),
+    borderRadius: scale(90),
+    backgroundColor: "rgba(255,255,255,0.05)",
+    top: -scale(50),
+    right: -scale(30),
+  },
+  heroDecorShape2: {
+    position: "absolute",
+    width: scale(140),
+    height: scale(140),
+    borderRadius: scale(70),
+    backgroundColor: "rgba(255,255,255,0.03)",
+    bottom: -scale(40),
+    left: -scale(30),
+  },
+  heroDecorShape3: {
+    position: "absolute",
+    width: scale(90),
+    height: scale(90),
+    borderRadius: scale(45),
+    backgroundColor: "rgba(255,255,255,0.04)",
+    top: scale(30),
+    left: scale(100),
+  },
+
+  /* Hero — top row */
+  heroTopRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    marginBottom: Spacing.md + Spacing.xs,
   },
-  loginBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+  heroLeft: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: Colors.surfaceCard,
-    borderWidth: 1,
-    borderColor: "rgba(109, 58, 61, 0.12)",
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    gap: Spacing.sm + Spacing.xs,
   },
-  notifBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: Colors.surfaceCard,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "rgba(109, 58, 61, 0.12)",
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+  avatarWrap: {
+    ...Shadows.card,
+    borderRadius: AVATAR_SIZE / 2,
   },
-  notifBadge: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    width: Layout.badgeSize,
-    height: Layout.badgeSize,
-    borderRadius: Layout.badgeSize / 2,
-    backgroundColor: Colors.error,
+  avatar: {
+    width: AVATAR_SIZE,
+    height: AVATAR_SIZE,
+    borderRadius: AVATAR_SIZE / 2,
     borderWidth: 2,
-    borderColor: Colors.surfaceCard,
+    borderColor: "rgba(255,255,255,0.3)",
   },
-  greeting: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    marginBottom: 2,
+  avatarPlaceholder: {
+    backgroundColor: Colors.primaryLight,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  heroGreeting: {
+    fontSize: FontSizes.small,
+    color: "rgba(255,255,255,0.8)",
     fontFamily: Fonts.regular,
     letterSpacing: 0.2,
   },
-  pageTitle: {
-    fontSize: 24,
-    color: Colors.text,
+  heroName: {
+    fontSize: FontSizes.title,
+    color: Colors.white,
+    fontFamily: Fonts.bold,
+    letterSpacing: -0.3,
+    marginTop: 1,
+  },
+
+  /* Hero — notification / login button */
+  heroNotifBtn: {
+    width: Layout.touchSize,
+    height: Layout.touchSize,
+    borderRadius: Layout.touchSize / 2,
+    backgroundColor: Colors.white,
+    alignItems: "center",
+    justifyContent: "center",
+    ...Shadows.card,
+  },
+  heroNotifBadge: {
+    position: "absolute",
+    top: Spacing.xs - 1,
+    right: Spacing.xs - 1,
+    minWidth: scale(18),
+    height: scale(18),
+    borderRadius: scale(9),
+    backgroundColor: Colors.error,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: Colors.white,
+    paddingHorizontal: Spacing.xs,
+  },
+  heroNotifBadgeText: {
+    fontSize: FontSizes.tiny,
+    color: Colors.white,
+    fontFamily: Fonts.bold,
+    lineHeight: scale(12),
+  },
+
+  /* Hero — title + subtitle */
+  heroTitle: {
+    fontSize: FontSizes.hero,
+    color: Colors.white,
     fontFamily: Fonts.bold,
     letterSpacing: -0.4,
+    marginBottom: Spacing.xs,
   },
-  scroll: {
-    paddingTop: Spacing.sm,
-    paddingBottom: Layout.tabBarHeight + Spacing.lg,
+  heroSubtitle: {
+    fontSize: FontSizes.body,
+    color: "rgba(255,255,255,0.7)",
+    fontFamily: Fonts.regular,
+    letterSpacing: 0.1,
+  },
+
+  /* ── Book of the Week Banner ─────────────────────────────────────────── */
+  bannerOuter: {
+    paddingHorizontal: Layout.screenPaddingWide,
+    marginBottom: Spacing.lg,
+  },
+  bannerImageContainer: {
+    width: "100%",
+    height: BANNER_HEIGHT,
+    borderRadius: Layout.cardRadiusLarge,
+    overflow: "hidden",
+    ...Shadows.card,
+  },
+  fullBannerImage: {
+    width: "100%",
+    height: "100%",
+    borderRadius: Layout.cardRadiusLarge,
+  },
+  banner: {
+    flexDirection: "row",
+    backgroundColor: Colors.surfaceCard,
+    borderRadius: Layout.cardRadiusLarge,
+    padding: Spacing.md,
+    minHeight: BANNER_HEIGHT,
+    overflow: "hidden",
+    ...Shadows.card,
+  },
+  bannerLeft: {
+    flex: 1,
+    justifyContent: "space-between",
+    paddingRight: Spacing.sm,
+  },
+  bannerBadge: {
+    backgroundColor: Colors.primaryDark,
+    paddingHorizontal: Spacing.sm + Spacing.xs,
+    paddingVertical: Spacing.xs + 1,
+    borderRadius: scale(20),
+    alignSelf: "flex-start",
+  },
+  bannerBadgeText: {
+    fontSize: FontSizes.tiny,
+    color: Colors.warning,
+    fontFamily: Fonts.bold,
+    letterSpacing: 0.5,
+  },
+  bannerTitle: {
+    fontSize: FontSizes.titleLarge,
+    color: Colors.text,
+    fontFamily: Fonts.bold,
+    letterSpacing: -0.3,
+    marginTop: Spacing.sm,
+  },
+  bannerDesc: {
+    fontSize: FontSizes.caption,
+    color: Colors.textSecondary,
+    fontFamily: Fonts.regular,
+    lineHeight: FontSizes.caption * 1.4,
+    marginTop: Spacing.xs,
+  },
+  bannerRatingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+    marginTop: Spacing.sm,
+  },
+  bannerRatingValue: {
+    fontSize: FontSizes.small,
+    color: Colors.text,
+    fontFamily: Fonts.bold,
+  },
+  bannerRatingCount: {
+    fontSize: FontSizes.caption,
+    color: Colors.textSecondary,
+    fontFamily: Fonts.regular,
+  },
+  bannerCta: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.primary,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: scale(20),
+    alignSelf: "flex-start",
+    gap: Spacing.xs,
+    marginTop: Spacing.sm,
+    ...Shadows.primary,
+  },
+  bannerCtaText: {
+    fontSize: FontSizes.small,
+    color: Colors.white,
+    fontFamily: Fonts.bold,
+  },
+
+  /* Banner — right (cover) */
+  bannerRight: {
+    width: BANNER_COVER_W + Spacing.md,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  bannerDecorCircle1: {
+    position: "absolute",
+    width: scale(80),
+    height: scale(80),
+    borderRadius: scale(40),
+    backgroundColor: Colors.primaryLight,
+    opacity: 0.4,
+    top: -Spacing.sm,
+    right: -Spacing.sm,
+  },
+  bannerDecorCircle2: {
+    position: "absolute",
+    width: scale(60),
+    height: scale(60),
+    borderRadius: scale(30),
+    backgroundColor: Colors.primaryAccent,
+    opacity: 0.15,
+    bottom: -Spacing.xs,
+    left: -Spacing.sm,
+  },
+  bannerCoverWrap: {
+    transform: [{ rotate: "-3deg" }],
+    borderRadius: Layout.borderRadius,
+    ...Shadows.elevated,
+  },
+  bannerCoverImg: {
+    width: BANNER_COVER_W,
+    height: BANNER_COVER_H,
+    borderRadius: Layout.borderRadius,
+  },
+  bannerCoverFallback: {
+    backgroundColor: Colors.primaryLight,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

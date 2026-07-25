@@ -378,4 +378,10 @@ export default defineSchema({
         .index("by_status", ["status"])
         .index("by_userId_status", ["userId", "status"])
         .index("by_createdAt", ["createdAt"]),
+
+    banner: defineTable({
+        bannerImage: v.id("_storage"),
+        title: v.optional(v.string()),
+        updatedAt: v.number(),
+    }),
 });
