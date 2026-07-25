@@ -40,3 +40,21 @@ export const getUnreadCount = query({
         return unread.length;
     },
 });
+
+export const isSubscribedToBook = query({
+    args: {
+        accessToken: v.string(),
+        bookId: v.id("books"),
+    },
+    handler: async (ctx, args) => {
+        const user = await getAuthenticatedUser(ctx, args.accessToken);
+        const existing = await ctx.db
+            .query("book_notifications")
+            .withIndex("by_userId_bookId", (q) =>
+                q.eq("userId", user._id).eq("bookId", args.bookId)
+            )
+            .first();
+
+        return Boolean(existing);
+    },
+});

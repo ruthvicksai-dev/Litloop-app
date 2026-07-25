@@ -224,7 +224,7 @@ export default function AdminBooksScreen() {
                                     availableCopies={book.availableCopies}
                                     coverUrl={book.coverUrl}
                                     coverUrls={book.coverUrls}
-                                    hideFavorite
+                                    rating={book.rating}
                                     onPress={() => router.push(`/(admin)/book-details?bookId=${book._id}` as any)}
                                 />
                             )}

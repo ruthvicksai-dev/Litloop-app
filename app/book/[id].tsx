@@ -13,7 +13,7 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useBookDetailsScreen } from "@/hooks";
 import { Ionicons } from "@expo/vector-icons";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -37,6 +37,10 @@ export default function BookDetailsScreen() {
     const { showToast } = useToast();
     const insets = useSafeAreaInsets();
     const subscribeToBook = useMutation(api.notifications.subscribeToBook);
+    const isSubscribed = useQuery(
+        api.notifications.isSubscribedToBook,
+        accessToken && id ? { accessToken, bookId: id as Id<"books"> } : "skip"
+    ) ?? false;
     const [isSubscribing, setIsSubscribing] = useState(false);
     const [isRentalModalVisible, setIsRentalModalVisible] = useState(false);
     const [showSignInPrompt, setShowSignInPrompt] = useState(false);
@@ -330,6 +334,7 @@ export default function BookDetailsScreen() {
                                         genre={item.genre ?? item.genres?.[0]}
                                         bookViews={item.bookViews}
                                         top10Position={item.top10Position}
+                                        rating={item.rating}
                                     />
                                 )}
                             />
@@ -352,6 +357,13 @@ export default function BookDetailsScreen() {
                             onPress={handleRentNowPress}
                             style={styles.primaryCta}
                         />
+                    ) : isSubscribed ? (
+                        <View style={[styles.notifyMeBtn, styles.notifyMeBtnActive]}>
+                            <Ionicons name="checkmark-circle" size={18} color={Colors.white} style={{ marginRight: 6 }} />
+                            <Text style={styles.notifyMeBtnText}>
+                                You'll Be Notified
+                            </Text>
+                        </View>
                     ) : (
                         <TouchableOpacity
                             style={[styles.notifyMeBtn, isSubscribing && styles.notifyMeBtnDisabled]}
@@ -629,6 +641,9 @@ const styles = StyleSheet.create({
         paddingVertical: 13,
         borderRadius: 10,
         backgroundColor: "#E65100",
+    },
+    notifyMeBtnActive: {
+        backgroundColor: Colors.success,
     },
     notifyMeBtnDisabled: {
         opacity: 0.6,

@@ -25,6 +25,7 @@ export interface DiscoverBook {
     genres?: string[];
     bookViews?: number;
     top10Position?: number;
+    rating?: number;
 }
 
 interface DiscoverSectionRowProps {
@@ -97,6 +98,7 @@ function DiscoverSectionRow({
                                 genre={genre}
                                 bookViews={item.bookViews}
                                 rank={item.top10Position ?? index + 1}
+                                rating={item.rating}
                             />
                         );
                     }
@@ -112,6 +114,7 @@ function DiscoverSectionRow({
                             genre={genre}
                             bookViews={item.bookViews}
                             top10Position={item.top10Position}
+                            rating={item.rating}
                         />
                     );
                 }}

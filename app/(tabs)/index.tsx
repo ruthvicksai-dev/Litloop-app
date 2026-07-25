@@ -118,7 +118,7 @@ export default function HomeScreen() {
                     />
                   ) : (
                     <View style={[styles.avatar, styles.avatarPlaceholder]}>
-                      <Ionicons name="person" size={scale(20)} color={Colors.primary} />
+                      <Ionicons name="person" size={scale(17)} color={Colors.primary} />
                     </View>
                   )}
                 </View>
@@ -142,7 +142,7 @@ export default function HomeScreen() {
                       router.push("/notifications" as any);
                     }}
                   >
-                    <Ionicons name={unreadCount > 0 ? "notifications" : "notifications-outline"} size={scale(22)} color={Colors.primary} />
+                    <Ionicons name={unreadCount > 0 ? "notifications" : "notifications-outline"} size={scale(18)} color={Colors.primary} />
                     {unreadCount > 0 && (
                       <View style={styles.heroNotifBadge}>
                         <Text style={styles.heroNotifBadgeText} allowFontScaling={false}>
@@ -161,7 +161,7 @@ export default function HomeScreen() {
                     router.push("/(auth)/sign-in");
                   }}
                 >
-                  <Ionicons name="log-in-outline" size={scale(24)} color={Colors.primary} />
+                  <Ionicons name="log-in-outline" size={scale(18)} color={Colors.primary} />
                 </TouchableOpacity>
               )}
             </View>
@@ -303,7 +303,7 @@ export default function HomeScreen() {
 
 /* ─── Constants ────────────────────────────────────────────────────────── */
 
-const AVATAR_SIZE = scale(44);
+const AVATAR_SIZE = scale(34);
 const BANNER_HEIGHT = scale(190);
 const BANNER_COVER_W = scale(110);
 const BANNER_COVER_H = scale(150);
@@ -414,9 +414,9 @@ const styles = StyleSheet.create({
 
   /* Hero — notification / login button */
   heroNotifBtn: {
-    width: Layout.touchSize,
-    height: Layout.touchSize,
-    borderRadius: Layout.touchSize / 2,
+    width: scale(34),
+    height: scale(34),
+    borderRadius: scale(17),
     backgroundColor: Colors.white,
     alignItems: "center",
     justifyContent: "center",
@@ -424,35 +424,35 @@ const styles = StyleSheet.create({
   },
   heroNotifBadge: {
     position: "absolute",
-    top: Spacing.xs - 1,
-    right: Spacing.xs - 1,
-    minWidth: scale(18),
-    height: scale(18),
-    borderRadius: scale(9),
+    top: -1,
+    right: -1,
+    minWidth: scale(15),
+    height: scale(15),
+    borderRadius: scale(7.5),
     backgroundColor: Colors.error,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: Colors.white,
-    paddingHorizontal: Spacing.xs,
+    paddingHorizontal: 2,
   },
   heroNotifBadgeText: {
-    fontSize: FontSizes.tiny,
+    fontSize: 9,
     color: Colors.white,
     fontFamily: Fonts.bold,
-    lineHeight: scale(12),
+    lineHeight: 11,
   },
 
   /* Hero — title + subtitle */
   heroTitle: {
-    fontSize: FontSizes.hero,
+    fontSize: FontSizes.heading,
     color: Colors.white,
     fontFamily: Fonts.bold,
     letterSpacing: -0.4,
     marginBottom: Spacing.xs,
   },
   heroSubtitle: {
-    fontSize: FontSizes.body,
+    fontSize: FontSizes.subtitle,
     color: "rgba(255,255,255,0.7)",
     fontFamily: Fonts.regular,
     letterSpacing: 0.1,

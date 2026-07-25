@@ -24,10 +24,11 @@ interface Top10BookCardProps {
     genre?: string;
     bookViews?: number;
     rank: number;
+    rating?: number;
 }
 
-const COVER_W = scale(120);
-const COVER_H = COVER_W * 1.5;
+const COVER_W = scale(105);
+const COVER_H = COVER_W * 1.45;
 
 export default function Top10BookCard({
     _id,
@@ -36,6 +37,7 @@ export default function Top10BookCard({
     coverUrl,
     coverUrls,
     rank,
+    rating,
 }: Top10BookCardProps) {
     const router = useRouter();
     const cardScale = useMemo(() => new Animated.Value(1), []);
@@ -88,6 +90,15 @@ export default function Top10BookCard({
                             {rankStyle.label}
                         </Text>
                     </LinearGradient>
+
+                    {rating && rating > 0 ? (
+                        <View style={styles.ratingBadge}>
+                            <Ionicons name="star" size={scale(10)} color="#FFD700" />
+                            <Text style={styles.ratingText} allowFontScaling={false}>
+                                {rating.toFixed(1)}
+                            </Text>
+                        </View>
+                    ) : null}
                 </View>
 
                 <Text style={styles.title} numberOfLines={2} allowFontScaling={false}>
@@ -136,6 +147,23 @@ const styles = StyleSheet.create({
         fontSize: FontSizes.small,
         fontFamily: Fonts.bold,
         letterSpacing: -0.5,
+    },
+    ratingBadge: {
+        position: "absolute",
+        bottom: scale(6),
+        left: scale(6),
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "rgba(0,0,0,0.65)",
+        paddingHorizontal: scale(6),
+        paddingVertical: scale(2),
+        borderRadius: scale(10),
+        gap: 3,
+    },
+    ratingText: {
+        fontSize: FontSizes.tiny,
+        color: Colors.white,
+        fontFamily: Fonts.bold,
     },
     placeholder: {
         alignItems: "center",

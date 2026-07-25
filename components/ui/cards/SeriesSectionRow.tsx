@@ -115,6 +115,7 @@ export default function SeriesSectionRow({
                                     coverUrls={item.coverUrls}
                                     genre={item.genre ?? item.genres?.[0]}
                                     bookViews={item.bookViews}
+                                    rating={item.rating}
                                 />
                             )}
                         />

@@ -1,6 +1,5 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, scale, Spacing } from "@/constants/theme";
-import { useFavorites } from "@/hooks";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -24,19 +23,19 @@ export interface DiscoverBookCardProps {
     _id: string;
     title: string;
     author: string;
-    rentPerDay: number;
-    availableCopies: number;
+    rentPerDay?: number;
+    availableCopies?: number;
     coverUrl: string | null;
     coverUrls?: string[];
     genre?: string;
     bookViews?: number;
     top10Position?: number;
+    rating?: number;
     onPress?: () => void;
-    hideFavorite?: boolean;
 }
 
-const CARD_WIDTH = scale(120);
-const COVER_H = CARD_WIDTH * 1.5;
+const CARD_WIDTH = scale(105);
+const COVER_H = CARD_WIDTH * 1.45;
 
 export default function DiscoverBookCard({
     _id,
@@ -45,33 +44,17 @@ export default function DiscoverBookCard({
     coverUrl,
     coverUrls,
     top10Position,
+    rating,
     onPress,
-    hideFavorite,
 }: DiscoverBookCardProps) {
     const router = useRouter();
-    const { isFavorite, toggleFavorite } = useFavorites();
-    const isLiked = isFavorite(_id);
-
     const cardScale = useSharedValue(1);
-    const heartScale = useSharedValue(1);
 
     const imageUri =
         coverUrls && coverUrls.length > 0 ? coverUrls[0] : coverUrl ?? undefined;
 
-    const handleToggleFavorite = () => {
-        toggleFavorite(_id);
-        heartScale.value = withSpring(1.35, { damping: 8, stiffness: 400 });
-        setTimeout(() => {
-            heartScale.value = withSpring(1, { damping: 12, stiffness: 300 });
-        }, 150);
-    };
-
     const cardAnimStyle = useAnimatedStyle(() => ({
         transform: [{ scale: cardScale.value }],
-    }));
-
-    const heartAnimStyle = useAnimatedStyle(() => ({
-        transform: [{ scale: heartScale.value }],
     }));
 
     return (
@@ -113,21 +96,14 @@ export default function DiscoverBookCard({
                         </LinearGradient>
                     ) : null}
 
-                    {!hideFavorite && (
-                        <Pressable
-                            style={styles.bookmarkBtn}
-                            onPress={handleToggleFavorite}
-                            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-                        >
-                            <Animated.View style={heartAnimStyle}>
-                                <Ionicons
-                                    name={isLiked ? "heart" : "heart-outline"}
-                                    size={scale(16)}
-                                    color={isLiked ? Colors.error : Colors.white}
-                                />
-                            </Animated.View>
-                        </Pressable>
-                    )}
+                    {rating && rating > 0 ? (
+                        <View style={styles.ratingBadge}>
+                            <Ionicons name="star" size={scale(10)} color="#FFD700" />
+                            <Text style={styles.ratingText} allowFontScaling={false}>
+                                {rating.toFixed(1)}
+                            </Text>
+                        </View>
+                    ) : null}
                 </View>
 
                 <Text style={styles.title} numberOfLines={2} allowFontScaling={false}>
@@ -164,19 +140,6 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
     },
-    bookmarkBtn: {
-        position: "absolute",
-        top: Spacing.sm,
-        right: Spacing.sm,
-        backgroundColor: "rgba(0,0,0,0.32)",
-        width: scale(30),
-        height: scale(30),
-        borderRadius: scale(15),
-        alignItems: "center",
-        justifyContent: "center",
-        borderWidth: StyleSheet.hairlineWidth,
-        borderColor: "rgba(255,255,255,0.15)",
-    },
     top10Badge: {
         position: "absolute",
         top: Spacing.sm,
@@ -192,6 +155,23 @@ const styles = StyleSheet.create({
         fontSize: FontSizes.small,
         fontFamily: Fonts.bold,
         letterSpacing: -0.4,
+    },
+    ratingBadge: {
+        position: "absolute",
+        bottom: scale(6),
+        left: scale(6),
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "rgba(0,0,0,0.65)",
+        paddingHorizontal: scale(6),
+        paddingVertical: scale(2),
+        borderRadius: scale(10),
+        gap: 3,
+    },
+    ratingText: {
+        fontSize: FontSizes.tiny,
+        color: Colors.white,
+        fontFamily: Fonts.bold,
     },
     title: {
         fontSize: FontSizes.caption,
