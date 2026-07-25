@@ -113,23 +113,26 @@ export const requestRental = mutation({
             availableCopies: freshBook.availableCopies - 1,
         });
 
+        const isHome = args.zone.trim() === "Home";
+        const sanitizedDeliveryLocation = {
+            phone: args.deliveryLocation.phone.trim(),
+            area: isHome ? args.deliveryLocation.area?.trim() || undefined : undefined,
+            landmark: args.deliveryLocation.landmark?.trim() || undefined,
+            city: isHome ? args.deliveryLocation.city?.trim() || undefined : undefined,
+            roomNo: !isHome ? args.deliveryLocation.roomNo?.trim() || undefined : undefined,
+            yearOfStudy: !isHome ? args.deliveryLocation.yearOfStudy?.trim() || undefined : undefined,
+            department: !isHome ? args.deliveryLocation.department?.trim() || undefined : undefined,
+            rollNo: !isHome ? args.deliveryLocation.rollNo?.trim() || undefined : undefined,
+            latitude: isHome ? args.deliveryLocation.latitude : undefined,
+            longitude: isHome ? args.deliveryLocation.longitude : undefined,
+            formattedAddress: isHome ? args.deliveryLocation.formattedAddress?.trim() || undefined : undefined,
+        };
+
         const rentalId = await ctx.db.insert("rentals", {
             userId: userId,
             bookId: args.bookId,
             zone: args.zone.trim(),
-            deliveryLocation: {
-                phone: args.deliveryLocation.phone.trim(),
-                landmark: args.deliveryLocation.landmark?.trim(),
-                area: args.deliveryLocation.area?.trim(),
-                city: args.deliveryLocation.city?.trim(),
-                roomNo: args.deliveryLocation.roomNo?.trim(),
-                yearOfStudy: args.deliveryLocation.yearOfStudy?.trim(),
-                department: args.deliveryLocation.department?.trim(),
-                rollNo: args.deliveryLocation.rollNo?.trim(),
-                latitude: args.deliveryLocation.latitude,
-                longitude: args.deliveryLocation.longitude,
-                formattedAddress: args.deliveryLocation.formattedAddress?.trim(),
-            },
+            deliveryLocation: sanitizedDeliveryLocation,
             rentPerDay: freshBook.rentPerDay,
             status: "requested",
             createdAt: Date.now(),

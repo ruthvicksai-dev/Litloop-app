@@ -148,6 +148,15 @@ export const deleteReview = mutation({
         }
 
         await ctx.db.delete(args.reviewId);
+
+        // Clean up any review votes for this review
+        const votes = await ctx.db
+            .query("review_votes")
+            .withIndex("by_reviewId", (q) => q.eq("reviewId", args.reviewId))
+            .take(100);
+        for (const vote of votes) {
+            await ctx.db.delete(vote._id);
+        }
         
         // Also clean up any reports for this review
         const reports = await ctx.db

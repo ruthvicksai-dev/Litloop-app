@@ -336,6 +336,16 @@ function RentalRequestModalContent({
 
     const handleClearPreviousAddress = () => {
         setSelectedPreviousAddress(null);
+        setPhone("");
+        setLandmark("");
+        setArea("");
+        setRoomNo("");
+        setYearOfStudy("");
+        setDepartment("");
+        setRollNo("");
+        setLatitude(undefined);
+        setLongitude(undefined);
+        setFormattedAddress("");
     };
 
     const isBusy = loading || verifyingAddressId !== null || isLocating;
