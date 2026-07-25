@@ -7,6 +7,7 @@ import InputField from "@/components/ui/core/InputField";
 import DropdownField from "@/components/ui/core/DropdownField";
 import { ALLOWED_AREAS } from "@/utils/location/areas";
 import DeliveryZoneSelector from "@/components/rental/form/DeliveryZoneSelector";
+import CollegeZoneFields from "@/components/rental/form/CollegeZoneFields";
 
 interface ReturnAddressFormProps {
     zone: string;
@@ -114,38 +115,17 @@ export default function ReturnAddressForm({
                         isVerifiedStudent={isVerifiedStudent} 
                     />
                     {zone === "College" ? (
-                        <>
-                            <InputField
-                                label="Room No"
-                                placeholder="e.g. 205"
-                                value={roomNo}
-                                onChangeText={setRoomNo}
-                            />
-                            <View style={styles.row}>
-                                <View style={styles.halfColumn}>
-                                    <InputField
-                                        label="Year of Study"
-                                        placeholder="e.g. 3rd"
-                                        value={yearOfStudy}
-                                        onChangeText={setYearOfStudy}
-                                    />
-                                </View>
-                                <View style={styles.halfColumn}>
-                                    <InputField
-                                        label="Department"
-                                        placeholder="e.g. CSE"
-                                        value={department}
-                                        onChangeText={setDepartment}
-                                    />
-                                </View>
-                            </View>
-                            <InputField
-                                label="Roll No"
-                                placeholder="e.g. 21K61A0501"
-                                value={rollNo}
-                                onChangeText={setRollNo}
-                            />
-                        </>
+                        <CollegeZoneFields
+                            roomNo={roomNo}
+                            setRoomNo={setRoomNo}
+                            yearOfStudy={yearOfStudy}
+                            setYearOfStudy={setYearOfStudy}
+                            department={department}
+                            setDepartment={setDepartment}
+                            rollNo={rollNo}
+                            setRollNo={setRollNo}
+                            isVerifiedStudent={isVerifiedStudent}
+                        />
                     ) : (
                         <>
                             <TouchableOpacity

@@ -1,5 +1,6 @@
 import { FontSizes, Fonts } from "@/constants/fonts";
 import { Colors, Spacing, ZONES } from "@/constants/theme";
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
@@ -10,31 +11,46 @@ interface DeliveryZoneSelectorProps {
 }
 
 export default function DeliveryZoneSelector({ zone, setZone, isVerifiedStudent = false }: DeliveryZoneSelectorProps) {
-    const availableZones = isVerifiedStudent ? ZONES : ZONES.filter(z => z === "Home");
-
     return (
         <>
             <Text style={styles.sectionTitle}>Delivery Zone</Text>
             <View style={styles.zoneGrid}>
-                {availableZones.map((item) => (
-                    <TouchableOpacity
-                        key={item}
-                        style={[
-                            styles.zoneChip,
-                            zone === item && styles.zoneChipActive,
-                        ]}
-                        onPress={() => setZone(item)}
-                    >
-                        <Text
+                {ZONES.map((item) => {
+                    const isLocked = item === "College" && !isVerifiedStudent;
+                    const isActive = zone === item;
+
+                    return (
+                        <TouchableOpacity
+                            key={item}
                             style={[
-                                styles.zoneChipText,
-                                zone === item && styles.zoneChipTextActive,
+                                styles.zoneChip,
+                                isActive && styles.zoneChipActive,
+                                isLocked && !isActive && styles.zoneChipLocked,
                             ]}
+                            onPress={() => setZone(item)}
+                            activeOpacity={0.7}
                         >
-                            {item}
-                        </Text>
-                    </TouchableOpacity>
-                ))}
+                            <View style={styles.chipContent}>
+                                <Text
+                                    style={[
+                                        styles.zoneChipText,
+                                        isActive && styles.zoneChipTextActive,
+                                    ]}
+                                >
+                                    {item}
+                                </Text>
+                                {isLocked ? (
+                                    <Ionicons
+                                        name="lock-closed"
+                                        size={13}
+                                        color={isActive ? Colors.white : Colors.textSecondary}
+                                        style={styles.lockIcon}
+                                    />
+                                ) : null}
+                            </View>
+                        </TouchableOpacity>
+                    );
+                })}
             </View>
         </>
     );
@@ -66,6 +82,15 @@ const styles = StyleSheet.create({
         borderColor: Colors.primary,
         backgroundColor: Colors.primary,
     },
+    zoneChipLocked: {
+        borderColor: Colors.border,
+        backgroundColor: Colors.surfaceCard,
+    },
+    chipContent: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+    },
     zoneChipText: {
         fontSize: FontSizes.small,
         fontFamily: Fonts.medium,
@@ -73,5 +98,8 @@ const styles = StyleSheet.create({
     },
     zoneChipTextActive: {
         color: Colors.white,
+    },
+    lockIcon: {
+        marginLeft: 2,
     },
 });

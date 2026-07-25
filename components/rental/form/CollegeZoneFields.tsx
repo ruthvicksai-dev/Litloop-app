@@ -2,6 +2,7 @@ import InputField from "@/components/ui/core/InputField";
 import { FontSizes, Fonts } from "@/constants/fonts";
 import { Colors, Spacing } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
@@ -30,6 +31,8 @@ export default function CollegeZoneFields({
     isVerifiedStudent,
     onVerifyPress,
 }: CollegeZoneFieldsProps) {
+    const router = useRouter();
+    const handleVerifyPress = onVerifyPress ?? (() => router.push("/profile/verify"));
     return (
         <>
             <View style={styles.infoBox}>
@@ -87,7 +90,7 @@ export default function CollegeZoneFields({
                         </Text>
                         <TouchableOpacity
                             style={styles.verifyOverlayBtn}
-                            onPress={onVerifyPress}
+                            onPress={handleVerifyPress}
                         >
                             <Text style={styles.verifyOverlayBtnText}>Verify Student Status</Text>
                             <Ionicons name="arrow-forward" size={16} color={Colors.white} />
