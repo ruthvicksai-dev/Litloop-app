@@ -28,7 +28,7 @@ import {
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
-const STICKY_CTA_HEIGHT = 80;
+const STICKY_CTA_HEIGHT = 56;
 
 export default function BookDetailsScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
@@ -140,7 +140,7 @@ export default function BookDetailsScreen() {
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={[
                     styles.scrollContent,
-                    { paddingBottom: STICKY_CTA_HEIGHT + insets.bottom + Spacing.md },
+                    { paddingBottom: STICKY_CTA_HEIGHT + insets.bottom + Spacing.sm },
                 ]}
             >
                 <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
@@ -685,7 +685,7 @@ const styles = StyleSheet.create({
         paddingRight: 10,
     },
     scrollContent: {
-        paddingBottom: Layout.tabBarHeight,
+        flexGrow: 1,
     },
     missingState: {
         paddingHorizontal: 40,
