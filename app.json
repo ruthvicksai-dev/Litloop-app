@@ -12,7 +12,8 @@
       "bundleIdentifier": "com.ruthvicksai.litloop",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Litloop needs your location to provide accurate book delivery to your doorstep.",
-        "NSCameraUsageDescription": "Litloop needs camera access to scan book ISBN barcodes."
+        "NSCameraUsageDescription": "Litloop needs camera access to scan book ISBN barcodes.",
+        "LSApplicationQueriesSchemes": ["mailto", "tel", "https", "http"]
       }
     },
       "android": {

@@ -21,11 +21,6 @@ export default function SupportScreen() {
     const openExternalLink = async (url: string, errorMessage: string) => {
         triggerHaptic("light");
         try {
-            const supported = await Linking.canOpenURL(url);
-            if (!supported) {
-                showToast(errorMessage, "error");
-                return;
-            }
             await Linking.openURL(url);
         } catch {
             showToast(errorMessage, "error");
