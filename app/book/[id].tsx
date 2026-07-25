@@ -361,7 +361,7 @@ export default function BookDetailsScreen() {
                         <View style={[styles.notifyMeBtn, styles.notifyMeBtnActive]}>
                             <Ionicons name="checkmark-circle" size={18} color={Colors.white} style={{ marginRight: 6 }} />
                             <Text style={styles.notifyMeBtnText}>
-                                You'll Be Notified
+                                You&apos;ll Be Notified
                             </Text>
                         </View>
                     ) : (
