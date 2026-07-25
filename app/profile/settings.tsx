@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     content: {
         paddingHorizontal: 20,
         paddingTop: Spacing.md,
-        paddingBottom: Spacing.xl * 2,
+        paddingBottom: Spacing.lg,
     },
     sectionLabel: {
         fontSize: FontSizes.caption,

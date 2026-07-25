@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
     content: {
         paddingHorizontal: Layout.screenPaddingWide,
         paddingTop: Spacing.md,
-        paddingBottom: Spacing.xl * 2,
+        paddingBottom: Spacing.lg,
     },
     introBlock: {
         marginBottom: Spacing.xl,
