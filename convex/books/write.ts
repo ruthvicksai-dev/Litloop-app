@@ -469,3 +469,38 @@ export const setBannerImage = mutation({
         });
     },
 });
+
+export const addBannerImage = mutation({
+    args: { accessToken: v.string(), storageId: v.id("_storage"), title: v.optional(v.string()) },
+    handler: async (ctx, args) => {
+        const admin = await assertAdmin(ctx, args.accessToken);
+
+        const bannerId = await ctx.db.insert("banner", {
+            bannerImage: args.storageId,
+            title: args.title,
+            updatedAt: Date.now(),
+        });
+
+        await insertAuditLog(ctx, "banner_added", admin._id, bannerId, "banner", {
+            title: args.title,
+            storageId: args.storageId,
+        });
+
+        return bannerId;
+    },
+});
+
+export const deleteBannerImage = mutation({
+    args: { accessToken: v.string(), bannerId: v.id("banner") },
+    handler: async (ctx, args) => {
+        const admin = await assertAdmin(ctx, args.accessToken);
+
+        const banner = await ctx.db.get(args.bannerId);
+        if (banner) {
+            await ctx.db.delete(args.bannerId);
+            await insertAuditLog(ctx, "banner_deleted", admin._id, args.bannerId, "banner", {
+                title: banner.title,
+            });
+        }
+    },
+});

@@ -11,6 +11,7 @@ export function useDiscoverSections() {
         newlyAddedBooks: discoverData?.newlyAddedBooks ?? undefined,
         famousBooks: discoverData?.famousBooks ?? undefined,
         seriesBooks: discoverData?.seriesBooks ?? undefined,
+        banners: discoverData?.banners ?? [],
         bannerImageUrl: discoverData?.bannerImageUrl ?? null,
     };
 }

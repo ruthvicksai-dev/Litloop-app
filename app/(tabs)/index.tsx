@@ -1,17 +1,18 @@
+import BannerSlider from "@/components/home/BannerSlider";
 import DiscoverSectionRow from "@/components/ui/cards/DiscoverSectionRow";
-import { HomeSkeleton } from "@/components/ui/skeletons/HomeSkeleton";
 import SeriesSectionRow from "@/components/ui/cards/SeriesSectionRow";
-import { Fonts, FontSizes } from "@/constants/fonts";
+import { HomeSkeleton } from "@/components/ui/skeletons/HomeSkeleton";
 import { Shadows } from "@/constants/designTokens";
-import { Colors, Layout, Spacing, scale } from "@/constants/theme";
+import { Fonts, FontSizes } from "@/constants/fonts";
+import { Colors, Layout, scale, Spacing } from "@/constants/theme";
 import { useAuthState } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";
 import { useDiscoverSections, useHomeEntrance } from "@/hooks";
 import { triggerHaptic } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
+import { useQuery } from "convex/react";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
@@ -39,11 +40,21 @@ export default function HomeScreen() {
   const router = useRouter();
   const [refreshing, setRefreshing] = React.useState(false);
   const { fadeAnim, slideAnim } = useHomeEntrance();
-  const { topPicks, top10Books, trendingBooks, famousBooks, seriesBooks, newlyAddedBooks, bannerImageUrl } = useDiscoverSections();
-  const unreadCount = useQuery(
-    api.notifications.getUnreadCount,
-    accessToken ? { accessToken } : "skip"
-  ) ?? 0;
+  const {
+    topPicks,
+    top10Books,
+    trendingBooks,
+    famousBooks,
+    seriesBooks,
+    newlyAddedBooks,
+    banners,
+    bannerImageUrl,
+  } = useDiscoverSections();
+  const unreadCount =
+    useQuery(
+      api.notifications.getUnreadCount,
+      accessToken ? { accessToken } : "skip",
+    ) ?? 0;
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
@@ -65,7 +76,7 @@ export default function HomeScreen() {
     if (!featuredBook) return undefined;
     return featuredBook.coverUrls && featuredBook.coverUrls.length > 0
       ? featuredBook.coverUrls[0]
-      : featuredBook.coverUrl ?? undefined;
+      : (featuredBook.coverUrl ?? undefined);
   }, [featuredBook]);
 
   const isLoading =
@@ -118,7 +129,11 @@ export default function HomeScreen() {
                     />
                   ) : (
                     <View style={[styles.avatar, styles.avatarPlaceholder]}>
-                      <Ionicons name="person" size={scale(17)} color={Colors.primary} />
+                      <Ionicons
+                        name="person"
+                        size={scale(17)}
+                        color={Colors.primary}
+                      />
                     </View>
                   )}
                 </View>
@@ -127,7 +142,12 @@ export default function HomeScreen() {
                     {greeting}
                   </Text>
                   <Text style={styles.heroName} allowFontScaling={false}>
-                    {user ? (user.role === "admin" ? "Admin" : user.name.split(" ")[0]) : "Reader"} 👋
+                    {user
+                      ? user.role === "admin"
+                        ? "Admin"
+                        : user.name.split(" ")[0]
+                      : "Reader"}{" "}
+                    👋
                   </Text>
                 </View>
               </View>
@@ -142,10 +162,21 @@ export default function HomeScreen() {
                       router.push("/notifications" as any);
                     }}
                   >
-                    <Ionicons name={unreadCount > 0 ? "notifications" : "notifications-outline"} size={scale(18)} color={Colors.primary} />
+                    <Ionicons
+                      name={
+                        unreadCount > 0
+                          ? "notifications"
+                          : "notifications-outline"
+                      }
+                      size={scale(18)}
+                      color={Colors.primary}
+                    />
                     {unreadCount > 0 && (
                       <View style={styles.heroNotifBadge}>
-                        <Text style={styles.heroNotifBadgeText} allowFontScaling={false}>
+                        <Text
+                          style={styles.heroNotifBadgeText}
+                          allowFontScaling={false}
+                        >
                           {unreadCount > 9 ? "9+" : unreadCount}
                         </Text>
                       </View>
@@ -161,7 +192,11 @@ export default function HomeScreen() {
                     router.push("/(auth)/sign-in");
                   }}
                 >
-                  <Ionicons name="log-in-outline" size={scale(18)} color={Colors.primary} />
+                  <Ionicons
+                    name="log-in-outline"
+                    size={scale(18)}
+                    color={Colors.primary}
+                  />
                 </TouchableOpacity>
               )}
             </View>
@@ -182,21 +217,16 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scroll}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[Colors.primary]}
+          />
         }
       >
-        {/* ─── Book of the Week Banner ────────────────────────────────── */}
-        {bannerImageUrl ? (
-          <View style={styles.bannerOuter}>
-            <View style={styles.bannerImageContainer}>
-              <Image
-                source={bannerImageUrl}
-                style={styles.fullBannerImage}
-                contentFit="cover"
-                cachePolicy="disk"
-              />
-            </View>
-          </View>
+        {/* ─── Sliding Banners / Featured Banner ─────────────────────── */}
+        {banners && banners.length > 0 ? (
+          <BannerSlider banners={banners} />
         ) : featuredBook ? (
           <View style={styles.bannerOuter}>
             <View style={styles.banner}>
@@ -208,22 +238,40 @@ export default function HomeScreen() {
                   </Text>
                 </View>
 
-                <Text style={styles.bannerTitle} numberOfLines={3} allowFontScaling={false}>
+                <Text
+                  style={styles.bannerTitle}
+                  numberOfLines={3}
+                  allowFontScaling={false}
+                >
                   {featuredBook.title}
                 </Text>
 
                 {featuredBook.description ? (
-                  <Text style={styles.bannerDesc} numberOfLines={2} allowFontScaling={false}>
+                  <Text
+                    style={styles.bannerDesc}
+                    numberOfLines={2}
+                    allowFontScaling={false}
+                  >
                     {featuredBook.description}
                   </Text>
                 ) : null}
 
                 <View style={styles.bannerRatingRow}>
-                  <Ionicons name="star" size={scale(14)} color={Colors.warning} />
-                  <Text style={styles.bannerRatingValue} allowFontScaling={false}>
+                  <Ionicons
+                    name="star"
+                    size={scale(14)}
+                    color={Colors.warning}
+                  />
+                  <Text
+                    style={styles.bannerRatingValue}
+                    allowFontScaling={false}
+                  >
                     {(featuredBook.rating ?? 0).toFixed(1)}
                   </Text>
-                  <Text style={styles.bannerRatingCount} allowFontScaling={false}>
+                  <Text
+                    style={styles.bannerRatingCount}
+                    allowFontScaling={false}
+                  >
                     ({formatRatingCount(featuredBook.ratingCount ?? 0)} ratings)
                   </Text>
                 </View>
@@ -233,7 +281,11 @@ export default function HomeScreen() {
                   <Text style={styles.bannerCtaText} allowFontScaling={false}>
                     Rent Now
                   </Text>
-                  <Ionicons name="arrow-forward" size={scale(14)} color={Colors.white} />
+                  <Ionicons
+                    name="arrow-forward"
+                    size={scale(14)}
+                    color={Colors.white}
+                  />
                 </View>
               </View>
 
@@ -250,8 +302,17 @@ export default function HomeScreen() {
                       cachePolicy="disk"
                     />
                   ) : (
-                    <View style={[styles.bannerCoverImg, styles.bannerCoverFallback]}>
-                      <Ionicons name="book" size={scale(32)} color={Colors.primary} />
+                    <View
+                      style={[
+                        styles.bannerCoverImg,
+                        styles.bannerCoverFallback,
+                      ]}
+                    >
+                      <Ionicons
+                        name="book"
+                        size={scale(32)}
+                        color={Colors.primary}
+                      />
                     </View>
                   )}
                 </View>
