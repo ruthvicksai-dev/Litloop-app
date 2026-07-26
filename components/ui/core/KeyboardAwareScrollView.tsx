@@ -12,6 +12,8 @@ export default React.forwardRef<ScrollView, KeyboardAwareScrollViewProps>(
         {
             bottomOffset = 24,
             extraKeyboardSpace = 8,
+            keyboardDismissMode = "none",
+            keyboardShouldPersistTaps = "handled",
             ...props
         },
         ref
@@ -21,6 +23,8 @@ export default React.forwardRef<ScrollView, KeyboardAwareScrollViewProps>(
                 ref={ref}
                 bottomOffset={bottomOffset}
                 extraKeyboardSpace={extraKeyboardSpace}
+                keyboardDismissMode={keyboardDismissMode}
+                keyboardShouldPersistTaps={keyboardShouldPersistTaps}
                 {...props}
             />
         );

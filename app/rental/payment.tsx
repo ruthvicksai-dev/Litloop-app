@@ -122,7 +122,7 @@ export default function PaymentScreen() {
                 <KeyboardAwareScrollView
                     contentContainerStyle={[styles.scroll, { paddingBottom: Math.max(140, 90 + insets.bottom) }]}
                     keyboardShouldPersistTaps="handled"
-                    keyboardDismissMode="on-drag"
+                    keyboardDismissMode="none"
                     showsVerticalScrollIndicator={false}
                 >
                     <View style={styles.header}>

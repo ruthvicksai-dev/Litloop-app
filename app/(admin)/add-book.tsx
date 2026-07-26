@@ -107,7 +107,7 @@ export default function AddBookScreen() {
                         { paddingBottom: Math.max(140, 80 + insets.bottom) },
                     ]}
                     keyboardShouldPersistTaps="handled"
-                    keyboardDismissMode="on-drag"
+                    keyboardDismissMode="none"
                 >
                     <InputField
                         label="Title"

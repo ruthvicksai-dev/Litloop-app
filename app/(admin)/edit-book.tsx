@@ -131,7 +131,7 @@ export default function EditBookScreen() {
                 <KeyboardAwareScrollView
                     contentContainerStyle={[styles.scroll, { paddingBottom: Math.max(140, 80 + insets.bottom) }]}
                     keyboardShouldPersistTaps="handled"
-                    keyboardDismissMode="on-drag"
+                    keyboardDismissMode="none"
                 >
                     <Animated.View style={{ opacity: fadeAnim }}>
                         <InputField

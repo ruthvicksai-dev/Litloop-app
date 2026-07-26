@@ -150,7 +150,7 @@ export default function ForgotPasswordScreen() {
                         },
                     ]}
                     keyboardShouldPersistTaps="handled"
-                    keyboardDismissMode="on-drag"
+                    keyboardDismissMode="none"
                     showsVerticalScrollIndicator={false}
                 >
                     {/* Back Button */}

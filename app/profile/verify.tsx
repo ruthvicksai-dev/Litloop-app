@@ -132,7 +132,7 @@ export default function VerifyStudentScreen() {
                     contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(Spacing.xl, insets.bottom + 20) }]}
                     showsVerticalScrollIndicator={false}
                     keyboardShouldPersistTaps="handled"
-                    keyboardDismissMode="on-drag"
+                    keyboardDismissMode="none"
                 >
                     <View style={styles.header}>
                         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>

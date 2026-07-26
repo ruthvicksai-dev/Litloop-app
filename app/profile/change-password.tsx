@@ -94,7 +94,7 @@ export default function ChangePasswordScreen() {
             { paddingBottom: Math.max(120, 80 + insets.bottom) },
           ]}
           keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
+          keyboardDismissMode="none"
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.card}>

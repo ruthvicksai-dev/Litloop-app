@@ -28,7 +28,7 @@ export default function RejectReasonModal({
             style={StyleSheet.absoluteFillObject}
             contentContainerStyle={rejectStyles.overlay}
             keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="on-drag"
+            keyboardDismissMode="none"
         >
             <View style={rejectStyles.card}>
                 <Text style={rejectStyles.title}>Reject Payment</Text>

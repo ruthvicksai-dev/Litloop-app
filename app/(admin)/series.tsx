@@ -239,7 +239,7 @@ export default function SeriesManagementScreen() {
                     <KeyboardAwareScrollView
                         contentContainerStyle={styles.modalScroll}
                         keyboardShouldPersistTaps="handled"
-                        keyboardDismissMode="on-drag"
+                        keyboardDismissMode="none"
                         showsVerticalScrollIndicator={false}
                     >
                         <View style={styles.modalContent}>

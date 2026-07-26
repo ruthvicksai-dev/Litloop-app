@@ -244,7 +244,7 @@ export default function PaymentSettingsScreen() {
                     <KeyboardAwareScrollView
                         contentContainerStyle={styles.modalOverlay}
                         keyboardShouldPersistTaps="handled"
-                        keyboardDismissMode="on-drag"
+                        keyboardDismissMode="none"
                     >
                         <View style={styles.modalCard}>
                             <Text style={styles.modalTitle}>Add UPI ID</Text>
@@ -295,7 +295,7 @@ export default function PaymentSettingsScreen() {
                     <KeyboardAwareScrollView
                         contentContainerStyle={styles.modalOverlay}
                         keyboardShouldPersistTaps="handled"
-                        keyboardDismissMode="on-drag"
+                        keyboardDismissMode="none"
                     >
                         <View style={styles.modalCard}>
                             <Text style={styles.modalTitle}>Edit UPI ID</Text>

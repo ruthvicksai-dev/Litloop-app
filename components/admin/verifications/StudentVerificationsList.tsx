@@ -220,7 +220,7 @@ function RejectModal({ visible, reason, setReason, loading, onConfirm, onCancel 
             style={StyleSheet.absoluteFillObject}
             contentContainerStyle={styles.modalOverlay}
             keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="on-drag"
+            keyboardDismissMode="none"
         >
             <View style={styles.modalCard}>
                 <Text style={styles.modalTitle}>Reject Verification</Text>

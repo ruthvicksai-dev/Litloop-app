@@ -232,7 +232,7 @@ export function CommonSettingsSections() {
                     style={{ flex: 1 }}
                     contentContainerStyle={styles.modalOverlay}
                     keyboardShouldPersistTaps="handled"
-                    keyboardDismissMode="on-drag"
+                    keyboardDismissMode="none"
                 >
                     <View style={styles.modalCard}>
                         <Ionicons name="warning-outline" size={36} color={Colors.error} />

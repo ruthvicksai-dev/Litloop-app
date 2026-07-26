@@ -83,7 +83,7 @@ export default function SignUpScreen() {
                         { paddingBottom: Math.max(Spacing.xl, insets.bottom + 20) },
                     ]}
                     keyboardShouldPersistTaps="handled"
-                    keyboardDismissMode="on-drag"
+                    keyboardDismissMode="none"
                     showsVerticalScrollIndicator={false}
                 >
                     <AuthHeader

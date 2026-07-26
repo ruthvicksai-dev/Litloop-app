@@ -253,7 +253,7 @@ export default function BookReviews({ bookId, limit, hasMore, onLoadMore, isAdmi
                     style={{ flex: 1 }}
                     contentContainerStyle={styles.modalOverlay}
                     keyboardShouldPersistTaps="handled"
-                    keyboardDismissMode="on-drag"
+                    keyboardDismissMode="none"
                 >
                     <View style={styles.editCard}>
                         <View style={styles.modalHeader}>
@@ -319,7 +319,7 @@ export default function BookReviews({ bookId, limit, hasMore, onLoadMore, isAdmi
                     style={{ flex: 1 }}
                     contentContainerStyle={styles.modalOverlay}
                     keyboardShouldPersistTaps="handled"
-                    keyboardDismissMode="on-drag"
+                    keyboardDismissMode="none"
                 >
                     <View style={styles.editCard}>
                         <View style={styles.modalHeader}>

@@ -65,7 +65,7 @@ export default function SignInScreen() {
                         },
                     ]}
                     keyboardShouldPersistTaps="handled"
-                    keyboardDismissMode="on-drag"
+                    keyboardDismissMode="none"
                     showsVerticalScrollIndicator={false}
                 >
                     <AuthHeader
