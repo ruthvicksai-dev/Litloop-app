@@ -1,6 +1,6 @@
 import { Shadows } from "@/constants/designTokens";
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Layout, Spacing, scale } from "@/constants/theme";
+import { Colors, Spacing, scale } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleProp, StyleSheet, TextInput, TextStyle, TouchableOpacity, View, ViewStyle } from "react-native";

@@ -48,7 +48,6 @@ export default function HomeScreen() {
     seriesBooks,
     newlyAddedBooks,
     banners,
-    bannerImageUrl,
   } = useDiscoverSections();
   const unreadCount =
     useQuery(

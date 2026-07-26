@@ -408,7 +408,7 @@ export default function MyRentalsScreen() {
 
             {/* Description */}
             <Text style={styles.emptyCardDesc} allowFontScaling={false}>
-              You haven't rented any books yet. Start exploring our collection
+              You haven&apos;t rented any books yet. Start exploring our collection
               and begin your reading journey!
             </Text>
 
