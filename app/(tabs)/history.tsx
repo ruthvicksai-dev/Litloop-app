@@ -7,6 +7,7 @@ import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, scale, Spacing } from "@/constants/theme";
 import { useAuthState } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";
+import RentalFilterPanel from "@/components/rental/RentalFilterPanel";
 import { useFadeSlideIn, useRentalFilters } from "@/hooks";
 import { triggerHaptic } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
@@ -202,7 +203,11 @@ export default function RentalHistoryScreen() {
                             }}
                             activeOpacity={0.85}
                         >
-                            <Ionicons name="filter-outline" size={scale(18)} color={Colors.primary} />
+                            <Ionicons
+                                name={showFilters ? "options" : "options-outline"}
+                                size={scale(18)}
+                                color={Colors.primary}
+                            />
                         </TouchableOpacity>
                     </View>
                 </Animated.View>
@@ -210,100 +215,18 @@ export default function RentalHistoryScreen() {
         </LinearGradient>
     );
 
-    /* ── Render Filter Panel ───────────────────────────────────────────── */
-    const renderFilterPanel = () => {
-        if (!showFilters) return null;
-        return (
-            <View style={styles.filterPanel}>
-                <Text style={styles.filterSectionTitle} allowFontScaling={false}>
-                    Status
-                </Text>
-                <View style={styles.filterRow}>
-                    {[
-                        { label: "All Orders", value: "all" },
-                        { label: "Paid", value: "paid" },
-                        { label: "Returned", value: "returned" },
-                    ].map((option) => {
-                        const isActive = statusFilter === option.value;
-
-                        return (
-                            <TouchableOpacity
-                                key={option.value}
-                                style={[
-                                    styles.filterChip,
-                                    styles.filterChipThird,
-                                    isActive && styles.filterChipActive,
-                                ]}
-                                onPress={() => handleFilterPress("status", option.value)}
-                                activeOpacity={0.85}
-                            >
-                                <Text
-                                    style={[
-                                        styles.filterChipText,
-                                        isActive && styles.filterChipTextActive,
-                                    ]}
-                                    allowFontScaling={false}
-                                    numberOfLines={1}
-                                    adjustsFontSizeToFit
-                                    minimumFontScale={0.8}
-                                >
-                                    {option.label}
-                                </Text>
-                            </TouchableOpacity>
-                        );
-                    })}
-                </View>
-
-                <Text style={styles.filterSectionTitle} allowFontScaling={false}>
-                    Time
-                </Text>
-                <View style={styles.filterRow}>
-                    {[
-                        { label: "All Time", value: "all" },
-                        { label: "Last 30 Days", value: "last_30_days" },
-                        { label: "This Month", value: "this_month" },
-                        { label: "This Year", value: "this_year" },
-                    ].map((option) => {
-                        const isActive = timeframeFilter === option.value;
-
-                        return (
-                            <TouchableOpacity
-                                key={option.value}
-                                style={[
-                                    styles.filterChip,
-                                    styles.filterChipHalf,
-                                    isActive && styles.filterChipActive,
-                                ]}
-                                onPress={() => handleFilterPress("time", option.value)}
-                                activeOpacity={0.85}
-                            >
-                                <Text
-                                    style={[
-                                        styles.filterChipText,
-                                        isActive && styles.filterChipTextActive,
-                                    ]}
-                                    allowFontScaling={false}
-                                    numberOfLines={1}
-                                    adjustsFontSizeToFit
-                                    minimumFontScale={0.8}
-                                >
-                                    {option.label}
-                                </Text>
-                            </TouchableOpacity>
-                        );
-                    })}
-                </View>
-            </View>
-        );
-    };
-
     /* ── Has History — show the FlatList with rental history cards ─────── */
     if (history.length > 0) {
         return (
             <View style={styles.container}>
                 {renderHeroHeader()}
 
-                {renderFilterPanel()}
+                <RentalFilterPanel
+                    visible={showFilters}
+                    statusFilter={statusFilter}
+                    timeframeFilter={timeframeFilter}
+                    onFilterChange={handleFilterPress}
+                />
 
                 <FlatList
                     data={history}
@@ -336,6 +259,13 @@ export default function RentalHistoryScreen() {
         <View style={styles.container}>
             {renderHeroHeader()}
 
+            <RentalFilterPanel
+                visible={showFilters}
+                statusFilter={statusFilter}
+                timeframeFilter={timeframeFilter}
+                onFilterChange={handleFilterPress}
+            />
+
             {/* ─── Scrollable Content ───────────────────────────────────── */}
             <ScrollView
                 showsVerticalScrollIndicator={false}
@@ -344,7 +274,6 @@ export default function RentalHistoryScreen() {
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />
                 }
             >
-                {renderFilterPanel()}
 
                 {/* ─── Empty State Card ─────────────────────────────────── */}
                 <View style={styles.emptyCard}>
@@ -451,7 +380,7 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.background,
     },
     scroll: {
-        paddingTop: Spacing.md,
+        paddingTop: scale(24),
         paddingBottom: Layout.tabBarHeight + Spacing.lg,
     },
 
@@ -488,15 +417,15 @@ const styles = StyleSheet.create({
         paddingRight: Spacing.sm,
     },
     heroTitle: {
-        fontSize: FontSizes.titleLarge,
+        fontSize: FontSizes.heading,
         color: Colors.white,
         fontFamily: Fonts.bold,
-        letterSpacing: -0.3,
+        letterSpacing: -0.4,
         marginBottom: Spacing.xs,
     },
     heroSubtitle: {
-        fontSize: FontSizes.body,
-        color: "rgba(255,255,255,0.75)",
+        fontSize: FontSizes.subtitle,
+        color: "rgba(255,255,255,0.7)",
         fontFamily: Fonts.regular,
         letterSpacing: 0.1,
     },
@@ -634,7 +563,7 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.xs + 2,
     },
     emptyCardTitle: {
-        fontSize: FontSizes.subtitle,
+        fontSize: FontSizes.title,
         color: Colors.text,
         fontFamily: Fonts.bold,
         letterSpacing: -0.3,
@@ -742,7 +671,7 @@ const styles = StyleSheet.create({
     list: {
         flexGrow: 1,
         paddingHorizontal: Layout.screenPaddingWide,
-        paddingTop: Spacing.md,
+        paddingTop: Spacing.sm,
         paddingBottom: Layout.tabBarHeight + Spacing.lg,
     },
 

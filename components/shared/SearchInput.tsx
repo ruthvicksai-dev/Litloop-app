@@ -1,3 +1,4 @@
+import { Shadows } from "@/constants/designTokens";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, Spacing, scale } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
@@ -24,7 +25,7 @@ export default function SearchInput({
 }: SearchInputProps) {
     const content = (
         <View style={[styles.container, containerStyle]}>
-            <Ionicons name="search" size={18} color={Colors.textLight} />
+            <Ionicons name="search-outline" size={scale(20)} color={Colors.textSecondary} style={styles.searchIcon} />
             <TextInput
                 style={[styles.input, inputStyle]}
                 placeholder={placeholder}
@@ -40,8 +41,9 @@ export default function SearchInput({
                 <TouchableOpacity
                     onPress={() => onChangeText("")}
                     hitSlop={{ top: scale(10), bottom: scale(10), left: scale(10), right: scale(10) }}
+                    style={styles.clearBtn}
                 >
-                    <Ionicons name="close-circle" size={18} color={Colors.textLight} />
+                    <Ionicons name="close-circle" size={scale(18)} color={Colors.textLight} />
                 </TouchableOpacity>
             )}
         </View>
@@ -62,23 +64,28 @@ const styles = StyleSheet.create({
     container: {
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: Colors.surfaceCard,
-        borderRadius: Layout.borderRadius,
+        backgroundColor: Colors.white,
+        borderRadius: scale(24),
         borderWidth: 1,
-        borderColor: Colors.borderSubtle,
+        borderColor: "rgba(0,0,0,0.06)",
         paddingHorizontal: Spacing.md,
         gap: Spacing.sm,
-        minHeight: Layout.buttonHeight,
+        minHeight: scale(54),
+        ...Shadows.card,
     },
-    icon: {
-        fontSize: FontSizes.subtitle,
+    searchIcon: {
+        marginLeft: scale(2),
     },
     input: {
         flex: 1,
-        minHeight: Layout.buttonHeight - scale(2),
-        paddingVertical: scale(10),
+        height: scale(50),
+        paddingVertical: 0,
         fontSize: FontSizes.bodyLarge,
         color: Colors.text,
         fontFamily: Fonts.regular,
+        textAlignVertical: "center",
+    },
+    clearBtn: {
+        padding: Spacing.xs,
     },
 });
