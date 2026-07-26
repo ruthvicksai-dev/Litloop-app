@@ -1,28 +1,58 @@
 import { RentalHistoryCard } from "@/components/history/RentalHistoryCard";
 import { GuestView } from "@/components/profile/GuestProfileView";
-import { EmptyState } from "@/components/ui/feedback/EmptyState";
 import { RentalHistorySkeleton } from "@/components/ui/skeletons/RentalHistorySkeleton";
 import { Skeleton } from "@/components/ui/skeletons/Skeleton";
+import { Shadows } from "@/constants/designTokens";
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Spacing } from "@/constants/theme";
+import { Colors, Layout, scale, Spacing } from "@/constants/theme";
 import { useAuthState } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";
 import { useFadeSlideIn, useRentalFilters } from "@/hooks";
 import { triggerHaptic } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";
+import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
     Animated,
     FlatList,
     RefreshControl,
+    ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+/* ─── Constants ────────────────────────────────────────────────────────── */
+
+const ILLUSTRATION_SIZE = scale(145);
+const FEATURE_ICON_SIZE = scale(36);
+
+/* ─── Information Strip Data ───────────────────────────────────────────── */
+
+const INFO_ITEMS = [
+    {
+        icon: "book-outline" as const,
+        title: "Completed Rentals",
+        desc: "All your finished rentals appear here.",
+    },
+    {
+        icon: "star-outline" as const,
+        title: "Reading Progress",
+        desc: "Track every book you've completed.",
+    },
+    {
+        icon: "time-outline" as const,
+        title: "History Forever",
+        desc: "Access previous rentals anytime.",
+    },
+];
+
+/* ─── Screen ───────────────────────────────────────────────────────────── */
 
 export default function RentalHistoryScreen() {
     const { user, userId, accessToken, isLoading } = useAuthState();
@@ -64,7 +94,7 @@ export default function RentalHistoryScreen() {
     if (isLoading) {
         return (
             <SafeAreaView style={styles.container}>
-                <View style={styles.header}>
+                <View style={styles.skeletonHeader}>
                     <Skeleton width={180} height={32} style={{ marginBottom: 8 }} />
                     <Skeleton width={150} height={16} />
                 </View>
@@ -92,8 +122,8 @@ export default function RentalHistoryScreen() {
         return (
             <SafeAreaView style={styles.container}>
                 <View style={styles.center}>
-                    <Text style={styles.title}>Admin Access</Text>
-                    <Text style={[styles.subtitle, { textAlign: "center", paddingHorizontal: 40, marginTop: 8 }]}>
+                    <Text style={styles.adminTitle}>Admin Access</Text>
+                    <Text style={[styles.adminSubtitle, { textAlign: "center", paddingHorizontal: 40, marginTop: 8 }]}>
                         Rental history is managed through the Admin Dashboard.
                     </Text>
                     <TouchableOpacity
@@ -112,7 +142,7 @@ export default function RentalHistoryScreen() {
     if (history === undefined) {
         return (
             <SafeAreaView style={styles.container}>
-                <View style={styles.header}>
+                <View style={styles.skeletonHeader}>
                     <Skeleton width={180} height={32} style={{ marginBottom: 8 }} />
                     <Skeleton width={150} height={16} />
                 </View>
@@ -125,154 +155,291 @@ export default function RentalHistoryScreen() {
         );
     }
 
-    return (
-        <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
-            <Animated.View
-                style={[
-                    styles.header,
-                    {
-                        opacity: fadeAnim,
-                        transform: [{ translateY: slideAnim }],
-                    },
-                ]}
-            >
-                <View style={styles.headerTopRow}>
-                    <View style={styles.headerTextWrap}>
-                        <Text style={styles.title} allowFontScaling={false}>
-                            Rental History
-                        </Text>
-                        <Text style={styles.subtitle} allowFontScaling={false}>
-                            Past completed rentals
-                        </Text>
+    /* ── Render Hero Header ────────────────────────────────────────────── */
+    const renderHeroHeader = () => (
+        <LinearGradient
+            colors={[Colors.primaryDark, Colors.primary]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.heroHeader}
+        >
+            {/* Decorative background shapes */}
+            <View style={styles.heroDecor} pointerEvents="none">
+                <View style={styles.heroDecorShape1} />
+                <View style={styles.heroDecorShape2} />
+                <View style={styles.heroDecorShape3} />
+                <Image
+                    source={require("@/assets/images/bookshelf-pattern.png")}
+                    style={styles.heroBookshelfBg}
+                    contentFit="cover"
+                />
+            </View>
+
+            <SafeAreaView edges={["top"]}>
+                <Animated.View
+                    style={[
+                        styles.heroContent,
+                        {
+                            opacity: fadeAnim,
+                            transform: [{ translateY: slideAnim }],
+                        },
+                    ]}
+                >
+                    <View style={styles.heroTopRow}>
+                        <View style={styles.heroTextWrap}>
+                            <Text style={styles.heroTitle} allowFontScaling={false}>
+                                Rental History
+                            </Text>
+                            <Text style={styles.heroSubtitle} allowFontScaling={false}>
+                                Past completed rentals
+                            </Text>
+                        </View>
+                        <TouchableOpacity
+                            style={styles.heroActionBtn}
+                            onPress={() => {
+                                triggerHaptic("light");
+                                toggleFilters();
+                            }}
+                            activeOpacity={0.85}
+                        >
+                            <Ionicons name="filter-outline" size={scale(18)} color={Colors.primary} />
+                        </TouchableOpacity>
                     </View>
-                    <TouchableOpacity
-                        style={styles.filterButton}
-                        onPress={() => {
-                            triggerHaptic("light");
-                            toggleFilters();
-                        }}
-                        activeOpacity={0.85}
-                    >
-                        <Ionicons name="filter-outline" size={18} color={Colors.primary} />
-                    </TouchableOpacity>
+                </Animated.View>
+            </SafeAreaView>
+        </LinearGradient>
+    );
+
+    /* ── Render Filter Panel ───────────────────────────────────────────── */
+    const renderFilterPanel = () => {
+        if (!showFilters) return null;
+        return (
+            <View style={styles.filterPanel}>
+                <Text style={styles.filterSectionTitle} allowFontScaling={false}>
+                    Status
+                </Text>
+                <View style={styles.filterRow}>
+                    {[
+                        { label: "All Orders", value: "all" },
+                        { label: "Paid", value: "paid" },
+                        { label: "Returned", value: "returned" },
+                    ].map((option) => {
+                        const isActive = statusFilter === option.value;
+
+                        return (
+                            <TouchableOpacity
+                                key={option.value}
+                                style={[
+                                    styles.filterChip,
+                                    styles.filterChipThird,
+                                    isActive && styles.filterChipActive,
+                                ]}
+                                onPress={() => handleFilterPress("status", option.value)}
+                                activeOpacity={0.85}
+                            >
+                                <Text
+                                    style={[
+                                        styles.filterChipText,
+                                        isActive && styles.filterChipTextActive,
+                                    ]}
+                                    allowFontScaling={false}
+                                    numberOfLines={1}
+                                    adjustsFontSizeToFit
+                                    minimumFontScale={0.8}
+                                >
+                                    {option.label}
+                                </Text>
+                            </TouchableOpacity>
+                        );
+                    })}
                 </View>
-                {showFilters ? (
-                    <View style={styles.filterPanel}>
-                        <Text style={styles.filterSectionTitle} allowFontScaling={false}>
-                            Status
-                        </Text>
-                        <View style={styles.filterRow}>
-                            {[
-                                { label: "All Orders", value: "all" },
-                                { label: "Paid", value: "paid" },
-                                { label: "Returned", value: "returned" },
-                            ].map((option) => {
-                                const isActive = statusFilter === option.value;
 
-                                return (
-                                    <TouchableOpacity
-                                        key={option.value}
-                                        style={[
-                                            styles.filterChip,
-                                            styles.filterChipThird,
-                                            isActive && styles.filterChipActive,
-                                        ]}
-                                        onPress={() => handleFilterPress("status", option.value)}
-                                        activeOpacity={0.85}
-                                    >
-                                        <Text
-                                            style={[
-                                                styles.filterChipText,
-                                                isActive && styles.filterChipTextActive,
-                                            ]}
-                                            allowFontScaling={false}
-                                            numberOfLines={1}
-                                            adjustsFontSizeToFit
-                                            minimumFontScale={0.8}
-                                        >
-                                            {option.label}
-                                        </Text>
-                                    </TouchableOpacity>
-                                );
-                            })}
-                        </View>
+                <Text style={styles.filterSectionTitle} allowFontScaling={false}>
+                    Time
+                </Text>
+                <View style={styles.filterRow}>
+                    {[
+                        { label: "All Time", value: "all" },
+                        { label: "Last 30 Days", value: "last_30_days" },
+                        { label: "This Month", value: "this_month" },
+                        { label: "This Year", value: "this_year" },
+                    ].map((option) => {
+                        const isActive = timeframeFilter === option.value;
 
-                        <Text style={styles.filterSectionTitle} allowFontScaling={false}>
-                            Time
-                        </Text>
-                        <View style={styles.filterRow}>
-                            {[
-                                { label: "All Time", value: "all" },
-                                { label: "Last 30 Days", value: "last_30_days" },
-                                { label: "This Month", value: "this_month" },
-                                { label: "This Year", value: "this_year" },
-                            ].map((option) => {
-                                const isActive = timeframeFilter === option.value;
+                        return (
+                            <TouchableOpacity
+                                key={option.value}
+                                style={[
+                                    styles.filterChip,
+                                    styles.filterChipHalf,
+                                    isActive && styles.filterChipActive,
+                                ]}
+                                onPress={() => handleFilterPress("time", option.value)}
+                                activeOpacity={0.85}
+                            >
+                                <Text
+                                    style={[
+                                        styles.filterChipText,
+                                        isActive && styles.filterChipTextActive,
+                                    ]}
+                                    allowFontScaling={false}
+                                    numberOfLines={1}
+                                    adjustsFontSizeToFit
+                                    minimumFontScale={0.8}
+                                >
+                                    {option.label}
+                                </Text>
+                            </TouchableOpacity>
+                        );
+                    })}
+                </View>
+            </View>
+        );
+    };
 
-                                return (
-                                    <TouchableOpacity
-                                        key={option.value}
-                                        style={[
-                                            styles.filterChip,
-                                            styles.filterChipHalf,
-                                            isActive && styles.filterChipActive,
-                                        ]}
-                                        onPress={() => handleFilterPress("time", option.value)}
-                                        activeOpacity={0.85}
-                                    >
-                                        <Text
-                                            style={[
-                                                styles.filterChipText,
-                                                isActive && styles.filterChipTextActive,
-                                            ]}
-                                            allowFontScaling={false}
-                                            numberOfLines={1}
-                                            adjustsFontSizeToFit
-                                            minimumFontScale={0.8}
-                                        >
-                                            {option.label}
-                                        </Text>
-                                    </TouchableOpacity>
-                                );
-                            })}
-                        </View>
-                    </View>
-                ) : null}
-            </Animated.View>
+    /* ── Has History — show the FlatList with rental history cards ─────── */
+    if (history.length > 0) {
+        return (
+            <View style={styles.container}>
+                {renderHeroHeader()}
 
-            <FlatList
-                data={history}
-                keyExtractor={(item) => item._id}
+                {renderFilterPanel()}
+
+                <FlatList
+                    data={history}
+                    keyExtractor={(item) => item._id}
+                    refreshControl={
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />
+                    }
+                    renderItem={({ item, index }) => (
+                        <RentalHistoryCard
+                            item={item}
+                            index={index}
+                            isExpanded={expandedRentalId === item._id}
+                            onToggleExpand={(id) => {
+                                triggerHaptic("light");
+                                setExpandedRentalId(prev => prev === id ? null : id);
+                            }}
+                            fadeAnim={fadeAnim}
+                            slideAnim={slideAnim}
+                        />
+                    )}
+                    contentContainerStyle={styles.list}
+                    showsVerticalScrollIndicator={false}
+                />
+            </View>
+        );
+    }
+
+    /* ── Empty State — premium redesigned layout ──────────────────────── */
+    return (
+        <View style={styles.container}>
+            {renderHeroHeader()}
+
+            {/* ─── Scrollable Content ───────────────────────────────────── */}
+            <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.scroll}
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />
                 }
-                renderItem={({ item, index }) => (
-                    <RentalHistoryCard
-                        item={item}
-                        index={index}
-                        isExpanded={expandedRentalId === item._id}
-                        onToggleExpand={(id) => {
-                            triggerHaptic("light");
-                            setExpandedRentalId(prev => prev === id ? null : id);
-                        }}
-                        fadeAnim={fadeAnim}
-                        slideAnim={slideAnim}
-                    />
-                )}
-                contentContainerStyle={styles.list}
-                showsVerticalScrollIndicator={false}
-                ListEmptyComponent={
-                    <EmptyState
-                        icon="time-outline"
-                        title="No rental history yet"
-                    />
-                }
-            />
-        </SafeAreaView>
+            >
+                {renderFilterPanel()}
+
+                {/* ─── Empty State Card ─────────────────────────────────── */}
+                <View style={styles.emptyCard}>
+                    {/* Left Side */}
+                    <View style={styles.emptyCardLeft}>
+                        {/* Icon Badge */}
+                        <View style={styles.emptyIconBadge}>
+                            <Ionicons
+                                name="time-outline"
+                                size={scale(18)}
+                                color={Colors.primary}
+                            />
+                        </View>
+
+                        {/* Headline */}
+                        <Text
+                            style={styles.emptyCardTitle}
+                            numberOfLines={1}
+                            adjustsFontSizeToFit
+                            minimumFontScale={0.85}
+                            allowFontScaling={false}
+                        >
+                            No rental history
+                        </Text>
+
+                        {/* Decorative divider */}
+                        <View style={styles.emptyDividerRow}>
+                            <View style={styles.emptyDividerLine} />
+                            <Text style={styles.emptyDividerDiamond}>✦</Text>
+                            <View style={styles.emptyDividerLine} />
+                        </View>
+
+                        {/* Description */}
+                        <Text style={styles.emptyCardDesc} allowFontScaling={false}>
+                            Your completed rentals will appear here once you return books. Track your reading journey and revisit your favourite reads anytime.
+                        </Text>
+
+                        {/* Browse Books CTA */}
+                        <TouchableOpacity
+                            style={styles.emptyCardCta}
+                            activeOpacity={0.85}
+                            onPress={() => router.push("/(tabs)")}
+                        >
+                            <Text style={styles.emptyCardCtaText} allowFontScaling={false}>
+                                Browse Books
+                            </Text>
+                            <Ionicons
+                                name="arrow-forward"
+                                size={scale(14)}
+                                color={Colors.white}
+                            />
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Right Side — Illustration */}
+                    <View style={styles.emptyCardRight}>
+                        <View style={styles.illustrationCircle} />
+                        <Image
+                            source={require("@/assets/images/history-illustration.png")}
+                            style={styles.illustrationImage}
+                            contentFit="cover"
+                            cachePolicy="disk"
+                        />
+                    </View>
+                </View>
+
+                {/* ─── Feature / Info Strip ──────────────────────────────── */}
+                <View style={styles.infoStrip}>
+                    {INFO_ITEMS.map((item) => (
+                        <View key={item.title} style={styles.infoItem}>
+                            <View style={styles.infoIconWrap}>
+                                <Ionicons
+                                    name={item.icon}
+                                    size={scale(16)}
+                                    color={Colors.primary}
+                                />
+                            </View>
+                            <Text style={styles.infoTitle} allowFontScaling={false}>
+                                {item.title}
+                            </Text>
+                            <Text style={styles.infoDesc} allowFontScaling={false}>
+                                {item.desc}
+                            </Text>
+                        </View>
+                    ))}
+                </View>
+            </ScrollView>
+        </View>
     );
 }
 
+/* ─── Styles ───────────────────────────────────────────────────────────── */
+
 const styles = StyleSheet.create({
+    /* ── Layout ──────────────────────────────────────────────────────────── */
     container: {
         flex: 1,
         backgroundColor: Colors.background,
@@ -283,58 +450,120 @@ const styles = StyleSheet.create({
         alignItems: "center",
         backgroundColor: Colors.background,
     },
-    header: {
-        paddingHorizontal: 20,
+    scroll: {
+        paddingTop: Spacing.md,
+        paddingBottom: Layout.tabBarHeight + Spacing.lg,
+    },
+
+    /* ── Skeleton Loading Header ─────────────────────────────────────────── */
+    skeletonHeader: {
+        paddingHorizontal: Layout.screenPaddingWide,
         paddingTop: Spacing.sm,
         paddingBottom: Spacing.md,
         backgroundColor: Colors.background,
         borderBottomWidth: 1,
         borderBottomColor: "rgba(109, 58, 61, 0.08)",
     },
-    headerTopRow: {
+
+    /* ── Hero Header ─────────────────────────────────────────────────────── */
+    heroHeader: {
+        borderBottomLeftRadius: Layout.cardRadiusLarge + scale(8),
+        borderBottomRightRadius: Layout.cardRadiusLarge + scale(8),
+        overflow: "hidden",
+        ...Shadows.elevated,
+    },
+    heroContent: {
+        paddingHorizontal: Layout.screenPaddingWide,
+        paddingTop: Spacing.md,
+        paddingBottom: Spacing.xl + Spacing.xs,
+    },
+    heroTopRow: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
+        paddingTop: Spacing.xs,
     },
-    headerTextWrap: {
+    heroTextWrap: {
         flex: 1,
-        marginRight: Spacing.sm,
+        paddingRight: Spacing.sm,
     },
-    title: {
-        fontSize: FontSizes.heading,
-        color: Colors.text,
+    heroTitle: {
+        fontSize: FontSizes.titleLarge,
+        color: Colors.white,
         fontFamily: Fonts.bold,
         letterSpacing: -0.3,
+        marginBottom: Spacing.xs,
     },
-    subtitle: {
+    heroSubtitle: {
         fontSize: FontSizes.body,
-        color: Colors.textSecondary,
-        marginTop: 4,
+        color: "rgba(255,255,255,0.75)",
         fontFamily: Fonts.regular,
+        letterSpacing: 0.1,
     },
-    filterButton: {
-        width: 38,
-        height: 38,
-        borderRadius: 19,
+    heroActionBtn: {
+        width: scale(38),
+        height: scale(38),
+        borderRadius: scale(19),
+        backgroundColor: Colors.white,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: Colors.surfaceCard,
-        borderWidth: 1,
-        borderColor: Colors.borderSubtle,
+        ...Shadows.card,
     },
+
+    /* Hero — decorative background */
+    heroDecor: {
+        ...StyleSheet.absoluteFillObject,
+        overflow: "hidden",
+    },
+    heroDecorShape1: {
+        position: "absolute",
+        width: scale(180),
+        height: scale(180),
+        borderRadius: scale(90),
+        backgroundColor: "rgba(255,255,255,0.05)",
+        top: -scale(50),
+        right: -scale(30),
+    },
+    heroDecorShape2: {
+        position: "absolute",
+        width: scale(140),
+        height: scale(140),
+        borderRadius: scale(70),
+        backgroundColor: "rgba(255,255,255,0.03)",
+        bottom: -scale(40),
+        left: -scale(30),
+    },
+    heroDecorShape3: {
+        position: "absolute",
+        width: scale(90),
+        height: scale(90),
+        borderRadius: scale(45),
+        backgroundColor: "rgba(255,255,255,0.04)",
+        top: scale(30),
+        left: scale(100),
+    },
+    heroBookshelfBg: {
+        ...StyleSheet.absoluteFillObject,
+        opacity: 0.06,
+    },
+
+    /* ── Filter Panel ────────────────────────────────────────────────────── */
     filterPanel: {
+        marginHorizontal: Layout.screenPaddingWide,
         marginTop: Spacing.sm,
+        marginBottom: Spacing.md,
         backgroundColor: Colors.surfaceCard,
-        borderRadius: 16,
+        borderRadius: Layout.cardRadius,
         padding: Spacing.sm,
         borderWidth: 1,
         borderColor: Colors.borderSubtle,
+        ...Shadows.subtle,
     },
     filterSectionTitle: {
-        fontSize: FontSizes.caption,
+        fontSize: FontSizes.tiny,
         color: Colors.textSecondary,
         fontFamily: Fonts.bold,
-        marginBottom: 8,
+        marginBottom: 6,
     },
     filterRow: {
         flexDirection: "row",
@@ -372,10 +601,162 @@ const styles = StyleSheet.create({
     filterChipTextActive: {
         color: Colors.white,
     },
+
+    /* ── Empty State Card ────────────────────────────────────────────────── */
+    emptyCard: {
+        flexDirection: "row",
+        backgroundColor: Colors.surfaceCard,
+        borderRadius: Layout.cardRadiusLarge,
+        marginHorizontal: Layout.screenPaddingWide,
+        paddingLeft: Spacing.md + 4,
+        paddingTop: Spacing.md,
+        paddingBottom: Spacing.md,
+        paddingRight: 0,
+        ...Shadows.card,
+        borderWidth: 1,
+        borderColor: "rgba(0,0,0,0.04)",
+        overflow: "hidden",
+    },
+    emptyCardLeft: {
+        flex: 1.25,
+        paddingRight: Spacing.xs,
+        justifyContent: "center",
+    },
+    emptyIconBadge: {
+        width: scale(38),
+        height: scale(38),
+        borderRadius: scale(19),
+        backgroundColor: "rgba(109, 58, 61, 0.07)",
+        borderWidth: 1,
+        borderColor: "rgba(109, 58, 61, 0.12)",
+        alignItems: "center",
+        justifyContent: "center",
+        marginBottom: Spacing.xs + 2,
+    },
+    emptyCardTitle: {
+        fontSize: FontSizes.subtitle,
+        color: Colors.text,
+        fontFamily: Fonts.bold,
+        letterSpacing: -0.3,
+        marginBottom: Spacing.xs / 2,
+    },
+    emptyDividerRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginVertical: Spacing.xs,
+        gap: Spacing.xs,
+    },
+    emptyDividerLine: {
+        width: scale(28),
+        height: 1,
+        backgroundColor: Colors.primaryLight,
+    },
+    emptyDividerDiamond: {
+        fontSize: FontSizes.tiny,
+        color: Colors.primary,
+    },
+    emptyCardDesc: {
+        fontSize: FontSizes.caption,
+        color: Colors.textSecondary,
+        fontFamily: Fonts.regular,
+        lineHeight: FontSizes.caption * 1.5,
+        marginBottom: Spacing.md,
+    },
+    emptyCardCta: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: Colors.primary,
+        paddingHorizontal: Spacing.md + 2,
+        paddingVertical: scale(10),
+        borderRadius: scale(22),
+        alignSelf: "flex-start",
+        gap: Spacing.xs + 2,
+        ...Shadows.primary,
+    },
+    emptyCardCtaText: {
+        fontSize: FontSizes.body,
+        color: Colors.white,
+        fontFamily: Fonts.bold,
+    },
+
+    /* Empty card — right side illustration */
+    emptyCardRight: {
+        width: ILLUSTRATION_SIZE,
+        alignItems: "center",
+        justifyContent: "center",
+        paddingRight: Spacing.sm,
+    },
+    illustrationCircle: {
+        position: "absolute",
+        width: ILLUSTRATION_SIZE - scale(15),
+        height: ILLUSTRATION_SIZE - scale(15),
+        borderRadius: (ILLUSTRATION_SIZE - scale(15)) / 2,
+        backgroundColor: "rgba(235, 217, 192, 0.35)",
+    },
+    illustrationImage: {
+        width: ILLUSTRATION_SIZE,
+        height: ILLUSTRATION_SIZE,
+    },
+
+    /* ── Information Strip (Matched to My Rentals Feature Strip) ────────── */
+    infoStrip: {
+        flexDirection: "row",
+        marginHorizontal: Layout.screenPaddingWide,
+        marginTop: Spacing.md + 4,
+        backgroundColor: Colors.surfaceCard,
+        borderRadius: Layout.cardRadius,
+        padding: Spacing.md,
+        ...Shadows.subtle,
+        borderWidth: 1,
+        borderColor: "rgba(0,0,0,0.04)",
+    },
+    infoItem: {
+        flex: 1,
+        alignItems: "center",
+    },
+    infoIconWrap: {
+        width: FEATURE_ICON_SIZE,
+        height: FEATURE_ICON_SIZE,
+        borderRadius: FEATURE_ICON_SIZE / 2,
+        backgroundColor: `${Colors.primary}0A`,
+        alignItems: "center",
+        justifyContent: "center",
+        marginBottom: Spacing.sm,
+    },
+    infoTitle: {
+        fontSize: FontSizes.tiny,
+        color: Colors.text,
+        fontFamily: Fonts.bold,
+        textAlign: "center",
+        marginBottom: Spacing.xs,
+    },
+    infoDesc: {
+        fontSize: FontSizes.tiny,
+        color: Colors.textSecondary,
+        fontFamily: Fonts.regular,
+        textAlign: "center",
+        lineHeight: FontSizes.tiny * 1.4,
+    },
+
+    /* ── List ────────────────────────────────────────────────────────────── */
     list: {
         flexGrow: 1,
-        paddingHorizontal: 20,
+        paddingHorizontal: Layout.screenPaddingWide,
         paddingTop: Spacing.md,
-        paddingBottom: 90,
+        paddingBottom: Layout.tabBarHeight + Spacing.lg,
+    },
+
+    /* ── Admin / Loading States ──────────────────────────────────────────── */
+    adminTitle: {
+        fontSize: FontSizes.titleLarge,
+        color: Colors.text,
+        fontFamily: Fonts.bold,
+        letterSpacing: -0.3,
+    },
+    adminSubtitle: {
+        fontSize: FontSizes.body,
+        color: Colors.textSecondary,
+        marginTop: 4,
+        fontFamily: Fonts.regular,
     },
 });
