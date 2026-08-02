@@ -289,12 +289,7 @@ export default function BookDetailsScreen() {
                                 Pay via <Text style={{ fontFamily: Fonts.bold }}>UPI or Cash</Text>. No subscription needed.
                             </Text>
                         </View>
-                        <View style={styles.instructionItem}>
-                            <Ionicons name="time-outline" size={18} color={Colors.primary} />
-                            <Text style={styles.instructionText}>
-                                Late returns incur a fee of <Text style={{ fontFamily: Fonts.bold }}>1.5x daily rent</Text> (Rent + half penalty).
-                            </Text>
-                        </View>
+
                         <View style={styles.instructionItem}>
                             <Ionicons name="warning-outline" size={18} color={Colors.warning} />
                             <Text style={styles.instructionText}>
