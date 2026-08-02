@@ -384,4 +384,43 @@ export default defineSchema({
         title: v.optional(v.string()),
         updatedAt: v.number(),
     }),
+
+    // Bug reports submitted by users via Profile → Settings → Report a Bug
+    bug_reports: defineTable({
+        reportId: v.string(),
+        userId: v.id("users"),
+        title: v.string(),
+        category: v.string(),
+        description: v.string(),
+        stepsToReproduce: v.optional(v.string()),
+        expectedBehaviour: v.optional(v.string()),
+        actualBehaviour: v.optional(v.string()),
+        screenshotId: v.optional(v.id("_storage")),
+        screenshotUrl: v.optional(v.string()),
+        contactMe: v.boolean(),
+        deviceInfo: v.string(),
+        status: v.union(
+            v.literal("open"),
+            v.literal("investigating"),
+            v.literal("in_progress"),
+            v.literal("fixed"),
+            v.literal("closed"),
+            v.literal("rejected")
+        ),
+        priority: v.union(
+            v.literal("low"),
+            v.literal("medium"),
+            v.literal("high"),
+            v.literal("critical")
+        ),
+        githubIssueNumber: v.optional(v.number()),
+        githubIssueUrl: v.optional(v.string()),
+        createdAt: v.number(),
+        updatedAt: v.number(),
+    })
+        .index("by_userId", ["userId"])
+        .index("by_status", ["status"])
+        .index("by_reportId", ["reportId"])
+        .index("by_userId_createdAt", ["userId", "createdAt"])
+        .index("by_createdAt", ["createdAt"]),
 });

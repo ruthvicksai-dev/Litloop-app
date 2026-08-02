@@ -124,6 +124,58 @@ export default function SettingsScreen() {
                             style={styles.rowChevron}
                         />
                     </TouchableOpacity>
+                    <View style={styles.divider} />
+                    <TouchableOpacity
+                        style={styles.row}
+                        onPress={() => {
+                            triggerHaptic("light");
+                            router.push("/profile/report-bug");
+                        }}
+                    >
+                        <View
+                            style={[
+                                styles.iconContainer,
+                                { backgroundColor: `${Colors.error}15` },
+                            ]}
+                        >
+                            <Ionicons name="bug-outline" size={18} color={Colors.error} />
+                        </View>
+                        <Text style={styles.rowText} allowFontScaling={false}>
+                            Report a Bug
+                        </Text>
+                        <Ionicons
+                            name="chevron-forward"
+                            size={16}
+                            color={Colors.textLight}
+                            style={styles.rowChevron}
+                        />
+                    </TouchableOpacity>
+                    <View style={styles.divider} />
+                    <TouchableOpacity
+                        style={styles.row}
+                        onPress={() => {
+                            triggerHaptic("light");
+                            router.push("/profile/my-reports");
+                        }}
+                    >
+                        <View
+                            style={[
+                                styles.iconContainer,
+                                { backgroundColor: `${Colors.primary}15` },
+                            ]}
+                        >
+                            <Ionicons name="document-text-outline" size={18} color={Colors.primary} />
+                        </View>
+                        <Text style={styles.rowText} allowFontScaling={false}>
+                            My Reports
+                        </Text>
+                        <Ionicons
+                            name="chevron-forward"
+                            size={16}
+                            color={Colors.textLight}
+                            style={styles.rowChevron}
+                        />
+                    </TouchableOpacity>
                 </View>
 
                 {/* ─── Shared: Notifications, Legal, Danger, Sign Out ─── */}

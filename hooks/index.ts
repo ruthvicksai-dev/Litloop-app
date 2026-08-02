@@ -24,6 +24,8 @@ export * from "./home/useDiscoverSections";
 export * from "./home/useHomeEntrance";
 export * from "./home/useHomeScreen";
 export * from "./profile/useProfileTabs";
+export * from "./profile/useBugReport";
+export * from "./profile/useMyBugReports";
 export * from "./rental/usePaymentScreen";
 export * from "./rental/usePreviousAddresses";
 export * from "./rental/useRentalFilters";
