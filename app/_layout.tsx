@@ -22,9 +22,10 @@ import { enableFreeze } from "react-native-screens";
 enableFreeze(false);
 
 // Safe Sentry Initialization
+const sentryDsn = process.env.EXPO_PUBLIC_SENTRY_DSN;
+const isSentryEnabled = Boolean(sentryDsn) && !__DEV__;
+
 try {
-  const sentryDsn = process.env.EXPO_PUBLIC_SENTRY_DSN;
-  const isSentryEnabled = Boolean(sentryDsn) && !__DEV__;
   if (isSentryEnabled) {
     Sentry.init({
       dsn: sentryDsn,
@@ -137,7 +138,6 @@ function RootLayout() {
         try {
           // eslint-disable-next-line @typescript-eslint/no-require-imports
           const NavigationBar = require("expo-navigation-bar");
-          await NavigationBar.setBackgroundColorAsync(Colors.background);
           await NavigationBar.setButtonStyleAsync("dark");
         } catch {}
       }
@@ -173,7 +173,7 @@ function RootLayout() {
 }
 
 // Safely wrap with Sentry without breaking default export shape
-const WrappedRootLayout = Sentry && typeof Sentry.wrap === "function" 
+const WrappedRootLayout = isSentryEnabled && Sentry && typeof Sentry.wrap === "function" 
   ? Sentry.wrap(RootLayout) 
   : RootLayout;
 

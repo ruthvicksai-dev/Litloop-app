@@ -9,8 +9,9 @@ import { useMutation } from "convex/react";
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
 import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
-import { StatusBar, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 let hasCompletedStartupSplash = false;
 
@@ -67,8 +68,10 @@ export default function AppGate({ fontsLoaded }: { fontsLoaded: boolean }) {
   return (
     <>
       <StatusBar
-        barStyle={showSplash ? "light-content" : "dark-content"}
-        backgroundColor={showSplash ? "#0F2027" : Colors.background}
+        style={showSplash ? "light" : "dark"}
+        translucent
+        backgroundColor="transparent"
+        animated
       />
       <ErrorBoundary>
         <Stack

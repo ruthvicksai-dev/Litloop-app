@@ -15,6 +15,7 @@ import { useQuery } from "convex/react";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
 import {
     Animated,
@@ -164,6 +165,7 @@ export default function RentalHistoryScreen() {
             end={{ x: 1, y: 1 }}
             style={styles.heroHeader}
         >
+            <StatusBar style="light" animated />
             {/* Decorative background shapes */}
             <View style={styles.heroDecor} pointerEvents="none">
                 <View style={styles.heroDecorShape1} />

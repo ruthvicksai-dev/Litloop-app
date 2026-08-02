@@ -7,6 +7,10 @@
     "icon": "./assets/images/icon.png",
     "scheme": "litloop",
     "userInterfaceStyle": "automatic",
+    "androidStatusBar": {
+      "translucent": true,
+      "barStyle": "dark-content"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.ruthvicksai.litloop",
@@ -27,7 +31,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.ruthvicksai.litloop",
-      "versionCode": 6,
+      "versionCode": 7,
       "permissions": [
         "POST_NOTIFICATIONS",
         "CAMERA",

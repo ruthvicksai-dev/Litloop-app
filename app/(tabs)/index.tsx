@@ -14,6 +14,7 @@ import { useQuery } from "convex/react";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import React from "react";
 import {
   Animated,
@@ -92,6 +93,7 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
+      <StatusBar style="light" animated />
       {/* ─── Premium Hero Header ──────────────────────────────────────── */}
       <LinearGradient
         colors={[Colors.primaryDark, Colors.primary]}

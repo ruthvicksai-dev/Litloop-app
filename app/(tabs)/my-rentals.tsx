@@ -14,6 +14,7 @@ import { useQuery } from "convex/react";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import React, { useMemo } from "react";
 import {
   Animated,
@@ -186,6 +187,7 @@ export default function MyRentalsScreen() {
   if (rentals.length > 0) {
     return (
       <View style={styles.container}>
+        <StatusBar style="light" animated />
         {/* ─── Premium Hero Header ──────────────────────────────── */}
         <LinearGradient
           colors={[Colors.primaryDark, Colors.primary]}
@@ -299,6 +301,7 @@ export default function MyRentalsScreen() {
   /* ── Empty State — premium redesigned layout ──────────────────────── */
   return (
     <View style={styles.container}>
+      <StatusBar style="light" animated />
       {/* ─── Premium Hero Header ──────────────────────────────────── */}
       <LinearGradient
         colors={[Colors.primaryDark, Colors.primary]}
