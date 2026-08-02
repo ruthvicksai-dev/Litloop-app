@@ -53,7 +53,7 @@ export default function SearchScreen() {
       <View style={styles.headerWrap}>
         {/* Full-cover illustration background */}
         <Image
-          source={require("@/assets/images/search illustration.png")}
+          source={require("@/assets/images/search-illustration.png")}
           style={styles.headerBgIllustration}
           contentFit="cover"
           cachePolicy="memory-disk"
