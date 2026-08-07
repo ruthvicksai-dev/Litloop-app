@@ -1,5 +1,6 @@
 import Button from "@/components/ui/core/Button";
-import { Spacing } from "@/constants/theme";
+import { Spacing, Colors } from "@/constants/theme";
+import { triggerHaptic } from "@/utils";
 import { useRouter } from "expo-router";
 import React from "react";
 import { StyleSheet, View } from "react-native";
@@ -19,33 +20,49 @@ export default function RentalActionButtons({
 }: RentalActionButtonsProps) {
     const router = useRouter();
 
+    if (!["requested", "delivery_scheduled", "payment_pending", "paid"].includes(status)) {
+        return null;
+    }
+
     return (
-        <View style={styles.actionSection}>
+        <View style={styles.actionCard}>
             {status === "requested" && (
                 <Button
                     title="Schedule Delivery"
-                    onPress={() => router.push(`/(admin)/schedule-delivery?rentalId=${rentalId}`)}
+                    onPress={() => {
+                        triggerHaptic("light");
+                        router.push(`/(admin)/schedule-delivery?rentalId=${rentalId}`);
+                    }}
                     variant="primary"
                 />
             )}
             {status === "delivery_scheduled" && (
                 <Button
                     title="Mark as Delivered"
-                    onPress={onMarkDelivered}
+                    onPress={() => {
+                        triggerHaptic("light");
+                        onMarkDelivered();
+                    }}
                     variant="primary"
                 />
             )}
             {status === "payment_pending" && (
                 <Button
                     title="Verify Payment"
-                    onPress={() => router.push(`/(admin)/verify-payment?rentalId=${rentalId}`)}
+                    onPress={() => {
+                        triggerHaptic("light");
+                        router.push(`/(admin)/verify-payment?rentalId=${rentalId}`);
+                    }}
                     variant="primary"
                 />
             )}
             {status === "paid" && (
                 <Button
                     title="Mark as Returned"
-                    onPress={onMarkReturned}
+                    onPress={() => {
+                        triggerHaptic("light");
+                        onMarkReturned();
+                    }}
                     variant="primary"
                 />
             )}
@@ -54,8 +71,19 @@ export default function RentalActionButtons({
 }
 
 const styles = StyleSheet.create({
-    actionSection: {
-        paddingHorizontal: Spacing.lg,
-        paddingVertical: Spacing.lg,
+    actionCard: {
+        backgroundColor: Colors.white,
+        borderRadius: 20,
+        marginHorizontal: 16,
+        marginTop: 4,
+        marginBottom: 16,
+        padding: 16,
+        shadowColor: Colors.shadow,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        elevation: 2,
+        borderWidth: 1,
+        borderColor: "rgba(0,0,0,0.04)",
     },
 });

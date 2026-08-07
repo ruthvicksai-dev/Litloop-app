@@ -1,5 +1,6 @@
 import { FontSizes, Fonts } from "@/constants/fonts";
 import { Colors, Layout, Spacing } from "@/constants/theme";
+import { triggerHaptic } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Image, Linking, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -23,116 +24,194 @@ export default function RentalPaymentCard({
 }: RentalPaymentCardProps) {
     if (totalRent === undefined && !paymentStatus) return null;
 
+    const isPaid = paymentStatus === "paid";
+    const statusColor = isPaid ? Colors.success : Colors.warning;
+
     return (
-        <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Payment & Fees</Text>
-            <View style={styles.gridRow}>
-                {totalRent !== undefined && (
-                    <View style={styles.gridItem}>
-                        <Text style={styles.gridLabel}>Total Rent</Text>
-                        <Text style={[styles.gridValue, { color: Colors.success, fontFamily: Fonts.bold }]}>₹{totalRent}</Text>
-                    </View>
-                )}
-                {lateFee !== undefined && (
-                    <View style={styles.gridItem}>
-                        <Text style={styles.gridLabel}>Late Fee</Text>
-                        <Text style={[styles.gridValue, { color: Colors.error }]}>₹{lateFee}</Text>
-                    </View>
-                )}
-            </View>
-            <View style={styles.gridRow}>
-                {paymentMethod && (
-                    <View style={styles.gridItem}>
-                        <Text style={styles.gridLabel}>Method</Text>
-                        <Text style={styles.gridValue}>{paymentMethod.toUpperCase()}</Text>
-                    </View>
-                )}
-                {paymentStatus && (
-                    <View style={styles.gridItem}>
-                        <Text style={styles.gridLabel}>Status</Text>
-                        <Text style={[styles.gridValue, { color: paymentStatus === "paid" ? Colors.success : Colors.warning }]}>
+        <View style={styles.card}>
+            <View style={styles.cardHeader}>
+                <View style={styles.headerTitleRow}>
+                    <Ionicons name="card" size={16} color={Colors.primary} />
+                    <Text style={styles.cardHeaderTitle}>Payment Summary</Text>
+                </View>
+                {paymentStatus ? (
+                    <View style={[styles.statusBadge, { backgroundColor: statusColor + "15" }]}>
+                        <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
+                        <Text style={[styles.statusBadgeText, { color: statusColor }]}>
                             {paymentStatus.replace("_", " ").toUpperCase()}
                         </Text>
                     </View>
+                ) : null}
+            </View>
+
+            <View style={styles.paymentGrid}>
+                {totalRent !== undefined && (
+                    <View style={styles.metricBox}>
+                        <Text style={styles.metricLabel}>Total Rent</Text>
+                        <Text style={styles.metricValueTotal}>₹{totalRent}</Text>
+                    </View>
+                )}
+                {lateFee !== undefined && lateFee > 0 ? (
+                    <View style={styles.metricBox}>
+                        <Text style={styles.metricLabel}>Late Fee</Text>
+                        <Text style={styles.metricValueFee}>₹{lateFee}</Text>
+                    </View>
+                ) : null}
+                {paymentMethod && (
+                    <View style={styles.metricBox}>
+                        <Text style={styles.metricLabel}>Payment Method</Text>
+                        <Text style={styles.metricValue}>{paymentMethod.toUpperCase()}</Text>
+                    </View>
                 )}
             </View>
-            {utrNumber && (
-                <View style={styles.gridItem}>
-                    <Text style={styles.gridLabel}>UTR Number</Text>
-                    <Text style={styles.gridValue}>{utrNumber}</Text>
-                </View>
-            )}
-            {screenshotUrl && (
-                <TouchableOpacity onPress={() => Linking.openURL(screenshotUrl)} style={styles.screenshotWrap}>
-                    <Image source={{ uri: screenshotUrl }} style={styles.screenshot} resizeMode="cover" />
-                    <View style={styles.screenshotOverlay}>
-                        <Ionicons name="expand" size={18} color={Colors.white} />
-                        <Text style={styles.screenshotOverlayText}>Tap to view</Text>
+
+            {utrNumber ? (
+                <View style={styles.utrRow}>
+                    <Ionicons name="receipt-outline" size={14} color={Colors.textSecondary} />
+                    <View style={styles.utrTextGroup}>
+                        <Text style={styles.utrLabel}>UTR Transaction ID</Text>
+                        <Text style={styles.utrValue}>{utrNumber}</Text>
                     </View>
+                </View>
+            ) : null}
+
+            {screenshotUrl ? (
+                <TouchableOpacity
+                    style={styles.screenshotBtn}
+                    activeOpacity={0.8}
+                    onPress={() => {
+                        triggerHaptic("light");
+                        Linking.openURL(screenshotUrl);
+                    }}
+                >
+                    <Ionicons name="image-outline" size={16} color={Colors.primary} />
+                    <Text style={styles.screenshotBtnText}>View Payment Screenshot</Text>
+                    <Ionicons name="open-outline" size={14} color={Colors.primary} />
                 </TouchableOpacity>
-            )}
+            ) : null}
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    section: {
-        paddingHorizontal: Spacing.lg,
-        paddingVertical: Spacing.md,
-        borderBottomWidth: 1,
-        borderBottomColor: Colors.border,
-        gap: Spacing.sm,
+    card: {
+        backgroundColor: Colors.white,
+        borderRadius: 20,
+        marginHorizontal: 16,
+        marginBottom: 12,
+        padding: 16,
+        shadowColor: Colors.shadow,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 6,
+        elevation: 1,
+        borderWidth: 1,
+        borderColor: "rgba(0,0,0,0.04)",
     },
-    sectionLabel: {
+    cardHeader: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        marginBottom: 12,
+        paddingBottom: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: "rgba(0,0,0,0.04)",
+    },
+    headerTitleRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+    },
+    cardHeaderTitle: {
         fontSize: FontSizes.caption,
         fontFamily: Fonts.bold,
-        color: Colors.textSecondary,
-        textTransform: "uppercase",
-        letterSpacing: 1,
-        marginBottom: 4,
-    },
-    gridRow: {
-        flexDirection: "row",
-        gap: Spacing.md,
-    },
-    gridItem: {
-        flex: 1,
-    },
-    gridLabel: {
-        fontSize: FontSizes.tiny,
-        fontFamily: Fonts.bold,
-        color: Colors.textSecondary,
-        textTransform: "uppercase",
-        letterSpacing: 0.5,
-        marginBottom: 2,
-    },
-    gridValue: {
-        fontSize: FontSizes.body,
-        fontFamily: Fonts.medium,
         color: Colors.text,
+        letterSpacing: 0.2,
     },
-    screenshotWrap: {
-        width: "100%",
-        aspectRatio: 4 / 3,
-        borderRadius: Layout.borderRadius,
-        backgroundColor: Colors.primaryLight,
-        overflow: "hidden",
-        marginTop: Spacing.sm,
-    },
-    screenshot: {
-        width: "100%",
-        height: "100%",
-    },
-    screenshotOverlay: {
-        ...StyleSheet.absoluteFillObject,
-        backgroundColor: "rgba(0,0,0,0.25)",
-        justifyContent: "center",
+    statusBadge: {
+        flexDirection: "row",
         alignItems: "center",
         gap: 4,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderRadius: 8,
     },
-    screenshotOverlayText: {
-        color: Colors.white,
+    statusDot: {
+        width: 6,
+        height: 6,
+        borderRadius: 3,
+    },
+    statusBadgeText: {
         fontSize: FontSizes.tiny,
         fontFamily: Fonts.bold,
+    },
+    paymentGrid: {
+        flexDirection: "row",
+        gap: 10,
+        marginBottom: 8,
+    },
+    metricBox: {
+        flex: 1,
+        backgroundColor: "rgba(0,0,0,0.02)",
+        borderRadius: 12,
+        padding: 10,
+    },
+    metricLabel: {
+        fontSize: FontSizes.tiny,
+        fontFamily: Fonts.medium,
+        color: Colors.textSecondary,
+        marginBottom: 2,
+    },
+    metricValue: {
+        fontSize: FontSizes.caption,
+        fontFamily: Fonts.bold,
+        color: Colors.text,
+    },
+    metricValueTotal: {
+        fontSize: FontSizes.subtitle,
+        fontFamily: Fonts.bold,
+        color: Colors.success,
+    },
+    metricValueFee: {
+        fontSize: FontSizes.subtitle,
+        fontFamily: Fonts.bold,
+        color: Colors.error,
+    },
+    utrRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+        backgroundColor: Colors.background,
+        borderRadius: 10,
+        padding: 10,
+        marginTop: 6,
+    },
+    utrTextGroup: {
+        flex: 1,
+    },
+    utrLabel: {
+        fontSize: FontSizes.tiny,
+        fontFamily: Fonts.medium,
+        color: Colors.textSecondary,
+    },
+    utrValue: {
+        fontSize: FontSizes.caption,
+        fontFamily: Fonts.bold,
+        color: Colors.text,
+    },
+    screenshotBtn: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 6,
+        marginTop: 10,
+        paddingVertical: 10,
+        borderRadius: 12,
+        backgroundColor: Colors.primary + "12",
+    },
+    screenshotBtnText: {
+        fontSize: FontSizes.caption,
+        fontFamily: Fonts.bold,
+        color: Colors.primary,
     },
 });

@@ -26,7 +26,7 @@ interface RentalLocationCardProps {
 export default function RentalLocationCard({ type, zone, location, date, time }: RentalLocationCardProps) {
     const isDelivery = type === "Delivery";
     const primaryColor = isDelivery ? Colors.primary : Colors.success;
-    const badgeText = isDelivery ? zone : "Collection";
+    const badgeText = isDelivery ? (zone ? `${zone} Zone` : "Delivery") : "Pickup Location";
 
     const openMap = () => {
         const { latitude, longitude } = location;
@@ -40,16 +40,19 @@ export default function RentalLocationCard({ type, zone, location, date, time }:
     };
 
     return (
-        <View style={styles.section}>
-            <View style={styles.sectionHeaderRow}>
-                <Text style={styles.sectionLabel}>{type}</Text>
-                <View style={[styles.badge, { backgroundColor: primaryColor + "18" }]}>
+        <View style={styles.card}>
+            <View style={styles.cardHeader}>
+                <View style={styles.headerTitleRow}>
+                    <Ionicons name={isDelivery ? "location" : "bicycle"} size={16} color={primaryColor} />
+                    <Text style={styles.cardHeaderTitle}>{type} Information</Text>
+                </View>
+                <View style={[styles.badge, { backgroundColor: primaryColor + "15" }]}>
                     <Text style={[styles.badgeText, { color: primaryColor }]}>{badgeText}</Text>
                 </View>
             </View>
 
             {zone === "College" ? (
-                <>
+                <View style={styles.gridContainer}>
                     <View style={styles.gridRow}>
                         <View style={styles.gridItem}>
                             <Text style={styles.gridLabel}>Room No</Text>
@@ -66,142 +69,152 @@ export default function RentalLocationCard({ type, zone, location, date, time }:
                             <Text style={styles.gridValue}>{location.department || "N/A"}</Text>
                         </View>
                         <View style={styles.gridItem}>
-                            <Text style={styles.gridLabel}>Year</Text>
+                            <Text style={styles.gridLabel}>Year of Study</Text>
                             <Text style={styles.gridValue}>{location.yearOfStudy || "N/A"}</Text>
                         </View>
                     </View>
-                </>
+                </View>
             ) : (
-                <>
+                <View style={styles.addressContainer}>
+                    <Text style={styles.addressLabel}>Address</Text>
                     <Text style={styles.addressText}>
-                        {location.formattedAddress ||
-                            (location.area ? `${location.area}, ${location.city}` : "Delivery Address Reused")}
+                        {location.formattedAddress || [location.area, location.city].filter(Boolean).join(", ") || "Address not provided"}
                     </Text>
-                    {location.latitude && location.longitude && (
-                        <TouchableOpacity style={styles.mapBtn} onPress={openMap}>
-                            <Ionicons name="navigate-outline" size={14} color={primaryColor} />
-                            <Text style={[styles.mapBtnText, { color: primaryColor }]}>Open in Maps</Text>
-                        </TouchableOpacity>
-                    )}
-                </>
-            )}
-
-            {!isDelivery && location.phone && (
-                <TouchableOpacity
-                    style={styles.detailRow}
-                    onPress={() => {
-                        const cleaned = location.phone?.replace(/[^\d+]/g, "");
-                        if (cleaned) Linking.openURL(`tel:${cleaned}`);
-                    }}
-                >
-                    <Ionicons name="call-outline" size={16} color={primaryColor} />
-                    <Text style={[styles.detailValue, { color: primaryColor, fontFamily: Fonts.bold }]}>
-                        {location.phone}
-                    </Text>
-                    <Ionicons name="open-outline" size={14} color={primaryColor} />
-                </TouchableOpacity>
-            )}
-
-            {date && (
-                <View style={styles.scheduleRow}>
-                    <Ionicons name={isDelivery ? "time-outline" : "calendar-outline"} size={14} color={primaryColor} />
-                    <Text style={[styles.scheduleText, { color: primaryColor }]}>{date} at {time}</Text>
                 </View>
             )}
+
+            {(date || time) && (
+                <View style={styles.scheduleRow}>
+                    <Ionicons name="calendar-outline" size={14} color={Colors.textSecondary} />
+                    <Text style={styles.scheduleText}>
+                        Scheduled: {[date, time].filter(Boolean).join(" at ")}
+                    </Text>
+                </View>
+            )}
+
+            {location.latitude && location.longitude ? (
+                <TouchableOpacity style={styles.mapBtn} activeOpacity={0.8} onPress={openMap}>
+                    <Ionicons name="map-outline" size={14} color={Colors.primary} />
+                    <Text style={styles.mapBtnText}>Open Map Navigation</Text>
+                </TouchableOpacity>
+            ) : null}
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    section: {
-        paddingHorizontal: Spacing.lg,
-        paddingVertical: Spacing.md,
-        borderBottomWidth: 1,
-        borderBottomColor: Colors.border,
-        gap: Spacing.sm,
+    card: {
+        backgroundColor: Colors.white,
+        borderRadius: 20,
+        marginHorizontal: 16,
+        marginBottom: 12,
+        padding: 16,
+        shadowColor: Colors.shadow,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 6,
+        elevation: 1,
+        borderWidth: 1,
+        borderColor: "rgba(0,0,0,0.04)",
     },
-    sectionLabel: {
+    cardHeader: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        marginBottom: 12,
+        paddingBottom: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: "rgba(0,0,0,0.04)",
+    },
+    headerTitleRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+    },
+    cardHeaderTitle: {
         fontSize: FontSizes.caption,
         fontFamily: Fonts.bold,
-        color: Colors.textSecondary,
-        textTransform: "uppercase",
-        letterSpacing: 1,
-        marginBottom: 4,
-    },
-    sectionHeaderRow: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: 4,
+        color: Colors.text,
+        letterSpacing: 0.2,
     },
     badge: {
-        paddingHorizontal: 10,
+        paddingHorizontal: 8,
         paddingVertical: 3,
-        borderRadius: 99,
+        borderRadius: 8,
     },
     badgeText: {
         fontSize: FontSizes.tiny,
         fontFamily: Fonts.bold,
     },
-    detailRow: {
-        flexDirection: "row",
-        alignItems: "center",
+    gridContainer: {
         gap: 10,
-    },
-    detailValue: {
-        fontSize: FontSizes.body,
-        fontFamily: Fonts.medium,
-        color: Colors.text,
-        flex: 1,
     },
     gridRow: {
         flexDirection: "row",
-        gap: Spacing.md,
+        gap: 12,
     },
     gridItem: {
         flex: 1,
+        backgroundColor: "rgba(0,0,0,0.02)",
+        borderRadius: 10,
+        padding: 8,
     },
     gridLabel: {
         fontSize: FontSizes.tiny,
-        fontFamily: Fonts.bold,
+        fontFamily: Fonts.medium,
         color: Colors.textSecondary,
-        textTransform: "uppercase",
-        letterSpacing: 0.5,
         marginBottom: 2,
     },
     gridValue: {
-        fontSize: FontSizes.body,
-        fontFamily: Fonts.medium,
-        color: Colors.text,
-    },
-    addressText: {
-        fontSize: FontSizes.body,
-        fontFamily: Fonts.regular,
-        color: Colors.text,
-        lineHeight: 22,
-    },
-    mapBtn: {
-        flexDirection: "row",
-        alignItems: "center",
-        alignSelf: "flex-start",
-        gap: 6,
-        marginTop: 4,
-    },
-    mapBtnText: {
         fontSize: FontSizes.caption,
         fontFamily: Fonts.bold,
+        color: Colors.text,
+    },
+    addressContainer: {
+        backgroundColor: "rgba(0,0,0,0.02)",
+        borderRadius: 12,
+        padding: 10,
+    },
+    addressLabel: {
+        fontSize: FontSizes.tiny,
+        fontFamily: Fonts.medium,
+        color: Colors.textSecondary,
+        marginBottom: 2,
+    },
+    addressText: {
+        fontSize: FontSizes.caption,
+        fontFamily: Fonts.bold,
+        color: Colors.text,
+        lineHeight: 18,
     },
     scheduleRow: {
         flexDirection: "row",
         alignItems: "center",
         gap: 6,
-        paddingTop: Spacing.sm,
-        marginTop: Spacing.xs,
-        borderTopWidth: 1,
-        borderTopColor: Colors.border,
+        marginTop: 10,
+        backgroundColor: Colors.primary + "0D",
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 8,
     },
     scheduleText: {
         fontSize: FontSizes.caption,
         fontFamily: Fonts.medium,
+        color: Colors.primary,
+    },
+    mapBtn: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 6,
+        marginTop: 10,
+        paddingVertical: 8,
+        borderRadius: 10,
+        backgroundColor: Colors.primary + "12",
+    },
+    mapBtnText: {
+        fontSize: FontSizes.caption,
+        fontFamily: Fonts.bold,
+        color: Colors.primary,
     },
 });
