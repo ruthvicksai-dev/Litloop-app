@@ -197,6 +197,9 @@ const styles = StyleSheet.create({
         borderBottomLeftRadius: Layout.cardRadiusLarge + scale(4),
         borderBottomRightRadius: Layout.cardRadiusLarge + scale(4),
         overflow: "hidden",
+        zIndex: 10,
+        elevation: 4,
+        backgroundColor: Colors.primaryDark,
     },
     heroSafeArea: {},
     heroContent: {
