@@ -14,7 +14,7 @@ interface RentalBookCardProps {
     rentPerDay: number;
 }
 
-export default function RentalBookCard({ bookId, coverUri, title, author, rentPerDay }: RentalBookCardProps) {
+function RentalBookCard({ bookId, coverUri, title, author, rentPerDay }: RentalBookCardProps) {
     const router = useRouter();
 
     return (
@@ -53,6 +53,8 @@ export default function RentalBookCard({ bookId, coverUri, title, author, rentPe
         </View>
     );
 }
+
+export default React.memo(RentalBookCard);
 
 const styles = StyleSheet.create({
     card: {

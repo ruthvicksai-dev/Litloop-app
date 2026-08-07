@@ -20,7 +20,7 @@ type AdminRentalCardProps = {
     onMarkReturned: () => void;
 };
 
-export default function AdminRentalCard({
+function AdminRentalCardComponent({
     item,
     onScheduleDelivery,
     onVerifyPayment,
@@ -67,215 +67,194 @@ export default function AdminRentalCard({
                         <Text style={styles.rentalTitle} numberOfLines={1}>
                             {item.book?.title || "Unknown"}
                         </Text>
-                        <View style={[styles.statusBadge, { backgroundColor: statusColor + "18" }]}>
+                        <View style={[styles.statusBadge, { backgroundColor: statusColor + "15" }]}>
                             <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
                             <Text
                                 style={[styles.statusText, { color: statusColor }]}
                                 numberOfLines={1}
                                 adjustsFontSizeToFit
-                                minimumFontScale={0.8}
+                                minimumFontScale={0.75}
                             >
-                                {RENTAL_STATUS_LABELS[item.status]}
+                                {RENTAL_STATUS_LABELS[item.status] || item.status}
                             </Text>
                         </View>
                     </View>
-                    <View style={styles.subInfo}>
-                        <Ionicons
-                            name="person-outline"
-                            size={14}
-                            color={Colors.textSecondary}
-                        />
-                        <Text style={styles.rentalUser}>
-                            {item.user?.name || "Unknown"}
-                        </Text>
-                    </View>
 
-                    <View style={styles.subInfo}>
-                        <Ionicons
-                            name="call-outline"
-                            size={14}
-                            color={Colors.textSecondary}
-                        />
-                        <Text style={styles.rentalUser}>{item.user?.phone}</Text>
-                    </View>
+                    <Text style={styles.customerName} numberOfLines={1}>
+                        <Ionicons name="person-outline" size={12} color={Colors.textSecondary} />{" "}
+                        {item.user?.name || "Customer"} ({item.user?.phone || "No phone"})
+                    </Text>
 
-                    <View style={styles.subInfo}>
-                        <Ionicons
-                            name="location-outline"
-                            size={14}
-                            color={Colors.primary}
-                        />
-                        <Text style={[styles.rentalLocation, { color: Colors.primary, fontFamily: Fonts.bold }]}>
-                            {item.zone}
-                        </Text>
-                    </View>
+                    <Text style={styles.zoneTag} numberOfLines={1}>
+                        <Ionicons name="location-outline" size={12} color={Colors.primary} /> Zone: {item.zone}
+                    </Text>
 
-                    {item.zone === "College" ? (
-                        <View style={styles.detailsGrid}>
-                            <View style={styles.detailItem}>
-                                <Text style={styles.detailLabel}>Room:</Text>
-                                <Text style={styles.detailValue}>{item.deliveryLocation?.roomNo}</Text>
+                    {/* Key Detail Chips */}
+                    <View style={styles.detailRow}>
+                        {item.deliveryDate ? (
+                            <View style={styles.detailChip}>
+                                <Text style={styles.detailLabel}>Deliv:</Text>
+                                <Text style={styles.detailValue}>{item.deliveryDate}</Text>
                             </View>
-                            <View style={styles.detailItem}>
-                                <Text style={styles.detailLabel}>Roll:</Text>
-                                <Text style={styles.detailValue}>{item.deliveryLocation?.rollNo}</Text>
+                        ) : null}
+                        {item.pickupDate ? (
+                            <View style={styles.detailChip}>
+                                <Text style={styles.detailLabel}>Pickup:</Text>
+                                <Text style={styles.detailValue}>{item.pickupDate}</Text>
                             </View>
-                            {item.deliveryLocation?.department && (
-                                <View style={styles.detailItem}>
-                                    <Text style={styles.detailLabel}>Dept:</Text>
-                                    <Text style={styles.detailValue}>{item.deliveryLocation?.department}</Text>
-                                </View>
-                            )}
-                        </View>
-                    ) : (
-                        <View style={styles.addressContainer}>
-                            <Text style={styles.rentalLocation} numberOfLines={2}>
-                                {item.deliveryLocation?.formattedAddress ||
-                                    `${item.deliveryLocation?.area}, ${item.deliveryLocation?.city}`}
-                            </Text>
-                        </View>
-                    )}
+                        ) : null}
+                    </View>
+
+                    {item.deliveryLocation?.formattedAddress ? (
+                        <Text style={styles.addressText} numberOfLines={1}>
+                            📍 {item.deliveryLocation.formattedAddress}
+                        </Text>
+                    ) : item.deliveryLocation?.roomNo ? (
+                        <Text style={styles.addressText} numberOfLines={1}>
+                            📍 Room {item.deliveryLocation.roomNo}, {item.deliveryLocation.department || ""}
+                        </Text>
+                    ) : null}
                 </View>
             </TouchableOpacity>
 
-            {(item.status === "requested" ||
-                item.status === "delivery_scheduled" ||
-                item.status === "paid" ||
-                item.status === "payment_pending") && (
-                    <View style={styles.actionRow}>
-                        {item.status === "requested" ? (
-                            <TouchableOpacity
-                                style={styles.actionBtn}
-                                onPress={() => {
-                                    triggerHaptic("medium");
-                                    onScheduleDelivery();
-                                }}
-                            >
-                                <Ionicons name="calendar-outline" size={14} color={Colors.white} style={{ marginRight: 4 }} />
-                                <Text style={styles.actionBtnText}>Schedule Delivery</Text>
-                            </TouchableOpacity>
-                        ) : null}
-                        {item.status === "delivery_scheduled" ? (
-                            <TouchableOpacity
-                                style={[styles.actionBtn, styles.successBtn]}
-                                onPress={() => {
-                                    triggerHaptic("medium");
-                                    onMarkDelivered();
-                                }}
-                            >
-                                <Ionicons name="checkmark-done" size={14} color={Colors.white} style={{ marginRight: 4 }} />
-                                <Text style={styles.actionBtnText}>Mark Delivered</Text>
-                            </TouchableOpacity>
-                        ) : null}
-                        {item.status === "paid" ? (
-                            <TouchableOpacity
-                                style={[styles.actionBtn, styles.successBtn]}
-                                onPress={() => {
-                                    triggerHaptic("medium");
-                                    onMarkReturned();
-                                }}
-                            >
-                                <Ionicons name="archive-outline" size={14} color={Colors.white} style={{ marginRight: 4 }} />
-                                <Text style={styles.actionBtnText}>Mark Returned</Text>
-                            </TouchableOpacity>
-                        ) : null}
-                        {item.status === "payment_pending" ? (
-                            <TouchableOpacity
-                                style={styles.actionBtn}
-                                onPress={() => {
-                                    triggerHaptic("medium");
-                                    onVerifyPayment();
-                                }}
-                            >
-                                <Ionicons name="card-outline" size={14} color={Colors.white} style={{ marginRight: 4 }} />
-                                <Text style={styles.actionBtnText}>Verify Payment</Text>
-                            </TouchableOpacity>
-                        ) : null}
-                    </View>
+            {/* Quick Action Buttons */}
+            <View style={styles.actionRow}>
+                {item.status === "requested" && (
+                    <TouchableOpacity
+                        style={styles.actionBtn}
+                        onPress={() => {
+                            triggerHaptic("light");
+                            onScheduleDelivery();
+                        }}
+                    >
+                        <Text style={styles.actionBtnText}>Schedule Delivery</Text>
+                    </TouchableOpacity>
                 )}
+
+                {item.status === "payment_pending" && (
+                    <TouchableOpacity
+                        style={styles.actionBtn}
+                        onPress={() => {
+                            triggerHaptic("light");
+                            onVerifyPayment();
+                        }}
+                    >
+                        <Text style={styles.actionBtnText}>Verify Payment</Text>
+                    </TouchableOpacity>
+                )}
+
+                {item.status === "delivery_scheduled" && (
+                    <TouchableOpacity
+                        style={[styles.actionBtn, styles.successBtn]}
+                        onPress={() => {
+                            triggerHaptic("light");
+                            onMarkDelivered();
+                        }}
+                    >
+                        <Text style={styles.actionBtnText}>Mark Delivered</Text>
+                    </TouchableOpacity>
+                )}
+
+                {item.status === "pickup_scheduled" && (
+                    <TouchableOpacity
+                        style={[styles.actionBtn, styles.successBtn]}
+                        onPress={() => {
+                            triggerHaptic("light");
+                            onMarkReturned();
+                        }}
+                    >
+                        <Text style={styles.actionBtnText}>Mark Returned</Text>
+                    </TouchableOpacity>
+                )}
+            </View>
         </View>
     );
 }
 
+export default React.memo(AdminRentalCardComponent);
+
 const styles = StyleSheet.create({
     rentalCard: {
-        backgroundColor: Colors.white + "F2",
-        marginHorizontal: 20,
+        backgroundColor: Colors.white,
+        borderRadius: 20,
+        padding: 14,
         marginBottom: 12,
-        borderRadius: 22,
-        padding: 16,
+        shadowColor: Colors.shadow,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 6,
+        elevation: 1,
         borderWidth: 1,
-        borderColor: Colors.border,
-        position: 'relative',
+        borderColor: "rgba(0,0,0,0.04)",
     },
     rentalTop: {
         flexDirection: "row",
-        alignItems: "flex-start",
+        gap: 12,
     },
     coverWrap: {
-        marginRight: 12,
-        width: 58,
-        alignSelf: "center",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
     },
     cover: {
-        width: "100%",
-        aspectRatio: 58 / 82,
-        borderRadius: 14,
+        width: 60,
+        height: 88,
+        borderRadius: 10,
         backgroundColor: Colors.border,
     },
     coverPlaceholder: {
-        backgroundColor: Colors.background,
-        borderWidth: 1,
-        borderColor: Colors.border,
-        alignItems: "center",
         justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: Colors.primaryLight,
     },
     rentalInfo: {
         flex: 1,
-        paddingTop: 2,
-        minWidth: 0,
+        justifyContent: "space-between",
     },
     headerRow: {
         flexDirection: "row",
         alignItems: "flex-start",
-        gap: 8,
-        marginBottom: 8,
+        justifyContent: "space-between",
+        gap: 6,
     },
     rentalTitle: {
         flex: 1,
-        fontSize: FontSizes.bodyLarge,
+        fontSize: FontSizes.body,
         fontFamily: Fonts.bold,
         color: Colors.text,
-        minWidth: 0,
+        lineHeight: 20,
     },
-    subInfo: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 6,
-        marginBottom: 5,
-    },
-    rentalUser: {
+    customerName: {
         fontSize: FontSizes.caption,
+        fontFamily: Fonts.medium,
         color: Colors.textSecondary,
-        fontFamily: Fonts.regular,
+        marginTop: 2,
     },
-    rentalLocation: {
-        fontSize: FontSizes.caption,
+    zoneTag: {
+        fontSize: FontSizes.tiny,
+        fontFamily: Fonts.bold,
+        color: Colors.primary,
+        marginTop: 2,
+    },
+    addressText: {
+        fontSize: FontSizes.tiny,
+        fontFamily: Fonts.regular,
         color: Colors.textSecondary,
-        fontFamily: Fonts.regular,
-        flex: 1,
+        marginTop: 3,
     },
-    detailsGrid: {
+    detailRow: {
         flexDirection: "row",
         flexWrap: "wrap",
-        gap: 8,
+        gap: 6,
         marginTop: 4,
     },
-    detailItem: {
+    detailChip: {
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: Colors.border + "40",
-        paddingHorizontal: 8,
+        backgroundColor: Colors.background,
+        paddingHorizontal: 6,
         paddingVertical: 2,
         borderRadius: 6,
     },
@@ -289,9 +268,6 @@ const styles = StyleSheet.create({
         fontSize: 10,
         fontFamily: Fonts.medium,
         color: Colors.text,
-    },
-    addressContainer: {
-        marginTop: 2,
     },
     statusBadge: {
         flexDirection: "row",

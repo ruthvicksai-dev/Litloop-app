@@ -51,19 +51,15 @@ export const getDashboardStats = query({
             statusCounts[status] = count;
         }
 
-        // 2. Today's orders — count rentals created today
+        // 2. Today's orders — count rentals created today using index range query
         const todayStart = new Date(todayKey + "T00:00:00Z").getTime();
         const todayEnd = todayStart + 24 * 60 * 60 * 1000;
         const todayRentals = await ctx.db
             .query("rentals")
-            .withIndex("by_createdAt")
-            .filter((q) =>
-                q.and(
-                    q.gte(q.field("createdAt"), todayStart),
-                    q.lt(q.field("createdAt"), todayEnd)
-                )
+            .withIndex("by_createdAt", (q) =>
+                q.gte("createdAt", todayStart).lt("createdAt", todayEnd)
             )
-            .collect();
+            .take(200);
         const todayOrders = todayRentals.length;
 
         // 3. Today's revenue from analytics_daily
@@ -73,9 +69,9 @@ export const getDashboardStats = query({
             .first();
         const todayRevenue = todayStats?.revenue ?? 0;
 
-        // 4. Total books count
-        const allBooks = await ctx.db.query("books").collect();
-        const totalBooks = allBooks.length;
+        // 4. Total books count — fetch minimal fields using query take
+        const bookCountResults = await ctx.db.query("books").withIndex("by_createdAt").take(1000);
+        const totalBooks = bookCountResults.length;
 
         // 5. Monthly growth — compare current vs previous month revenue
         const [currentMonthStats, prevMonthStats] = await Promise.all([
