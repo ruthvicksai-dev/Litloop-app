@@ -19,6 +19,7 @@ interface Props {
     hasMore?: boolean;
     onLoadMore?: () => void;
     isAdmin?: boolean;
+    hideTitle?: boolean;
 }
 
 interface Review {
@@ -56,7 +57,7 @@ function StarIcons({ rating, size = 14 }: { rating: number; size?: number }) {
     );
 }
 
-export default function BookReviews({ bookId, limit, hasMore, onLoadMore, isAdmin }: Props) {
+export default function BookReviews({ bookId, limit, hasMore, onLoadMore, isAdmin, hideTitle }: Props) {
     const { accessToken, userId } = useAuthState();
     const { showToast } = useToast();
     
@@ -174,8 +175,8 @@ export default function BookReviews({ bookId, limit, hasMore, onLoadMore, isAdmi
     if (summary.totalReviews === 0) {
         if (isAdmin) {
             return (
-                <View style={styles.container}>
-                    <Text style={styles.sectionTitle}>Ratings & Reviews</Text>
+                <View style={[styles.container, hideTitle && { marginTop: 0 }]}>
+                    {!hideTitle && <Text style={styles.sectionTitle}>Ratings & Reviews</Text>}
                     <View style={styles.emptyContainer}>
                         <Text style={styles.emptyText}>There are no reviews yet.</Text>
                     </View>
@@ -188,8 +189,8 @@ export default function BookReviews({ bookId, limit, hasMore, onLoadMore, isAdmi
     const maxDist = Math.max(...Object.values(summary.distribution), 1);
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.sectionTitle}>Ratings & Reviews</Text>
+        <View style={[styles.container, hideTitle && { marginTop: 0 }]}>
+            {!hideTitle && <Text style={styles.sectionTitle}>Ratings & Reviews</Text>}
 
             <View style={styles.summaryRow}>
                 <View style={styles.ratingBig}>

@@ -1,9 +1,9 @@
 import { FontSizes, Fonts } from "@/constants/fonts";
-import { Colors, Layout, Spacing } from "@/constants/theme";
+import { Colors } from "@/constants/theme";
 import { triggerHaptic } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Image, Linking, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Linking, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface RentalPaymentCardProps {
     totalRent?: number;

@@ -1,5 +1,5 @@
 import { FontSizes, Fonts } from "@/constants/fonts";
-import { Colors, Spacing } from "@/constants/theme";
+import { Colors } from "@/constants/theme";
 import { triggerHaptic } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";

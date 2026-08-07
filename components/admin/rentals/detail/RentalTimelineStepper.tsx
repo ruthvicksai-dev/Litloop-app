@@ -1,5 +1,5 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, RENTAL_STATUS_LABELS, Spacing } from "@/constants/theme";
+import { Colors, RENTAL_STATUS_LABELS } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";

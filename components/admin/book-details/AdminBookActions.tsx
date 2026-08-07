@@ -2,7 +2,8 @@ import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Spacing } from "@/constants/theme";
+import { Colors } from "@/constants/theme";
+import { triggerHaptic } from "@/utils";
 
 interface AdminBookActionsProps {
     onEditPress: () => void;
@@ -14,48 +15,73 @@ export default function AdminBookActions({
     onDeletePress,
 }: AdminBookActionsProps) {
     return (
-        <View style={styles.actionsSection}>
-            <TouchableOpacity
-                style={styles.editBtn}
-                onPress={onEditPress}
-                activeOpacity={0.8}
-            >
-                <Ionicons name="create-outline" size={20} color={Colors.primary} />
-                <Text style={styles.editBtnText}>Edit Book</Text>
-            </TouchableOpacity>
+        <View>
+            <View style={styles.headerRow}>
+                <Ionicons name="settings" size={16} color={Colors.primary} />
+                <Text style={styles.headerTitle}>Admin Actions</Text>
+            </View>
+            <View style={styles.actionsRow}>
+                <TouchableOpacity
+                    style={styles.editBtn}
+                    onPress={() => {
+                        triggerHaptic("light");
+                        onEditPress();
+                    }}
+                    activeOpacity={0.8}
+                >
+                    <Ionicons name="create-outline" size={18} color={Colors.primary} />
+                    <Text style={styles.editBtnText}>Edit Book</Text>
+                </TouchableOpacity>
 
-            <TouchableOpacity
-                style={styles.deleteBtn}
-                onPress={onDeletePress}
-                activeOpacity={0.8}
-            >
-                <Ionicons name="trash-outline" size={20} color={Colors.error} />
-                <Text style={styles.deleteBtnText}>Delete Book</Text>
-            </TouchableOpacity>
+                <TouchableOpacity
+                    style={styles.deleteBtn}
+                    onPress={() => {
+                        triggerHaptic("medium");
+                        onDeletePress();
+                    }}
+                    activeOpacity={0.8}
+                >
+                    <Ionicons name="trash-outline" size={18} color={Colors.error} />
+                    <Text style={styles.deleteBtnText}>Delete</Text>
+                </TouchableOpacity>
+            </View>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    actionsSection: {
+    headerRow: {
         flexDirection: "row",
-        gap: Spacing.md,
-        marginTop: Spacing.sm,
+        alignItems: "center",
+        gap: 6,
+        marginBottom: 12,
+        paddingBottom: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: "rgba(0,0,0,0.04)",
+    },
+    headerTitle: {
+        fontSize: FontSizes.caption,
+        fontFamily: Fonts.bold,
+        color: Colors.text,
+        flex: 1,
+        letterSpacing: 0.2,
+    },
+    actionsRow: {
+        flexDirection: "row",
+        gap: 10,
     },
     editBtn: {
         flex: 1,
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
-        gap: 8,
-        paddingVertical: 14,
-        borderRadius: 12,
-        borderWidth: 1.5,
-        borderColor: Colors.primary,
-        backgroundColor: Colors.white,
+        gap: 6,
+        paddingVertical: 12,
+        borderRadius: 14,
+        backgroundColor: Colors.primary + "12",
     },
     editBtnText: {
-        fontSize: FontSizes.body,
+        fontSize: FontSizes.caption,
         fontFamily: Fonts.bold,
         color: Colors.primary,
     },
@@ -64,15 +90,13 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
-        gap: 8,
-        paddingVertical: 14,
-        borderRadius: 12,
-        borderWidth: 1.5,
-        borderColor: Colors.error,
-        backgroundColor: Colors.error + "08",
+        gap: 6,
+        paddingVertical: 12,
+        borderRadius: 14,
+        backgroundColor: Colors.error + "10",
     },
     deleteBtnText: {
-        fontSize: FontSizes.body,
+        fontSize: FontSizes.caption,
         fontFamily: Fonts.bold,
         color: Colors.error,
     },

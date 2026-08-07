@@ -16,7 +16,6 @@ import {
     RefreshControl,
     ScrollView,
     StyleSheet,
-    View,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -57,6 +56,24 @@ export default function AdminDashboard() {
     return (
         <SafeAreaView style={styles.container} edges={["bottom", "left", "right"]}>
             <StatusBar style="light" animated />
+
+            {/* ─── Fixed Hero Header (Exact same position as User Home Screen) ─── */}
+            <AdminDashboardHeader
+                greeting={greeting}
+                unreadCount={unreadCount}
+                todayOrders={dashboardStats?.todayOrders ?? 0}
+                todayRevenue={dashboardStats?.todayRevenue ?? 0}
+                onNotificationsPress={() => {
+                    triggerHaptic("light");
+                    router.push("/(admin)/notifications" as any);
+                }}
+                onSettingsPress={() => {
+                    triggerHaptic("light");
+                    router.push("/(admin)/payment-settings" as any);
+                }}
+            />
+
+            {/* ─── Scrollable Content Body Below Fixed Header ─── */}
             <ScrollView
                 style={styles.flex}
                 contentContainerStyle={[
@@ -69,8 +86,7 @@ export default function AdminDashboard() {
                         refreshing={refreshing}
                         onRefresh={onRefresh}
                         colors={[Colors.primary]}
-                        tintColor={Colors.white}
-                        progressViewOffset={Math.max(insets.top + 20, 50)}
+                        tintColor={Colors.primary}
                     />
                 }
             >
@@ -80,23 +96,7 @@ export default function AdminDashboard() {
                         transform: [{ translateY: slideAnim }],
                     }}
                 >
-                    {/* Hero Header matching User Home screen gradient & SafeAreaView */}
-                    <AdminDashboardHeader
-                        greeting={greeting}
-                        unreadCount={unreadCount}
-                        todayOrders={dashboardStats?.todayOrders ?? 0}
-                        todayRevenue={dashboardStats?.todayRevenue ?? 0}
-                        onNotificationsPress={() => {
-                            triggerHaptic("light");
-                            router.push("/(admin)/notifications" as any);
-                        }}
-                        onSettingsPress={() => {
-                            triggerHaptic("light");
-                            router.push("/(admin)/payment-settings" as any);
-                        }}
-                    />
-
-                    {/* Body Content in LitLoop Theme Light Background */}
+                    {/* Stats Section */}
                     <AdminDashboardStats
                         stats={stats}
                         revenue={revenue}
@@ -129,6 +129,7 @@ const styles = StyleSheet.create({
     },
     scrollContent: {
         backgroundColor: Colors.background,
+        paddingTop: 8,
     },
     center: {
         flex: 1,

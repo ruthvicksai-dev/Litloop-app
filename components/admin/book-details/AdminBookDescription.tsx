@@ -1,7 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Spacing } from "@/constants/theme";
+import { Colors } from "@/constants/theme";
 
 interface AdminBookDescriptionProps {
     description: string;
@@ -15,8 +15,7 @@ export default function AdminBookDescription({
     onToggleExpand,
 }: AdminBookDescriptionProps) {
     return (
-        <View style={styles.sectionCard}>
-            <Text style={styles.sectionLabel}>Description</Text>
+        <View>
             <Text
                 style={styles.descriptionText}
                 numberOfLines={isExpanded ? undefined : 3}
@@ -27,9 +26,10 @@ export default function AdminBookDescription({
                 <TouchableOpacity
                     onPress={onToggleExpand}
                     activeOpacity={0.8}
+                    style={styles.toggleBtn}
                 >
                     <Text style={styles.toggleText}>
-                        {isExpanded ? "View less" : "View more"}
+                        {isExpanded ? "Show less" : "Read more"}
                     </Text>
                 </TouchableOpacity>
             )}
@@ -38,31 +38,20 @@ export default function AdminBookDescription({
 }
 
 const styles = StyleSheet.create({
-    sectionCard: {
-        paddingTop: Spacing.xs,
-        paddingBottom: Spacing.md,
-        paddingHorizontal: Spacing.xs,
-        marginBottom: Spacing.md,
-        borderBottomWidth: 1,
-        borderBottomColor: "rgba(0,0,0,0.05)",
-    },
-    sectionLabel: {
-        fontSize: FontSizes.subtitle,
-        fontFamily: Fonts.bold,
-        color: Colors.text,
-        marginBottom: Spacing.sm,
-    },
     descriptionText: {
-        fontSize: FontSizes.bodyLarge,
+        fontSize: FontSizes.body,
         color: Colors.textSecondary,
-        lineHeight: 24,
-        letterSpacing: 0.2,
+        lineHeight: 22,
+        letterSpacing: 0.15,
         fontFamily: Fonts.regular,
     },
+    toggleBtn: {
+        marginTop: 6,
+        alignSelf: "flex-start",
+    },
     toggleText: {
-        fontSize: FontSizes.body,
+        fontSize: FontSizes.caption,
         color: Colors.primary,
-        fontFamily: Fonts.medium,
-        marginTop: Spacing.xs,
+        fontFamily: Fonts.bold,
     },
 });

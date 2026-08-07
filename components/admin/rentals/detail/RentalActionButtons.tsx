@@ -1,5 +1,5 @@
 import Button from "@/components/ui/core/Button";
-import { Spacing, Colors } from "@/constants/theme";
+import { Colors } from "@/constants/theme";
 import { triggerHaptic } from "@/utils";
 import { useRouter } from "expo-router";
 import React from "react";

@@ -13,7 +13,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useMutation } from "convex/react";
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
-import { router as globalRouter } from "expo-router";
 import React, { useState } from "react";
 import { Linking, Modal, StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
 

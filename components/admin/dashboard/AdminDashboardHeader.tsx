@@ -1,5 +1,6 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Spacing, Layout, scale } from "@/constants/theme";
+import { Shadows } from "@/constants/designTokens";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -37,40 +38,74 @@ export default function AdminDashboardHeader({
             <View style={styles.heroDecor} pointerEvents="none">
                 <View style={styles.heroDecorShape1} />
                 <View style={styles.heroDecorShape2} />
+                <View style={styles.heroDecorShape3} />
             </View>
 
             <SafeAreaView edges={["top"]} style={styles.heroSafeArea}>
                 <View style={styles.heroContent}>
                     {/* Top Row: Avatar + Greeting | Actions */}
-                    <View style={styles.topRow}>
-                        <View style={styles.greetingRow}>
+                    <View style={styles.heroTopRow}>
+                        <View style={styles.heroLeft}>
+                            <View style={styles.avatarWrap}>
+                                <View style={[styles.avatar, styles.avatarPlaceholder]}>
+                                    <Ionicons
+                                        name="shield-checkmark"
+                                        size={scale(18)}
+                                        color={Colors.primary}
+                                    />
+                                </View>
+                            </View>
                             <View>
-                                <Text style={styles.greetingText}>{greeting}</Text>
-                                <Text style={styles.adminName}>Admin 👋</Text>
+                                <Text style={styles.heroGreeting} allowFontScaling={false}>
+                                    {greeting}
+                                </Text>
+                                <Text style={styles.heroName} allowFontScaling={false}>
+                                    Admin 👋
+                                </Text>
                             </View>
                         </View>
+
                         <View style={styles.headerActions}>
-                            <TouchableOpacity style={styles.iconBtn} onPress={onNotificationsPress}>
+                            <TouchableOpacity
+                                style={styles.heroNotifBtn}
+                                activeOpacity={0.75}
+                                onPress={onNotificationsPress}
+                            >
                                 <Ionicons
                                     name={unreadCount > 0 ? "notifications" : "notifications-outline"}
-                                    size={18}
+                                    size={scale(18)}
                                     color={Colors.primary}
                                 />
-                                {unreadCount > 0 ? <View style={styles.badge} /> : null}
+                                {unreadCount > 0 ? (
+                                    <View style={styles.heroNotifBadge}>
+                                        <Text style={styles.heroNotifBadgeText}>
+                                            {unreadCount > 9 ? "9+" : unreadCount}
+                                        </Text>
+                                    </View>
+                                ) : null}
                             </TouchableOpacity>
-                            <TouchableOpacity style={styles.iconBtn} onPress={onSettingsPress}>
-                                <Ionicons name="settings-outline" size={18} color={Colors.primary} />
+
+                            <TouchableOpacity
+                                style={styles.heroNotifBtn}
+                                activeOpacity={0.75}
+                                onPress={onSettingsPress}
+                            >
+                                <Ionicons
+                                    name="settings-outline"
+                                    size={scale(18)}
+                                    color={Colors.primary}
+                                />
                             </TouchableOpacity>
                         </View>
                     </View>
 
-                    {/* Title Section */}
+                    {/* Dashboard Section Title */}
                     <View style={styles.titleSection}>
                         <Text style={styles.heroTitle}>Dashboard</Text>
-                        <Text style={styles.heroSubtitle}>Manage LitLoop effortlessly</Text>
+                        <Text style={styles.heroSubtitle}>Manage LitLoop rentals and inventory</Text>
                     </View>
 
-                    {/* Today's Stats Bar */}
+                    {/* Today's Quick Stats Bar */}
                     <View style={styles.todayBar}>
                         <View style={styles.todayItem}>
                             <View style={styles.todayIconWrap}>
@@ -100,16 +135,17 @@ export default function AdminDashboardHeader({
 
 const styles = StyleSheet.create({
     heroHeader: {
-        borderBottomLeftRadius: Layout.cardRadiusLarge + scale(8),
-        borderBottomRightRadius: Layout.cardRadiusLarge + scale(8),
+        borderBottomLeftRadius: scale(24),
+        borderBottomRightRadius: scale(24),
         overflow: "hidden",
+        zIndex: 10,
+        elevation: 4,
+        backgroundColor: Colors.primaryDark,
     },
-    heroSafeArea: {
-        // Safe area handles top inset cleanly
-    },
+    heroSafeArea: {},
     heroContent: {
         paddingHorizontal: Layout.screenPaddingWide,
-        paddingTop: Spacing.sm,
+        paddingTop: Spacing.xs,
         paddingBottom: Spacing.lg,
     },
     /* Decorative shapes */
@@ -135,60 +171,90 @@ const styles = StyleSheet.create({
         bottom: -scale(40),
         left: -scale(30),
     },
+    heroDecorShape3: {
+        position: "absolute",
+        width: scale(90),
+        height: scale(90),
+        borderRadius: scale(45),
+        backgroundColor: "rgba(255,255,255,0.04)",
+        top: scale(30),
+        left: scale(100),
+    },
     /* Top row */
-    topRow: {
+    heroTopRow: {
         flexDirection: "row",
+        alignItems: "center",
         justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: Spacing.sm,
+        marginBottom: Spacing.md,
     },
-    greetingRow: {
+    heroLeft: {
         flexDirection: "row",
         alignItems: "center",
-        gap: 10,
+        gap: Spacing.sm + Spacing.xs,
     },
-    avatarCircle: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
+    avatarWrap: {
+        ...Shadows.card,
+        borderRadius: scale(20),
+    },
+    avatar: {
+        width: scale(40),
+        height: scale(40),
+        borderRadius: scale(20),
+        borderWidth: 2,
+        borderColor: "rgba(255,255,255,0.3)",
+    },
+    avatarPlaceholder: {
         backgroundColor: Colors.white,
         alignItems: "center",
         justifyContent: "center",
     },
-    greetingText: {
-        fontSize: FontSizes.caption,
-        fontFamily: Fonts.medium,
+    heroGreeting: {
+        fontSize: FontSizes.small,
         color: "rgba(255,255,255,0.8)",
-    },
-    adminName: {
-        fontSize: FontSizes.bodyLarge,
         fontFamily: Fonts.regular,
+        letterSpacing: 0.2,
+    },
+    heroName: {
+        fontSize: FontSizes.title,
         color: Colors.white,
+        fontFamily: Fonts.bold,
+        letterSpacing: -0.3,
+        marginTop: 1,
     },
     headerActions: {
         flexDirection: "row",
         gap: 8,
         alignItems: "center",
     },
-    iconBtn: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
+    heroNotifBtn: {
+        width: scale(36),
+        height: scale(36),
+        borderRadius: scale(18),
         backgroundColor: Colors.white,
-        justifyContent: "center",
         alignItems: "center",
+        justifyContent: "center",
         position: "relative",
+        ...Shadows.card,
     },
-    badge: {
+    heroNotifBadge: {
         position: "absolute",
-        top: 6,
-        right: 6,
-        width: 8,
-        height: 8,
-        borderRadius: 4,
+        top: -1,
+        right: -1,
+        minWidth: scale(15),
+        height: scale(15),
+        borderRadius: scale(7.5),
         backgroundColor: Colors.error,
+        alignItems: "center",
+        justifyContent: "center",
         borderWidth: 1.5,
         borderColor: Colors.white,
+        paddingHorizontal: 2,
+    },
+    heroNotifBadgeText: {
+        fontSize: 9,
+        color: Colors.white,
+        fontFamily: Fonts.bold,
+        lineHeight: 11,
     },
     /* Title section */
     titleSection: {
@@ -199,55 +265,57 @@ const styles = StyleSheet.create({
         fontFamily: Fonts.bold,
         color: Colors.white,
         letterSpacing: -0.4,
+        marginBottom: 2,
     },
     heroSubtitle: {
         fontSize: FontSizes.caption,
         fontFamily: Fonts.regular,
-        color: "rgba(255,255,255,0.7)",
-        marginTop: 1,
+        color: "rgba(255,255,255,0.75)",
     },
-    /* Today bar */
+    /* Today Stats Bar */
     todayBar: {
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: "rgba(0,0,0,0.2)",
-        borderRadius: 14,
-        paddingVertical: 8,
-        paddingHorizontal: 14,
+        backgroundColor: "rgba(255,255,255,0.12)",
+        borderRadius: 16,
+        paddingHorizontal: Spacing.md,
+        paddingVertical: Spacing.sm + 2,
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.15)",
     },
     todayItem: {
         flex: 1,
         flexDirection: "row",
         alignItems: "center",
-        gap: 8,
+        gap: 10,
     },
     todayIconWrap: {
-        width: 30,
-        height: 30,
-        borderRadius: 15,
-        backgroundColor: "rgba(235,217,192,0.15)",
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: "rgba(255,255,255,0.15)",
         alignItems: "center",
         justifyContent: "center",
     },
     rupeeIcon: {
-        fontSize: FontSizes.body,
+        fontSize: 14,
         fontFamily: Fonts.bold,
         color: "#EBD9C0",
     },
     todayLabel: {
         fontSize: FontSizes.tiny,
         fontFamily: Fonts.medium,
-        color: "rgba(235,217,192,0.7)",
+        color: "rgba(255,255,255,0.75)",
     },
     todayValue: {
-        fontSize: FontSizes.subtitle,
+        fontSize: FontSizes.body,
         fontFamily: Fonts.bold,
         color: Colors.white,
     },
     todayDivider: {
         width: 1,
-        height: 26,
-        backgroundColor: "rgba(235,217,192,0.2)",
-        marginHorizontal: 6,
+        height: 24,
+        backgroundColor: "rgba(255,255,255,0.2)",
+        marginHorizontal: 8,
     },
 });
