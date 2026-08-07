@@ -219,6 +219,14 @@ export default function ScheduleReturnScreen() {
         await handleSchedule();
     };
 
+    const deliveryTimestamp = rental?.deliveredAt
+        ? rental.deliveredAt
+        : (rental?.deliveryDate ? new Date(rental.deliveryDate).getTime() : 0);
+    const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
+    const elapsedMs = Date.now() - deliveryTimestamp;
+    const isPickupLocked = deliveryTimestamp > 0 && elapsedMs < TWELVE_HOURS_MS;
+    const hoursLeft = isPickupLocked ? Math.ceil((TWELVE_HOURS_MS - elapsedMs) / (1000 * 60 * 60)) : 0;
+
     const availableDates = React.useMemo(() => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -300,6 +308,15 @@ export default function ScheduleReturnScreen() {
                             ) : null}
                         </View>
 
+                        {isPickupLocked && (
+                            <View style={styles.lockBanner}>
+                                <Ionicons name="lock-closed-outline" size={16} color="#92400E" />
+                                <Text style={styles.lockBannerText}>
+                                    Return pickup scheduling is available strictly 12 hours after delivery ({hoursLeft}h remaining).
+                                </Text>
+                            </View>
+                        )}
+
                         <SlotDatePicker
                             label="Pickup Date"
                             dates={availableDates}
@@ -378,9 +395,10 @@ export default function ScheduleReturnScreen() {
                         />
 
                         <Button
-                            title="Schedule Pickup"
+                            title={isPickupLocked ? `Available in ${hoursLeft}h` : "Schedule Pickup"}
                             onPress={handleSubmitPickup}
                             loading={loading}
+                            disabled={isPickupLocked}
                             style={{ marginTop: Spacing.md }}
                         />
                     </View>
@@ -458,5 +476,22 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center",
         backgroundColor: Colors.background,
+    },
+    lockBanner: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#FEF3C7",
+        borderColor: "#F59E0B",
+        borderWidth: 1,
+        borderRadius: 12,
+        padding: Spacing.md,
+        gap: 10,
+        marginBottom: Spacing.md,
+    },
+    lockBannerText: {
+        flex: 1,
+        fontSize: FontSizes.small,
+        color: "#92400E",
+        fontFamily: Fonts.medium,
     },
 });

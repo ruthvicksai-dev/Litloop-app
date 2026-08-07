@@ -121,23 +121,25 @@ export default function HomeScreen() {
             {/* Top Row: Avatar + Greeting | Notification */}
             <View style={styles.heroTopRow}>
               <View style={styles.heroLeft}>
-                <View style={styles.avatarWrap}>
-                  {user?.avatarUrl ? (
-                    <Image
-                      source={user.avatarUrl}
-                      style={styles.avatar}
-                      contentFit="cover"
-                    />
-                  ) : (
-                    <View style={[styles.avatar, styles.avatarPlaceholder]}>
-                      <Ionicons
-                        name="person"
-                        size={scale(17)}
-                        color={Colors.primary}
+                {user && (
+                  <View style={styles.avatarWrap}>
+                    {user.avatarUrl ? (
+                      <Image
+                        source={user.avatarUrl}
+                        style={styles.avatar}
+                        contentFit="cover"
                       />
-                    </View>
-                  )}
-                </View>
+                    ) : (
+                      <View style={[styles.avatar, styles.avatarPlaceholder]}>
+                        <Ionicons
+                          name="person"
+                          size={scale(17)}
+                          color={Colors.primary}
+                        />
+                      </View>
+                    )}
+                  </View>
+                )}
                 <View>
                   <Text style={styles.heroGreeting} allowFontScaling={false}>
                     {greeting}
@@ -186,18 +188,16 @@ export default function HomeScreen() {
                 ) : null
               ) : (
                 <TouchableOpacity
-                  style={styles.heroNotifBtn}
+                  style={styles.heroLoginBtn}
                   activeOpacity={0.7}
                   onPress={() => {
                     triggerHaptic("light");
                     router.push("/(auth)/sign-in");
                   }}
                 >
-                  <Ionicons
-                    name="log-in-outline"
-                    size={scale(18)}
-                    color={Colors.primary}
-                  />
+                  <Text style={styles.heroLoginText} allowFontScaling={false}>
+                    Log In
+                  </Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -483,6 +483,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     ...Shadows.card,
+  },
+  heroLoginBtn: {
+    paddingHorizontal: Spacing.md,
+    height: scale(34),
+    borderRadius: scale(17),
+    backgroundColor: Colors.white,
+    alignItems: "center",
+    justifyContent: "center",
+    ...Shadows.card,
+  },
+  heroLoginText: {
+    fontSize: FontSizes.small,
+    color: Colors.primary,
+    fontFamily: Fonts.bold,
   },
   heroNotifBadge: {
     position: "absolute",

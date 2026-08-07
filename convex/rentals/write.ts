@@ -190,9 +190,10 @@ export const scheduleDelivery = mutation({
         }
 
         if (args.deliveryDate === todayStr) {
-            const currentHour = now.getHours();
-            if (slotStartHour < currentHour + 1) {
-                throw new Error("Delivery must be scheduled at least 1 hour in advance.");
+            const currentDecimalHour = now.getHours() + now.getMinutes() / 60;
+            const slotCutoffHour = slotStartHour + 2.5; // Cutoff 30 mins before slot end (e.g. 2:30 PM for 12-3 PM slot)
+            if (currentDecimalHour > slotCutoffHour) {
+                throw new Error("Selected delivery slot has expired for today.");
             }
         }
 
@@ -223,6 +224,7 @@ export const markDelivered = mutation({
 
         await ctx.db.patch(args.rentalId, {
             status: "delivered",
+            deliveredAt: Date.now(),
         });
 
         const book = await ctx.db.get(rental.bookId);
@@ -328,20 +330,22 @@ export const schedulePickup = mutation({
         }
 
         if (args.pickupDate === todayStr) {
-            const currentHour = now.getHours();
-            if (slotStartHour < currentHour + 1) {
-                throw new Error("Pickup must be scheduled at least 1 hour in advance.");
+            const currentDecimalHour = now.getHours() + now.getMinutes() / 60;
+            const slotCutoffHour = slotStartHour + 2.5; // Cutoff 30 mins before slot end (e.g. 2:30 PM for 12-3 PM slot)
+            if (currentDecimalHour > slotCutoffHour) {
+                throw new Error("Selected pickup slot has expired for today.");
             }
         }
 
-        if (!rental.deliveryDate || !rental.deliveryTime)
-            throw new Error("Delivery date/time missing for rent calculation.");
+        const deliveryTimestamp = rental.deliveredAt ?? (rental.deliveryDate ? new Date(rental.deliveryDate).getTime() : rental.createdAt);
+        const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
+        const elapsedMs = Math.max(0, now.getTime() - deliveryTimestamp);
 
-        if (args.pickupDate <= rental.deliveryDate) {
-            throw new Error("Pickup date must be strictly after the delivery date.");
+        if (elapsedMs < TWELVE_HOURS_MS) {
+            throw new Error("Return pickup can strictly be scheduled only 12 hours after delivery.");
         }
 
-        const days = daysBetween(rental.deliveryDate, args.pickupDate);
+        const days = Math.max(1, Math.floor(elapsedMs / (24 * 60 * 60 * 1000)) + 1);
         const totalRent = rental.rentPerDay * days;
 
         const book = await ctx.db.get(rental.bookId);
@@ -511,5 +515,32 @@ export const markReturned = mutation({
         });
 
         await recordUserActivity(ctx, rental.userId, Date.now());
+    },
+});
+
+export const migrateLegacyRentals = mutation({
+    args: { accessToken: v.optional(v.string()) },
+    handler: async (ctx) => {
+        const rentals = await ctx.db.query("rentals").collect();
+        let updatedCount = 0;
+        for (const rental of rentals) {
+            if (
+                rental.deliveredAt === undefined &&
+                (rental.status === "delivered" ||
+                    rental.status === "pickup_scheduled" ||
+                    rental.status === "payment_pending" ||
+                    rental.status === "paid" ||
+                    rental.status === "returned")
+            ) {
+                const timestamp = rental.deliveryDate
+                    ? new Date(rental.deliveryDate).getTime()
+                    : rental.createdAt;
+                await ctx.db.patch(rental._id, {
+                    deliveredAt: timestamp,
+                });
+                updatedCount++;
+            }
+        }
+        return { updatedCount, totalRentals: rentals.length };
     },
 });

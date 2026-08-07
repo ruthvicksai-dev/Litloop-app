@@ -65,23 +65,32 @@ export function useScheduleReturnScreen(rentalId: string) {
     };
 
     const estimatedDays = useMemo(() => {
-        if (!rental?.deliveryDate || !pickupDate) {
-            return 0;
-        }
+        const deliveryTimestamp = rental?.deliveredAt
+            ? rental.deliveredAt
+            : (rental?.deliveryDate ? new Date(rental.deliveryDate).getTime() : 0);
 
-        return Math.max(
-            0,
-            Math.ceil(
-                (new Date(pickupDate).getTime() -
-                    new Date(rental.deliveryDate).getTime()) /
-                (1000 * 60 * 60 * 24)
-            )
-        );
-    }, [pickupDate, rental?.deliveryDate]);
+        if (!deliveryTimestamp) return 1;
+
+        const targetTime = pickupDate ? new Date(pickupDate).getTime() : Date.now();
+        const diffMs = Math.max(0, targetTime - deliveryTimestamp);
+        return Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1;
+    }, [pickupDate, rental?.deliveryDate, rental?.deliveredAt]);
 
     const estimatedRent = estimatedDays * (rental?.rentPerDay || 0);
 
     const handleSchedule = async () => {
+        const deliveryTimestamp = rental?.deliveredAt
+            ? rental.deliveredAt
+            : (rental?.deliveryDate ? new Date(rental.deliveryDate).getTime() : 0);
+
+        const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
+        const elapsed = Date.now() - deliveryTimestamp;
+        if (deliveryTimestamp > 0 && elapsed < TWELVE_HOURS_MS) {
+            const hoursLeft = Math.ceil((TWELVE_HOURS_MS - elapsed) / (1000 * 60 * 60));
+            showToast(`Return pickup can strictly be scheduled only 12 hours after delivery (${hoursLeft}h remaining).`, "error");
+            return;
+        }
+
         if (!pickupDate) {
             showToast("Pickup date is required.", "error");
             return;
@@ -103,14 +112,6 @@ export function useScheduleReturnScreen(rentalId: string) {
 
         if (userRating < 1 || userRating > 5) {
             showToast("Please rate this book before scheduling pickup.", "error");
-            return;
-        }
-
-        if (
-            rental?.deliveryDate &&
-            new Date(pickupDate) <= new Date(rental.deliveryDate)
-        ) {
-            showToast("Pickup date must be after delivery date.", "error");
             return;
         }
 

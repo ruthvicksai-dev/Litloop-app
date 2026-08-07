@@ -63,7 +63,7 @@ describe("deleteAccount", () => {
       const bookId = await t.run(async (ctx: any) => {
         return ctx.db.insert("books", {
           title: "B", author: "A", description: "D", rentPerDay: 5,
-          genre: "Fiction", genres: ["Fiction"], totalCopies: 1,
+          genre: "Action", genres: ["Action"], totalCopies: 1,
           availableCopies: 0, rating: 0, ratingCount: 0, createdAt: Date.now(),
         });
       });
@@ -124,7 +124,7 @@ describe("deleteAccount", () => {
       const bookId = await t.run(async (ctx: any) => {
         return ctx.db.insert("books", {
           title: "B", author: "A", description: "D", rentPerDay: 5,
-          genre: "Fiction", genres: ["Fiction"], totalCopies: 1,
+          genre: "Action", genres: ["Action"], totalCopies: 1,
           availableCopies: 1, rating: 0, ratingCount: 0, createdAt: Date.now(),
         });
       });
@@ -206,7 +206,7 @@ describe("deleteAccount", () => {
       const bookId = await t.run(async (ctx: any) => {
         return ctx.db.insert("books", {
           title: "B", author: "A", description: "D", rentPerDay: 5,
-          genre: "Fiction", genres: ["Fiction"], totalCopies: 1,
+          genre: "Action", genres: ["Action"], totalCopies: 1,
           availableCopies: 1, rating: 4, ratingCount: 1, avgRating: 4,
           totalReviews: 1, rating4Count: 1, createdAt: Date.now(),
         });

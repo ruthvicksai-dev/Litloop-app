@@ -1,6 +1,8 @@
 export const MAIN_GENRES = [
     "Action",
     "Adventure",
+    "Fiction",
+    "Crime",
     "Thriller",
     "Mystery",
     "Fantasy",
@@ -11,7 +13,6 @@ export const MAIN_GENRES = [
     "History",
     "Self Help",
     "Rom com",
-    "Education",
     "Business",
     "Psychology",
 ] as const;

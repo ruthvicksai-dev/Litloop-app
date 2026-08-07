@@ -180,6 +180,7 @@ export default defineSchema({
         }),
         deliveryDate: v.optional(v.string()),
         deliveryTime: v.optional(v.string()),
+        deliveredAt: v.optional(v.number()),
         pickupDate: v.optional(v.string()),
         pickupTime: v.optional(v.string()),
         userRating: v.optional(v.number()),

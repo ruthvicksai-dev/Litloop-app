@@ -18,6 +18,8 @@ type GenreChipProps = {
 
 const GENRE_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
     Action: "flash-outline",
+    Fiction: "book-outline",
+    Crime: "finger-print-outline",
     Romance: "heart-outline",
     "Sci-Fi": "rocket-outline",
     Mystery: "search-outline",
@@ -29,7 +31,6 @@ const GENRE_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
     "Self Help": "bulb-outline",
     History: "time-outline",
     "Rom com": "heart-half-outline",
-    Education: "school-outline",
     Business: "briefcase-outline",
     Psychology: "analytics-outline",
     "View All": "grid-outline",

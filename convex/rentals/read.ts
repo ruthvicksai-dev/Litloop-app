@@ -27,8 +27,10 @@ export const getUserRentals = query({
         const rentalsWithBooks = await Promise.all(
             rentals.map(async (rental) => {
                 const book = await getBookWithCoverUrls(ctx, rental.bookId);
+                const computedDeliveredAt = rental.deliveredAt ?? (rental.deliveryDate ? new Date(rental.deliveryDate).getTime() : rental.createdAt);
                 return {
                     ...rental,
+                    deliveredAt: computedDeliveredAt,
                     coverUrl: book?.coverUrl ?? null,
                     coverUrls: book?.coverUrls ?? [],
                     book,
@@ -160,8 +162,11 @@ export const getRental = query({
             screenshotUrl = await ctx.storage.getUrl(rental.paymentScreenshot);
         }
 
+        const computedDeliveredAt = rental.deliveredAt ?? (rental.deliveryDate ? new Date(rental.deliveryDate).getTime() : rental.createdAt);
+
         return {
             ...rental,
+            deliveredAt: computedDeliveredAt,
             coverUrl: book?.coverUrl ?? null,
             coverUrls: book?.coverUrls ?? [],
             book,

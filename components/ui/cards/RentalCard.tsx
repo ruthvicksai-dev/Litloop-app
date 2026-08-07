@@ -25,6 +25,7 @@ interface RentalCardProps {
     bookAuthor: string;
     status: string;
     coverUrl?: string | null;
+    deliveredAt?: number;
     deliveryDate?: string;
     deliveryTime?: string;
     pickupDate?: string;
@@ -39,6 +40,7 @@ export default function RentalCard({
     bookAuthor,
     status,
     coverUrl,
+    deliveredAt,
     deliveryDate,
     deliveryTime,
     pickupDate,
@@ -47,8 +49,8 @@ export default function RentalCard({
     zone,
     onPress,
 }: RentalCardProps) {
-    const [currentDays, setCurrentDays] = useState(0);
-    const [currentRent, setCurrentRent] = useState(0);
+    const [currentDays, setCurrentDays] = useState(1);
+    const [currentRent, setCurrentRent] = useState(rentPerDay);
     const scaleAnim = useSharedValue(1);
 
     const animatedStyle = useAnimatedStyle(() => ({
@@ -56,12 +58,14 @@ export default function RentalCard({
     }));
 
     useEffect(() => {
-        if (status === "delivered" && deliveryDate) {
+        if (status === "delivered") {
             const updateTimer = () => {
-                const delivery = new Date(deliveryDate);
-                const now = new Date();
-                const diffMs = now.getTime() - delivery.getTime();
-                const days = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+                const deliveryTimestamp = deliveredAt 
+                    ? deliveredAt 
+                    : (deliveryDate ? new Date(deliveryDate).getTime() : Date.now());
+                const now = Date.now();
+                const diffMs = Math.max(0, now - deliveryTimestamp);
+                const days = Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1;
                 setCurrentDays(days);
                 setCurrentRent(days * rentPerDay);
             };
@@ -70,7 +74,7 @@ export default function RentalCard({
             const interval = setInterval(updateTimer, 60000);
             return () => clearInterval(interval);
         }
-    }, [status, deliveryDate, rentPerDay]);
+    }, [status, deliveredAt, deliveryDate, rentPerDay]);
 
     const statusColor = STATUS_COLORS[status] || Colors.textSecondary;
     const statusLabel = RENTAL_STATUS_LABELS[status] || status;

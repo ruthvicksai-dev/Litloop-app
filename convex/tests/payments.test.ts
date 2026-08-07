@@ -50,7 +50,7 @@ async function makePickupScheduledRental(t: any, userId: string) {
   const bookId = await t.run(async (ctx: any) => {
     return ctx.db.insert("books", {
       title: "Pay Book", author: "Author", description: "Desc",
-      rentPerDay: 5, genre: "Fiction", genres: ["Fiction"],
+      rentPerDay: 5, genre: "Action", genres: ["Action"],
       totalCopies: 3, availableCopies: 2, rating: 0, ratingCount: 0,
       createdAt: Date.now(),
     });
@@ -172,7 +172,7 @@ describe("submitUpiPayment", () => {
     const bookId = await t.run(async (ctx: any) => {
       return ctx.db.insert("books", {
         title: "B", author: "A", description: "D", rentPerDay: 5,
-        genre: "Fiction", genres: ["Fiction"], totalCopies: 1,
+        genre: "Action", genres: ["Action"], totalCopies: 1,
         availableCopies: 1, rating: 0, ratingCount: 0, createdAt: Date.now(),
       });
     });

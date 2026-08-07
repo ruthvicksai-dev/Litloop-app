@@ -50,7 +50,7 @@ async function makeBook(t: any, overrides: Record<string, any> = {}) {
   return t.run(async (ctx: any) => {
     return ctx.db.insert("books", {
       title: "Book", author: "Author", description: "Desc",
-      rentPerDay: 5, genre: "Fiction", genres: ["Fiction"],
+      rentPerDay: 5, genre: "Action", genres: ["Action"],
       totalCopies: 3, availableCopies: 3, rating: 0, ratingCount: 0,
       createdAt: Date.now(), ...overrides,
     });

@@ -45,11 +45,11 @@ export function CommonSettingsSections() {
     const deleteAccountMutation = useMutation(api.users.deleteAccount);
 
     React.useEffect(() => {
-        if (user === null && accessToken === null) {
+        if (user === null && accessToken === null && !isSigningOut) {
             if (globalRouter.canDismiss()) globalRouter.dismissAll();
-            globalRouter.replace("/(auth)/sign-in");
+            globalRouter.replace("/(tabs)");
         }
-    }, [user, accessToken]);
+    }, [user, accessToken, isSigningOut]);
 
     const handleTogglePush = async (value: boolean) => {
         if (!accessToken) return;
@@ -80,12 +80,15 @@ export function CommonSettingsSections() {
     const handleSignOut = async () => {
         setShowLogoutConfirm(false);
         setIsSigningOut(true);
-        await signOut();
-        setIsSigningOut(false);
-        showToast("Signed out successfully.", "info");
-        // Explicit redirect — don't rely on passive useEffect alone
-        if (globalRouter.canDismiss()) globalRouter.dismissAll();
-        globalRouter.replace("/(auth)/sign-in");
+        try {
+            await signOut();
+            showToast("Signed out successfully.", "info");
+        } catch {
+            // Ignore sign-out errors
+        } finally {
+            if (globalRouter.canDismiss()) globalRouter.dismissAll();
+            globalRouter.replace("/(tabs)");
+        }
     };
 
     const handleDeleteAccount = async () => {

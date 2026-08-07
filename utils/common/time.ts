@@ -42,11 +42,11 @@ export function getValidTimeSlots(
     const minHourAllowedByConstraints = minTimeStr ? getSlotStartHour(minTimeStr) ?? 0 : 0;
 
     for (const slot of TIME_SLOTS) {
-        // If scheduling for today, slot start time must be at least 1 hour from now
+        // If scheduling for today, slot remains valid until 30 minutes before slot ends (startHour + 2.5)
         if (isToday) {
-            const currentHour = now.getHours();
-            const minAllowedHour = currentHour + 1; // 1 hr buffer
-            if (slot.startHour < minAllowedHour) continue;
+            const currentDecimalHour = now.getHours() + now.getMinutes() / 60;
+            const slotCutoffHour = slot.startHour + 2.5; // e.g. 14.5 (2:30 PM) for 12-3 PM slot
+            if (currentDecimalHour > slotCutoffHour) continue;
         }
 
         // If minTimeStr is provided (e.g., delivery time on same day), pickup must be >= delivery slot

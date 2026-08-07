@@ -6,6 +6,7 @@ import { Shadows } from "@/constants/designTokens";
 import { Fonts, FontSizes } from "@/constants/fonts";
 import { Colors, Layout, scale, Spacing } from "@/constants/theme";
 import { useAuthState } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { useFadeSlideIn, useRentalFilters } from "@/hooks";
 import { triggerHaptic } from "@/utils";
@@ -57,6 +58,7 @@ const FEATURES = [
 
 export default function MyRentalsScreen() {
   const { user, userId, accessToken, isLoading } = useAuthState();
+  const { showToast } = useToast();
   const {
     statusFilter,
     setStatusFilter,
@@ -177,6 +179,20 @@ export default function MyRentalsScreen() {
 
   const handleRentalPress = (rental: (typeof rentals)[number]) => {
     if (rental.status === "delivered") {
+      const deliveryTimestamp = rental.deliveredAt
+        ? rental.deliveredAt
+        : (rental.deliveryDate ? new Date(rental.deliveryDate).getTime() : 0);
+      const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
+      const elapsed = Date.now() - deliveryTimestamp;
+
+      if (deliveryTimestamp > 0 && elapsed < TWELVE_HOURS_MS) {
+        const hoursLeft = Math.ceil((TWELVE_HOURS_MS - elapsed) / (1000 * 60 * 60));
+        showToast(
+          `Pickup Will be enabled after 12 hours from delivery (${hoursLeft}h remaining).`,
+          "info"
+        );
+        return;
+      }
       router.push(`/rental/schedule-return?rentalId=${rental._id}`);
     } else if (rental.status === "pickup_scheduled") {
       router.push(`/rental/payment?rentalId=${rental._id}`);
@@ -274,6 +290,7 @@ export default function MyRentalsScreen() {
                 bookAuthor={item.book?.author || "Unknown Author"}
                 coverUrl={item.coverUrl || item.book?.coverUrl}
                 status={item.status}
+                deliveredAt={item.deliveredAt}
                 deliveryDate={item.deliveryDate}
                 deliveryTime={item.deliveryTime}
                 pickupDate={item.pickupDate}
@@ -739,3 +756,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.medium,
   },
 });
+function showToast(arg0: string, arg1: string) {
+  throw new Error("Function not implemented.");
+}
+

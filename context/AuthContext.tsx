@@ -509,21 +509,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
             const storedRefresh = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
 
-            // L6 FIX: Clear local session first so active Convex queries instantly skip
-            // and unmount before the server officially revokes the session.
+            // Clear local session first so active Convex queries skip and unmount cleanly
             await clearLocalSession();
 
-            // Fire-and-forget: revoke the session server-side without blocking the UI.
-            // The local session is already cleared, so the user sees instant sign-out.
+            // Revoke session server-side safely ignoring errors
             if (storedRefresh) {
-                signOutMutation({ refreshToken: storedRefresh }).catch(() => {
+                try {
+                    await signOutMutation({ refreshToken: storedRefresh });
+                } catch {
                     // Ignore backend errors on sign-out
-                });
+                }
             }
         } catch {
             // Ignore backend errors on sign-out
         } finally {
-            // Failsafe in case clearLocalSession was skipped due to error, though unlikely
             if (signOutInProgressRef.current) {
                 await clearLocalSession();
                 signOutInProgressRef.current = false;
@@ -539,7 +538,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } finally {
             signOutInProgressRef.current = false;
             if (globalRouter.canDismiss()) globalRouter.dismissAll();
-            globalRouter.replace("/(auth)/sign-in");
+            globalRouter.replace("/(tabs)");
         }
     }, [clearLocalSession]);
 

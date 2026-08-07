@@ -44,15 +44,19 @@ export const clearPushToken = mutation({
             return;
         }
 
-        const userId = await getUserIdFromAccessToken(ctx, args.accessToken);
-        const user = await ctx.db.get(userId);
-        if (!user || user.pushToken !== args.pushToken) {
-            return;
-        }
+        try {
+            const userId = await getUserIdFromAccessToken(ctx, args.accessToken);
+            const user = await ctx.db.get(userId);
+            if (!user || user.pushToken !== args.pushToken) {
+                return;
+            }
 
-        await ctx.db.patch(userId, {
-            pushToken: undefined,
-        });
+            await ctx.db.patch(userId, {
+                pushToken: undefined,
+            });
+        } catch {
+            // Session already revoked or expired during logout; push token cleanup is no longer needed
+        }
     },
 });
 

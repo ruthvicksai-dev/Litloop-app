@@ -123,13 +123,14 @@ export default function SearchScreen() {
         visible={showAllGenres}
         transparent
         animationType="fade"
+        statusBarTranslucent
         onRequestClose={() => setShowAllGenres(false)}
       >
         <Pressable
           style={styles.modalOverlay}
           onPress={() => setShowAllGenres(false)}
         >
-          <Pressable style={styles.modalCard}>
+          <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>All Genres</Text>
               <TouchableOpacity
@@ -139,7 +140,10 @@ export default function SearchScreen() {
                 <Ionicons name="close" size={20} color={Colors.text} />
               </TouchableOpacity>
             </View>
-            <View style={styles.modalBody}>
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.modalBody}
+            >
               {allGenres.map((genre) => (
                 <View key={genre} style={styles.modalChipCell}>
                   <GenreChip
@@ -153,7 +157,7 @@ export default function SearchScreen() {
                   />
                 </View>
               ))}
-            </View>
+            </ScrollView>
           </Pressable>
         </Pressable>
       </Modal>
@@ -220,11 +224,13 @@ const styles = StyleSheet.create({
   /* ── Modal ───────────────────────────────────────────────────────────── */
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(20,15,12,0.35)",
+    backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
-    paddingHorizontal: scale(12),
+    paddingHorizontal: scale(16),
+    paddingVertical: scale(40),
   },
   modalCard: {
+    maxHeight: "82%",
     borderRadius: Layout.cardRadiusLarge + 4,
     padding: Spacing.md,
     backgroundColor: Colors.surfaceCard,
@@ -255,10 +261,11 @@ const styles = StyleSheet.create({
   modalBody: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between",
-    rowGap: scale(8),
+    justifyContent: "flex-start",
+    gap: scale(8),
+    paddingBottom: Spacing.xs,
   },
   modalChipCell: {
-    width: "31.8%",
+    width: "31%",
   },
 });

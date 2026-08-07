@@ -1,6 +1,8 @@
 export const GENRES = [
     "Action",
     "Adventure",
+    "Fiction",
+    "Crime",
     "Thriller",
     "Mystery",
     "Romance",
@@ -11,7 +13,6 @@ export const GENRES = [
     "Self Help",
     "History",
     "Rom com",
-    "Education",
 ] as const;
 
 export type Genre = (typeof GENRES)[number];

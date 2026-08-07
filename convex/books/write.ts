@@ -92,7 +92,7 @@ export const add = mutation({
             normalizeSingleGenre(args.genre) ??
             detectedGenre ??
             normalizedGenres[0] ??
-            "Education";
+            "Self Help";
         const pageCount = normalizeOptionalPositiveInt(args.pageCount, "Page count");
         const publishedYear = normalizePublishedYear(args.publishedYear);
         const isTop10 = Boolean(args.isTop10);
@@ -207,7 +207,7 @@ export const update = mutation({
         }
 
         if (!nextGenre) {
-            nextGenre = "Education"; // final fallback
+            nextGenre = "Self Help"; // final fallback
         }
 
         if (
