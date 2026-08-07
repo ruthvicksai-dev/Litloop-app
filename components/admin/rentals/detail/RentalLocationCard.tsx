@@ -87,10 +87,19 @@ export default function RentalLocationCard({ type, zone, location, date, time }:
             )}
 
             {!isDelivery && location.phone && (
-                <View style={styles.detailRow}>
+                <TouchableOpacity
+                    style={styles.detailRow}
+                    onPress={() => {
+                        const cleaned = location.phone?.replace(/[^\d+]/g, "");
+                        if (cleaned) Linking.openURL(`tel:${cleaned}`);
+                    }}
+                >
                     <Ionicons name="call-outline" size={16} color={primaryColor} />
-                    <Text style={[styles.detailValue, { color: primaryColor }]}>{location.phone}</Text>
-                </View>
+                    <Text style={[styles.detailValue, { color: primaryColor, fontFamily: Fonts.bold }]}>
+                        {location.phone}
+                    </Text>
+                    <Ionicons name="open-outline" size={14} color={primaryColor} />
+                </TouchableOpacity>
             )}
 
             {date && (

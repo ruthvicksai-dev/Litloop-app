@@ -110,7 +110,7 @@ export const submitVerification = mutation({
         }
 
         // Create verification record
-        await ctx.db.insert("student_verifications", {
+        const verificationId = await ctx.db.insert("student_verifications", {
             userId,
             studentIdNumber: trimmedIdNumber,
             fullNameOnId: trimmedName,
@@ -120,6 +120,13 @@ export const submitVerification = mutation({
             status: "pending",
             createdAt: now,
             updatedAt: now,
+        });
+
+        // Notify admins of new verification request
+        await ctx.scheduler.runAfter(0, internal.notifications.notifyAdminsOfVerificationRequest, {
+            verificationId,
+            userName: user.name ?? "A user",
+            studentIdNumber: trimmedIdNumber,
         });
 
         // Audit log

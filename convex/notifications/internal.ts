@@ -227,6 +227,25 @@ export const notifyAdminsOfPickupScheduled = internalAction({
     },
 });
 
+export const notifyAdminsOfVerificationRequest = internalAction({
+    args: { verificationId: v.id("student_verifications"), userName: v.string(), studentIdNumber: v.string() },
+    handler: async (ctx, args) => {
+        const admins = await ctx.runQuery(internal.notifications.internal.getAdminRecipients, {});
+        const dataJson = JSON.stringify({ verificationId: args.verificationId, type: "verification" });
+
+        for (const admin of admins as any[]) {
+            await saveAndPushToRecipient(
+                ctx,
+                admin,
+                "Student Verification Request 🎓",
+                `${args.userName} (ID: ${args.studentIdNumber}) submitted a student verification request.`,
+                "system",
+                dataJson
+            );
+        }
+    },
+});
+
 /**
  * L4: Cleanup old notifications — called by the weekly cron in crons.ts.
  * Deletes user_notifications records older than TTL_DAYS days.
