@@ -17,6 +17,8 @@ type AdminDashboardStatsProps = {
         currentMonthLabel: string;
     };
     onPressRevenue: () => void;
+    totalBooks: number;
+    monthlyGrowth: number;
 };
 
 const formatCurrency = (value: number) =>
@@ -24,212 +26,340 @@ const formatCurrency = (value: number) =>
         maximumFractionDigits: 0,
     }).format(value);
 
+function MiniSparkline() {
+    const points = [20, 35, 28, 40, 32, 55, 48, 65];
+    const max = Math.max(...points);
+    const min = Math.min(...points);
+    const range = max - min || 1;
+    const height = 42;
+    const width = 125;
+
+    return (
+        <View style={sparkStyles.container}>
+            {points.map((val, i) => {
+                const x = (i / (points.length - 1)) * (width - 8);
+                const y = height - ((val - min) / range) * (height - 10) - 5;
+                return (
+                    <View
+                        key={i}
+                        style={[
+                            sparkStyles.dot,
+                            {
+                                left: x,
+                                top: y,
+                            },
+                        ]}
+                    />
+                );
+            })}
+            {points.slice(0, -1).map((val, i) => {
+                const x1 = (i / (points.length - 1)) * (width - 8) + 2.5;
+                const y1 = height - ((val - min) / range) * (height - 10) - 2.5;
+                const nextVal = points[i + 1];
+                const x2 = ((i + 1) / (points.length - 1)) * (width - 8) + 2.5;
+                const y2 = height - ((nextVal - min) / range) * (height - 10) - 2.5;
+
+                const dx = x2 - x1;
+                const dy = y2 - y1;
+                const len = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+
+                return (
+                    <View
+                        key={`line-${i}`}
+                        style={[
+                            sparkStyles.line,
+                            {
+                                left: x1,
+                                top: y1,
+                                width: len,
+                                transform: [{ rotate: `${angle}deg` }],
+                            },
+                        ]}
+                    />
+                );
+            })}
+        </View>
+    );
+}
+
+const sparkStyles = StyleSheet.create({
+    container: {
+        width: 125,
+        height: 42,
+        position: "relative",
+    },
+    dot: {
+        position: "absolute",
+        width: 5,
+        height: 5,
+        borderRadius: 2.5,
+        backgroundColor: Colors.primary,
+    },
+    line: {
+        position: "absolute",
+        height: 2,
+        backgroundColor: Colors.primary,
+        borderRadius: 1,
+        transformOrigin: "left center",
+    },
+});
+
 export default function AdminDashboardStats({
     stats,
     revenue,
     onPressRevenue,
+    totalBooks,
+    monthlyGrowth,
 }: AdminDashboardStatsProps) {
-    const items = [
+    const statCards = [
         {
-            key: "total",
-            label: "Total",
-            value: stats.total,
-            icon: "apps" as const,
+            key: "books",
+            label: "Total Books",
+            value: totalBooks,
+            icon: "library" as const,
             color: Colors.primary,
-            backgroundColor: Colors.primary + "15",
+            bgColor: Colors.primary + "15",
+            tag: "All Books",
+            tagColor: Colors.primary,
         },
         {
             key: "active",
-            label: "Active",
+            label: "Active Rentals",
             value: stats.active,
-            icon: "reader" as const,
+            icon: "book" as const,
             color: "#1E3A8A",
-            backgroundColor: "#1E3A8A15",
+            bgColor: "#1E3A8A15",
+            tag: "Currently Active",
+            tagColor: "#1E3A8A",
         },
         {
             key: "pending",
             label: "Pending",
             value: stats.pending,
             icon: "time" as const,
-            color: "#b98325",
-            backgroundColor: "#b9832515",
+            color: "#D97706",
+            bgColor: "#D9770615",
+            tag: "Needs Attention",
+            tagColor: "#D97706",
         },
         {
             key: "completed",
-            label: "Done",
+            label: "Completed",
             value: stats.completed,
             icon: "checkmark-circle" as const,
-            color: "#137252",
-            backgroundColor: "#13725210",
+            color: "#059669",
+            bgColor: "#05966915",
+            tag: "This Month",
+            tagColor: "#059669",
         },
     ];
 
+    const growthPositive = monthlyGrowth >= 0;
+
     return (
-        <View style={styles.statsRow}>
-            <TouchableOpacity style={styles.revenueCard} activeOpacity={0.9} onPress={onPressRevenue}>
-                <View style={styles.revenueHeader}>
-                    <View>
-                        <Text style={styles.revenueEyebrow}>Revenue</Text>
-                        <Text style={styles.revenueTitle}>₹{formatCurrency(revenue.monthlyRevenue)}</Text>
+        <View style={styles.wrapper}>
+            {/* ─── Total Revenue Analytics Card ─── */}
+            <TouchableOpacity style={styles.revenueCard} activeOpacity={0.85} onPress={onPressRevenue}>
+                <View style={styles.revenueRow}>
+                    {/* Left: Title + Amount + Sparkline + Growth */}
+                    <View style={styles.revenueLeft}>
+                        <Text style={styles.revenueEyebrow}>Total Revenue</Text>
+                        <Text style={styles.revenueAmount}>₹{formatCurrency(revenue.monthlyRevenue)}</Text>
+                        <MiniSparkline />
+                        <View style={styles.growthRow}>
+                            <Ionicons
+                                name={growthPositive ? "trending-up" : "trending-down"}
+                                size={13}
+                                color={growthPositive ? "#059669" : Colors.error}
+                            />
+                            <Text
+                                style={[
+                                    styles.growthText,
+                                    { color: growthPositive ? "#059669" : Colors.error },
+                                ]}
+                            >
+                                {growthPositive ? "+" : ""}{monthlyGrowth}% vs last month
+                            </Text>
+                        </View>
                     </View>
-                    <View style={styles.revenueIconWrap}>
-                        <Ionicons name="wallet-outline" size={20} color={Colors.primary} />
+
+                    {/* Right: Month + Orders */}
+                    <View style={styles.revenueRight}>
+                        <View style={styles.revenueMetricCard}>
+                            <View style={styles.metricIconRow}>
+                                <Ionicons name="calendar-outline" size={13} color={Colors.primary} />
+                                <Text style={styles.metricLabel}>This Month</Text>
+                            </View>
+                            <Text style={styles.metricValue}>{revenue.currentMonthLabel}</Text>
+                        </View>
+                        <View style={styles.revenueMetricCard}>
+                            <Text style={styles.metricLabel}>Total Orders</Text>
+                            <Text style={styles.metricValueLarge}>{revenue.monthlyOrders}</Text>
+                        </View>
                     </View>
-                </View>
-                <View style={styles.revenueMetricsRow}>
-                    <View style={styles.revenueMetric}>
-                        <Text style={styles.revenueMetricLabel}>Month</Text>
-                        <Text style={styles.revenueMetricValue}>{revenue.currentMonthLabel}</Text>
-                    </View>
-                    <View style={styles.revenueMetric}>
-                        <Text style={styles.revenueMetricLabel}>Orders</Text>
-                        <Text style={styles.revenueMetricValue}>{revenue.monthlyOrders}</Text>
-                    </View>
-                </View>
-                <View style={styles.revenueLinkRow}>
-                    <Text style={styles.revenueLink}>View revenue analytics</Text>
-                    <Ionicons name="chevron-forward" size={14} color={Colors.primary} />
                 </View>
             </TouchableOpacity>
-            {items.map((item) => (
-                <View
-                    key={item.key}
-                    style={[
-                        styles.statCard,
-                        { backgroundColor: item.backgroundColor },
-                    ]}
-                >
-                    <View style={styles.cardTop}>
-                        <View style={[styles.iconWrap, { backgroundColor: item.color }]}>
-                            <Ionicons name={item.icon} size={18} color={Colors.white} />
+
+            {/* ─── 4 Transparent Stat Boxes in 1 Row ─── */}
+            <View style={styles.statCardsRow}>
+                {statCards.map((item) => (
+                    <View key={item.key} style={styles.statCard}>
+                        <View style={[styles.statIconWrap, { backgroundColor: item.bgColor }]}>
+                            <Ionicons name={item.icon} size={18} color={item.color} />
                         </View>
-                        <View style={[styles.valueBadge, { backgroundColor: item.color + "18" }]}>
-                            <Text style={[styles.statNumber, { color: item.color }]}>{item.value}</Text>
+                        <Text
+                            style={styles.statLabel}
+                            numberOfLines={1}
+                            adjustsFontSizeToFit
+                            minimumFontScale={0.75}
+                        >
+                            {item.label}
+                        </Text>
+                        <Text style={[styles.statValue, { color: item.color }]}>{item.value}</Text>
+                        <View style={[styles.statTag, { backgroundColor: item.tagColor + "15" }]}>
+                            <Text
+                                style={[styles.statTagText, { color: item.tagColor }]}
+                                numberOfLines={1}
+                                adjustsFontSizeToFit
+                                minimumFontScale={0.75}
+                            >
+                                {item.tag}
+                            </Text>
                         </View>
                     </View>
-                    <Text style={styles.statLabel}>{item.label}</Text>
-                </View>
-            ))}
+                ))}
+            </View>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    statsRow: {
-        flexDirection: "row",
-        paddingHorizontal: 20,
-        gap: 10,
-        marginBottom: Spacing.md,
-        flexWrap: "wrap",
+    wrapper: {
+        paddingHorizontal: 14,
+        gap: 12,
+        marginTop: Spacing.sm,
     },
+    // Total Revenue Card
     revenueCard: {
-        width: "100%",
-        paddingHorizontal: 16,
-        paddingVertical: 14,
-        borderRadius: 24,
-        backgroundColor: Colors.white,
+        backgroundColor: "rgba(255,255,255,0.72)",
+        borderRadius: 22,
+        padding: 16,
         borderWidth: 1,
-        borderColor: Colors.border,
+        borderColor: "rgba(255,255,255,0.9)",
     },
-    revenueHeader: {
+    revenueRow: {
         flexDirection: "row",
+        gap: 12,
         alignItems: "center",
-        justifyContent: "space-between",
-        marginBottom: 12,
+    },
+    revenueLeft: {
+        flex: 1,
     },
     revenueEyebrow: {
         fontSize: FontSizes.caption,
-        fontFamily: Fonts.medium,
-        color: Colors.textSecondary,
-        textTransform: "uppercase",
-        letterSpacing: 0.6,
+        fontFamily: Fonts.bold,
+        color: Colors.text,
+        marginBottom: 2,
     },
-    revenueTitle: {
+    revenueAmount: {
         fontSize: FontSizes.heading,
         fontFamily: Fonts.bold,
-        color: Colors.primary,
-        marginTop: 2,
-    },
-    revenueIconWrap: {
-        width: 36,
-        aspectRatio: 1,
-        borderRadius: 18,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: Colors.primaryLight,
-    },
-    revenueMetricsRow: {
-        flexDirection: "row",
-        gap: 8,
-    },
-    revenueMetric: {
-        flex: 1,
-        backgroundColor: Colors.background,
-        borderRadius: 14,
-        paddingVertical: 10,
-        paddingHorizontal: 12,
-    },
-    revenueMetricLabel: {
-        fontSize: FontSizes.caption,
-        fontFamily: Fonts.medium,
-        color: Colors.textSecondary,
+        color: Colors.text,
         marginBottom: 4,
     },
-    revenueMetricValue: {
-        fontSize: FontSizes.subtitle,
+    growthRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 3,
+        marginTop: 5,
+    },
+    growthText: {
+        fontSize: FontSizes.tiny,
+        fontFamily: Fonts.bold,
+    },
+    revenueRight: {
+        justifyContent: "space-between",
+        gap: 8,
+        minWidth: 108,
+    },
+    revenueMetricCard: {
+        backgroundColor: "rgba(255,255,255,0.6)",
+        borderRadius: 12,
+        paddingVertical: 9,
+        paddingHorizontal: 10,
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.8)",
+    },
+    metricIconRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 3,
+        marginBottom: 2,
+    },
+    metricLabel: {
+        fontSize: FontSizes.tiny,
+        fontFamily: Fonts.medium,
+        color: Colors.textSecondary,
+    },
+    metricValue: {
+        fontSize: FontSizes.caption,
         fontFamily: Fonts.bold,
         color: Colors.text,
     },
-    revenueLink: {
-        fontSize: FontSizes.small,
-        fontFamily: Fonts.medium,
-        color: Colors.primary,
+    metricValueLarge: {
+        fontSize: FontSizes.title,
+        fontFamily: Fonts.bold,
+        color: Colors.text,
     },
-    revenueLinkRow: {
+    // 4 Transparent Stat Items in 1 Row
+    statCardsRow: {
         flexDirection: "row",
-        alignItems: "center",
-        gap: 4,
-        marginTop: 10,
+        justifyContent: "space-between",
+        alignItems: "stretch",
+        gap: 6,
     },
     statCard: {
-        flexBasis: "47%",
-        flexGrow: 1,
-        minHeight: 108,
-        paddingHorizontal: 16,
-        paddingVertical: 14,
-        borderRadius: 24,
-        justifyContent: "space-between",
-        borderWidth: 1,
-        borderColor: Colors.border,
-    },
-    cardTop: {
-        flexDirection: "row",
+        flex: 1,
+        backgroundColor: "transparent",
+        borderRadius: 16,
+        paddingVertical: 8,
+        paddingHorizontal: 2,
         alignItems: "center",
         justifyContent: "space-between",
+        minHeight: 110,
     },
-    iconWrap: {
+    statIconWrap: {
         width: 36,
-        aspectRatio: 1,
+        height: 36,
         borderRadius: 18,
         alignItems: "center",
         justifyContent: "center",
-    },
-    valueBadge: {
-        minWidth: 52,
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 999,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    statNumber: {
-        fontSize: FontSizes.titleLarge,
-        fontFamily: Fonts.bold,
+        marginBottom: 4,
     },
     statLabel: {
-        fontSize: FontSizes.small,
+        fontSize: 10,
+        fontFamily: Fonts.medium,
+        color: Colors.textSecondary,
+        textAlign: "center",
+        paddingHorizontal: 2,
+    },
+    statValue: {
+        fontSize: FontSizes.subtitle,
         fontFamily: Fonts.bold,
-        color: Colors.text,
-        marginTop: 10,
+        marginVertical: 2,
+        textAlign: "center",
+    },
+    statTag: {
+        alignSelf: "center",
+        paddingHorizontal: 5,
+        paddingVertical: 3,
+        borderRadius: 8,
+        maxWidth: "95%",
+    },
+    statTagText: {
+        fontSize: 9,
+        fontFamily: Fonts.bold,
+        textAlign: "center",
     },
 });

@@ -1,283 +1,139 @@
 import AdminDashboardHeader from "@/components/admin/dashboard/AdminDashboardHeader";
 import AdminDashboardStats from "@/components/admin/dashboard/AdminDashboardStats";
-import AdminRentalCard from "@/components/admin/rentals/AdminRentalCard";
-import AdminStatusFilters from "@/components/admin/rentals/AdminStatusFilters";
+import QuickActionGrid from "@/components/admin/dashboard/QuickActionGrid";
 import BookLoader from "@/components/ui/feedback/BookLoader";
-import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Spacing } from "@/constants/theme";
+import { Colors } from "@/constants/theme";
 import { useAuthState } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";
 import { useAdminDashboard, useFadeSlideIn } from "@/hooks";
 import { triggerHaptic } from "@/utils";
-import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
 import {
     Animated,
     RefreshControl,
-    SectionList,
+    ScrollView,
     StyleSheet,
-    Text,
-    TouchableOpacity,
     View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function AdminDashboard() {
-  const router = useRouter();
-  const { user, accessToken } = useAuthState();
-  const [refreshing, setRefreshing] = useState(false);
-  const {
-    rentals,
-    stats,
-    revenue,
-    statusFilter,
-    setStatusFilter,
-    groupedByZone,
-    handleMarkDelivered,
-    handleMarkReturned,
-    statusFilters,
-  } = useAdminDashboard();
-  const { fadeAnim, slideAnim } = useFadeSlideIn();
-  const unreadCount =
-    useQuery(
-      api.notifications.getUnreadCount,
-      accessToken ? { accessToken } : "skip",
-    ) ?? 0;
+    const router = useRouter();
+    const { accessToken } = useAuthState();
+    const [refreshing, setRefreshing] = useState(false);
+    const insets = useSafeAreaInsets();
+    const {
+        rentals,
+        stats,
+        revenue,
+        dashboardStats,
+        greeting,
+    } = useAdminDashboard();
+    const { fadeAnim, slideAnim } = useFadeSlideIn();
 
-  const onRefresh = React.useCallback(() => {
-    setRefreshing(true);
-    triggerHaptic("light");
-    setTimeout(() => setRefreshing(false), 1000);
-  }, []);
+    const unreadCount =
+        useQuery(
+            api.notifications.getUnreadCount,
+            accessToken ? { accessToken } : "skip",
+        ) ?? 0;
 
-  if (rentals === undefined) {
+    const onRefresh = React.useCallback(() => {
+        setRefreshing(true);
+        triggerHaptic("light");
+        setTimeout(() => setRefreshing(false), 1000);
+    }, []);
+
+    if (rentals === undefined && dashboardStats === undefined) {
+        return (
+            <SafeAreaView style={styles.center} edges={["bottom", "left", "right"]}>
+                <BookLoader label="Loading dashboard..." />
+            </SafeAreaView>
+        );
+    }
+
     return (
-      <View style={styles.center}>
-        <BookLoader label="Loading dashboard..." />
-      </View>
+        <SafeAreaView style={styles.container} edges={["bottom", "left", "right"]}>
+            <StatusBar style="light" animated />
+            <ScrollView
+                style={styles.flex}
+                contentContainerStyle={[
+                    styles.scrollContent,
+                    { paddingBottom: Math.max(insets.bottom + 24, 32) }
+                ]}
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={[Colors.primary]}
+                        tintColor={Colors.white}
+                        progressViewOffset={Math.max(insets.top + 20, 50)}
+                    />
+                }
+            >
+                <Animated.View
+                    style={{
+                        opacity: fadeAnim,
+                        transform: [{ translateY: slideAnim }],
+                    }}
+                >
+                    {/* Hero Header matching User Home screen gradient & SafeAreaView */}
+                    <AdminDashboardHeader
+                        greeting={greeting}
+                        unreadCount={unreadCount}
+                        todayOrders={dashboardStats?.todayOrders ?? 0}
+                        todayRevenue={dashboardStats?.todayRevenue ?? 0}
+                        onNotificationsPress={() => {
+                            triggerHaptic("light");
+                            router.push("/(admin)/notifications" as any);
+                        }}
+                        onSettingsPress={() => {
+                            triggerHaptic("light");
+                            router.push("/(admin)/payment-settings" as any);
+                        }}
+                    />
+
+                    {/* Body Content in LitLoop Theme Light Background */}
+                    <AdminDashboardStats
+                        stats={stats}
+                        revenue={revenue}
+                        totalBooks={dashboardStats?.totalBooks ?? 0}
+                        monthlyGrowth={dashboardStats?.monthlyGrowth ?? 0}
+                        onPressRevenue={() => {
+                            triggerHaptic("light");
+                            router.push("/(admin)/analytics");
+                        }}
+                    />
+
+                    {/* Quick Actions Grid */}
+                    <QuickActionGrid
+                        statusCounts={dashboardStats?.statusCounts}
+                    />
+                </Animated.View>
+            </ScrollView>
+        </SafeAreaView>
     );
-  }
-
-  return (
-    <SafeAreaView style={styles.container}>
-      <SectionList
-        sections={groupedByZone}
-        keyExtractor={(item) => item._id}
-        style={styles.flex}
-        ListHeaderComponent={
-          <Animated.View
-            style={{
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            }}
-          >
-            <AdminDashboardHeader
-              unreadCount={unreadCount}
-              onNotificationsPress={() => {
-                triggerHaptic("light");
-                router.push("/(admin)/notifications" as any);
-              }}
-              onSettingsPress={() => {
-                triggerHaptic("light");
-                router.push("/(admin)/payment-settings" as any);
-              }}
-            />
-
-            <AdminDashboardStats
-              stats={stats}
-              revenue={revenue}
-              onPressRevenue={() => {
-                triggerHaptic("light");
-                router.push("/(admin)/analytics");
-              }}
-            />
-
-            <View style={styles.quickActionsScroll}>
-              <TouchableOpacity
-                style={styles.quickAction}
-                onPress={() => {
-                  triggerHaptic("light");
-                  router.push("/(admin)/verify-payment");
-                }}
-              >
-                <Ionicons
-                  name="shield-checkmark"
-                  size={18}
-                  color={Colors.primary}
-                />
-                <Text style={styles.quickActionText}>Verify</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.quickAction}
-                onPress={() => {
-                  triggerHaptic("light");
-                  router.push("/(admin)/books");
-                }}
-              >
-                <Ionicons name="book" size={18} color={Colors.primary} />
-                <Text style={styles.quickActionText}>Books</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.quickAction}
-                onPress={() => {
-                  triggerHaptic("light");
-                  router.push("/(admin)/add-book");
-                }}
-              >
-                <Ionicons name="add-circle" size={18} color={Colors.primary} />
-                <Text style={styles.quickActionText}>Add Book</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.quickAction}
-                onPress={() => {
-                  triggerHaptic("light");
-                  router.push("/(admin)/series" as any);
-                }}
-              >
-                <Ionicons name="layers" size={18} color={Colors.primary} />
-                <Text style={styles.quickActionText}>Series</Text>
-              </TouchableOpacity>
-            </View>
-
-            <AdminStatusFilters
-              items={statusFilters}
-              selected={statusFilter}
-              onSelect={(item) => {
-                triggerHaptic("light");
-                setStatusFilter(item as (typeof statusFilters)[number]);
-              }}
-            />
-          </Animated.View>
-        }
-        renderSectionHeader={({ section }) => (
-          <View style={styles.sectionHeader}>
-            <Ionicons name="location" size={18} color={Colors.primary} />
-            <Text style={styles.sectionTitle}>{section.title}</Text>
-            <View style={styles.sectionBadge}>
-              <Text style={styles.sectionCount}>{section.data.length}</Text>
-            </View>
-          </View>
-        )}
-        renderItem={({ item }) => (
-          <AdminRentalCard
-            item={item}
-            onScheduleDelivery={() =>
-              router.push(`/(admin)/schedule-delivery?rentalId=${item._id}`)
-            }
-            onVerifyPayment={() =>
-              router.push(`/(admin)/verify-payment?rentalId=${item._id}`)
-            }
-            onMarkDelivered={() => handleMarkDelivered(item._id)}
-            onMarkReturned={() => handleMarkReturned(item._id)}
-          />
-        )}
-        contentContainerStyle={styles.list}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={[Colors.primary]}
-          />
-        }
-        ListEmptyComponent={
-          <View style={styles.empty}>
-            <Ionicons
-              name="clipboard-outline"
-              size={48}
-              color={Colors.textLight}
-              style={{ marginBottom: Spacing.md }}
-            />
-            <Text style={styles.emptyText}>No rentals found</Text>
-          </View>
-        }
-      />
-    </SafeAreaView>
-  );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  flex: {
-    flex: 1,
-  },
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: Colors.background,
-  },
-  quickActionsScroll: {
-    flexDirection: "row",
-    paddingHorizontal: 20,
-    gap: 10,
-    marginBottom: Spacing.md,
-  },
-  quickAction: {
-    flex: 1,
-    backgroundColor: Colors.white,
-    borderRadius: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  quickActionText: {
-    fontSize: FontSizes.tiny,
-    fontFamily: Fonts.bold,
-    color: Colors.text,
-    textAlign: "center",
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: 20,
-    backgroundColor: Colors.background,
-  },
-  sectionTitle: {
-    fontSize: FontSizes.bodyLarge,
-    fontFamily: Fonts.bold,
-    color: Colors.text,
-  },
-  sectionBadge: {
-    backgroundColor: Colors.primary + "20",
-    borderRadius: 10,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-  },
-  sectionCount: {
-    fontSize: FontSizes.caption,
-    fontFamily: Fonts.bold,
-    color: Colors.primary,
-  },
-  list: {
-    flexGrow: 1,
-    paddingBottom: 20,
-  },
-  empty: {
-    alignItems: "center",
-    paddingHorizontal: 24,
-    paddingVertical: 56,
-  },
-  emptyIcon: {
-    fontSize: FontSizes.display,
-    marginBottom: Spacing.md,
-  },
-  emptyText: {
-    fontSize: FontSizes.subtitle,
-    color: Colors.textSecondary,
-    fontFamily: Fonts.regular,
-  },
+    container: {
+        flex: 1,
+        backgroundColor: Colors.background,
+    },
+    flex: {
+        flex: 1,
+        backgroundColor: Colors.background,
+    },
+    scrollContent: {
+        backgroundColor: Colors.background,
+    },
+    center: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: Colors.background,
+    },
 });

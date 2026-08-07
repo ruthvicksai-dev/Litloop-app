@@ -14,6 +14,7 @@ export default function AdminLayout() {
             }}
         >
             <Stack.Screen name="dashboard" />
+            <Stack.Screen name="orders" />
             <Stack.Screen name="analytics" />
             <Stack.Screen name="revenue" />
             <Stack.Screen name="add-book" />

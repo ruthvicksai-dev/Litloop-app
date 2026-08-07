@@ -61,6 +61,7 @@ import type * as readLater_read from "../readLater/read.js";
 import type * as readLater_write from "../readLater/write.js";
 import type * as rentals from "../rentals.js";
 import type * as rentals_addresses from "../rentals/addresses.js";
+import type * as rentals_dashboardStats from "../rentals/dashboardStats.js";
 import type * as rentals_helpers from "../rentals/helpers.js";
 import type * as rentals_internal from "../rentals/internal.js";
 import type * as rentals_read from "../rentals/read.js";
@@ -141,6 +142,7 @@ declare const fullApi: ApiFromModules<{
   "readLater/write": typeof readLater_write;
   rentals: typeof rentals;
   "rentals/addresses": typeof rentals_addresses;
+  "rentals/dashboardStats": typeof rentals_dashboardStats;
   "rentals/helpers": typeof rentals_helpers;
   "rentals/internal": typeof rentals_internal;
   "rentals/read": typeof rentals_read;

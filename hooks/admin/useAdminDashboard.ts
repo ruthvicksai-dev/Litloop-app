@@ -16,6 +16,13 @@ const STATUS_FILTERS = [
     "returned",
 ] as const;
 
+function getGreeting(): string {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good Morning,";
+    if (hour < 17) return "Good Afternoon,";
+    return "Good Evening,";
+}
+
 export function useAdminDashboard() {
     const { showToast } = useToast();
     const { accessToken } = useAuthState();
@@ -54,6 +61,17 @@ export function useAdminDashboard() {
         lastValidRevenueRef.current = serverRevenue;
     }
     const effectiveRevenue = serverRevenue ?? lastValidRevenueRef.current;
+
+    // Lightweight dashboard stats for badges, today's metrics, total books, growth
+    const dashboardStatsRaw = useQuery(
+        api.rentals.getDashboardStats,
+        accessToken ? { accessToken } : "skip"
+    );
+    const lastValidDashboardStatsRef = useRef<typeof dashboardStatsRaw>(undefined);
+    if (dashboardStatsRaw !== undefined) {
+        lastValidDashboardStatsRef.current = dashboardStatsRaw;
+    }
+    const dashboardStats = dashboardStatsRaw ?? lastValidDashboardStatsRef.current;
 
     const stats = useMemo(() => {
         const rentalList = effectiveRentals?.page ?? [];
@@ -127,6 +145,8 @@ export function useAdminDashboard() {
         await signOut();
     };
 
+    const greeting = useMemo(() => getGreeting(), []);
+
     return {
         rentals: effectiveRentals,
         stats,
@@ -138,5 +158,7 @@ export function useAdminDashboard() {
         handleMarkReturned,
         handleSignOut,
         statusFilters: STATUS_FILTERS,
+        dashboardStats,
+        greeting,
     };
 }
