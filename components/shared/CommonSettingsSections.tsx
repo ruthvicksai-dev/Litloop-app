@@ -44,13 +44,6 @@ export function CommonSettingsSections() {
     const clearPushToken = useMutation(api.notifications.clearPushToken);
     const deleteAccountMutation = useMutation(api.users.deleteAccount);
 
-    React.useEffect(() => {
-        if (user === null && accessToken === null && !isSigningOut) {
-            if (globalRouter.canDismiss()) globalRouter.dismissAll();
-            globalRouter.replace("/(tabs)");
-        }
-    }, [user, accessToken, isSigningOut]);
-
     const handleTogglePush = async (value: boolean) => {
         if (!accessToken) return;
         triggerHaptic("light");
@@ -86,8 +79,7 @@ export function CommonSettingsSections() {
         } catch {
             // Ignore sign-out errors
         } finally {
-            if (globalRouter.canDismiss()) globalRouter.dismissAll();
-            globalRouter.replace("/(tabs)");
+            setIsSigningOut(false);
         }
     };
 

@@ -25,247 +25,259 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function AdminDashboard() {
-    const router = useRouter();
-    const { accessToken } = useAuthState();
-    const [refreshing, setRefreshing] = useState(false);
-    const {
-        rentals,
-        stats,
-        revenue,
-        statusFilter,
-        setStatusFilter,
-        groupedByZone,
-        handleMarkDelivered,
-        handleMarkReturned,
-        statusFilters,
-    } = useAdminDashboard();
-    const { fadeAnim, slideAnim } = useFadeSlideIn();
-    const unreadCount = useQuery(
-        api.notifications.getUnreadCount,
-        accessToken ? { accessToken } : "skip"
+  const router = useRouter();
+  const { user, accessToken } = useAuthState();
+  const [refreshing, setRefreshing] = useState(false);
+  const {
+    rentals,
+    stats,
+    revenue,
+    statusFilter,
+    setStatusFilter,
+    groupedByZone,
+    handleMarkDelivered,
+    handleMarkReturned,
+    statusFilters,
+  } = useAdminDashboard();
+  const { fadeAnim, slideAnim } = useFadeSlideIn();
+  const unreadCount =
+    useQuery(
+      api.notifications.getUnreadCount,
+      accessToken ? { accessToken } : "skip",
     ) ?? 0;
 
-    const onRefresh = React.useCallback(() => {
-        setRefreshing(true);
-        triggerHaptic("light");
-        setTimeout(() => setRefreshing(false), 1000);
-    }, []);
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    triggerHaptic("light");
+    setTimeout(() => setRefreshing(false), 1000);
+  }, []);
 
-    if (rentals === undefined) {
-        return (
-            <View style={styles.center}>
-                <BookLoader label="Loading dashboard..." />
-            </View>
-        );
-    }
-
+  if (rentals === undefined) {
     return (
-        <SafeAreaView style={styles.container}>
-            <SectionList
-                sections={groupedByZone}
-                keyExtractor={(item) => item._id}
-                style={styles.flex}
-                ListHeaderComponent={
-                    <Animated.View
-                        style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}
-                    >
-                        <AdminDashboardHeader
-                            unreadCount={unreadCount}
-                            onNotificationsPress={() => {
-                                triggerHaptic("light");
-                                router.push("/(admin)/notifications" as any);
-                            }}
-                            onSettingsPress={() => {
-                                triggerHaptic("light");
-                                router.push("/(admin)/payment-settings" as any);
-                            }}
-                        />
+      <View style={styles.center}>
+        <BookLoader label="Loading dashboard..." />
+      </View>
+    );
+  }
 
-                        <AdminDashboardStats
-                            stats={stats}
-                            revenue={revenue}
-                            onPressRevenue={() => {
-                                triggerHaptic("light");
-                                router.push("/(admin)/analytics");
-                            }}
-                        />
-
-                        <View style={styles.quickActionsScroll}>
-                            <TouchableOpacity
-                                style={styles.quickAction}
-                                onPress={() => {
-                                    triggerHaptic("light");
-                                    router.push("/(admin)/verify-payment");
-                                }}
-                            >
-                                <Ionicons name="shield-checkmark" size={18} color={Colors.primary} />
-                                <Text style={styles.quickActionText}>Verify</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.quickAction}
-                                onPress={() => {
-                                    triggerHaptic("light");
-                                    router.push("/(admin)/books");
-                                }}
-                            >
-                                <Ionicons name="book" size={18} color={Colors.primary} />
-                                <Text style={styles.quickActionText}>Books</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.quickAction}
-                                onPress={() => {
-                                    triggerHaptic("light");
-                                    router.push("/(admin)/add-book");
-                                }}
-                            >
-                                <Ionicons name="add-circle" size={18} color={Colors.primary} />
-                                <Text style={styles.quickActionText}>Add Book</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.quickAction}
-                                onPress={() => {
-                                    triggerHaptic("light");
-                                    router.push("/(admin)/series" as any);
-                                }}
-                            >
-                                <Ionicons name="layers" size={18} color={Colors.primary} />
-                                <Text style={styles.quickActionText}>Series</Text>
-                            </TouchableOpacity>
-                        </View>
-
-                        <AdminStatusFilters
-                            items={statusFilters}
-                            selected={statusFilter}
-                            onSelect={(item) => {
-                                triggerHaptic("light");
-                                setStatusFilter(item as (typeof statusFilters)[number]);
-                            }}
-                        />
-                    </Animated.View>
-                }
-                renderSectionHeader={({ section }) => (
-                    <View style={styles.sectionHeader}>
-                        <Ionicons name="location" size={18} color={Colors.primary} />
-                        <Text style={styles.sectionTitle}>{section.title}</Text>
-                        <View style={styles.sectionBadge}>
-                            <Text style={styles.sectionCount}>{section.data.length}</Text>
-                        </View>
-                    </View>
-                )}
-                renderItem={({ item }) => (
-                    <AdminRentalCard
-                        item={item}
-                        onScheduleDelivery={() =>
-                            router.push(`/(admin)/schedule-delivery?rentalId=${item._id}`)
-                        }
-                        onVerifyPayment={() =>
-                            router.push(`/(admin)/verify-payment?rentalId=${item._id}`)
-                        }
-                        onMarkDelivered={() => handleMarkDelivered(item._id)}
-                        onMarkReturned={() => handleMarkReturned(item._id)}
-                    />
-                )}
-                contentContainerStyle={styles.list}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={onRefresh}
-                        colors={[Colors.primary]}
-                    />
-                }
-                ListEmptyComponent={
-                    <View style={styles.empty}>
-                        <Ionicons name="clipboard-outline" size={48} color={Colors.textLight} style={{ marginBottom: Spacing.md }} />
-                        <Text style={styles.emptyText}>No rentals found</Text>
-                    </View>
-                }
+  return (
+    <SafeAreaView style={styles.container}>
+      <SectionList
+        sections={groupedByZone}
+        keyExtractor={(item) => item._id}
+        style={styles.flex}
+        ListHeaderComponent={
+          <Animated.View
+            style={{
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            }}
+          >
+            <AdminDashboardHeader
+              unreadCount={unreadCount}
+              onNotificationsPress={() => {
+                triggerHaptic("light");
+                router.push("/(admin)/notifications" as any);
+              }}
+              onSettingsPress={() => {
+                triggerHaptic("light");
+                router.push("/(admin)/payment-settings" as any);
+              }}
             />
 
-        </SafeAreaView>
-    );
+            <AdminDashboardStats
+              stats={stats}
+              revenue={revenue}
+              onPressRevenue={() => {
+                triggerHaptic("light");
+                router.push("/(admin)/analytics");
+              }}
+            />
+
+            <View style={styles.quickActionsScroll}>
+              <TouchableOpacity
+                style={styles.quickAction}
+                onPress={() => {
+                  triggerHaptic("light");
+                  router.push("/(admin)/verify-payment");
+                }}
+              >
+                <Ionicons
+                  name="shield-checkmark"
+                  size={18}
+                  color={Colors.primary}
+                />
+                <Text style={styles.quickActionText}>Verify</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.quickAction}
+                onPress={() => {
+                  triggerHaptic("light");
+                  router.push("/(admin)/books");
+                }}
+              >
+                <Ionicons name="book" size={18} color={Colors.primary} />
+                <Text style={styles.quickActionText}>Books</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.quickAction}
+                onPress={() => {
+                  triggerHaptic("light");
+                  router.push("/(admin)/add-book");
+                }}
+              >
+                <Ionicons name="add-circle" size={18} color={Colors.primary} />
+                <Text style={styles.quickActionText}>Add Book</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.quickAction}
+                onPress={() => {
+                  triggerHaptic("light");
+                  router.push("/(admin)/series" as any);
+                }}
+              >
+                <Ionicons name="layers" size={18} color={Colors.primary} />
+                <Text style={styles.quickActionText}>Series</Text>
+              </TouchableOpacity>
+            </View>
+
+            <AdminStatusFilters
+              items={statusFilters}
+              selected={statusFilter}
+              onSelect={(item) => {
+                triggerHaptic("light");
+                setStatusFilter(item as (typeof statusFilters)[number]);
+              }}
+            />
+          </Animated.View>
+        }
+        renderSectionHeader={({ section }) => (
+          <View style={styles.sectionHeader}>
+            <Ionicons name="location" size={18} color={Colors.primary} />
+            <Text style={styles.sectionTitle}>{section.title}</Text>
+            <View style={styles.sectionBadge}>
+              <Text style={styles.sectionCount}>{section.data.length}</Text>
+            </View>
+          </View>
+        )}
+        renderItem={({ item }) => (
+          <AdminRentalCard
+            item={item}
+            onScheduleDelivery={() =>
+              router.push(`/(admin)/schedule-delivery?rentalId=${item._id}`)
+            }
+            onVerifyPayment={() =>
+              router.push(`/(admin)/verify-payment?rentalId=${item._id}`)
+            }
+            onMarkDelivered={() => handleMarkDelivered(item._id)}
+            onMarkReturned={() => handleMarkReturned(item._id)}
+          />
+        )}
+        contentContainerStyle={styles.list}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[Colors.primary]}
+          />
+        }
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            <Ionicons
+              name="clipboard-outline"
+              size={48}
+              color={Colors.textLight}
+              style={{ marginBottom: Spacing.md }}
+            />
+            <Text style={styles.emptyText}>No rentals found</Text>
+          </View>
+        }
+      />
+    </SafeAreaView>
+  );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: Colors.background,
-    },
-    flex: {
-        flex: 1,
-    },
-    center: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: Colors.background,
-    },
-    quickActionsScroll: {
-        flexDirection: "row",
-        paddingHorizontal: 20,
-        gap: 10,
-        marginBottom: Spacing.md,
-    },
-    quickAction: {
-        flex: 1,
-        backgroundColor: Colors.white,
-        borderRadius: 14,
-        paddingVertical: 14,
-        paddingHorizontal: 12,
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 6,
-        shadowColor: Colors.shadow,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
-        shadowRadius: 6,
-        elevation: 2,
-    },
-    quickActionText: {
-        fontSize: FontSizes.tiny,
-        fontFamily: Fonts.bold,
-        color: Colors.text,
-        textAlign: "center",
-    },
-    sectionHeader: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 8,
-        paddingVertical: Spacing.sm,
-        paddingHorizontal: 20,
-        backgroundColor: Colors.background,
-    },
-    sectionTitle: {
-        fontSize: FontSizes.bodyLarge,
-        fontFamily: Fonts.bold,
-        color: Colors.text,
-    },
-    sectionBadge: {
-        backgroundColor: Colors.primary + "20",
-        borderRadius: 10,
-        paddingHorizontal: 8,
-        paddingVertical: 2,
-    },
-    sectionCount: {
-        fontSize: FontSizes.caption,
-        fontFamily: Fonts.bold,
-        color: Colors.primary,
-    },
-    list: {
-        flexGrow: 1,
-        paddingBottom: 20,
-    },
-    empty: {
-        alignItems: "center",
-        paddingHorizontal: 24,
-        paddingVertical: 56,
-    },
-    emptyIcon: {
-        fontSize: FontSizes.display,
-        marginBottom: Spacing.md,
-    },
-    emptyText: {
-        fontSize: FontSizes.subtitle,
-        color: Colors.textSecondary,
-        fontFamily: Fonts.regular,
-    },
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  flex: {
+    flex: 1,
+  },
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: Colors.background,
+  },
+  quickActionsScroll: {
+    flexDirection: "row",
+    paddingHorizontal: 20,
+    gap: 10,
+    marginBottom: Spacing.md,
+  },
+  quickAction: {
+    flex: 1,
+    backgroundColor: Colors.white,
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  quickActionText: {
+    fontSize: FontSizes.tiny,
+    fontFamily: Fonts.bold,
+    color: Colors.text,
+    textAlign: "center",
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: 20,
+    backgroundColor: Colors.background,
+  },
+  sectionTitle: {
+    fontSize: FontSizes.bodyLarge,
+    fontFamily: Fonts.bold,
+    color: Colors.text,
+  },
+  sectionBadge: {
+    backgroundColor: Colors.primary + "20",
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  sectionCount: {
+    fontSize: FontSizes.caption,
+    fontFamily: Fonts.bold,
+    color: Colors.primary,
+  },
+  list: {
+    flexGrow: 1,
+    paddingBottom: 20,
+  },
+  empty: {
+    alignItems: "center",
+    paddingHorizontal: 24,
+    paddingVertical: 56,
+  },
+  emptyIcon: {
+    fontSize: FontSizes.display,
+    marginBottom: Spacing.md,
+  },
+  emptyText: {
+    fontSize: FontSizes.subtitle,
+    color: Colors.textSecondary,
+    fontFamily: Fonts.regular,
+  },
 });

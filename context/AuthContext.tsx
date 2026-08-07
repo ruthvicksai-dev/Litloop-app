@@ -509,8 +509,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
             const storedRefresh = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
 
-            // Clear local session first so active Convex queries skip and unmount cleanly
+            // Clear local session first so user state becomes null
             await clearLocalSession();
+
+            // Perform clean navigation directly to /(tabs) guest view
+            globalRouter.replace("/(tabs)");
 
             // Revoke session server-side safely ignoring errors
             if (storedRefresh) {
@@ -534,11 +537,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSessionExpired(false);
         signOutInProgressRef.current = true;
         try {
+            globalRouter.replace("/(tabs)");
             await clearLocalSession();
         } finally {
             signOutInProgressRef.current = false;
-            if (globalRouter.canDismiss()) globalRouter.dismissAll();
-            globalRouter.replace("/(tabs)");
         }
     }, [clearLocalSession]);
 

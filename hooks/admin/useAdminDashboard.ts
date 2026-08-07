@@ -3,7 +3,7 @@ import { useToast } from "@/context/ToastContext";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 const STATUS_FILTERS = [
     "all",
@@ -32,6 +32,14 @@ export function useAdminDashboard() {
             }
             : "skip"
     );
+
+    // Cache last valid rentals so unmounting during sign-out never reverts to undefined or triggers BookLoader
+    const lastValidRentalsRef = useRef<typeof rentals>(undefined);
+    if (rentals !== undefined) {
+        lastValidRentalsRef.current = rentals;
+    }
+    const effectiveRentals = rentals ?? lastValidRentalsRef.current;
+
     const markDelivered = useMutation(api.rentals.markDelivered);
     const markReturned = useMutation(api.rentals.markReturned);
     const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>("all");
@@ -41,9 +49,14 @@ export function useAdminDashboard() {
         api.analytics.getDashboardRevenue,
         accessToken ? { accessToken } : "skip"
     );
+    const lastValidRevenueRef = useRef<typeof serverRevenue>(undefined);
+    if (serverRevenue !== undefined) {
+        lastValidRevenueRef.current = serverRevenue;
+    }
+    const effectiveRevenue = serverRevenue ?? lastValidRevenueRef.current;
 
     const stats = useMemo(() => {
-        const rentalList = rentals?.page ?? [];
+        const rentalList = effectiveRentals?.page ?? [];
 
         return {
             total: rentalList.length,
@@ -57,20 +70,20 @@ export function useAdminDashboard() {
                 ["paid", "returned"].includes(rental.status)
             ).length,
         };
-    }, [rentals]);
+    }, [effectiveRentals]);
 
     const revenue = useMemo(() => {
-        if (serverRevenue) return serverRevenue;
+        if (effectiveRevenue) return effectiveRevenue;
         return { monthlyRevenue: 0, monthlyOrders: 0, currentMonthLabel: "" };
-    }, [serverRevenue]);
+    }, [effectiveRevenue]);
 
     const filteredRentals = useMemo(() => {
-        const rentalList = rentals?.page ?? [];
+        const rentalList = effectiveRentals?.page ?? [];
 
         return statusFilter === "all"
             ? rentalList
             : rentalList.filter((rental) => rental.status === statusFilter);
-    }, [rentals, statusFilter]);
+    }, [effectiveRentals, statusFilter]);
 
     const groupedByZone = useMemo(() => {
         const groups: Record<string, typeof filteredRentals> = {};
@@ -115,7 +128,7 @@ export function useAdminDashboard() {
     };
 
     return {
-        rentals,
+        rentals: effectiveRentals,
         stats,
         revenue,
         statusFilter,
