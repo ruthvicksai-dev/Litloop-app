@@ -193,9 +193,12 @@ export default function MyRentalsScreen() {
         );
         return;
       }
-      router.push(`/rental/schedule-return?rentalId=${rental._id}`);
-    } else if (rental.status === "pickup_scheduled") {
-      router.push(`/rental/payment?rentalId=${rental._id}`);
+    } else if (rental.status === "pickup_scheduled" || rental.status === "payment_pending") {
+      if (rental.paymentStatus === "cash_pending" || rental.paymentMethod === "cash" || rental.paymentStatus === "paid") {
+        showToast("Your return pickup is scheduled. Please keep the book ready for collection!", "info");
+      } else {
+        router.push(`/rental/payment?rentalId=${rental._id}`);
+      }
     }
   };
 
@@ -290,6 +293,7 @@ export default function MyRentalsScreen() {
                 bookAuthor={item.book?.author || "Unknown Author"}
                 coverUrl={item.coverUrl || item.book?.coverUrl}
                 status={item.status}
+                paymentStatus={item.paymentStatus}
                 deliveredAt={item.deliveredAt}
                 deliveryDate={item.deliveryDate}
                 deliveryTime={item.deliveryTime}

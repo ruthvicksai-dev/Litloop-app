@@ -1,3 +1,4 @@
+import AdminHeader from "@/components/admin/core/AdminHeader";
 import { CommonSettingsSections } from "@/components/shared/CommonSettingsSections";
 import { SettingsSkeleton } from "@/components/ui/skeletons/SettingsSkeleton";
 import { Fonts, FontSizes } from "@/constants/fonts";
@@ -16,36 +17,23 @@ export default function SettingsScreen() {
 
     if (!user) {
         return (
-            <SafeAreaView style={styles.container}>
-                <View style={styles.header}>
-                    <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                        <Ionicons name="chevron-back" size={24} color={Colors.text} />
-                    </TouchableOpacity>
-                    <Text style={styles.headerTitle} allowFontScaling={false}>
-                        Settings
-                    </Text>
-                    <View style={styles.headerSpacer} />
-                </View>
-                <SettingsSkeleton />
-            </SafeAreaView>
+            <View style={styles.container}>
+                <AdminHeader title="Settings" variant="dark" />
+                <SafeAreaView style={styles.flex} edges={["bottom", "left", "right"]}>
+                    <SettingsSkeleton />
+                </SafeAreaView>
+            </View>
         );
     }
 
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                    <Ionicons name="chevron-back" size={24} color={Colors.text} />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle} allowFontScaling={false}>
-                    Settings
-                </Text>
-                <View style={styles.headerSpacer} />
-            </View>
+        <View style={styles.container}>
+            <AdminHeader title="Settings" variant="dark" />
 
-            <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-                {/* ─── Account Section (user-specific) ─── */}
-                <Text style={styles.sectionLabel}>ACCOUNT</Text>
+            <SafeAreaView style={styles.flex} edges={["bottom", "left", "right"]}>
+                <ScrollView contentContainerStyle={[styles.content, { paddingTop: Spacing.md }]} showsVerticalScrollIndicator={false}>
+                    {/* ─── Account Section (user-specific) ─── */}
+                    <Text style={styles.sectionLabel}>ACCOUNT</Text>
                 <View style={styles.section}>
                     <TouchableOpacity
                         style={styles.row}
@@ -182,6 +170,7 @@ export default function SettingsScreen() {
                 <CommonSettingsSections />
             </ScrollView>
         </SafeAreaView>
+    </View>
     );
 }
 
@@ -190,26 +179,8 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: Colors.background,
     },
-    header: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        paddingHorizontal: Layout.screenPaddingWide,
-        paddingVertical: Spacing.sm,
-    },
-    backBtn: {
-        width: 40,
-        height: 40,
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    headerTitle: {
-        fontSize: FontSizes.title,
-        color: Colors.text,
-        fontFamily: Fonts.bold,
-    },
-    headerSpacer: {
-        width: 40,
+    flex: {
+        flex: 1,
     },
     content: {
         paddingHorizontal: 20,

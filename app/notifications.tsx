@@ -1,3 +1,4 @@
+import AdminHeader from "@/components/admin/core/AdminHeader";
 import { NotificationItem } from "@/components/notifications/NotificationItem";
 import { GuestView } from "@/components/profile/GuestProfileView";
 import { EmptyState } from "@/components/ui/feedback/EmptyState";
@@ -101,23 +102,17 @@ export default function NotificationsScreen() {
 
     if (isLoading) {
         return (
-            <SafeAreaView style={styles.container}>
-                <View style={styles.headerBar}>
-                    <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                        <Ionicons name="chevron-back" size={24} color={Colors.text} />
-                    </TouchableOpacity>
-                    <Text style={styles.headerTitle} allowFontScaling={false}>
-                        Notifications
-                    </Text>
-                    <View style={styles.headerSpacer} />
-                </View>
-                <View style={styles.summaryRow}>
-                    <Skeleton width={120} height={18} />
-                </View>
-                <View style={styles.emptyContainer}>
-                    <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 40 }} />
-                </View>
-            </SafeAreaView>
+            <View style={styles.container}>
+                <AdminHeader title="Notifications" variant="dark" />
+                <SafeAreaView style={styles.flex} edges={["bottom", "left", "right"]}>
+                    <View style={styles.summaryRow}>
+                        <Skeleton width={120} height={18} />
+                    </View>
+                    <View style={styles.emptyContainer}>
+                        <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 40 }} />
+                    </View>
+                </SafeAreaView>
+            </View>
         );
     }
 
@@ -134,70 +129,64 @@ export default function NotificationsScreen() {
     }
 
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.headerBar}>
-                <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                    <Ionicons name="chevron-back" size={24} color={Colors.text} />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle} allowFontScaling={false}>
-                    Notifications
-                </Text>
-                <View style={styles.headerSpacer} />
-            </View>
+        <View style={styles.container}>
+            <AdminHeader title="Notifications" variant="dark" />
 
-            <View style={styles.summaryRow}>
-                <Text style={styles.summaryText}>
-                    {unreadCount > 0 ? `${unreadCount} unread` : "All caught up!"}
-                </Text>
-                {unreadCount > 0 && (
-                    <TouchableOpacity onPress={handleMarkAllRead} style={styles.markAllBtn}>
-                        <Text style={styles.markAllText}>Mark all read</Text>
-                    </TouchableOpacity>
-                )}
-            </View>
-
-            {user && !user.pushToken && (
-                <View style={styles.pushPromptContainer}>
-                    <View style={styles.pushPromptContent}>
-                        <Ionicons name="notifications-off-outline" size={24} color={Colors.warning} />
-                        <View style={styles.pushPromptTextContainer}>
-                            <Text style={styles.pushPromptTitle}>Push Notifications Disabled</Text>
-                            <Text style={styles.pushPromptSubtitle}>
-                                Turn on push notifications so you don{"'"}t miss important updates.
-                            </Text>
-                        </View>
-                    </View>
-                    <TouchableOpacity style={styles.pushPromptButton} onPress={handleEnablePush}>
-                        <Text style={styles.pushPromptButtonText}>Enable</Text>
-                    </TouchableOpacity>
+            <SafeAreaView style={styles.flex} edges={["bottom", "left", "right"]}>
+                <View style={[styles.summaryRow, { paddingTop: Spacing.md }]}>
+                    <Text style={styles.summaryText}>
+                        {unreadCount > 0 ? `${unreadCount} unread` : "All caught up!"}
+                    </Text>
+                    {unreadCount > 0 && (
+                        <TouchableOpacity onPress={handleMarkAllRead} style={styles.markAllBtn}>
+                            <Text style={styles.markAllText}>Mark all read</Text>
+                        </TouchableOpacity>
+                    )}
                 </View>
-            )}
 
-            <FlatList
-                data={notifications}
-                keyExtractor={(item) => item._id}
-                contentContainerStyle={
-                    notifications?.length === 0 ? styles.emptyContainer : styles.listContent
-                }
-                ListEmptyComponent={
-                    notifications === undefined ? null : (
-                        <EmptyState
-                            icon="notifications-outline"
-                            title="No notifications yet"
-                            subtitle="Delivery, pickup, and availability alerts will appear here."
-                        />
-                    )
-                }
-                renderItem={({ item }) => (
-                    <NotificationItem
-                        item={item}
-                        onPress={handlePress}
-                        icon={TYPE_ICON[item.type] ?? "notifications-outline"}
-                    />
+                {user && !user.pushToken && (
+                    <View style={styles.pushPromptContainer}>
+                        <View style={styles.pushPromptContent}>
+                            <Ionicons name="notifications-off-outline" size={24} color={Colors.warning} />
+                            <View style={styles.pushPromptTextContainer}>
+                                <Text style={styles.pushPromptTitle}>Push Notifications Disabled</Text>
+                                <Text style={styles.pushPromptSubtitle}>
+                                    Turn on push notifications so you don{"'"}t miss important updates.
+                                </Text>
+                            </View>
+                        </View>
+                        <TouchableOpacity style={styles.pushPromptButton} onPress={handleEnablePush}>
+                            <Text style={styles.pushPromptButtonText}>Enable</Text>
+                        </TouchableOpacity>
+                    </View>
                 )}
-                ItemSeparatorComponent={() => <View style={styles.separator} />}
-            />
-        </SafeAreaView>
+
+                <FlatList
+                    data={notifications}
+                    keyExtractor={(item) => item._id}
+                    contentContainerStyle={
+                        notifications?.length === 0 ? styles.emptyContainer : styles.listContent
+                    }
+                    ListEmptyComponent={
+                        notifications === undefined ? null : (
+                            <EmptyState
+                                icon="notifications-outline"
+                                title="No notifications yet"
+                                subtitle="Delivery, pickup, and availability alerts will appear here."
+                            />
+                        )
+                    }
+                    renderItem={({ item }) => (
+                        <NotificationItem
+                            item={item}
+                            onPress={handlePress}
+                            icon={TYPE_ICON[item.type] ?? "notifications-outline"}
+                        />
+                    )}
+                    ItemSeparatorComponent={() => <View style={styles.separator} />}
+                />
+            </SafeAreaView>
+        </View>
     );
 }
 
@@ -206,26 +195,8 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: Colors.background,
     },
-    headerBar: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        paddingHorizontal: Layout.screenPaddingWide,
-        paddingVertical: Spacing.sm,
-    },
-    backBtn: {
-        width: 40,
-        height: 40,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    headerTitle: {
-        fontSize: FontSizes.title,
-        color: Colors.text,
-        fontFamily: Fonts.bold,
-    },
-    headerSpacer: {
-        width: 40,
+    flex: {
+        flex: 1,
     },
     summaryRow: {
         flexDirection: "row",

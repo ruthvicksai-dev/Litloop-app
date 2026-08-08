@@ -207,7 +207,7 @@ describe("selectCashPayment", () => {
     const rental = await t.run(async (ctx: any) => ctx.db.get(rentalId));
     expect(rental.paymentMethod).toBe("cash");
     expect(rental.paymentStatus).toBe("cash_pending");
-    expect(rental.status).toBe("payment_pending");
+    expect(rental.status).toBe("pickup_scheduled");
   });
 
   it("rejects already-paid rental", async () => {

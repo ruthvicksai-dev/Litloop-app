@@ -1,3 +1,4 @@
+import AdminHeader from "@/components/admin/core/AdminHeader";
 import BookLoader from "@/components/ui/feedback/BookLoader";
 import Button from "@/components/ui/core/Button";
 import ConfirmActionModal from "@/components/ui/feedback/ConfirmActionModal";
@@ -43,10 +44,10 @@ export default function PaymentScreen() {
         handleCancelPickup,
     } = usePaymentScreen(rentalId);
 
-    // Resolve dynamic config from backend, with env-var fallbacks
-    const upiId = paymentSettings?.upiId ?? UPI_ID_FALLBACK;
-    const merchantName = paymentSettings?.merchantName ?? PAYEE_NAME_FALLBACK;
-    const upiOnHold = paymentSettings === null;
+    // Resolve dynamic UPI configuration configured by admin in backend
+    const upiId = paymentSettings?.upiId ?? "";
+    const merchantName = paymentSettings?.merchantName ?? "Lit Loop";
+    const upiOnHold = paymentSettings === null || !paymentSettings?.upiId;
 
     const { isOnline } = useNetworkStatus();
     const { showToast } = useToast();
@@ -84,6 +85,32 @@ export default function PaymentScreen() {
         }
     }, [rental?.paymentExpiresAt]);
 
+    const handleOpenUpiApp = async () => {
+        const orderIdStr = typeof rentalId === "string" ? rentalId : "";
+        const url = buildUpiUri(
+            rental?.totalRent ?? 0,
+            orderIdStr,
+            upiId,
+            merchantName
+        );
+
+        try {
+            const canOpen = await Linking.canOpenURL(url);
+            if (canOpen) {
+                await Linking.openURL(url);
+                return;
+            }
+        } catch {
+            // Fall through to direct open
+        }
+
+        try {
+            await Linking.openURL(url);
+        } catch {
+            showToast(`Could not launch UPI app. Please scan the QR code or pay to ${upiId}.`, "info");
+        }
+    };
+
     const onSubmitUpiPayment = () => {
         if (!isOnline) {
             showToast("Internet is required to submit payment.", "error");
@@ -110,39 +137,36 @@ export default function PaymentScreen() {
 
     if (!rental) {
         return (
-            <View style={styles.center}>
-                <BookLoader label="Loading payment..." />
+            <View style={styles.container}>
+                <AdminHeader title="Payment" variant="dark" />
+                <SafeAreaView style={styles.flex} edges={["bottom", "left", "right"]}>
+                    <View style={styles.center}>
+                        <BookLoader label="Loading payment..." />
+                    </View>
+                </SafeAreaView>
             </View>
         );
     }
 
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.flex}>
+        <View style={styles.container}>
+            <AdminHeader title="Payment" variant="dark" />
+
+            <SafeAreaView style={styles.flex} edges={["bottom", "left", "right"]}>
                 <KeyboardAwareScrollView
-                    contentContainerStyle={[styles.scroll, { paddingBottom: Math.max(140, 90 + insets.bottom) }]}
+                    contentContainerStyle={[styles.scroll, { paddingBottom: Math.max(140, 90 + insets.bottom), paddingTop: Spacing.md }]}
                     keyboardShouldPersistTaps="handled"
                     keyboardDismissMode="none"
                     showsVerticalScrollIndicator={false}
                 >
-                    <View style={styles.header}>
-                        <TouchableOpacity
-                            onPress={() => router.back()}
-                            style={styles.backButton}
-                            accessibilityRole="button"
-                            accessibilityLabel="Go back"
-                        >
-                            <Ionicons name="chevron-back" size={24} color={Colors.text} />
-                        </TouchableOpacity>
-                        <View style={styles.headerText}>
-                            <Text style={styles.title}>Payment</Text>
-                            <Text style={styles.subtitle}>{rental.book?.title}</Text>
-                        </View>
-                    </View>
-
                     <View style={styles.amountCard}>
                         <Text style={styles.amountLabel}>Total Amount</Text>
                         <Text style={styles.amountValue}>₹ {rental.totalRent || 0}</Text>
+                        {rental.book?.title ? (
+                            <Text style={styles.amountSubtitle} numberOfLines={1}>
+                                {rental.book.title}
+                            </Text>
+                        ) : null}
                     </View>
 
                     {timeLeft ? (
@@ -244,48 +268,50 @@ export default function PaymentScreen() {
 
                     {paymentMethod === "upi" ? (
                         <View style={styles.section}>
-                            <View style={styles.qrCard}>
-                                <Text style={styles.qrTitle}>Scan QR to Pay</Text>
+                            {upiId ? (
+                                <View style={styles.qrCard}>
+                                    <Text style={styles.qrTitle}>Scan QR to Pay</Text>
 
-                                {/* Real UPI QR — amount bound to this specific order */}
-                                <View style={styles.qrWrapper}>
-                                    <QRCode
-                                        value={buildUpiUri(
-                                            rental.totalRent ?? 0,
-                                            typeof rentalId === "string" ? rentalId : "",
-                                            upiId,
-                                            merchantName
-                                        )}
-                                        size={scale(180)}
-                                        color={Colors.text}
-                                        backgroundColor="#FFFFFF"
-                                        quietZone={12}
-                                    />
-                                </View>
-
-                                <Text style={styles.qrUpiId}>{upiId}</Text>
-                                <Text style={styles.qrNote}>
-                                    Pay ₹{rental.totalRent ?? 0} using any UPI app
-                                </Text>
-
-                                {/* UPI deep link — opens phone's UPI app directly */}
-                                <TouchableOpacity
-                                    style={styles.openUpiBtn}
-                                    onPress={() =>
-                                        Linking.openURL(
-                                            buildUpiUri(
+                                    {/* High-contrast NPCI compliant QR code */}
+                                    <View style={styles.qrWrapper}>
+                                        <QRCode
+                                            value={buildUpiUri(
                                                 rental.totalRent ?? 0,
                                                 typeof rentalId === "string" ? rentalId : "",
                                                 upiId,
                                                 merchantName
-                                            )
-                                        ).catch(() => { })
-                                    }
-                                >
-                                    <Ionicons name="phone-portrait-outline" size={scale(16)} color={Colors.primary} />
-                                    <Text style={styles.openUpiText}>Open in UPI App</Text>
-                                </TouchableOpacity>
-                            </View>
+                                            )}
+                                            size={scale(180)}
+                                            color="#000000"
+                                            backgroundColor="#FFFFFF"
+                                            quietZone={8}
+                                            ecl="M"
+                                        />
+                                    </View>
+
+                                    <Text style={styles.qrUpiId}>{upiId}</Text>
+                                    <Text style={styles.qrNote}>
+                                        Scan with Google Pay, PhonePe, Paytm or any UPI app to pay ₹{rental.totalRent ?? 0}
+                                    </Text>
+
+                                    <TouchableOpacity
+                                        style={styles.openUpiBtn}
+                                        activeOpacity={0.85}
+                                        onPress={handleOpenUpiApp}
+                                    >
+                                        <Ionicons name="phone-portrait-outline" size={scale(16)} color={Colors.white} />
+                                        <Text style={styles.openUpiBtnText}>Pay with any UPI App (GPay / PhonePe / Paytm)</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            ) : (
+                                <View style={[styles.qrCard, { paddingVertical: Spacing.xl }]}>
+                                    <Ionicons name="alert-circle-outline" size={40} color={Colors.warning} style={{ marginBottom: Spacing.sm }} />
+                                    <Text style={styles.qrTitle}>UPI Currently On Hold</Text>
+                                    <Text style={[styles.qrNote, { maxWidth: 280 }]}>
+                                        The administrator has not activated a UPI ID yet. Please select Cash on Pickup to complete your order.
+                                    </Text>
+                                </View>
+                            )}
 
                             {/* Compliance: no misleading instant success message */}
                             <View style={styles.disclaimer}>
@@ -356,23 +382,23 @@ export default function PaymentScreen() {
                         </View>
                     ) : null}
                 </KeyboardAwareScrollView>
-            </View>
 
-            <ConfirmActionModal
-                visible={isCancelModalVisible}
-                title="Cancel Pickup?"
-                message="Are you sure you want to cancel the scheduled pickup? Your rental timer will resume."
-                confirmLabel="Yes, Cancel"
-                cancelLabel="No"
-                tone="danger"
-                loading={canceling}
-                onConfirm={() => {
-                    setCancelModalVisible(false);
-                    handleCancelPickup();
-                }}
-                onCancel={() => setCancelModalVisible(false)}
-            />
-        </SafeAreaView>
+                <ConfirmActionModal
+                    visible={isCancelModalVisible}
+                    title="Cancel Pickup?"
+                    message="Are you sure you want to cancel the scheduled pickup? Your rental timer will resume."
+                    confirmLabel="Yes, Cancel"
+                    cancelLabel="No"
+                    tone="danger"
+                    loading={canceling}
+                    onConfirm={() => {
+                        setCancelModalVisible(false);
+                        handleCancelPickup();
+                    }}
+                    onCancel={() => setCancelModalVisible(false)}
+                />
+            </SafeAreaView>
+        </View>
     );
 }
 
@@ -472,6 +498,12 @@ const styles = StyleSheet.create({
         color: Colors.white,
         fontFamily: Fonts.bold,
     },
+    amountSubtitle: {
+        fontSize: FontSizes.caption,
+        color: "rgba(255,255,255,0.85)",
+        fontFamily: Fonts.medium,
+        marginTop: 4,
+    },
     sectionTitle: {
         fontSize: FontSizes.subtitle,
         fontFamily: Fonts.bold,
@@ -561,18 +593,19 @@ const styles = StyleSheet.create({
     openUpiBtn: {
         flexDirection: "row",
         alignItems: "center",
-        gap: 6,
+        justifyContent: "center",
+        gap: 8,
         paddingHorizontal: Spacing.lg,
-        paddingVertical: Spacing.sm,
-        borderRadius: 999,
-        borderWidth: 1.5,
-        borderColor: Colors.primary,
-        backgroundColor: Colors.primaryLight,
+        paddingVertical: 12,
+        borderRadius: 12,
+        backgroundColor: Colors.primary,
+        width: "100%",
+        marginTop: 4,
     },
-    openUpiText: {
-        fontSize: FontSizes.body,
+    openUpiBtnText: {
+        fontSize: FontSizes.caption,
         fontFamily: Fonts.bold,
-        color: Colors.primary,
+        color: Colors.white,
     },
     // Compliance disclaimer
     disclaimer: {

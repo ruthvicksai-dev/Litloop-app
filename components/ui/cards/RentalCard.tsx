@@ -2,9 +2,8 @@ import { Fonts, FontSizes } from "@/constants/fonts";
 import {
     Colors,
     Layout,
-    RENTAL_STATUS_LABELS,
     Spacing,
-    STATUS_COLORS,
+    getRentalStatusMeta,
     scale,
 } from "@/constants/theme";
 import { Borders, Shadows } from "@/constants/designTokens";
@@ -24,6 +23,7 @@ interface RentalCardProps {
     bookTitle: string;
     bookAuthor: string;
     status: string;
+    paymentStatus?: string;
     coverUrl?: string | null;
     deliveredAt?: number;
     deliveryDate?: string;
@@ -39,6 +39,7 @@ export default function RentalCard({
     bookTitle,
     bookAuthor,
     status,
+    paymentStatus,
     coverUrl,
     deliveredAt,
     deliveryDate,
@@ -76,8 +77,10 @@ export default function RentalCard({
         }
     }, [status, deliveredAt, deliveryDate, rentPerDay]);
 
-    const statusColor = STATUS_COLORS[status] || Colors.textSecondary;
-    const statusLabel = RENTAL_STATUS_LABELS[status] || status;
+    const statusMeta = getRentalStatusMeta({
+        status,
+        paymentStatus,
+    });
 
     return (
         <Animated.View style={animatedStyle}>
@@ -107,15 +110,15 @@ export default function RentalCard({
                             <Text numberOfLines={1} style={styles.cardTitle}>
                                 {bookTitle}
                             </Text>
-                            <View style={[styles.statusBadge, { backgroundColor: statusColor + "12" }]}>
-                                <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
+                            <View style={[styles.statusBadge, { backgroundColor: statusMeta.color + "12" }]}>
+                                <View style={[styles.statusDot, { backgroundColor: statusMeta.color }]} />
                                 <Text
-                                    style={[styles.statusText, { color: statusColor }]}
+                                    style={[styles.statusText, { color: statusMeta.color }]}
                                     numberOfLines={1}
                                     adjustsFontSizeToFit
                                     minimumFontScale={0.8}
                                 >
-                                    {statusLabel}
+                                    {statusMeta.badgeText}
                                 </Text>
                             </View>
                         </View>
@@ -231,26 +234,23 @@ const styles = StyleSheet.create({
     statusBadge: {
         flexDirection: "row",
         alignItems: "center",
-        gap: scale(4),
-        paddingHorizontal: scale(7),
-        paddingVertical: scale(3),
+        gap: 6,
+        paddingHorizontal: 10,
+        paddingVertical: 4,
         borderRadius: 999,
         borderWidth: 1,
         borderColor: Colors.borderSubtle,
-        width: scale(102),
-        minHeight: scale(24),
         flexShrink: 0,
     },
     statusDot: {
-        width: scale(5),
-        height: scale(5),
-        borderRadius: scale(3),
+        width: 7,
+        height: 7,
+        borderRadius: 3.5,
     },
     statusText: {
-        fontSize: FontSizes.tiny,
+        fontSize: FontSizes.caption,
         fontFamily: Fonts.bold,
-        flex: 1,
-        textAlign: "center",
+        letterSpacing: 0.1,
     },
     cardAuthor: {
         fontSize: FontSizes.small,

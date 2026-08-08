@@ -6,20 +6,27 @@ import { StyleSheet, View } from "react-native";
 
 interface RentalActionButtonsProps {
     status: string;
+    paymentStatus?: string;
+    paymentMethod?: string;
     rentalId: string;
     onMarkDelivered: () => void;
     onMarkReturned: () => void;
+    onVerifyCash?: () => void;
 }
 
 export default function RentalActionButtons({
     status,
+    paymentStatus,
+    paymentMethod,
     rentalId,
     onMarkDelivered,
     onMarkReturned,
+    onVerifyCash,
 }: RentalActionButtonsProps) {
     const router = useRouter();
 
-    if (!["requested", "delivery_scheduled", "payment_pending", "paid"].includes(status)) {
+    const isVisible = ["requested", "delivery_scheduled", "payment_pending", "paid", "pickup_scheduled"].includes(status);
+    if (!isVisible) {
         return null;
     }
 
@@ -45,19 +52,41 @@ export default function RentalActionButtons({
                     variant="primary"
                 />
             )}
-            {status === "payment_pending" && (
+            {(paymentStatus === "verification_pending" || (status === "payment_pending" && paymentMethod !== "cash")) && (
                 <Button
-                    title="Verify Payment"
+                    title="Verify Payment (UPI)"
                     onPress={() => {
                         triggerHaptic("light");
                         router.push(`/(admin)/verify-payment?rentalId=${rentalId}`);
                     }}
                     variant="primary"
+                    style={{ backgroundColor: "#8B5CF6" }}
+                />
+            )}
+            {paymentStatus === "cash_pending" && onVerifyCash && (
+                <Button
+                    title="Verify Cash Payment (Mark Paid)"
+                    onPress={() => {
+                        triggerHaptic("light");
+                        onVerifyCash();
+                    }}
+                    variant="primary"
+                    style={{ backgroundColor: "#10B981" }}
+                />
+            )}
+            {paymentStatus === "rejected" && (
+                <Button
+                    title="Review Payment Submission"
+                    onPress={() => {
+                        triggerHaptic("light");
+                        router.push(`/(admin)/verify-payment?rentalId=${rentalId}`);
+                    }}
+                    variant="outline"
                 />
             )}
             {status === "paid" && (
                 <Button
-                    title="Mark as Returned"
+                    title="Mark as Returned & Restock Book"
                     onPress={() => {
                         triggerHaptic("light");
                         onMarkReturned();

@@ -1,3 +1,4 @@
+import AdminHeader from "@/components/admin/core/AdminHeader";
 import BookLoader from "@/components/ui/feedback/BookLoader";
 import Button from "@/components/ui/core/Button";
 import ConfirmActionModal from "@/components/ui/feedback/ConfirmActionModal";
@@ -26,7 +27,6 @@ import React from "react";
 import {
     StyleSheet,
     Text,
-    TouchableOpacity,
     View,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
@@ -98,34 +98,65 @@ export default function ScheduleReturnScreen() {
             longitude: nextLongitude,
         });
 
-        if (address && address.length > 0) {
-            const addr = address[0];
-            const fullAddress = [addr.name, addr.street, addr.district, addr.city, addr.region, addr.postalCode]
+        if (address[0]) {
+            const formatted = [
+                address[0].name,
+                address[0].street,
+                address[0].city,
+                address[0].region,
+            ]
                 .filter(Boolean)
                 .join(", ");
-            setFormattedAddress(fullAddress);
+            setFormattedAddress(formatted);
+        }
+    };
 
-            const detectedArea = resolveDeliveryAreaFromLocation({
-                formattedAddress: fullAddress,
+    const handleAutoDetectLocation = async () => {
+        setIsLocating(true);
+        try {
+            const { status } = await Location.requestForegroundPermissionsAsync();
+            if (status !== "granted") {
+                showToast("Location permission is needed to auto-detect your address.", "error");
+                return;
+            }
+
+            const current = await getReliableCurrentLocation();
+            if (!current) {
+                showToast("Unable to fetch your precise GPS location. Please enter your address manually.", "error");
+                return;
+            }
+
+            await updateAddressFromCoords(current.coords.latitude, current.coords.longitude);
+
+            if (pickupZone === "Home") {
+                const detected = resolveDeliveryAreaFromLocation({
+                    latitude: current.coords.latitude,
+                    longitude: current.coords.longitude,
+                });
+                if (detected?.area) {
+                    setArea(detected.area.name);
+                    showToast(`Detected area: ${detected.area.name}`, "success");
+                }
+            }
+        } catch {
+            showToast("Failed to fetch location automatically.", "error");
+        } finally {
+            setIsLocating(false);
+        }
+    };
+
+    const handleAddressCoordsFound = (nextLatitude: number, nextLongitude: number) => {
+        setLatitude(nextLatitude);
+        setLongitude(nextLongitude);
+
+        if (pickupZone === "Home" && area.trim()) {
+            const validation = validateDeliveryAreaSelection({
+                selectedArea: area,
+                formattedAddress,
                 latitude: nextLatitude,
                 longitude: nextLongitude,
-            })?.area;
-            if (detectedArea) {
-                if (area && area !== detectedArea.name) {
-                    setMismatchConfig({
-                        title: "Location Mismatch",
-                        message: `We detected your location as ${detectedArea.name}, but you selected ${area}.`,
-                        confirmLabel: `Change to ${detectedArea.name}`,
-                        onConfirm: () => {
-                            setArea(detectedArea.name);
-                            setMismatchModalVisible(false);
-                        }
-                    });
-                    setMismatchModalVisible(true);
-                } else if (!area) {
-                    setArea(detectedArea.name);
-                }
-            } else if (area) {
+            });
+            if (!validation.isValid && validation.reason !== "missing_location") {
                 setMismatchConfig({
                     title: "Location Mismatch",
                     message: "Your current location does not match the selected pickup area.",
@@ -269,27 +300,24 @@ export default function ScheduleReturnScreen() {
 
     if (rental === undefined) {
         return (
-            <View style={styles.center}>
-                <BookLoader label="Loading rental..." />
+            <View style={styles.container}>
+                <AdminHeader title="Schedule Return" variant="dark" />
+                <SafeAreaView style={styles.flex} edges={["bottom", "left", "right"]}>
+                    <View style={styles.center}>
+                        <BookLoader label="Loading rental..." />
+                    </View>
+                </SafeAreaView>
             </View>
         );
     }
 
     return (
-        <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                    <Ionicons name="chevron-back" size={24} color={Colors.text} />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle} allowFontScaling={false}>
-                    Schedule Return
-                </Text>
-                <View style={styles.headerSpacer} />
-            </View>
+        <View style={styles.container}>
+            <AdminHeader title="Schedule Return" variant="dark" />
 
-            <View style={styles.flex}>
+            <SafeAreaView style={styles.flex} edges={["bottom", "left", "right"]}>
                 <KeyboardAwareScrollView
-                    contentContainerStyle={[styles.scroll, { paddingBottom: Math.max(120, 80 + insets.bottom) }]}
+                    contentContainerStyle={[styles.scroll, { paddingBottom: Math.max(120, 80 + insets.bottom), paddingTop: Spacing.md }]}
                     keyboardShouldPersistTaps="handled"
                     keyboardDismissMode="none"
                     showsVerticalScrollIndicator={false}
@@ -403,19 +431,19 @@ export default function ScheduleReturnScreen() {
                         />
                     </View>
                 </KeyboardAwareScrollView>
-            </View>
 
-            <ConfirmActionModal
-                visible={mismatchModalVisible}
-                title={mismatchConfig.title}
-                message={mismatchConfig.message}
-                confirmLabel={mismatchConfig.confirmLabel}
-                cancelLabel="Keep Selected Area"
-                stackActions
-                onConfirm={mismatchConfig.onConfirm}
-                onCancel={() => setMismatchModalVisible(false)}
-            />
-        </SafeAreaView>
+                <ConfirmActionModal
+                    visible={mismatchModalVisible}
+                    title={mismatchConfig.title}
+                    message={mismatchConfig.message}
+                    confirmLabel={mismatchConfig.confirmLabel}
+                    cancelLabel="Keep Selected Area"
+                    stackActions
+                    onConfirm={mismatchConfig.onConfirm}
+                    onCancel={() => setMismatchModalVisible(false)}
+                />
+            </SafeAreaView>
+        </View>
     );
 }
 

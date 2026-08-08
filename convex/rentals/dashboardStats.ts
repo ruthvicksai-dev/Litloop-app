@@ -36,19 +36,23 @@ export const getDashboardStats = query({
             "returned",
         ] as const;
 
-        const statusCountResults = await Promise.all(
-            statuses.map(async (status) => {
-                const items = await ctx.db
-                    .query("rentals")
-                    .withIndex("by_status", (q) => q.eq("status", status))
-                    .collect();
-                return { status, count: items.length };
-            })
-        );
+        const statusCounts: Record<string, number> = {
+            requested: 0,
+            delivery_scheduled: 0,
+            delivered: 0,
+            pickup_scheduled: 0,
+            payment_pending: 0,
+            paid: 0,
+            returned: 0,
+        };
 
-        const statusCounts: Record<string, number> = {};
-        for (const { status, count } of statusCountResults) {
-            statusCounts[status] = count;
+        for (const status of statuses) {
+            const items = await ctx.db
+                .query("rentals")
+                .withIndex("by_status", (q) => q.eq("status", status))
+                .collect();
+
+            statusCounts[status] = items.length;
         }
 
         // 2. Today's orders — count rentals created today using index range query

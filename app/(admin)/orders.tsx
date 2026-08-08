@@ -47,12 +47,20 @@ const SUBTITLE_MAP: Record<string, string> = {
     returned: "Books returned and added back to inventory",
 };
 
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useAuthState } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
+
 export default function AdminOrdersScreen() {
     const router = useRouter();
     const params = useLocalSearchParams<{ status?: string }>();
     const [refreshing, setRefreshing] = useState(false);
     const [activeZone, setActiveZone] = useState<"Home" | "College">("Home");
     const insets = useSafeAreaInsets();
+    const { accessToken } = useAuthState();
+    const { showToast } = useToast();
+    const verifyPayment = useMutation(api.payments.verifyPayment);
 
     const {
         rentals,
@@ -77,9 +85,28 @@ export default function AdminOrdersScreen() {
 
     const filteredRentals = useMemo(() => {
         const rentalList = rentals?.page ?? [];
-        return statusFilter === "all"
-            ? rentalList
-            : rentalList.filter((rental) => rental.status === statusFilter);
+        if (statusFilter === "all") return rentalList;
+
+        if (statusFilter === "payment_pending") {
+            return rentalList.filter((rental) =>
+                rental.status === "payment_pending" ||
+                rental.paymentStatus === "verification_pending"
+            );
+        }
+
+        if (statusFilter === "pickup_scheduled") {
+            return rentalList.filter((rental) =>
+                rental.status === "pickup_scheduled"
+            );
+        }
+
+        if (statusFilter === "paid") {
+            return rentalList.filter((rental) =>
+                rental.status === "paid"
+            );
+        }
+
+        return rentalList.filter((rental) => rental.status === statusFilter);
     }, [rentals, statusFilter]);
 
     const zoneRentals = useMemo(() => {
@@ -91,6 +118,20 @@ export default function AdminOrdersScreen() {
             return z !== "college";
         });
     }, [filteredRentals, activeZone]);
+
+    const handleVerifyCash = async (rentalId: string, amount: number) => {
+        try {
+            if (!accessToken) throw new Error("Unauthenticated");
+            await verifyPayment({
+                accessToken,
+                rentalId: rentalId as any,
+                approved: true,
+            });
+            showToast(`Cash payment of ₹${amount} verified. Order is now paid.`, "success");
+        } catch (e: any) {
+            showToast(e.message || "Failed to verify cash payment.", "error");
+        }
+    };
 
     if (rentals === undefined) {
         return (
@@ -173,6 +214,7 @@ export default function AdminOrdersScreen() {
                             onVerifyPayment={() =>
                                 router.push(`/(admin)/verify-payment?rentalId=${item._id}`)
                             }
+                            onVerifyCash={() => handleVerifyCash(item._id, item.totalRent ?? 0)}
                             onMarkDelivered={() => handleMarkDelivered(item._id)}
                             onMarkReturned={() => handleMarkReturned(item._id)}
                         />

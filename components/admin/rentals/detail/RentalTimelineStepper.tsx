@@ -7,19 +7,34 @@ import { StyleSheet, Text, View } from "react-native";
 interface RentalTimelineStepperProps {
     currentIndex: number;
     statusColor: string;
+    customStepLabel?: string;
 }
 
-const STATUS_FLOW = ["requested", "delivery_scheduled", "delivered", "payment_pending", "paid", "returned"];
+export const ENTERPRISE_STATUS_FLOW = [
+    { key: "requested", label: "Requested" },
+    { key: "delivery_scheduled", label: "Delivery" },
+    { key: "delivered", label: "Reading" },
+    { key: "pickup_scheduled", label: "Pickup" },
+    { key: "paid", label: "Paid" },
+    { key: "returned", label: "Returned" },
+];
 
-export default function RentalTimelineStepper({ currentIndex, statusColor }: RentalTimelineStepperProps) {
+export default function RentalTimelineStepper({
+    currentIndex,
+    statusColor,
+    customStepLabel,
+}: RentalTimelineStepperProps) {
+    const safeIndex = Math.max(0, Math.min(currentIndex, ENTERPRISE_STATUS_FLOW.length - 1));
+    const activeLabel = customStepLabel || ENTERPRISE_STATUS_FLOW[safeIndex]?.label || "Processing";
+
     return (
         <View style={styles.stepperContainer}>
             <View style={styles.stepperRow}>
-                {STATUS_FLOW.map((step, i) => {
-                    const isDone = i <= currentIndex;
-                    const isCurrent = i === currentIndex;
+                {ENTERPRISE_STATUS_FLOW.map((step, i) => {
+                    const isDone = i <= safeIndex;
+                    const isCurrent = i === safeIndex;
                     return (
-                        <React.Fragment key={step}>
+                        <React.Fragment key={step.key}>
                             <View style={styles.stepperDotWrap}>
                                 <View style={[
                                     styles.stepperDot,
@@ -29,18 +44,28 @@ export default function RentalTimelineStepper({ currentIndex, statusColor }: Ren
                                     {isDone && !isCurrent && <Ionicons name="checkmark" size={10} color={Colors.white} />}
                                     {isCurrent && <View style={styles.stepperDotInner} />}
                                 </View>
+                                <Text
+                                    style={[
+                                        styles.stepMiniLabel,
+                                        isCurrent && { color: statusColor, fontFamily: Fonts.bold },
+                                        isDone && !isCurrent && { color: Colors.text },
+                                    ]}
+                                    numberOfLines={1}
+                                >
+                                    {step.label}
+                                </Text>
                             </View>
-                            {i < STATUS_FLOW.length - 1 && (
-                                <View style={[styles.stepperLine, i < currentIndex && { backgroundColor: Colors.success }]} />
+                            {i < ENTERPRISE_STATUS_FLOW.length - 1 && (
+                                <View style={[styles.stepperLine, i < safeIndex && { backgroundColor: Colors.success }]} />
                             )}
                         </React.Fragment>
                     );
                 })}
             </View>
             <View style={styles.currentStepBadge}>
-                <Text style={styles.currentStepLabel}>Current Step:</Text>
+                <Text style={styles.currentStepLabel}>Current Stage:</Text>
                 <Text style={[styles.currentStepValue, { color: statusColor }]}>
-                    {RENTAL_STATUS_LABELS[STATUS_FLOW[currentIndex] as keyof typeof RENTAL_STATUS_LABELS] || STATUS_FLOW[currentIndex]}
+                    {activeLabel}
                 </Text>
             </View>
         </View>
@@ -97,5 +122,12 @@ const styles = StyleSheet.create({
     currentStepValue: {
         fontSize: FontSizes.caption,
         fontFamily: Fonts.bold,
+    },
+    stepMiniLabel: {
+        fontSize: 9,
+        fontFamily: Fonts.medium,
+        color: Colors.textSecondary,
+        marginTop: 4,
+        textAlign: "center",
     },
 });

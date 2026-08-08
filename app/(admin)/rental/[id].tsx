@@ -12,9 +12,8 @@ import { FontSizes, Fonts } from "@/constants/fonts";
 import {
     Colors,
     Layout,
-    RENTAL_STATUS_LABELS,
-    STATUS_COLORS,
     Spacing,
+    getRentalStatusMeta,
     scale,
 } from "@/constants/theme";
 import { useAuthState } from "@/context/AuthContext";
@@ -52,6 +51,7 @@ export default function AdminRentalDetailScreen() {
   );
   const markDelivered = useMutation(api.rentals.markDelivered);
   const markReturned = useMutation(api.rentals.markReturned);
+  const verifyPayment = useMutation(api.payments.verifyPayment);
   const { showToast } = useToast();
 
   const [loading, setLoading] = useState(false);
@@ -127,21 +127,11 @@ export default function AdminRentalDetailScreen() {
     }
   };
 
-  const STATUS_FLOW = [
-    "requested",
-    "delivery_scheduled",
-    "delivered",
-    "payment_pending",
-    "paid",
-    "returned",
-  ];
-  const currentIndex = STATUS_FLOW.indexOf(rental.status);
-  const statusColor =
-    STATUS_COLORS[rental.status as keyof typeof STATUS_COLORS] ||
-    Colors.textSecondary;
-  const statusLabel =
-    RENTAL_STATUS_LABELS[rental.status as keyof typeof RENTAL_STATUS_LABELS] ||
-    rental.status;
+  const statusMeta = getRentalStatusMeta({
+    status: rental.status,
+    paymentStatus: rental.paymentStatus,
+    paymentMethod: rental.paymentMethod,
+  });
 
   return (
     <SafeAreaView style={styles.container} edges={["bottom", "left", "right"]}>
@@ -177,13 +167,13 @@ export default function AdminRentalDetailScreen() {
               <View
                 style={[
                   styles.statusBadge,
-                  { backgroundColor: statusColor + "30" },
+                  { backgroundColor: statusMeta.color + "30" },
                 ]}
               >
                 <View
-                  style={[styles.statusDot, { backgroundColor: statusColor }]}
+                  style={[styles.statusDot, { backgroundColor: statusMeta.color }]}
                 />
-                <Text style={styles.statusBadgeText}>{statusLabel}</Text>
+                <Text style={styles.statusBadgeText}>{statusMeta.badgeText}</Text>
               </View>
             </View>
 
@@ -217,14 +207,18 @@ export default function AdminRentalDetailScreen() {
       >
         <View style={styles.statusCard}>
           <RentalStatusBanner
-            statusColor={statusColor}
-            statusLabel={statusLabel}
+            statusColor={statusMeta.color}
+            statusLabel={statusMeta.label}
             createdAt={rental.createdAt}
+            paymentLabel={statusMeta.paymentLabel}
+            paymentColor={statusMeta.paymentColor}
+            rejectionReason={rental.rejectionReason}
           />
 
           <RentalTimelineStepper
-            currentIndex={currentIndex}
-            statusColor={statusColor}
+            currentIndex={statusMeta.stepIndex}
+            statusColor={statusMeta.color}
+            customStepLabel={statusMeta.badgeText}
           />
         </View>
 
@@ -269,6 +263,8 @@ export default function AdminRentalDetailScreen() {
 
         <RentalActionButtons
           status={rental.status}
+          paymentStatus={rental.paymentStatus}
+          paymentMethod={rental.paymentMethod}
           rentalId={rental._id}
           onMarkDelivered={() =>
             handleAction(
@@ -281,10 +277,25 @@ export default function AdminRentalDetailScreen() {
               },
             )
           }
+          onVerifyCash={() =>
+            handleAction(
+              "Verify Cash Receipt?",
+              `Confirm that ₹${rental.totalRent ?? 0} cash has been received from the customer for this rental.`,
+              async () => {
+                if (!accessToken) throw new Error("Unauthenticated");
+                await verifyPayment({
+                  accessToken,
+                  rentalId: rental._id,
+                  approved: true,
+                });
+                showToast("Cash payment verified.", "success");
+              },
+            )
+          }
           onMarkReturned={() =>
             handleAction(
               "Mark Returned?",
-              "Confirm that the book has been received back in good condition and payment is verified.",
+              "Confirm that the book has been received back in good condition and restocked in warehouse inventory.",
               () => {
                 if (!accessToken)
                   return Promise.reject(new Error("Unauthenticated"));

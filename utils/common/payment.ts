@@ -1,7 +1,6 @@
-// ─── UPI Config ─────────────────────────────────────────────────────────────
-// Fallback values used when backend-driven payment settings are unavailable.
-// In production, the frontend fetches UPI config from getActiveSettings query.
-export const UPI_ID_FALLBACK = process.env.EXPO_PUBLIC_UPI_ID ?? "YOUR_UPI_ID@upi";
+// Fallback values used when backend-driven payment settings are not yet loaded.
+// The frontend fetches the active UPI config dynamically from the admin payment settings.
+export const UPI_ID_FALLBACK = process.env.EXPO_PUBLIC_UPI_ID ?? "";
 export const PAYEE_NAME_FALLBACK = "Lit Loop";
 
 // Legacy export for backward compatibility (used by components not yet migrated)
@@ -12,25 +11,26 @@ export const PAYEE_NAME = PAYEE_NAME_FALLBACK;
 export const MAX_UPLOAD_SIZE_BYTES = 10 * 1024 * 1024;
 
 /**
- * Builds a UPI payment deeplink URI.
+ * Builds a clean, universal NPCI UPI payment URI.
  *
- * @param amount   – Rental amount in INR
- * @param orderId  – Rental/order ID for transaction note
- * @param upiId    – Merchant UPI ID (from backend settings or fallback)
- * @param payeeName – Merchant display name (from backend settings or fallback)
+ * Uses standard P2P Collect format:
+ * `upi://pay?pa={upiId}&pn={payeeName}&am={amount}&cu=INR`
+ *
+ * By strictly omitting merchant-only tracking tags (`tr`, `mc`, `mode`),
+ * Google Pay (Tez) and PhonePe open their native UPI payment screen directly
+ * without triggering Google Play Merchant / PhonePe B2B SDK account validation errors.
  */
 export function buildUpiUri(
     amount: number,
-    orderId: string,
+    orderId?: string,
     upiId: string = UPI_ID_FALLBACK,
     payeeName: string = PAYEE_NAME_FALLBACK
 ): string {
-    const params = new URLSearchParams({
-        pa: upiId,
-        pn: payeeName,
-        am: amount.toFixed(2),
-        tn: `LitLoop-${orderId}`,
-        cu: "INR",
-    });
-    return `upi://pay?${params.toString()}`;
+    const rawUpiId = (upiId || "").trim();
+    if (!rawUpiId) return "";
+
+    const cleanPayee = (payeeName || "LitLoop").trim().replace(/[^a-zA-Z0-9 ]/g, "");
+    const am = Math.max(0, amount).toFixed(2);
+
+    return `upi://pay?pa=${rawUpiId}&pn=${encodeURIComponent(cleanPayee)}&am=${am}&cu=INR`;
 }

@@ -1,5 +1,5 @@
 import { FontSizes, Fonts } from "@/constants/fonts";
-import { Colors } from "@/constants/theme";
+import { Colors, PAYMENT_STATUS_COLORS, PAYMENT_STATUS_LABELS } from "@/constants/theme";
 import { triggerHaptic } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
@@ -24,8 +24,8 @@ export default function RentalPaymentCard({
 }: RentalPaymentCardProps) {
     if (totalRent === undefined && !paymentStatus) return null;
 
-    const isPaid = paymentStatus === "paid";
-    const statusColor = isPaid ? Colors.success : Colors.warning;
+    const statusColor = (paymentStatus && PAYMENT_STATUS_COLORS[paymentStatus]) || Colors.warning;
+    const statusLabel = (paymentStatus && PAYMENT_STATUS_LABELS[paymentStatus]) || paymentStatus?.replace("_", " ").toUpperCase() || "PENDING";
 
     return (
         <View style={styles.card}>
@@ -38,7 +38,7 @@ export default function RentalPaymentCard({
                     <View style={[styles.statusBadge, { backgroundColor: statusColor + "15" }]}>
                         <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
                         <Text style={[styles.statusBadgeText, { color: statusColor }]}>
-                            {paymentStatus.replace("_", " ").toUpperCase()}
+                            {statusLabel}
                         </Text>
                     </View>
                 ) : null}

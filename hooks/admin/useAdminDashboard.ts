@@ -98,9 +98,28 @@ export function useAdminDashboard() {
     const filteredRentals = useMemo(() => {
         const rentalList = effectiveRentals?.page ?? [];
 
-        return statusFilter === "all"
-            ? rentalList
-            : rentalList.filter((rental) => rental.status === statusFilter);
+        if (statusFilter === "all") return rentalList;
+
+        if (statusFilter === "payment_pending") {
+            return rentalList.filter((rental) =>
+                rental.status === "payment_pending" ||
+                rental.paymentStatus === "verification_pending"
+            );
+        }
+
+        if (statusFilter === "pickup_scheduled") {
+            return rentalList.filter((rental) =>
+                rental.status === "pickup_scheduled"
+            );
+        }
+
+        if (statusFilter === "paid") {
+            return rentalList.filter((rental) =>
+                rental.status === "paid"
+            );
+        }
+
+        return rentalList.filter((rental) => rental.status === statusFilter);
     }, [effectiveRentals, statusFilter]);
 
     const groupedByZone = useMemo(() => {
@@ -116,6 +135,33 @@ export function useAdminDashboard() {
 
         return Object.entries(groups).map(([title, data]) => ({ title, data }));
     }, [filteredRentals]);
+
+    // Compute dynamic, real-time status counts directly from rentals to avoid any stale index lag
+    const computedStatusCounts = useMemo(() => {
+        const counts: Record<string, number> = {
+            requested: 0,
+            delivery_scheduled: 0,
+            delivered: 0,
+            pickup_scheduled: 0,
+            payment_pending: 0,
+            paid: 0,
+            returned: 0,
+        };
+
+        const list = effectiveRentals?.page ?? [];
+        for (const r of list) {
+            if (r.status === "payment_pending" || r.paymentStatus === "verification_pending") {
+                counts.payment_pending++;
+            } else if (counts[r.status] !== undefined) {
+                counts[r.status]++;
+            }
+        }
+
+        return {
+            ...(dashboardStats?.statusCounts ?? {}),
+            ...counts,
+        };
+    }, [effectiveRentals, dashboardStats?.statusCounts]);
 
     const handleMarkDelivered = async (rentalId: string) => {
         try {
@@ -147,6 +193,14 @@ export function useAdminDashboard() {
 
     const greeting = useMemo(() => getGreeting(), []);
 
+    const mergedDashboardStats = useMemo(() => {
+        if (!dashboardStats) return undefined;
+        return {
+            ...dashboardStats,
+            statusCounts: computedStatusCounts,
+        };
+    }, [dashboardStats, computedStatusCounts]);
+
     return {
         rentals: effectiveRentals,
         stats,
@@ -158,7 +212,7 @@ export function useAdminDashboard() {
         handleMarkReturned,
         handleSignOut,
         statusFilters: STATUS_FILTERS,
-        dashboardStats,
+        dashboardStats: mergedDashboardStats,
         greeting,
     };
 }

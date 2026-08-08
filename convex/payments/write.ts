@@ -158,7 +158,7 @@ export const selectCashPayment = mutation({
         await ctx.db.patch(args.rentalId, {
             paymentMethod: "cash",
             paymentStatus: "cash_pending",
-            status: "payment_pending",
+            status: "pickup_scheduled",
         });
 
         const book = await ctx.db.get(rental.bookId);

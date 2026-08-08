@@ -1,5 +1,5 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, RENTAL_STATUS_LABELS, Spacing, STATUS_COLORS } from "@/constants/theme";
+import { Colors, Spacing, getRentalStatusMeta } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -11,6 +11,8 @@ import { HistoryDetailTile } from "./HistoryDetailTile";
 type RentalItem = {
     _id: string;
     status: string;
+    paymentStatus?: string;
+    paymentMethod?: string;
     coverUrl?: string;
     book?: {
         title: string;
@@ -43,8 +45,11 @@ export function RentalHistoryCard({
     fadeAnim,
     slideAnim,
 }: RentalHistoryCardProps) {
-    const statusLabel = RENTAL_STATUS_LABELS[item.status as keyof typeof RENTAL_STATUS_LABELS] || item.status;
-    const statusColor = STATUS_COLORS[item.status as keyof typeof STATUS_COLORS] || Colors.textSecondary;
+    const statusMeta = getRentalStatusMeta({
+        status: item.status,
+        paymentStatus: item.paymentStatus,
+        paymentMethod: item.paymentMethod,
+    });
 
     return (
         <Animated.View
@@ -88,10 +93,10 @@ export function RentalHistoryCard({
                             <Text numberOfLines={1} style={styles.cardTitle} allowFontScaling={false}>
                                 {item.book?.title || "Unknown Book"}
                             </Text>
-                            <View style={[styles.statusBadge, { backgroundColor: statusColor + "18" }]}>
-                                <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
-                                <Text style={[styles.statusText, { color: statusColor }]} allowFontScaling={false}>
-                                    {statusLabel}
+                            <View style={[styles.statusBadge, { backgroundColor: statusMeta.color + "18" }]}>
+                                <View style={[styles.statusDot, { backgroundColor: statusMeta.color }]} />
+                                <Text style={[styles.statusText, { color: statusMeta.color }]} allowFontScaling={false}>
+                                    {statusMeta.badgeText}
                                 </Text>
                             </View>
                         </View>
@@ -146,7 +151,7 @@ export function RentalHistoryCard({
                             </Text>
                             <View style={styles.detailsTag}>
                                 <Text style={styles.detailsTagText} allowFontScaling={false}>
-                                    {statusLabel}
+                                    {statusMeta.badgeText}
                                 </Text>
                             </View>
                         </View>
@@ -214,21 +219,22 @@ const styles = StyleSheet.create({
     statusBadge: {
         flexDirection: "row",
         alignItems: "center",
-        gap: 5,
-        paddingHorizontal: 8,
-        paddingVertical: 3,
+        gap: 6,
+        paddingHorizontal: 10,
+        paddingVertical: 4,
         borderRadius: 999,
         borderWidth: 1,
         borderColor: Colors.borderSubtle,
     },
     statusDot: {
-        width: 6,
-        height: 6,
-        borderRadius: 3,
+        width: 7,
+        height: 7,
+        borderRadius: 3.5,
     },
     statusText: {
-        fontSize: FontSizes.tiny,
+        fontSize: FontSizes.caption,
         fontFamily: Fonts.bold,
+        letterSpacing: 0.1,
     },
     cardAuthor: {
         fontSize: FontSizes.small,

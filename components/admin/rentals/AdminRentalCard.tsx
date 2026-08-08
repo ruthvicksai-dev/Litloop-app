@@ -1,5 +1,5 @@
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, RENTAL_STATUS_LABELS, scale, STATUS_COLORS } from "@/constants/theme";
+import { Colors, getRentalStatusMeta, scale } from "@/constants/theme";
 import { triggerHaptic } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
@@ -18,6 +18,7 @@ type AdminRentalCardProps = {
     onVerifyPayment: () => void;
     onMarkDelivered: () => void;
     onMarkReturned: () => void;
+    onVerifyCash?: () => void;
 };
 
 function AdminRentalCardComponent({
@@ -26,9 +27,16 @@ function AdminRentalCardComponent({
     onVerifyPayment,
     onMarkDelivered,
     onMarkReturned,
+    onVerifyCash,
 }: AdminRentalCardProps) {
     const router = useRouter();
-    const statusColor = STATUS_COLORS[item.status] || Colors.textSecondary;
+
+    const statusMeta = getRentalStatusMeta({
+        status: item.status,
+        paymentStatus: item.paymentStatus,
+        paymentMethod: item.paymentMethod,
+    });
+
     const coverUri = item.coverUrl || item.coverUrls?.[0] || null;
 
     return (
@@ -67,15 +75,13 @@ function AdminRentalCardComponent({
                         <Text style={styles.rentalTitle} numberOfLines={1}>
                             {item.book?.title || "Unknown"}
                         </Text>
-                        <View style={[styles.statusBadge, { backgroundColor: statusColor + "15" }]}>
-                            <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
+                        <View style={[styles.statusBadge, { backgroundColor: statusMeta.color + "18", borderColor: statusMeta.color + "35" }]}>
+                            <View style={[styles.statusDot, { backgroundColor: statusMeta.color }]} />
                             <Text
-                                style={[styles.statusText, { color: statusColor }]}
+                                style={[styles.statusText, { color: statusMeta.color }]}
                                 numberOfLines={1}
-                                adjustsFontSizeToFit
-                                minimumFontScale={0.75}
                             >
-                                {RENTAL_STATUS_LABELS[item.status] || item.status}
+                                {statusMeta.badgeText}
                             </Text>
                         </View>
                     </View>
@@ -117,61 +123,101 @@ function AdminRentalCardComponent({
                 </View>
             </TouchableOpacity>
 
-            {/* Quick Action Buttons */}
-            {(item.status === "requested" ||
-                item.status === "payment_pending" ||
-                item.status === "delivery_scheduled" ||
-                item.status === "pickup_scheduled") && (
-                <View style={styles.actionRow}>
-                    {item.status === "requested" && (
-                        <TouchableOpacity
-                            style={styles.actionBtn}
-                            onPress={() => {
-                                triggerHaptic("light");
-                                onScheduleDelivery();
-                            }}
-                        >
-                            <Text style={styles.actionBtnText}>Schedule Delivery</Text>
-                        </TouchableOpacity>
-                    )}
+            {/* Quick Action Buttons based on Enterprise Status Matrix */}
+            <View style={styles.actionRow}>
+                {statusMeta.allowedActions.includes("schedule_delivery") && (
+                    <TouchableOpacity
+                        style={styles.actionBtn}
+                        onPress={() => {
+                            triggerHaptic("light");
+                            onScheduleDelivery();
+                        }}
+                    >
+                        <Text style={styles.actionBtnText}>Schedule Delivery</Text>
+                    </TouchableOpacity>
+                )}
 
-                    {item.status === "payment_pending" && (
-                        <TouchableOpacity
-                            style={styles.actionBtn}
-                            onPress={() => {
-                                triggerHaptic("light");
+                {statusMeta.allowedActions.includes("mark_delivered") && (
+                    <TouchableOpacity
+                        style={[styles.actionBtn, styles.successBtn]}
+                        onPress={() => {
+                            triggerHaptic("light");
+                            onMarkDelivered();
+                        }}
+                    >
+                        <Text style={styles.actionBtnText}>Mark Delivered</Text>
+                    </TouchableOpacity>
+                )}
+
+                {statusMeta.allowedActions.includes("verify_upi") && (
+                    <TouchableOpacity
+                        style={[styles.actionBtn, { backgroundColor: "#8B5CF6" }]}
+                        onPress={() => {
+                            triggerHaptic("light");
+                            onVerifyPayment();
+                        }}
+                    >
+                        <Text style={styles.actionBtnText}>Verify Payment (UPI)</Text>
+                    </TouchableOpacity>
+                )}
+
+                {statusMeta.allowedActions.includes("verify_cash") && (
+                    <TouchableOpacity
+                        style={[styles.actionBtn, { backgroundColor: "#10B981" }]}
+                        onPress={() => {
+                            triggerHaptic("light");
+                            if (onVerifyCash) {
+                                onVerifyCash();
+                            } else {
                                 onVerifyPayment();
-                            }}
-                        >
-                            <Text style={styles.actionBtnText}>Verify Payment</Text>
-                        </TouchableOpacity>
-                    )}
+                            }
+                        }}
+                    >
+                        <Text style={styles.actionBtnText}>Verify Cash (Mark Paid)</Text>
+                    </TouchableOpacity>
+                )}
 
-                    {item.status === "delivery_scheduled" && (
-                        <TouchableOpacity
-                            style={[styles.actionBtn, styles.successBtn]}
-                            onPress={() => {
-                                triggerHaptic("light");
-                                onMarkDelivered();
-                            }}
-                        >
-                            <Text style={styles.actionBtnText}>Mark Delivered</Text>
-                        </TouchableOpacity>
-                    )}
+                {statusMeta.allowedActions.includes("reverify_payment") && (
+                    <TouchableOpacity
+                        style={[styles.actionBtn, { backgroundColor: "#EF4444" }]}
+                        onPress={() => {
+                            triggerHaptic("light");
+                            onVerifyPayment();
+                        }}
+                    >
+                        <Text style={styles.actionBtnText}>Review Rejected Payment</Text>
+                    </TouchableOpacity>
+                )}
 
-                    {item.status === "pickup_scheduled" && (
-                        <TouchableOpacity
-                            style={[styles.actionBtn, styles.successBtn]}
-                            onPress={() => {
-                                triggerHaptic("light");
-                                onMarkReturned();
-                            }}
-                        >
-                            <Text style={styles.actionBtnText}>Mark Returned</Text>
-                        </TouchableOpacity>
-                    )}
-                </View>
-            )}
+                {statusMeta.allowedActions.includes("mark_returned") && (
+                    <TouchableOpacity
+                        style={[styles.actionBtn, styles.successBtn]}
+                        onPress={() => {
+                            triggerHaptic("light");
+                            onMarkReturned();
+                        }}
+                    >
+                        <Text style={styles.actionBtnText}>Mark Returned & Restock</Text>
+                    </TouchableOpacity>
+                )}
+
+                {!statusMeta.allowedActions.length && (item.status === "pickup_scheduled" || item.status === "payment_pending") && (
+                    <TouchableOpacity
+                        style={[styles.actionBtn, { backgroundColor: Colors.surfaceSecondary }]}
+                        onPress={() => {
+                            triggerHaptic("light");
+                            router.push({
+                                pathname: "/(admin)/rental/[id]",
+                                params: { id: item._id }
+                            } as any);
+                        }}
+                    >
+                        <Text style={[styles.actionBtnText, { color: Colors.textSecondary }]}>
+                            ⏳ Awaiting Customer Payment
+                        </Text>
+                    </TouchableOpacity>
+                )}
+            </View>
         </View>
     );
 }
@@ -278,28 +324,25 @@ const styles = StyleSheet.create({
     statusBadge: {
         flexDirection: "row",
         alignItems: "center",
-        gap: scale(4),
-        paddingHorizontal: scale(7),
-        paddingVertical: scale(2),
+        gap: 6,
+        paddingHorizontal: 10,
+        paddingVertical: 4,
         borderRadius: 999,
         borderWidth: 1,
         borderColor: Colors.border,
-        width: scale(102),
-        minHeight: scale(24),
         flexShrink: 0,
         alignSelf: "flex-start",
         marginTop: 1,
     },
     statusDot: {
-        width: scale(6),
-        height: scale(6),
-        borderRadius: scale(3),
+        width: 7,
+        height: 7,
+        borderRadius: 3.5,
     },
     statusText: {
-        fontSize: FontSizes.tiny,
+        fontSize: FontSizes.caption,
         fontFamily: Fonts.bold,
-        flex: 1,
-        textAlign: "center",
+        letterSpacing: 0.1,
     },
     actionRow: {
         flexDirection: "row",
