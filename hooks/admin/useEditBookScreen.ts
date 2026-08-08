@@ -8,10 +8,9 @@ import { useBookCoverManager } from "@/hooks/books/useBookCoverManager";
 import { 
     applyMetadataToBookForm, 
     parseBookNumericFields,
-    fetchBookMetadataExtended,
     validateEnglishSafeDescription 
 } from "@/utils";
-import { useMutation, useQuery } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Alert } from "react-native";
@@ -25,6 +24,7 @@ export function useEditBookScreen(bookId: string) {
     const updateBook = useMutation(api.books.update);
     const removeBook = useMutation(api.books.remove);
     const generateUploadUrl = useMutation(api.books.generateUploadUrl);
+    const lookupBookAction = useAction(api.bookMetadata.lookupBookByIsbn);
 
     const [title, setTitle] = useState("");
     const [author, setAuthor] = useState("");
@@ -139,38 +139,69 @@ export function useEditBookScreen(bookId: string) {
     const fetchBookInfo = async (isbnOverride?: string) => {
         const lookupIsbn = isbnOverride ?? isbn;
 
-        if (!lookupIsbn.trim() && (!title.trim() || !author.trim())) {
-            showToast("Enter ISBN, or enter title and author to fetch book details.", "error");
+        if (!lookupIsbn.trim() && !title.trim() && !author.trim()) {
+            showToast("Enter ISBN, or enter Title / Author to fetch book details.", "error");
             return;
         }
 
         setIsFetchingBookInfo(true);
         try {
-            const metadata = await fetchBookMetadataExtended(title, author, lookupIsbn);
-            applyMetadataToBookForm(
-                metadata,
-                {
-                    setTitle,
-                    setAuthor,
-                    setDescription,
-                    setSelectedGenres,
-                    setPageCount,
-                    setPublishedYear,
-                    setPublisher,
-                    setIsbn,
-                },
-                { currentTitle: title, currentAuthor: author }
-            );
+            const result = await lookupBookAction({
+                isbn: lookupIsbn.trim() || undefined,
+                title: title.trim() || undefined,
+                author: author.trim() || undefined,
+                accessToken: accessToken || "",
+            });
 
-            if (metadata.descriptionRejectedReason) {
-                showToast(
-                    `Book info refreshed, but description was skipped: ${metadata.descriptionRejectedReason}`,
-                    "error"
-                );
-            } else {
-                showToast("Book info refreshed successfully.", "success");
+            if (result.status === "EXISTING_BOOK") {
+                showToast(result.message || "A book with this ISBN already exists.", "error");
+                setIsManualLookupVisible(true);
+                setHasFetchedBookInfo(true);
+                return;
             }
-            setHasFetchedBookInfo(true);
+            if (result.status === "INVALID_ISBN") {
+                showToast(result.message || "Invalid ISBN format.", "error");
+                setIsManualLookupVisible(true);
+                setHasFetchedBookInfo(true);
+                return;
+            }
+            if (result.status === "NOT_FOUND" || result.status === "PROVIDER_UNAVAILABLE") {
+                showToast(result.message || "Book details not found. Please enter manually.", "error");
+                setIsManualLookupVisible(true);
+                setHasFetchedBookInfo(true);
+                return;
+            }
+
+            if (result.metadata) {
+                applyMetadataToBookForm(
+                    result.metadata,
+                    {
+                        setTitle,
+                        setAuthor,
+                        setDescription,
+                        setSelectedGenres,
+                        setPageCount,
+                        setPublishedYear,
+                        setPublisher,
+                        setIsbn,
+                    },
+                    { currentTitle: title, currentAuthor: author }
+                );
+
+                if (result.metadata.coverCandidates && result.metadata.coverCandidates.length > 0) {
+                    setCoverUris(result.metadata.coverCandidates);
+                }
+
+                if (result.metadata.descriptionRejectedReason) {
+                    showToast(
+                        `Book info refreshed, but description was skipped: ${result.metadata.descriptionRejectedReason}`,
+                        "error"
+                    );
+                } else {
+                    showToast(result.message || "Book info refreshed successfully.", "success");
+                }
+                setHasFetchedBookInfo(true);
+            }
         } catch (error: unknown) {
             const message =
                 error instanceof Error ? error.message : "Failed to fetch book info.";

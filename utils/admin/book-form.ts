@@ -1,4 +1,14 @@
-import type { BookMetadataExtended } from "../book/metadata";
+export type BookMetadataExtended = {
+    title?: string;
+    author: string;
+    description: string;
+    genres: string[];
+    publishedYear: string;
+    isbn?: string;
+    publisher?: string;
+    pageCount?: number;
+    descriptionRejectedReason?: string;
+};
 
 export type ParsedBookNumericFields = {
     rentPerDay: number;

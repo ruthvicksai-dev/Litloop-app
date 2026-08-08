@@ -149,6 +149,7 @@ export default defineSchema({
         .index("by_isFamous", ["isFamous"])
         .index("by_isTrending", ["isTrending"])
         .index("by_top10Position", ["top10Position"])
+        .index("by_isbn", ["isbn"])
         .searchIndex("search_books", {
             searchField: "searchText",
             filterFields: ["genres"],

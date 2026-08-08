@@ -6,6 +6,7 @@ import { insertAuditLog } from "../lib/auditLog";
 import { assertAdmin } from "../lib/authHelpers";
 import { calculateRankingScore } from "../lib/bookHelpers";
 import { assertRateLimit, buildRateLimitKey } from "../lib/rateLimit";
+import { normalizeIsbn } from "../bookMetadata/isbn";
 import {
     BOOK_RATE_LIMITS,
     buildSearchText,
@@ -68,7 +69,8 @@ export const add = mutation({
         const title = args.title.trim();
         const author = args.author.trim();
         const description = args.description.trim();
-        const isbn = args.isbn?.replace(/[-\s]/g, "").trim().toUpperCase() || undefined;
+        const rawIsbn = args.isbn?.trim();
+        const isbn = rawIsbn ? normalizeIsbn(rawIsbn) : undefined;
 
         if (!title) throw new Error("Title is required.");
         if (!author) throw new Error("Author is required.");
@@ -76,14 +78,32 @@ export const add = mutation({
         if (args.totalCopies <= 0)
             throw new Error("Total copies must be positive.");
 
-        const duplicateBook = await ctx.db
+        const duplicateTitleAuthor = await ctx.db
             .query("books")
             .withIndex("by_title_author", (q) =>
                 q.eq("title", title).eq("author", author)
             )
             .first();
-        if (duplicateBook) {
+        if (duplicateTitleAuthor) {
             throw new Error("This book already exists.");
+        }
+
+        const duplicateTitle = await ctx.db
+            .query("books")
+            .withIndex("by_title", (q) => q.eq("title", title))
+            .first();
+        if (duplicateTitle) {
+            throw new Error(`A book named "${title}" already exists.`);
+        }
+
+        if (isbn) {
+            const isbnDuplicate = await ctx.db
+                .query("books")
+                .withIndex("by_isbn", (q) => q.eq("isbn", isbn))
+                .first();
+            if (isbnDuplicate) {
+                throw new Error("A book with this ISBN already exists.");
+            }
         }
 
         const normalizedGenres = normalizeGenres(args.genres);
