@@ -36,7 +36,7 @@ export default function IsbnScannerModal({
     };
 
     return (
-        <Modal visible={visible} animationType="slide" onRequestClose={handleClose}>
+        <Modal visible={visible} statusBarTranslucent animationType="slide" onRequestClose={handleClose}>
             <SafeAreaView style={styles.container}>
                 <View style={styles.header}>
                     <Text style={styles.title}>Scan ISBN</Text>

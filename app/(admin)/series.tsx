@@ -195,44 +195,48 @@ export default function SeriesManagementScreen() {
     );
 
     return (
-        <SafeAreaView style={styles.container}>
+        <View style={styles.container}>
             <AdminHeader
                 title="Book Series"
+                variant="dark"
                 rightComponent={
                     <TouchableOpacity onPress={() => handleOpenModal()} style={styles.addBtn}>
-                        <Ionicons name="add" size={28} color={Colors.primary} />
+                        <Ionicons name="add" size={18} color={Colors.white} />
                     </TouchableOpacity>
                 }
             />
 
-            {seriesQuery === undefined ? (
-                <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 50 }} />
-            ) : (
-                <FlatList
-                    data={seriesList}
-                    renderItem={renderItem}
-                    keyExtractor={(item) => item._id}
-                    contentContainerStyle={styles.list}
-                    refreshControl={
-                        <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={onRefresh}
-                            colors={[Colors.primary]}
-                        />
-                    }
-                    ListEmptyComponent={
-                        <View style={styles.empty}>
-                            <Ionicons name="layers-outline" size={60} color={Colors.textLight} />
-                            <Text style={styles.emptyText}>No series created yet.</Text>
-                        </View>
-                    }
-                />
-            )}
+            <SafeAreaView style={styles.flex} edges={["bottom", "left", "right"]}>
+                {seriesQuery === undefined ? (
+                    <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 50 }} />
+                ) : (
+                    <FlatList
+                        data={seriesList}
+                        renderItem={renderItem}
+                        keyExtractor={(item) => item._id}
+                        contentContainerStyle={styles.list}
+                        refreshControl={
+                            <RefreshControl
+                                refreshing={refreshing}
+                                onRefresh={onRefresh}
+                                colors={[Colors.primary]}
+                            />
+                        }
+                        ListEmptyComponent={
+                            <View style={styles.empty}>
+                                <Ionicons name="layers-outline" size={60} color={Colors.textLight} />
+                                <Text style={styles.emptyText}>No series created yet.</Text>
+                            </View>
+                        }
+                    />
+                )}
+            </SafeAreaView>
 
             <Modal
                 visible={modalVisible}
                 animationType="slide"
                 transparent
+                statusBarTranslucent
                 onRequestClose={() => setModalVisible(false)}
             >
                 <View style={styles.modalOverlay}>
@@ -292,7 +296,7 @@ export default function SeriesManagementScreen() {
                     </KeyboardAwareScrollView>
                 </View>
             </Modal>
-        </SafeAreaView>
+        </View>
     );
 }
 
@@ -300,6 +304,9 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: Colors.background,
+    },
+    flex: {
+        flex: 1,
     },
     header: {
         flexDirection: "row",
@@ -309,7 +316,16 @@ const styles = StyleSheet.create({
         paddingVertical: Spacing.md,
     },
     backBtn: { padding: 4 },
-    addBtn: { padding: 4 },
+    addBtn: {
+        backgroundColor: "rgba(255,255,255,0.18)",
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.3)",
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        alignItems: "center",
+        justifyContent: "center",
+    },
     title: {
         fontSize: FontSizes.title,
         color: Colors.text,

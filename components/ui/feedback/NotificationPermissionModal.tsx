@@ -81,6 +81,7 @@ export function NotificationPermissionModal({
         <Modal
             visible={visible}
             transparent
+            statusBarTranslucent
             animationType="slide"
             onRequestClose={onDecline}
         >

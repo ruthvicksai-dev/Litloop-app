@@ -99,14 +99,14 @@ describe("End-to-End ISBN Metadata & Cover Pipeline Verification", () => {
             expect(result.genres).toBeDefined();
             expect(Array.isArray(result.genres)).toBe(true);
         }
-    }, 15000);
+    }, 30000);
 
     it("2. Verifies Open Library single GET cover candidate resolution", async () => {
         const isbn = "9780134685991";
         const coverUrl = await fetchOpenLibraryCoverCandidate(isbn);
         expect(coverUrl).not.toBeNull();
         expect(coverUrl).toContain("covers.openlibrary.org");
-    }, 15000);
+    }, 30000);
 
     it("3. Verifies complete Convex action lookupBookByIsbn for admin", async () => {
         const t = convexTest(schema);
@@ -125,7 +125,7 @@ describe("End-to-End ISBN Metadata & Cover Pipeline Verification", () => {
             expect(response.metadata.coverCandidates.length).toBeGreaterThan(0);
             expect(response.metadata.sourceProvider).toBe("Open Library");
         }
-    }, 20000);
+    }, 30000);
 
     it("4. Verifies duplicate ISBN & Title/Author protection (lookup & mutation level)", async () => {
         const t = convexTest(schema);

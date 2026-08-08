@@ -39,10 +39,6 @@ export function useAddBookScreen(params?: AddBookPrefillParams) {
     const [publishedYear, setPublishedYear] = useState("");
     const [publisher, setPublisher] = useState("");
     const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
-    const [isTop10, setIsTop10] = useState(false);
-    const [top10Position, setTop10Position] = useState("");
-    const [isFamous, setIsFamous] = useState(false);
-    const [isTrending, setIsTrending] = useState(false);
     const [isSeries, setIsSeries] = useState(false);
     const [series, setSeries] = useState("");
     const [seriesId, setSeriesId] = useState<Id<"book_series"> | undefined>(undefined);
@@ -161,16 +157,6 @@ export function useAddBookScreen(params?: AddBookPrefillParams) {
         []
     );
 
-    const toggleTop10 = () => {
-        setIsTop10((current) => {
-            const next = !current;
-            if (!next) setTop10Position("");
-            return next;
-        });
-    };
-
-    const toggleFamous = () => setIsFamous((current) => !current);
-    const toggleTrending = () => setIsTrending((current) => !current);
     const toggleSeries = () => {
         setIsSeries((current) => {
             const next = !current;
@@ -285,8 +271,6 @@ export function useAddBookScreen(params?: AddBookPrefillParams) {
                 totalCopies,
                 pageCount,
                 publishedYear,
-                top10Position,
-                isTop10,
             });
 
             let uploadedCoverImages: Id<"_storage">[] = [];
@@ -323,10 +307,6 @@ export function useAddBookScreen(params?: AddBookPrefillParams) {
                 publishedYear: parsed.publishedYear,
                 publisher: publisher.trim() || undefined,
                 isbn: isbn.trim() || undefined,
-                isTop10,
-                top10Position: parsed.top10Position,
-                isFamous,
-                isTrending,
                 series: isSeries ? series.trim() || undefined : undefined,
                 seriesId: isSeries ? seriesId : undefined,
                 coverImages: uploadedCoverImages.length > 0 ? uploadedCoverImages : undefined,
@@ -368,17 +348,6 @@ export function useAddBookScreen(params?: AddBookPrefillParams) {
         setPublisher,
         selectedGenres,
         availableGenres,
-        isTop10,
-        setIsTop10,
-        toggleTop10,
-        top10Position,
-        setTop10Position,
-        isFamous,
-        setIsFamous,
-        toggleFamous,
-        isTrending,
-        setIsTrending,
-        toggleTrending,
         isSeries,
         setIsSeries,
         toggleSeries,

@@ -29,7 +29,7 @@ interface RentalRequestModalProps {
 
 export default function RentalRequestModal({ visible, onClose, bookId }: RentalRequestModalProps) {
     return (
-        <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={() => {}}>
+        <Modal visible={visible} statusBarTranslucent animationType="slide" transparent={false} onRequestClose={() => {}}>
             <ToastProvider>
                 <RentalRequestModalContent visible={visible} onClose={onClose} bookId={bookId} />
             </ToastProvider>

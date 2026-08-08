@@ -127,6 +127,7 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         flexDirection: "row",
         minHeight: Layout.buttonHeight,
+        overflow: "hidden",
     },
     primary: {
         backgroundColor: Colors.primary,

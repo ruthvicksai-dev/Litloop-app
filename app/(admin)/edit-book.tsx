@@ -48,14 +48,6 @@ export default function EditBookScreen() {
         setPublisher,
         availableGenres,
         selectedGenres,
-        isTop10,
-        toggleTop10,
-        top10Position,
-        setTop10Position,
-        isFamous,
-        toggleFamous,
-        isTrending,
-        toggleTrending,
         isSeries,
         toggleSeries,
         series,
@@ -85,30 +77,33 @@ export default function EditBookScreen() {
 
     if (book === null) {
         return (
-            <SafeAreaView style={styles.container}>
-                <AdminHeader title="Edit Book" />
-                <View style={[styles.center, { paddingHorizontal: 40 }]}>
-                    <Ionicons
-                        name="book-outline"
-                        size={60}
-                        color={Colors.textLight}
-                        style={{ marginBottom: 20 }}
-                    />
-                    <Text style={styles.notFoundTitle}>Book not found</Text>
-                    <Text style={styles.notFoundText}>
-                        The book you are looking for does not exist or has been removed.
-                    </Text>
-                    <Button title="Go Back" onPress={() => router.back()} style={{ width: "100%" }} />
-                </View>
-            </SafeAreaView>
+            <View style={styles.container}>
+                <AdminHeader title="Edit Book" variant="dark" />
+                <SafeAreaView style={styles.flex} edges={["bottom", "left", "right"]}>
+                    <View style={[styles.center, { paddingHorizontal: 40 }]}>
+                        <Ionicons
+                            name="book-outline"
+                            size={60}
+                            color={Colors.textLight}
+                            style={{ marginBottom: 20 }}
+                        />
+                        <Text style={styles.notFoundTitle}>Book not found</Text>
+                        <Text style={styles.notFoundText}>
+                            The book you are looking for does not exist or has been removed.
+                        </Text>
+                        <Button title="Go Back" onPress={() => router.back()} style={{ width: "100%" }} />
+                    </View>
+                </SafeAreaView>
+            </View>
         );
     }
 
     return (
-        <SafeAreaView style={styles.container}>
+        <View style={styles.container}>
             <Animated.View style={{ opacity: fadeAnim }}>
                 <AdminHeader
                     title="Edit Book"
+                    variant="dark"
                     rightComponent={
                         <View style={styles.headerActions}>
                             <TouchableOpacity
@@ -117,19 +112,19 @@ export default function EditBookScreen() {
                                 accessibilityRole="button"
                                 accessibilityLabel="Scan ISBN"
                             >
-                                <Ionicons name="barcode-outline" size={22} color={Colors.text} />
+                                <Ionicons name="barcode-outline" size={22} color={Colors.white} />
                             </TouchableOpacity>
                             <TouchableOpacity onPress={handleDelete} disabled={deleting}>
-                                <Ionicons name="trash-outline" size={22} color={Colors.error} />
+                                <Ionicons name="trash-outline" size={22} color={Colors.white} />
                             </TouchableOpacity>
                         </View>
                     }
                 />
             </Animated.View>
 
-            <View style={styles.flex}>
+            <SafeAreaView style={styles.flex} edges={["bottom", "left", "right"]}>
                 <KeyboardAwareScrollView
-                    contentContainerStyle={[styles.scroll, { paddingBottom: Math.max(140, 80 + insets.bottom) }]}
+                    contentContainerStyle={[styles.scroll, { paddingTop: Spacing.lg, paddingBottom: Math.max(40, 20 + insets.bottom) }]}
                     keyboardShouldPersistTaps="handled"
                     keyboardDismissMode="none"
                 >
@@ -196,25 +191,17 @@ export default function EditBookScreen() {
                         />
 
                         <FormSectionHeader
-                            title="Featured Sections"
-                            subtitle="Homepage placement controls."
+                            title="Book Series"
+                            subtitle="Assign book to a series (optional)."
                         />
                         <FeaturedSectionsFields
-                            isTop10={isTop10}
-                            top10Position={top10Position}
-                            isFamous={isFamous}
-                            isTrending={isTrending}
                             isSeries={isSeries}
                             series={series}
                             seriesId={seriesId}
                             seriesList={seriesList}
-                            onToggleTop10={toggleTop10}
-                            onToggleFamous={toggleFamous}
-                            onToggleTrending={toggleTrending}
                             onToggleSeries={toggleSeries}
                             onChangeSeries={setSeries}
                             onSelectSeriesId={setSeriesId}
-                            onChangeTop10Position={setTop10Position}
                         />
 
                         <View style={styles.statsRow}>
@@ -237,8 +224,8 @@ export default function EditBookScreen() {
                         />
                     </Animated.View>
                 </KeyboardAwareScrollView>
-            </View>
-        </SafeAreaView>
+            </SafeAreaView>
+        </View>
     );
 }
 

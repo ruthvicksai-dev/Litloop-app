@@ -20,7 +20,6 @@ import React, { useMemo, useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-
 export default function AdminRevenueScreen() {
     const { accessToken } = useAuthState();
     const rentalsQuery = useQuery(
@@ -66,113 +65,116 @@ export default function AdminRevenueScreen() {
     }
 
     return (
-        <SafeAreaView style={styles.container}>
-            <AdminHeader title="Revenue Analytics" />
-            <ScrollView
-                contentContainerStyle={styles.content}
-                showsVerticalScrollIndicator={false}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={onRefresh}
-                        colors={[Colors.primary]}
-                    />
-                }
-            >
-                <Text style={styles.screenSubtitle}>
-                    {activeMonthOption?.fullLabel ?? formatMonthLabel(activeMonth)}
-                </Text>
+        <View style={styles.container}>
+            <AdminHeader title="Revenue Analytics" variant="dark" />
 
+            <SafeAreaView style={styles.flex} edges={["bottom", "left", "right"]}>
                 <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.monthRow}
-                    style={styles.monthScroll}
+                    contentContainerStyle={[styles.content, { paddingTop: Spacing.md }]}
+                    showsVerticalScrollIndicator={false}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            colors={[Colors.primary]}
+                        />
+                    }
                 >
-                    {monthOptions.map((option) => {
-                        const isActive = option.key === activeMonth;
-                        return (
-                            <TouchableOpacity
-                                key={option.key}
-                                style={[styles.monthChip, isActive && styles.monthChipActive]}
-                                onPress={() => setSelectedMonth(option.key)}
-                            >
-                                <Text style={[styles.monthChipText, isActive && styles.monthChipTextActive]}>
-                                    {option.label}
-                                </Text>
-                            </TouchableOpacity>
-                        );
-                    })}
-                </ScrollView>
+                    <Text style={styles.screenSubtitle}>
+                        {activeMonthOption?.fullLabel ?? formatMonthLabel(activeMonth)}
+                    </Text>
 
-                <View style={styles.kpiRow}>
-                    <View style={[styles.kpiCard, styles.kpiCardPrimary]}>
-                        <Text style={[styles.kpiLabel, styles.kpiLabelPrimary]}>Monthly Revenue</Text>
-                        <Text style={[styles.kpiValue, styles.kpiValuePrimary]}>
-                            ₹{formatCurrency(metrics.revenue)}
-                        </Text>
-                    </View>
-                    <View style={styles.kpiCard}>
-                        <Text style={styles.kpiLabel}>Total Orders</Text>
-                        <Text style={styles.kpiValue}>{metrics.totalOrders}</Text>
-                    </View>
-                    <View style={styles.kpiCard}>
-                        <Text style={styles.kpiLabel}>Completed</Text>
-                        <Text style={styles.kpiValue}>{metrics.completedOrders}</Text>
-                    </View>
-                    <View style={styles.kpiCard}>
-                        <Text style={styles.kpiLabel}>Pending Value</Text>
-                        <Text style={styles.kpiValue}>₹{formatCurrency(metrics.pendingRevenue)}</Text>
-                    </View>
-                    <View style={styles.kpiCard}>
-                        <Text style={styles.kpiLabel}>Avg Order</Text>
-                        <Text style={styles.kpiValue}>₹{formatCurrency(metrics.averageOrderValue)}</Text>
-                    </View>
-                </View>
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.monthRow}
+                        style={styles.monthScroll}
+                    >
+                        {monthOptions.map((option) => {
+                            const isActive = option.key === activeMonth;
+                            return (
+                                <TouchableOpacity
+                                    key={option.key}
+                                    style={[styles.monthChip, isActive && styles.monthChipActive]}
+                                    onPress={() => setSelectedMonth(option.key)}
+                                >
+                                    <Text style={[styles.monthChipText, isActive && styles.monthChipTextActive]}>
+                                        {option.label}
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </ScrollView>
 
-                <View style={styles.chartGrid}>
-                    <View style={styles.chartWide}>
-                        <AdminStackedBarChart
-                            title="Orders Flow by Week"
-                            items={metrics.weeklyTrend}
-                            emptyLabel="No weekly order data for this month."
-                        />
-                    </View>
-                    <View style={styles.chartWide}>
-                        <AdminDonutChart
-                            title="Orders by Payment Method"
-                            items={metrics.paymentBreakdown.map((item, index) => ({
-                                ...item,
-                                color: [Colors.primary, Colors.success, Colors.warning, "#3B82F6"][index % 4],
-                            }))}
-                            centerLabel="Methods"
-                            centerValue={`${metrics.paymentBreakdown.reduce((sum, item) => sum + item.value, 0)}`}
-                            emptyLabel="No payment methods recorded yet."
-                        />
-                    </View>
-                    <View style={styles.chartHalf}>
-                        <AdminAnalyticsBars
-                            title="Orders by Zone"
-                            items={metrics.zoneBreakdown}
-                            emptyLabel="No zone data available."
-                            tone={Colors.warning}
-                        />
-                    </View>
-                    <View style={styles.chartHalf}>
-                        <View style={styles.noteCard}>
-                            <Text style={styles.noteTitle}>Monthly Snapshot</Text>
-                            <Text style={styles.noteText}>
-                                {metrics.totalOrders} orders tracked in{" "}
-                                {activeMonthOption?.fullLabel ?? formatMonthLabel(activeMonth)}.
-                            </Text>
-                            <Text style={styles.noteText}>
-                                {metrics.completedOrders} completed and ₹{formatCurrency(metrics.pendingRevenue)} still pending.
+                    <View style={styles.kpiRow}>
+                        <View style={[styles.kpiCard, styles.kpiCardPrimary]}>
+                            <Text style={[styles.kpiLabel, styles.kpiLabelPrimary]}>Monthly Revenue</Text>
+                            <Text style={[styles.kpiValue, styles.kpiValuePrimary]}>
+                                ₹{formatCurrency(metrics.revenue)}
                             </Text>
                         </View>
+                        <View style={styles.kpiCard}>
+                            <Text style={styles.kpiLabel}>Total Orders</Text>
+                            <Text style={styles.kpiValue}>{metrics.totalOrders}</Text>
+                        </View>
+                        <View style={styles.kpiCard}>
+                            <Text style={styles.kpiLabel}>Completed</Text>
+                            <Text style={styles.kpiValue}>{metrics.completedOrders}</Text>
+                        </View>
+                        <View style={styles.kpiCard}>
+                            <Text style={styles.kpiLabel}>Pending Value</Text>
+                            <Text style={styles.kpiValue}>₹{formatCurrency(metrics.pendingRevenue)}</Text>
+                        </View>
+                        <View style={styles.kpiCard}>
+                            <Text style={styles.kpiLabel}>Avg Order</Text>
+                            <Text style={styles.kpiValue}>₹{formatCurrency(metrics.averageOrderValue)}</Text>
+                        </View>
                     </View>
-                </View>
-            </ScrollView>
-        </SafeAreaView>
+
+                    <View style={styles.chartGrid}>
+                        <View style={styles.chartWide}>
+                            <AdminStackedBarChart
+                                title="Orders Flow by Week"
+                                items={metrics.weeklyTrend}
+                                emptyLabel="No weekly order data for this month."
+                            />
+                        </View>
+                        <View style={styles.chartWide}>
+                            <AdminDonutChart
+                                title="Orders by Payment Method"
+                                items={metrics.paymentBreakdown.map((item, index) => ({
+                                    ...item,
+                                    color: [Colors.primary, Colors.success, Colors.warning, "#3B82F6"][index % 4],
+                                }))}
+                                centerLabel="Methods"
+                                centerValue={`${metrics.paymentBreakdown.reduce((sum, item) => sum + item.value, 0)}`}
+                                emptyLabel="No payment methods recorded yet."
+                            />
+                        </View>
+                        <View style={styles.chartHalf}>
+                            <AdminAnalyticsBars
+                                title="Orders by Zone"
+                                items={metrics.zoneBreakdown}
+                                emptyLabel="No zone data available."
+                                tone={Colors.warning}
+                            />
+                        </View>
+                        <View style={styles.chartHalf}>
+                            <View style={styles.noteCard}>
+                                <Text style={styles.noteTitle}>Monthly Snapshot</Text>
+                                <Text style={styles.noteText}>
+                                    {metrics.totalOrders} orders tracked in{" "}
+                                    {activeMonthOption?.fullLabel ?? formatMonthLabel(activeMonth)}.
+                                </Text>
+                                <Text style={styles.noteText}>
+                                    {metrics.completedOrders} completed and ₹{formatCurrency(metrics.pendingRevenue)} still pending.
+                                </Text>
+                            </View>
+                        </View>
+                    </View>
+                </ScrollView>
+            </SafeAreaView>
+        </View>
     );
 }
 
@@ -180,6 +182,9 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: Colors.background,
+    },
+    flex: {
+        flex: 1,
     },
     center: {
         flex: 1,
@@ -189,37 +194,6 @@ const styles = StyleSheet.create({
     },
     content: {
         paddingBottom: Spacing.xl,
-    },
-    header: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        paddingHorizontal: 20,
-        paddingTop: Spacing.sm,
-        paddingBottom: Spacing.md,
-    },
-    headerLeft: {
-        flex: 1,
-        flexDirection: "row",
-        alignItems: "center",
-    },
-    backBtn: {
-        width: 40,
-        height: 40,
-        alignItems: "center",
-        justifyContent: "center",
-        marginLeft: -25,
-    },
-    headerTitle: {
-        flex: 1,
-        fontSize: FontSizes.title,
-        color: Colors.text,
-        textAlign: "center",
-        fontFamily: Fonts.bold,
-    },
-    headerSpacer: {
-        width: 40,
-        marginRight: -25,
     },
     screenSubtitle: {
         fontSize: FontSizes.body,
@@ -259,19 +233,18 @@ const styles = StyleSheet.create({
     kpiRow: {
         flexDirection: "row",
         flexWrap: "wrap",
-        gap: Spacing.sm,
         paddingHorizontal: 20,
+        gap: 10,
         marginBottom: Spacing.md,
     },
     kpiCard: {
-        flexBasis: "48%",
-        flexGrow: 1,
+        flex: 1,
+        minWidth: "45%",
         backgroundColor: Colors.white,
-        borderRadius: 18,
+        borderRadius: 16,
+        padding: 14,
         borderWidth: 1,
         borderColor: Colors.border,
-        paddingVertical: 12,
-        paddingHorizontal: 12,
     },
     kpiCardPrimary: {
         backgroundColor: Colors.primary,
@@ -284,10 +257,10 @@ const styles = StyleSheet.create({
         marginBottom: 4,
     },
     kpiLabelPrimary: {
-        color: Colors.white + "CC",
+        color: "rgba(255, 255, 255, 0.8)",
     },
     kpiValue: {
-        fontSize: FontSizes.subtitle,
+        fontSize: FontSizes.title,
         fontFamily: Fonts.bold,
         color: Colors.text,
     },
@@ -295,8 +268,8 @@ const styles = StyleSheet.create({
         color: Colors.white,
     },
     chartGrid: {
-        flexDirection: "row",
-        flexWrap: "wrap",
+        paddingHorizontal: 20,
+        gap: Spacing.md,
     },
     chartWide: {
         width: "100%",
@@ -305,11 +278,9 @@ const styles = StyleSheet.create({
         width: "100%",
     },
     noteCard: {
-        marginHorizontal: 20,
-        marginBottom: Spacing.md,
-        padding: Spacing.md,
-        borderRadius: 20,
         backgroundColor: Colors.white,
+        borderRadius: 16,
+        padding: 16,
         borderWidth: 1,
         borderColor: Colors.border,
         minHeight: 190,

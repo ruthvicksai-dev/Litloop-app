@@ -26,6 +26,8 @@ export default function AdminLayout() {
             <Stack.Screen name="verify-payment" />
             <Stack.Screen name="payment-settings" />
             <Stack.Screen name="notifications" />
+            <Stack.Screen name="series" />
+            <Stack.Screen name="manage-home-sections" />
         </Stack>
     );
 }

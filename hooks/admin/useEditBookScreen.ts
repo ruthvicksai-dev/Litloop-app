@@ -38,10 +38,6 @@ export function useEditBookScreen(bookId: string) {
     const [publishedYear, setPublishedYear] = useState("");
     const [publisher, setPublisher] = useState("");
     const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
-    const [isTop10, setIsTop10] = useState(false);
-    const [top10Position, setTop10Position] = useState("");
-    const [isFamous, setIsFamous] = useState(false);
-    const [isTrending, setIsTrending] = useState(false);
     const [isSeries, setIsSeries] = useState(false);
     const [series, setSeries] = useState("");
     const [seriesId, setSeriesId] = useState<Id<"book_series"> | undefined>(undefined);
@@ -70,7 +66,6 @@ export function useEditBookScreen(bookId: string) {
         onError: (message) => showToast(message, "error"),
         onSuccess: (message) => showToast(message, "success"),
     });
-
     const toggleGenre = (genre: string) => {
         setSelectedGenres((current) =>
             current.includes(genre)
@@ -81,16 +76,6 @@ export function useEditBookScreen(bookId: string) {
         );
     };
 
-    const toggleTop10 = () => {
-        setIsTop10((current) => {
-            const next = !current;
-            if (!next) setTop10Position("");
-            return next;
-        });
-    };
-
-    const toggleFamous = () => setIsFamous((current) => !current);
-    const toggleTrending = () => setIsTrending((current) => !current);
     const toggleSeries = () => {
         setIsSeries((current) => {
             const next = !current;
@@ -117,10 +102,6 @@ export function useEditBookScreen(bookId: string) {
         setPublishedYear(book.publishedYear ? String(book.publishedYear) : "");
         setPublisher(book.publisher ?? "");
         setSelectedGenres(book.genres ?? []);
-        setIsTop10(Boolean(book.isTop10));
-        setTop10Position(book.top10Position ? String(book.top10Position) : "");
-        setIsFamous(Boolean(book.isFamous));
-        setIsTrending(Boolean(book.isTrending));
         setIsSeries(Boolean(book.series || book.seriesId));
         setSeries(book.series ?? "");
         setSeriesId(book.seriesId);
@@ -242,8 +223,6 @@ export function useEditBookScreen(bookId: string) {
                 totalCopies,
                 pageCount,
                 publishedYear,
-                top10Position,
-                isTop10,
             });
 
             let coverImageIds: Id<"_storage">[] | undefined;
@@ -280,10 +259,6 @@ export function useEditBookScreen(bookId: string) {
                 publishedYear: parsed.publishedYear,
                 publisher: publisher.trim() || undefined,
                 isbn: isbn.trim() || undefined,
-                isTop10,
-                top10Position: parsed.top10Position,
-                isFamous,
-                isTrending,
                 series: isSeries ? series.trim() || undefined : undefined,
                 seriesId: isSeries ? seriesId : undefined,
             };
@@ -363,17 +338,6 @@ export function useEditBookScreen(bookId: string) {
         setPublisher,
         selectedGenres,
         availableGenres,
-        isTop10,
-        setIsTop10,
-        toggleTop10,
-        top10Position,
-        setTop10Position,
-        isFamous,
-        setIsFamous,
-        toggleFamous,
-        isTrending,
-        setIsTrending,
-        toggleTrending,
         isSeries,
         setIsSeries,
         toggleSeries,
@@ -399,3 +363,7 @@ export function useEditBookScreen(bookId: string) {
         removeCover,
     };
 }
+        function showToast(arg0: string, arg1: string) {
+            throw new Error("Function not implemented.");
+        }
+

@@ -118,55 +118,60 @@ function AdminRentalCardComponent({
             </TouchableOpacity>
 
             {/* Quick Action Buttons */}
-            <View style={styles.actionRow}>
-                {item.status === "requested" && (
-                    <TouchableOpacity
-                        style={styles.actionBtn}
-                        onPress={() => {
-                            triggerHaptic("light");
-                            onScheduleDelivery();
-                        }}
-                    >
-                        <Text style={styles.actionBtnText}>Schedule Delivery</Text>
-                    </TouchableOpacity>
-                )}
+            {(item.status === "requested" ||
+                item.status === "payment_pending" ||
+                item.status === "delivery_scheduled" ||
+                item.status === "pickup_scheduled") && (
+                <View style={styles.actionRow}>
+                    {item.status === "requested" && (
+                        <TouchableOpacity
+                            style={styles.actionBtn}
+                            onPress={() => {
+                                triggerHaptic("light");
+                                onScheduleDelivery();
+                            }}
+                        >
+                            <Text style={styles.actionBtnText}>Schedule Delivery</Text>
+                        </TouchableOpacity>
+                    )}
 
-                {item.status === "payment_pending" && (
-                    <TouchableOpacity
-                        style={styles.actionBtn}
-                        onPress={() => {
-                            triggerHaptic("light");
-                            onVerifyPayment();
-                        }}
-                    >
-                        <Text style={styles.actionBtnText}>Verify Payment</Text>
-                    </TouchableOpacity>
-                )}
+                    {item.status === "payment_pending" && (
+                        <TouchableOpacity
+                            style={styles.actionBtn}
+                            onPress={() => {
+                                triggerHaptic("light");
+                                onVerifyPayment();
+                            }}
+                        >
+                            <Text style={styles.actionBtnText}>Verify Payment</Text>
+                        </TouchableOpacity>
+                    )}
 
-                {item.status === "delivery_scheduled" && (
-                    <TouchableOpacity
-                        style={[styles.actionBtn, styles.successBtn]}
-                        onPress={() => {
-                            triggerHaptic("light");
-                            onMarkDelivered();
-                        }}
-                    >
-                        <Text style={styles.actionBtnText}>Mark Delivered</Text>
-                    </TouchableOpacity>
-                )}
+                    {item.status === "delivery_scheduled" && (
+                        <TouchableOpacity
+                            style={[styles.actionBtn, styles.successBtn]}
+                            onPress={() => {
+                                triggerHaptic("light");
+                                onMarkDelivered();
+                            }}
+                        >
+                            <Text style={styles.actionBtnText}>Mark Delivered</Text>
+                        </TouchableOpacity>
+                    )}
 
-                {item.status === "pickup_scheduled" && (
-                    <TouchableOpacity
-                        style={[styles.actionBtn, styles.successBtn]}
-                        onPress={() => {
-                            triggerHaptic("light");
-                            onMarkReturned();
-                        }}
-                    >
-                        <Text style={styles.actionBtnText}>Mark Returned</Text>
-                    </TouchableOpacity>
-                )}
-            </View>
+                    {item.status === "pickup_scheduled" && (
+                        <TouchableOpacity
+                            style={[styles.actionBtn, styles.successBtn]}
+                            onPress={() => {
+                                triggerHaptic("light");
+                                onMarkReturned();
+                            }}
+                        >
+                            <Text style={styles.actionBtnText}>Mark Returned</Text>
+                        </TouchableOpacity>
+                    )}
+                </View>
+            )}
         </View>
     );
 }
@@ -176,9 +181,9 @@ export default React.memo(AdminRentalCardComponent);
 const styles = StyleSheet.create({
     rentalCard: {
         backgroundColor: Colors.white,
-        borderRadius: 20,
-        padding: 14,
-        marginBottom: 12,
+        borderRadius: 18,
+        padding: 18,
+        marginBottom: 15,
         shadowColor: Colors.shadow,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.04,
@@ -199,8 +204,8 @@ const styles = StyleSheet.create({
         elevation: 2,
     },
     cover: {
-        width: 60,
-        height: 88,
+        width: 64,
+        height: 94,
         borderRadius: 10,
         backgroundColor: Colors.border,
     },
@@ -218,6 +223,7 @@ const styles = StyleSheet.create({
         alignItems: "flex-start",
         justifyContent: "space-between",
         gap: 6,
+        marginBottom: 2,
     },
     rentalTitle: {
         flex: 1,
@@ -230,25 +236,25 @@ const styles = StyleSheet.create({
         fontSize: FontSizes.caption,
         fontFamily: Fonts.medium,
         color: Colors.textSecondary,
-        marginTop: 2,
+        marginTop: 4,
     },
     zoneTag: {
         fontSize: FontSizes.tiny,
         fontFamily: Fonts.bold,
         color: Colors.primary,
-        marginTop: 2,
+        marginTop: 4,
     },
     addressText: {
         fontSize: FontSizes.tiny,
         fontFamily: Fonts.regular,
         color: Colors.textSecondary,
-        marginTop: 3,
+        marginTop: 5,
     },
     detailRow: {
         flexDirection: "row",
         flexWrap: "wrap",
         gap: 6,
-        marginTop: 4,
+        marginTop: 5,
     },
     detailChip: {
         flexDirection: "row",
@@ -297,8 +303,8 @@ const styles = StyleSheet.create({
     },
     actionRow: {
         flexDirection: "row",
-        marginTop: 14,
-        paddingTop: 14,
+        marginTop: 10,
+        paddingTop: 10,
         borderTopWidth: 1,
         borderTopColor: Colors.border + "40",
         gap: 8,

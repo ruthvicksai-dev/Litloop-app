@@ -15,6 +15,7 @@ import React from "react";
 import {
     ActivityIndicator,
     FlatList,
+    RefreshControl,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -31,6 +32,7 @@ const TYPE_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
 export default function AdminNotificationsScreen() {
     const { accessToken, isLoading } = useAuthState();
     const router = useRouter();
+    const [refreshing, setRefreshing] = React.useState(false);
 
     const notifications = useQuery(
         api.notifications.getNotifications,
@@ -83,71 +85,88 @@ export default function AdminNotificationsScreen() {
         }
     };
 
+    const onRefresh = () => {
+        setRefreshing(true);
+        setTimeout(() => setRefreshing(false), 800);
+    };
+
     if (isLoading) {
         return (
-            <SafeAreaView style={styles.container}>
-                <AdminHeader title="Admin Alerts" />
-                <View style={styles.emptyContainer}>
-                    <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 40 }} />
-                </View>
-            </SafeAreaView>
+            <View style={styles.container}>
+                <AdminHeader title="Admin Alerts" variant="dark" />
+                <SafeAreaView style={styles.flex} edges={["bottom", "left", "right"]}>
+                    <View style={styles.emptyContainer}>
+                        <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 40 }} />
+                    </View>
+                </SafeAreaView>
+            </View>
         );
     }
 
     return (
-        <SafeAreaView style={styles.container}>
-            <AdminHeader title="Admin Alerts" />
-            <View style={styles.summaryRow}>
-                   <Text style={styles.summaryText}>
-                       {unreadCount > 0 ? `${unreadCount} unread` : "All caught up!"}
-                   </Text>
-                   {unreadCount > 0 && (
-                       <TouchableOpacity onPress={handleMarkAllRead} style={styles.markAllBtn}>
-                           <Text style={styles.markAllText}>Mark all read</Text>
-                       </TouchableOpacity>
-                   )}
-               </View>
+        <View style={styles.container}>
+            <AdminHeader title="Admin Alerts" variant="dark" />
 
-            {user && !user.pushToken && (
-                <View style={[styles.pushPromptContainer, { marginTop: 15 }]}>
-                    <View style={styles.pushPromptContent}>
-                        <Ionicons name="notifications-off-outline" size={24} color={Colors.warning} />
-                        <View style={styles.pushPromptTextContainer}>
-                            <Text style={styles.pushPromptTitle}>Admin Push Disabled</Text>
-                            <Text style={styles.pushPromptSubtitle}>Turn on push to get instant alerts for new rentals and payments.</Text>
-                        </View>
-                    </View>
-                    <TouchableOpacity style={styles.pushPromptButton} onPress={handleEnablePush}>
-                        <Text style={styles.pushPromptButtonText}>Enable</Text>
-                    </TouchableOpacity>
+            <SafeAreaView style={styles.flex} edges={["bottom", "left", "right"]}>
+                <View style={styles.summaryRow}>
+                    <Text style={styles.summaryText}>
+                        {unreadCount > 0 ? `${unreadCount} unread` : "All caught up!"}
+                    </Text>
+                    {unreadCount > 0 && (
+                        <TouchableOpacity onPress={handleMarkAllRead} style={styles.markAllBtn}>
+                            <Text style={styles.markAllText}>Mark all read</Text>
+                        </TouchableOpacity>
+                    )}
                 </View>
-            )}
 
-            <FlatList
-                data={notifications}
-                keyExtractor={(item) => item._id}
-                contentContainerStyle={
-                    notifications?.length === 0 ? styles.emptyContainer : styles.listContent
-                }
-                ListEmptyComponent={
-                    notifications === undefined ? null : (
-                        <EmptyState
-                            icon="notifications-outline"
-                            title="No admin alerts"
-                            subtitle="System alerts and rental requests will appear here."
-                        />
-                    )
-                }
-                renderItem={({ item }) => (
-                    <NotificationItem
-                        item={item}
-                        onPress={handlePress}
-                        icon={TYPE_ICON[item.type] ?? "notifications-outline"}
-                    />
+                {user && !user.pushToken && (
+                    <View style={styles.pushPromptContainer}>
+                        <View style={styles.pushPromptContent}>
+                            <Ionicons name="notifications-off-outline" size={24} color={Colors.warning} />
+                            <View style={styles.pushPromptTextContainer}>
+                                <Text style={styles.pushPromptTitle}>Admin Push Disabled</Text>
+                                <Text style={styles.pushPromptSubtitle}>Turn on push to get instant alerts for new rentals and payments.</Text>
+                            </View>
+                        </View>
+                        <TouchableOpacity style={styles.pushPromptButton} onPress={handleEnablePush}>
+                            <Text style={styles.pushPromptButtonText}>Enable</Text>
+                        </TouchableOpacity>
+                    </View>
                 )}
-                ItemSeparatorComponent={() => <View style={styles.separator} />}
-            />
-        </SafeAreaView>
+
+                <FlatList
+                    data={notifications}
+                    keyExtractor={(item) => item._id}
+                    contentContainerStyle={
+                        notifications?.length === 0 ? styles.emptyContainer : styles.listContent
+                    }
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            colors={[Colors.primary]}
+                        />
+                    }
+                    ListEmptyComponent={
+                        notifications === undefined ? null : (
+                            <EmptyState
+                                icon="notifications-outline"
+                                title="No admin alerts"
+                                subtitle="System alerts and rental requests will appear here."
+                            />
+                        )
+                    }
+                    renderItem={({ item }) => (
+                        <NotificationItem
+                            item={item}
+                            onPress={handlePress}
+                            icon={TYPE_ICON[item.type] ?? "notifications-outline"}
+                        />
+                    )}
+                    ItemSeparatorComponent={() => <View style={styles.separator} />}
+                />
+            </SafeAreaView>
+        </View>
     );
 }
 
@@ -156,36 +175,8 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: Colors.background,
     },
-    header: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        paddingHorizontal: Layout.screenPaddingWide,
-        paddingTop: Spacing.sm,
-        paddingBottom: Spacing.md,
-    },
-    headerLeft: {
+    flex: {
         flex: 1,
-        flexDirection: "row",
-        alignItems: "center",
-    },
-    backBtn: {
-        width: 40,
-        height: 40,
-        alignItems: "center",
-        justifyContent: "center",
-        marginLeft: -25,
-    },
-    headerTitle: {
-        flex: 1,
-        fontSize: FontSizes.title,
-        color: Colors.text,
-        textAlign: "center",
-        fontFamily: Fonts.bold,
-    },
-    headerSpacer: {
-        width: 40,
-        marginRight: -25,
     },
     summaryRow: {
         flexDirection: "row",
@@ -193,6 +184,7 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
         gap: Spacing.md,
         paddingHorizontal: Layout.screenPaddingWide,
+        paddingTop: Spacing.md,
         paddingBottom: Spacing.md,
     },
     summaryText: {

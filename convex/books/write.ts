@@ -524,3 +524,138 @@ export const deleteBannerImage = mutation({
         }
     },
 });
+
+// ─── Home Section Management Mutations ────────────────────────────────────────
+
+/**
+ * Adds a book to a home section at a specific position.
+ * Sets the section boolean flag and position field.
+ * Prevents duplicates within the same section.
+ */
+export const addBookToSection = mutation({
+    args: {
+        accessToken: v.string(),
+        bookId: v.id("books"),
+        section: v.union(
+            v.literal("top10"),
+            v.literal("famous"),
+            v.literal("trending")
+        ),
+        position: v.number(),
+    },
+    handler: async (ctx, args) => {
+        const admin = await assertAdmin(ctx, args.accessToken);
+        const book = await ctx.db.get(args.bookId);
+        if (!book) throw new Error("Book not found.");
+
+        // Validate position range
+        if (args.position < 1) {
+            throw new Error("Position must be at least 1.");
+        }
+        if (args.section === "top10" && args.position > 10) {
+            throw new Error("Top 10 position must be between 1 and 10.");
+        }
+
+        // Prevent duplicate: check if book is already in this section
+        const sectionFlag =
+            args.section === "top10" ? "isTop10" :
+            args.section === "famous" ? "isFamous" :
+            "isTrending";
+
+        if (book[sectionFlag]) {
+            throw new Error("This book is already in this section.");
+        }
+
+        // Check if another book already occupies this position
+        const positionField =
+            args.section === "top10" ? "top10Position" :
+            args.section === "famous" ? "famousPosition" :
+            "trendingPosition";
+
+        const indexName =
+            args.section === "top10" ? "by_isTop10" as const :
+            args.section === "famous" ? "by_isFamous" as const :
+            "by_isTrending" as const;
+
+        const existingBooks = await ctx.db
+            .query("books")
+            .withIndex(indexName, (q: any) => q.eq(sectionFlag, true))
+            .collect();
+
+        const positionConflict = existingBooks.find(
+            (b) => (b as any)[positionField] === args.position
+        );
+
+        if (positionConflict) {
+            throw new Error(
+                `Position ${args.position} is already occupied by "${positionConflict.title}".`
+            );
+        }
+
+        // Set the flag and position
+        const updates: Record<string, unknown> = {
+            [sectionFlag]: true,
+            [positionField]: args.position,
+        };
+
+        await ctx.db.patch(args.bookId, updates);
+
+        await insertAuditLog(ctx, "section_book_added", admin._id, args.bookId, "book", {
+            section: args.section,
+            position: args.position,
+            title: book.title,
+        });
+    },
+});
+
+/**
+ * Removes a book from a home section.
+ * Clears the section boolean flag and position field.
+ * Does NOT delete the book from the database.
+ */
+export const removeBookFromSection = mutation({
+    args: {
+        accessToken: v.string(),
+        bookId: v.id("books"),
+        section: v.union(
+            v.literal("top10"),
+            v.literal("famous"),
+            v.literal("trending")
+        ),
+    },
+    handler: async (ctx, args) => {
+        const admin = await assertAdmin(ctx, args.accessToken);
+        const book = await ctx.db.get(args.bookId);
+        if (!book) throw new Error("Book not found.");
+
+        const sectionFlag =
+            args.section === "top10" ? "isTop10" :
+            args.section === "famous" ? "isFamous" :
+            "isTrending";
+
+        const positionField =
+            args.section === "top10" ? "top10Position" :
+            args.section === "famous" ? "famousPosition" :
+            "trendingPosition";
+
+        if (!book[sectionFlag]) {
+            throw new Error("This book is not in this section.");
+        }
+
+        const removedPosition = (book as any)[positionField];
+
+        const updates: Record<string, unknown> = {
+            [sectionFlag]: false,
+            [positionField]: undefined,
+        };
+
+        await ctx.db.patch(args.bookId, updates);
+
+        await insertAuditLog(ctx, "section_book_removed", admin._id, args.bookId, "book", {
+            section: args.section,
+            position: removedPosition,
+            title: book.title,
+        });
+    },
+});
+

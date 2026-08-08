@@ -192,7 +192,7 @@ export default function StudentVerificationsList() {
                 onCancel={() => setRejectModalVisible(false)}
             />
 
-            <Modal visible={!!selectedImage} transparent={true} animationType="fade" onRequestClose={() => setSelectedImage(null)}>
+            <Modal visible={!!selectedImage} transparent={true} statusBarTranslucent animationType="fade" onRequestClose={() => setSelectedImage(null)}>
                 <View style={styles.imageViewerOverlay}>
                     <TouchableOpacity 
                         style={styles.imageViewerClose}
@@ -259,6 +259,7 @@ const styles = StyleSheet.create({
     list: {
         flexGrow: 1,
         paddingHorizontal: 20,
+        paddingTop: Spacing.md,
         paddingBottom: 40,
     },
     listHeaderWrap: {

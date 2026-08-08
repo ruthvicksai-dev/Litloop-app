@@ -25,8 +25,9 @@ export default function ScanBookPage() {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
-            <AdminHeader title="Scan ISBN" />
+        <View style={styles.container}>
+            <AdminHeader title="Scan ISBN" variant="dark" />
+            <SafeAreaView style={styles.flex} edges={["bottom", "left", "right"]}>
 
             {!permission ? (
                 <View style={styles.center}>
@@ -77,7 +78,8 @@ export default function ScanBookPage() {
                     variant="ghost"
                 />
             </View>
-        </SafeAreaView>
+            </SafeAreaView>
+        </View>
     );
 }
 
@@ -85,6 +87,9 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: Colors.background,
+    },
+    flex: {
+        flex: 1,
     },
     center: {
         flex: 1,

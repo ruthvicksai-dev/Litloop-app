@@ -49,151 +49,154 @@ export default function AdminAnalyticsDashboard() {
     }
 
     return (
-        <SafeAreaView style={styles.container}>
-            <AdminHeader title="Analytics Dashboard" />
-            <ScrollView
-                contentContainerStyle={styles.content}
-                showsVerticalScrollIndicator={false}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={onRefresh}
-                        colors={[Colors.primary]}
-                    />
-                }
-            >
-                <Text style={styles.screenSubtitle}>Marketplace performance overview</Text>
+        <View style={styles.container}>
+            <AdminHeader title="Analytics Dashboard" variant="dark" />
 
+            <SafeAreaView style={styles.flex} edges={["bottom", "left", "right"]}>
                 <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.filterRow}
-                    style={styles.filterScroll}
+                    contentContainerStyle={[styles.content, { paddingTop: Spacing.md }]}
+                    showsVerticalScrollIndicator={false}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            colors={[Colors.primary]}
+                        />
+                    }
                 >
-                    {FILTERS.map((filter) => {
-                        const isActive = filter.key === range;
-                        return (
-                            <TouchableOpacity
-                                key={filter.key}
-                                style={[styles.filterChip, isActive && styles.filterChipActive]}
-                                onPress={() => setRange(filter.key)}
-                            >
-                                <Text style={[styles.filterChipText, isActive && styles.filterChipTextActive]}>
-                                    {filter.label}
-                                </Text>
-                            </TouchableOpacity>
-                        );
-                    })}
-                </ScrollView>
+                    <Text style={styles.screenSubtitle}>Marketplace performance overview</Text>
 
-                <View style={styles.statsGrid}>
-                    <StatCard
-                        label="Total Revenue"
-                        value={`₹${formatCurrency(analytics.kpis.totalRevenue)}`}
-                        icon="wallet-outline"
-                    />
-                    <StatCard
-                        label="Revenue This Month"
-                        value={`₹${formatCurrency(analytics.kpis.revenueThisMonth)}`}
-                        icon="trending-up-outline"
-                        tint={Colors.success}
-                    />
-                    <StatCard
-                        label="Active Rentals"
-                        value={analytics.kpis.activeRentals}
-                        icon="book-outline"
-                        tint={Colors.warning}
-                    />
-                    <StatCard
-                        label="Total Users"
-                        value={analytics.kpis.totalUsers}
-                        icon="people-outline"
-                        tint="#3B82F6"
-                    />
-                </View>
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.filterRow}
+                        style={styles.filterScroll}
+                    >
+                        {FILTERS.map((filter) => {
+                            const isActive = filter.key === range;
+                            return (
+                                <TouchableOpacity
+                                    key={filter.key}
+                                    style={[styles.filterChip, isActive && styles.filterChipActive]}
+                                    onPress={() => setRange(filter.key)}
+                                >
+                                    <Text style={[styles.filterChipText, isActive && styles.filterChipTextActive]}>
+                                        {filter.label}
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </ScrollView>
 
-                <View style={styles.chartCard}>
-                    <AdminVerticalBarChart
-                        title="Monthly Revenue"
-                        items={analytics.charts.monthlyRevenue}
-                        emptyLabel="No monthly revenue data yet."
+                    <View style={styles.statsGrid}>
+                        <StatCard
+                            label="Total Revenue"
+                            value={`₹${formatCurrency(analytics.kpis.totalRevenue)}`}
+                            icon="wallet-outline"
+                        />
+                        <StatCard
+                            label="Revenue This Month"
+                            value={`₹${formatCurrency(analytics.kpis.revenueThisMonth)}`}
+                            icon="trending-up-outline"
+                            tint={Colors.success}
+                        />
+                        <StatCard
+                            label="Active Rentals"
+                            value={analytics.kpis.activeRentals}
+                            icon="book-outline"
+                            tint={Colors.warning}
+                        />
+                        <StatCard
+                            label="Total Users"
+                            value={analytics.kpis.totalUsers}
+                            icon="people-outline"
+                            tint="#3B82F6"
+                        />
+                    </View>
+
+                    <View style={styles.chartCard}>
+                        <AdminVerticalBarChart
+                            title="Monthly Revenue"
+                            items={analytics.charts.monthlyRevenue}
+                            emptyLabel="No monthly revenue data yet."
+                            tone={Colors.primary}
+                        />
+                    </View>
+
+                    <View style={styles.chartCard}>
+                        <AdminLineChart
+                            title="Daily Rentals"
+                            points={analytics.charts.dailyRentals}
+                            emptyLabel="No daily rental data yet."
+                            tone={Colors.success}
+                        />
+                    </View>
+
+                    <View style={styles.chartCard}>
+                        <AdminDonutChart
+                            title="Rentals by Genre"
+                            items={analytics.charts.rentalsByGenre.map((item, index) => ({
+                                label: item.name,
+                                value: item.rentals,
+                                color: [Colors.primary, Colors.success, Colors.warning, "#3B82F6", "#8B5CF6"][index % 5],
+                            }))}
+                            centerLabel="Genres"
+                            centerValue={`${analytics.charts.rentalsByGenre.reduce((sum, item) => sum + item.rentals, 0)}`}
+                            emptyLabel="No genre analytics available yet."
+                        />
+                    </View>
+
+                    <AdminAnalyticsBars
+                        title="Top Rented Books"
+                        items={analytics.charts.topBooksByRentals.map((item) => ({
+                            label: item.title,
+                            value: item.rentals,
+                        }))}
+                        emptyLabel="No book rental analytics yet."
                         tone={Colors.primary}
                     />
-                </View>
 
-                <View style={styles.chartCard}>
-                    <AdminLineChart
-                        title="Daily Rentals"
-                        points={analytics.charts.dailyRentals}
-                        emptyLabel="No daily rental data yet."
-                        tone={Colors.success}
-                    />
-                </View>
+                    <View style={styles.leaderboardCard}>
+                        <Text style={styles.chartTitle}>Top 10 Most Rented Books</Text>
+                        {analytics.leaderboards.topRentedBooks.map((book, index) => (
+                            <View key={`${book.bookId}-rentals`} style={styles.leaderRow}>
+                                <Text style={styles.rank}>{index + 1}</Text>
+                                <Text style={styles.leaderLabel} numberOfLines={1}>
+                                    {book.title}
+                                </Text>
+                                <Text style={styles.leaderValue}>{book.rentals}</Text>
+                            </View>
+                        ))}
+                    </View>
 
-                <View style={styles.chartCard}>
-                    <AdminDonutChart
-                        title="Rentals by Genre"
-                        items={analytics.charts.rentalsByGenre.map((item, index) => ({
-                            label: item.name,
-                            value: item.rentals,
-                            color: [Colors.primary, Colors.success, Colors.warning, "#3B82F6", "#8B5CF6"][index % 5],
-                        }))}
-                        centerLabel="Genres"
-                        centerValue={`${analytics.charts.rentalsByGenre.reduce((sum, item) => sum + item.rentals, 0)}`}
-                        emptyLabel="No genre analytics available yet."
-                    />
-                </View>
+                    <View style={styles.leaderboardCard}>
+                        <Text style={styles.chartTitle}>Top Revenue Generating Books</Text>
+                        {analytics.leaderboards.topRevenueBooks.map((book, index) => (
+                            <View key={`${book.bookId}-revenue`} style={styles.leaderRow}>
+                                <Text style={styles.rank}>{index + 1}</Text>
+                                <Text style={styles.leaderLabel} numberOfLines={1}>
+                                    {book.title}
+                                </Text>
+                                <Text style={styles.leaderValue}>₹{formatCurrency(book.revenue)}</Text>
+                            </View>
+                        ))}
+                    </View>
 
-                <AdminAnalyticsBars
-                    title="Top Rented Books"
-                    items={analytics.charts.topBooksByRentals.map((item) => ({
-                        label: item.title,
-                        value: item.rentals,
-                    }))}
-                    emptyLabel="No book rental analytics yet."
-                    tone={Colors.primary}
-                />
-
-                <View style={styles.leaderboardCard}>
-                    <Text style={styles.chartTitle}>Top 10 Most Rented Books</Text>
-                    {analytics.leaderboards.topRentedBooks.map((book, index) => (
-                        <View key={`${book.bookId}-rentals`} style={styles.leaderRow}>
-                            <Text style={styles.rank}>{index + 1}</Text>
-                            <Text style={styles.leaderLabel} numberOfLines={1}>
-                                {book.title}
-                            </Text>
-                            <Text style={styles.leaderValue}>{book.rentals}</Text>
-                        </View>
-                    ))}
-                </View>
-
-                <View style={styles.leaderboardCard}>
-                    <Text style={styles.chartTitle}>Top Revenue Generating Books</Text>
-                    {analytics.leaderboards.topRevenueBooks.map((book, index) => (
-                        <View key={`${book.bookId}-revenue`} style={styles.leaderRow}>
-                            <Text style={styles.rank}>{index + 1}</Text>
-                            <Text style={styles.leaderLabel} numberOfLines={1}>
-                                {book.title}
-                            </Text>
-                            <Text style={styles.leaderValue}>₹{formatCurrency(book.revenue)}</Text>
-                        </View>
-                    ))}
-                </View>
-
-                <View style={styles.leaderboardCard}>
-                    <Text style={styles.chartTitle}>Top Genres by Rentals</Text>
-                    {analytics.leaderboards.topGenres.map((genre, index) => (
-                        <View key={`${genre.genre}-${index}`} style={styles.leaderRow}>
-                            <Text style={styles.rank}>{index + 1}</Text>
-                            <Text style={styles.leaderLabel} numberOfLines={1}>
-                                {genre.genre}
-                            </Text>
-                            <Text style={styles.leaderValue}>{genre.rentals}</Text>
-                        </View>
-                    ))}
-                </View>
-            </ScrollView>
-        </SafeAreaView>
+                    <View style={styles.leaderboardCard}>
+                        <Text style={styles.chartTitle}>Top Genres by Rentals</Text>
+                        {analytics.leaderboards.topGenres.map((genre, index) => (
+                            <View key={`${genre.genre}-${index}`} style={styles.leaderRow}>
+                                <Text style={styles.rank}>{index + 1}</Text>
+                                <Text style={styles.leaderLabel} numberOfLines={1}>
+                                    {genre.genre}
+                                </Text>
+                                <Text style={styles.leaderValue}>{genre.rentals}</Text>
+                            </View>
+                        ))}
+                    </View>
+                </ScrollView>
+            </SafeAreaView>
+        </View>
     );
 }
 
@@ -201,6 +204,9 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: Colors.background,
+    },
+    flex: {
+        flex: 1,
     },
     center: {
         flex: 1,

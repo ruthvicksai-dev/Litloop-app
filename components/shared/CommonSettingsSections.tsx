@@ -219,6 +219,7 @@ export function CommonSettingsSections() {
             <Modal
                 visible={showDeleteModal}
                 transparent
+                statusBarTranslucent
                 animationType="fade"
                 onRequestClose={() => setShowDeleteModal(false)}
             >

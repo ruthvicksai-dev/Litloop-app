@@ -79,42 +79,46 @@ export default function VerifyPaymentScreen() {
 
     if (params.rentalId && !singleRental) {
         return (
-            <SafeAreaView style={styles.container}>
-                <AdminHeader title="Verify Payment" />
-                <Text style={styles.screenSubtitle}>This payment request is no longer available.</Text>
-                <EmptyState
-                    icon="receipt-outline"
-                    title="Payment request not found"
-                    subtitle="It may have already been verified or removed from the queue."
-                    actionLabel="Go Back"
-                    onAction={() => router.back()}
-                />
-            </SafeAreaView>
+            <View style={styles.container}>
+                <AdminHeader title="Verify Payment" variant="dark" />
+                <SafeAreaView style={styles.flex} edges={["bottom", "left", "right"]}>
+                    <Text style={[styles.screenSubtitle, { marginTop: Spacing.md }]}>This payment request is no longer available.</Text>
+                    <EmptyState
+                        icon="receipt-outline"
+                        title="Payment request not found"
+                        subtitle="It may have already been verified or removed from the queue."
+                        actionLabel="Go Back"
+                        onAction={() => router.back()}
+                    />
+                </SafeAreaView>
+            </View>
         );
     }
 
     if (params.rentalId && singleRental) {
         return (
-            <SafeAreaView style={styles.container}>
-                <AdminHeader title="Verify Payment" />
-                <ScrollView
-                    contentContainerStyle={[styles.singleScroll, { paddingBottom: Math.max(100, 60 + insets.bottom) }]}
-                    showsVerticalScrollIndicator={false}
-                    refreshControl={
-                        <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={onRefresh}
-                            colors={[Colors.primary]}
+            <View style={styles.container}>
+                <AdminHeader title="Verify Payment" variant="dark" />
+                <SafeAreaView style={styles.flex} edges={["bottom", "left", "right"]}>
+                    <ScrollView
+                        contentContainerStyle={[styles.singleScroll, { paddingTop: Spacing.lg, paddingBottom: Math.max(100, 60 + insets.bottom) }]}
+                        showsVerticalScrollIndicator={false}
+                        refreshControl={
+                            <RefreshControl
+                                refreshing={refreshing}
+                                onRefresh={onRefresh}
+                                colors={[Colors.primary]}
+                            />
+                        }
+                    >
+                        <SinglePaymentVerificationView 
+                            singleRental={singleRental}
+                            handleVerify={handleVerify}
+                            openRejectModal={openRejectModal}
+                            setSelectedImage={setSelectedImage}
                         />
-                    }
-                >
-                    <SinglePaymentVerificationView 
-                        singleRental={singleRental}
-                        handleVerify={handleVerify}
-                        openRejectModal={openRejectModal}
-                        setSelectedImage={setSelectedImage}
-                    />
-                </ScrollView>
+                    </ScrollView>
+                </SafeAreaView>
 
                 <RejectReasonModal
                     visible={rejectModalVisible}
@@ -124,18 +128,18 @@ export default function VerifyPaymentScreen() {
                     onConfirm={confirmReject}
                     onCancel={() => setRejectModalVisible(false)}
                 />
-            </SafeAreaView>
+            </View>
         );
     }
 
     const screenshotCount = pendingPayments.filter((item) => !!item.screenshotUrl).length;
 
     return (
-        <SafeAreaView style={styles.container}>
+        <View style={styles.container}>
             <View style={styles.listHeaderWrap}>
-                <AdminHeader title="Verifications" />
+                <AdminHeader title="Verifications" variant="dark" />
                 
-                <View style={{ paddingBottom: Spacing.sm }}>
+                <View style={styles.tabContainer}>
                     <SegmentedControl
                         options={TAB_OPTIONS}
                         activeValue={activeTab}
@@ -144,48 +148,50 @@ export default function VerifyPaymentScreen() {
                 </View>
             </View>
 
-            {activeTab === "payments" && (
-                <FlatList
-                    data={pendingPayments}
-                    keyExtractor={(item) => item._id}
-                    refreshControl={
-                        <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={onRefresh}
-                            colors={[Colors.primary]}
-                        />
-                    }
-                    renderItem={({ item }) => (
-                        <PaymentVerificationCard 
-                            item={item}
-                            handleVerify={handleVerify}
-                            openRejectModal={openRejectModal}
-                            setSelectedImage={setSelectedImage}
-                        />
-                    )}
-                    contentContainerStyle={styles.list}
-                    showsVerticalScrollIndicator={false}
-                    ListHeaderComponent={
-                        <PaymentVerificationListHeader 
-                            pendingCount={pendingPayments.length}
-                            screenshotCount={screenshotCount}
-                        />
-                    }
-                    ListEmptyComponent={
-                        <EmptyState 
-                            icon="checkmark-circle-outline"
-                            title="All payments are cleared"
-                            subtitle="There are no pending payment proofs waiting for admin verification."
-                        />
-                    }
-                />
-            )}
+            <SafeAreaView style={styles.flex} edges={["bottom", "left", "right"]}>
+                {activeTab === "payments" && (
+                    <FlatList
+                        data={pendingPayments}
+                        keyExtractor={(item) => item._id}
+                        refreshControl={
+                            <RefreshControl
+                                refreshing={refreshing}
+                                onRefresh={onRefresh}
+                                colors={[Colors.primary]}
+                            />
+                        }
+                        renderItem={({ item }) => (
+                            <PaymentVerificationCard 
+                                item={item}
+                                handleVerify={handleVerify}
+                                openRejectModal={openRejectModal}
+                                setSelectedImage={setSelectedImage}
+                            />
+                        )}
+                        contentContainerStyle={[styles.list, { paddingTop: Spacing.md }]}
+                        showsVerticalScrollIndicator={false}
+                        ListHeaderComponent={
+                            <PaymentVerificationListHeader 
+                                pendingCount={pendingPayments.length}
+                                screenshotCount={screenshotCount}
+                            />
+                        }
+                        ListEmptyComponent={
+                            <EmptyState 
+                                icon="checkmark-circle-outline"
+                                title="All payments are cleared"
+                                subtitle="There are no pending payment proofs waiting for admin verification."
+                            />
+                        }
+                    />
+                )}
 
-            {activeTab === "students" && (
-                <View style={{ flex: 1 }}>
-                    <StudentVerificationsList />
-                </View>
-            )}
+                {activeTab === "students" && (
+                    <View style={styles.flex}>
+                        <StudentVerificationsList />
+                    </View>
+                )}
+            </SafeAreaView>
 
             <RejectReasonModal
                 visible={rejectModalVisible}
@@ -197,7 +203,7 @@ export default function VerifyPaymentScreen() {
             />
 
             {/* Image Viewer Modal */}
-            <Modal visible={!!selectedImage} transparent={true} animationType="fade" onRequestClose={() => setSelectedImage(null)}>
+            <Modal visible={!!selectedImage} transparent={true} statusBarTranslucent animationType="fade" onRequestClose={() => setSelectedImage(null)}>
                 <View style={styles.imageViewerOverlay}>
                     <TouchableOpacity 
                         style={styles.imageViewerClose}
@@ -214,7 +220,7 @@ export default function VerifyPaymentScreen() {
                     )}
                 </View>
             </Modal>
-        </SafeAreaView>
+        </View>
     );
 }
 
@@ -222,6 +228,14 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: Colors.background,
+    },
+    flex: {
+        flex: 1,
+    },
+    tabContainer: {
+        paddingHorizontal: Layout.screenPaddingWide,
+        marginTop: Spacing.md,
+        marginBottom: Spacing.md,
     },
     center: {
         flex: 1,
@@ -246,6 +260,7 @@ const styles = StyleSheet.create({
     list: {
         flexGrow: 1,
         paddingHorizontal: Layout.screenPaddingWide,
+        paddingTop: Spacing.md,
         paddingBottom: Spacing.xl,
     },
     imageViewerOverlay: {

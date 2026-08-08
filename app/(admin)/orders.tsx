@@ -1,3 +1,4 @@
+import { SegmentedControl, SegmentOption } from "@/components/ui/core/SegmentedControl";
 import AdminRentalCard from "@/components/admin/rentals/AdminRentalCard";
 import BookLoader from "@/components/ui/feedback/BookLoader";
 import { Fonts, FontSizes } from "@/constants/fonts";
@@ -8,16 +9,21 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
+    FlatList,
     RefreshControl,
-    SectionList,
     StyleSheet,
     Text,
     TouchableOpacity,
     View,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+
+const ZONE_TAB_OPTIONS: SegmentOption[] = [
+    { label: "Home", value: "Home", icon: "home-outline", activeIcon: "home" },
+    { label: "College", value: "College", icon: "school-outline", activeIcon: "school" },
+];
 
 const TITLE_MAP: Record<string, string> = {
     all: "All Orders",
@@ -45,13 +51,13 @@ export default function AdminOrdersScreen() {
     const router = useRouter();
     const params = useLocalSearchParams<{ status?: string }>();
     const [refreshing, setRefreshing] = useState(false);
+    const [activeZone, setActiveZone] = useState<"Home" | "College">("Home");
     const insets = useSafeAreaInsets();
 
     const {
         rentals,
         statusFilter,
         setStatusFilter,
-        groupedByZone,
         handleMarkDelivered,
         handleMarkReturned,
         statusFilters,
@@ -69,6 +75,23 @@ export default function AdminOrdersScreen() {
         setTimeout(() => setRefreshing(false), 1000);
     }, []);
 
+    const filteredRentals = useMemo(() => {
+        const rentalList = rentals?.page ?? [];
+        return statusFilter === "all"
+            ? rentalList
+            : rentalList.filter((rental) => rental.status === statusFilter);
+    }, [rentals, statusFilter]);
+
+    const zoneRentals = useMemo(() => {
+        return filteredRentals.filter((rental) => {
+            const z = (rental.zone || "").toLowerCase();
+            if (activeZone === "College") {
+                return z === "college";
+            }
+            return z !== "college";
+        });
+    }, [filteredRentals, activeZone]);
+
     if (rentals === undefined) {
         return (
             <SafeAreaView style={styles.center} edges={["bottom", "left", "right"]}>
@@ -79,10 +102,10 @@ export default function AdminOrdersScreen() {
 
     const pageTitle = TITLE_MAP[statusFilter] || RENTAL_STATUS_LABELS[statusFilter] || "Orders";
     const pageSubtitle = SUBTITLE_MAP[statusFilter] || "Manage customer rentals";
-    const totalCount = groupedByZone.reduce((acc, z) => acc + z.data.length, 0);
+    const totalCount = zoneRentals.length;
 
     return (
-        <SafeAreaView style={styles.container} edges={["bottom", "left", "right"]}>
+        <View style={styles.container}>
             <StatusBar style="light" animated />
 
             {/* ─── Premium Gradient Hero Header (Matching Admin Dashboard) ─── */}
@@ -97,7 +120,7 @@ export default function AdminOrdersScreen() {
                     <View style={styles.heroDecorShape2} />
                 </View>
 
-                <SafeAreaView edges={["top"]} style={styles.heroSafeArea}>
+                <SafeAreaView edges={["top", "left", "right"]} style={styles.heroSafeArea}>
                     <View style={styles.heroContent}>
                         {/* Top Nav Row */}
                         <View style={styles.topNavRow}>
@@ -124,57 +147,62 @@ export default function AdminOrdersScreen() {
             </LinearGradient>
 
             {/* ─── Orders List Section ─── */}
-            <SectionList
-                sections={groupedByZone}
-                keyExtractor={(item) => item._id}
-                style={styles.flex}
-                renderSectionHeader={({ section }) => (
-                    <View style={styles.sectionHeader}>
-                        <Ionicons name="location" size={16} color={Colors.primary} />
-                        <Text style={styles.sectionTitle}>{section.title} Zone</Text>
-                        <View style={styles.sectionBadge}>
-                            <Text style={styles.sectionCount}>{section.data.length}</Text>
-                        </View>
-                    </View>
-                )}
-                renderItem={({ item }) => (
-                    <AdminRentalCard
-                        item={item}
-                        onScheduleDelivery={() =>
-                            router.push(`/(admin)/schedule-delivery?rentalId=${item._id}`)
-                        }
-                        onVerifyPayment={() =>
-                            router.push(`/(admin)/verify-payment?rentalId=${item._id}`)
-                        }
-                        onMarkDelivered={() => handleMarkDelivered(item._id)}
-                        onMarkReturned={() => handleMarkReturned(item._id)}
+            <SafeAreaView style={styles.flex} edges={["bottom", "left", "right"]}>
+                {/* Zone Tabs */}
+                <View style={styles.tabContainer}>
+                    <SegmentedControl
+                        options={ZONE_TAB_OPTIONS}
+                        activeValue={activeZone}
+                        onChange={(val) => {
+                            triggerHaptic("light");
+                            setActiveZone(val as "Home" | "College");
+                        }}
                     />
-                )}
-                contentContainerStyle={[
-                    styles.list,
-                    { paddingBottom: Math.max(insets.bottom + 24, 32) }
-                ]}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={onRefresh}
-                        colors={[Colors.primary]}
-                        tintColor={Colors.primary}
-                    />
-                }
-                ListEmptyComponent={
-                    <View style={styles.emptyCard}>
-                        <View style={styles.emptyIconCircle}>
-                            <Ionicons name="clipboard-outline" size={36} color={Colors.primary} />
+                </View>
+
+                <FlatList
+                    data={zoneRentals}
+                    keyExtractor={(item) => item._id}
+                    style={styles.flex}
+                    renderItem={({ item }) => (
+                        <AdminRentalCard
+                            item={item}
+                            onScheduleDelivery={() =>
+                                router.push(`/(admin)/schedule-delivery?rentalId=${item._id}`)
+                            }
+                            onVerifyPayment={() =>
+                                router.push(`/(admin)/verify-payment?rentalId=${item._id}`)
+                            }
+                            onMarkDelivered={() => handleMarkDelivered(item._id)}
+                            onMarkReturned={() => handleMarkReturned(item._id)}
+                        />
+                    )}
+                    contentContainerStyle={[
+                        styles.list,
+                        { paddingBottom: Math.max(insets.bottom + 24, 32) }
+                    ]}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            colors={[Colors.primary]}
+                            tintColor={Colors.primary}
+                        />
+                    }
+                    ListEmptyComponent={
+                        <View style={styles.emptyCard}>
+                            <View style={styles.emptyIconCircle}>
+                                <Ionicons name="clipboard-outline" size={36} color={Colors.primary} />
+                            </View>
+                            <Text style={styles.emptyTitle}>No {pageTitle}</Text>
+                            <Text style={styles.emptyText}>
+                                There are currently no {activeZone.toLowerCase()} zone orders under this status.
+                            </Text>
                         </View>
-                        <Text style={styles.emptyTitle}>No {pageTitle}</Text>
-                        <Text style={styles.emptyText}>
-                            There are currently no orders under this status category.
-                        </Text>
-                    </View>
-                }
-            />
-        </SafeAreaView>
+                    }
+                />
+            </SafeAreaView>
+        </View>
     );
 }
 
@@ -182,6 +210,11 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: Colors.background,
+    },
+    tabContainer: {
+        paddingHorizontal: Layout.screenPaddingWide,
+        marginTop: Spacing.md,
+        marginBottom: Spacing.xs,
     },
     flex: {
         flex: 1,
@@ -293,6 +326,7 @@ const styles = StyleSheet.create({
     list: {
         flexGrow: 1,
         paddingTop: 8,
+        paddingHorizontal: Layout.screenPaddingWide,
     },
     /* Empty State */
     emptyCard: {

@@ -1,5 +1,4 @@
 import Button from "@/components/ui/core/Button";
-import { Colors } from "@/constants/theme";
 import { triggerHaptic } from "@/utils";
 import { useRouter } from "expo-router";
 import React from "react";
@@ -25,7 +24,7 @@ export default function RentalActionButtons({
     }
 
     return (
-        <View style={styles.actionCard}>
+        <View style={styles.container}>
             {status === "requested" && (
                 <Button
                     title="Schedule Delivery"
@@ -71,19 +70,9 @@ export default function RentalActionButtons({
 }
 
 const styles = StyleSheet.create({
-    actionCard: {
-        backgroundColor: Colors.white,
-        borderRadius: 20,
+    container: {
         marginHorizontal: 16,
-        marginTop: 4,
+        marginTop: 8,
         marginBottom: 16,
-        padding: 16,
-        shadowColor: Colors.shadow,
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
-        borderWidth: 1,
-        borderColor: "rgba(0,0,0,0.04)",
     },
 });

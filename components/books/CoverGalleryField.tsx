@@ -83,6 +83,7 @@ export default function CoverGalleryField({
             <Modal
                 visible={Boolean(previewUri)}
                 transparent
+                statusBarTranslucent
                 animationType="fade"
                 onRequestClose={() => setPreviewUri(null)}
             >

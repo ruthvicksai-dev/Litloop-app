@@ -12,21 +12,13 @@ type SeriesOption = {
 };
 
 type FeaturedSectionsFieldsProps = {
-    isTop10: boolean;
-    top10Position: string;
-    isFamous: boolean;
-    isTrending: boolean;
     isSeries: boolean;
     series: string;
     seriesList: SeriesOption[] | undefined;
     seriesId?: Id<"book_series">;
-    onToggleTop10: () => void;
-    onToggleFamous: () => void;
-    onToggleTrending: () => void;
     onToggleSeries: () => void;
     onChangeSeries: (value: string) => void;
     onSelectSeriesId: (id: Id<"book_series"> | undefined) => void;
-    onChangeTop10Position: (value: string) => void;
 };
 
 function CheckRow({
@@ -49,57 +41,16 @@ function CheckRow({
 }
 
 export default function FeaturedSectionsFields({
-    isTop10,
-    top10Position,
-    isFamous,
-    isTrending,
     isSeries,
     series,
-    onToggleTop10,
-    onToggleFamous,
-    onToggleTrending,
     onToggleSeries,
     onChangeSeries,
-    onChangeTop10Position,
     seriesList,
     seriesId,
     onSelectSeriesId,
 }: FeaturedSectionsFieldsProps) {
     return (
         <View style={styles.container}>
-            <CheckRow label="Top 10 Rentals" checked={isTop10} onPress={onToggleTop10} />
-
-            {isTop10 ? (
-                <View style={styles.positionWrap}>
-                    <Text style={styles.positionLabel}>Top 10 Position</Text>
-                    <View style={styles.positionGrid}>
-                        {Array.from({ length: 10 }, (_, index) => {
-                            const value = String(index + 1);
-                            const selected = top10Position === value;
-                            return (
-                                <TouchableOpacity
-                                    key={value}
-                                    style={[styles.positionChip, selected && styles.positionChipActive]}
-                                    onPress={() => onChangeTop10Position(value)}
-                                    activeOpacity={0.85}
-                                >
-                                    <Text
-                                        style={[
-                                            styles.positionChipText,
-                                            selected && styles.positionChipTextActive,
-                                        ]}
-                                    >
-                                        {value}
-                                    </Text>
-                                </TouchableOpacity>
-                            );
-                        })}
-                    </View>
-                </View>
-            ) : null}
-
-            <CheckRow label="Famous Books" checked={isFamous} onPress={onToggleFamous} />
-            <CheckRow label="Trending Books" checked={isTrending} onPress={onToggleTrending} />
             <CheckRow label="Book Series" checked={isSeries} onPress={onToggleSeries} />
 
             {isSeries ? (

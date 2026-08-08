@@ -121,6 +121,8 @@ export default defineSchema({
         top10Position: v.optional(v.number()),
         isFamous: v.optional(v.boolean()),
         isTrending: v.optional(v.boolean()),
+        famousPosition: v.optional(v.number()),
+        trendingPosition: v.optional(v.number()),
         series: v.optional(v.string()), // Legacy string field
         seriesId: v.optional(v.id("book_series")), // New linked field
         searchText: v.optional(v.string()),

@@ -108,6 +108,7 @@ export default function HomeZoneFields({
             <Modal
                 visible={areaPickerVisible}
                 transparent
+                statusBarTranslucent
                 animationType="slide"
                 onRequestClose={() => setAreaPickerVisible(false)}
             >

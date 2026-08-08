@@ -3,6 +3,7 @@ export * from "./admin/useAdminBookDetailsScreen";
 export * from "./admin/useAdminBooksScreen";
 export * from "./admin/useAdminDashboard";
 export * from "./admin/useEditBookScreen";
+export * from "./admin/useManageHomeSections";
 export * from "./admin/useScheduleDeliveryScreen";
 export * from "./admin/useVerifyPaymentScreen";
 export * from "./admin/useVerifyStudentsScreen";

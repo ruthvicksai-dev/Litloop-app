@@ -66,6 +66,7 @@ export default function MapLocationPicker({
     return (
         <Modal
             visible={visible}
+            statusBarTranslucent
             animationType="slide"
             presentationStyle="fullScreen"
             onRequestClose={onClose}

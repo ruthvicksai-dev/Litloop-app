@@ -32,8 +32,8 @@ export function parseBookNumericFields(input: {
     totalCopies: string;
     pageCount: string;
     publishedYear: string;
-    top10Position: string;
-    isTop10: boolean;
+    top10Position?: string;
+    isTop10?: boolean;
 }) {
     const currentYear = new Date().getFullYear();
 
@@ -52,7 +52,7 @@ export function parseBookNumericFields(input: {
     if (publishedYear !== undefined && (publishedYear < 1400 || publishedYear > currentYear + 1)) {
         throw new Error("Published year must be a valid year.");
     }
-    const top10Position = input.isTop10
+    const top10Position = input.isTop10 && input.top10Position
         ? parseOptionalPositiveInt(input.top10Position, "Top 10 position")
         : undefined;
 

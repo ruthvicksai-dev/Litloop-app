@@ -7,7 +7,7 @@ import { Linking, Platform, StyleSheet, Text, TouchableOpacity, View } from "rea
 interface RentalLocationCardProps {
     type: "Delivery" | "Pickup";
     zone?: string;
-    location: {
+    location?: {
         roomNo?: string;
         rollNo?: string;
         department?: string;
@@ -15,18 +15,32 @@ interface RentalLocationCardProps {
         formattedAddress?: string;
         area?: string;
         city?: string;
+        landmark?: string;
         latitude?: number;
         longitude?: number;
         phone?: string;
-    };
+    } | null;
     date?: string;
     time?: string;
 }
 
 export default function RentalLocationCard({ type, zone, location, date, time }: RentalLocationCardProps) {
+    if (!location) return null;
+
     const isDelivery = type === "Delivery";
     const primaryColor = isDelivery ? Colors.primary : Colors.success;
-    const badgeText = isDelivery ? (zone ? `${zone} Zone` : "Delivery") : "Pickup Location";
+
+    // Detect if this specific location has College fields or Home address fields
+    const isCollegeLocation = Boolean(
+        location.roomNo?.trim() ||
+        location.rollNo?.trim() ||
+        location.department?.trim() ||
+        location.yearOfStudy?.trim() ||
+        (zone === "College" && !location.formattedAddress?.trim() && !location.area?.trim() && !location.city?.trim())
+    );
+
+    const effectiveZone = isCollegeLocation ? "College" : "Home";
+    const badgeText = `${effectiveZone} Zone ${isDelivery ? "Delivery" : "Pickup"}`;
 
     const openMap = () => {
         const { latitude, longitude } = location;
@@ -38,6 +52,11 @@ export default function RentalLocationCard({ type, zone, location, date, time }:
             if (url) Linking.openURL(url);
         }
     };
+
+    const addressText =
+        location.formattedAddress?.trim() ||
+        [location.area?.trim(), location.city?.trim()].filter(Boolean).join(", ") ||
+        "Address not provided";
 
     return (
         <View style={styles.card}>
@@ -51,7 +70,7 @@ export default function RentalLocationCard({ type, zone, location, date, time }:
                 </View>
             </View>
 
-            {zone === "College" ? (
+            {isCollegeLocation ? (
                 <View style={styles.gridContainer}>
                     <View style={styles.gridRow}>
                         <View style={styles.gridItem}>
@@ -73,24 +92,48 @@ export default function RentalLocationCard({ type, zone, location, date, time }:
                             <Text style={styles.gridValue}>{location.yearOfStudy || "N/A"}</Text>
                         </View>
                     </View>
+                    {location.landmark ? (
+                        <View style={styles.landmarkRow}>
+                            <Ionicons name="navigate-outline" size={13} color={Colors.textSecondary} />
+                            <Text style={styles.landmarkText}>Landmark: {location.landmark}</Text>
+                        </View>
+                    ) : null}
                 </View>
             ) : (
                 <View style={styles.addressContainer}>
                     <Text style={styles.addressLabel}>Address</Text>
-                    <Text style={styles.addressText}>
-                        {location.formattedAddress || [location.area, location.city].filter(Boolean).join(", ") || "Address not provided"}
-                    </Text>
+                    <Text style={styles.addressText}>{addressText}</Text>
+                    {location.landmark ? (
+                        <View style={styles.landmarkRow}>
+                            <Ionicons name="navigate-outline" size={13} color={Colors.textSecondary} />
+                            <Text style={styles.landmarkText}>Landmark: {location.landmark}</Text>
+                        </View>
+                    ) : null}
                 </View>
             )}
 
-            {(date || time) && (
+            {location.phone ? (
+                <View style={styles.phoneRow}>
+                    <Ionicons name="call-outline" size={13} color={Colors.textSecondary} />
+                    <Text style={styles.phoneText}>Contact: {location.phone}</Text>
+                </View>
+            ) : null}
+
+            {date || time ? (
                 <View style={styles.scheduleRow}>
                     <Ionicons name="calendar-outline" size={14} color={Colors.textSecondary} />
                     <Text style={styles.scheduleText}>
                         Scheduled: {[date, time].filter(Boolean).join(" at ")}
                     </Text>
                 </View>
-            )}
+            ) : !isDelivery ? (
+                <View style={styles.scheduleRow}>
+                    <Ionicons name="time-outline" size={14} color={Colors.textSecondary} />
+                    <Text style={styles.scheduleText}>
+                        Scheduled: Pending customer return request
+                    </Text>
+                </View>
+            ) : null}
 
             {location.latitude && location.longitude ? (
                 <TouchableOpacity style={styles.mapBtn} activeOpacity={0.8} onPress={openMap}>
@@ -186,6 +229,28 @@ const styles = StyleSheet.create({
         fontFamily: Fonts.bold,
         color: Colors.text,
         lineHeight: 18,
+    },
+    landmarkRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+        marginTop: 6,
+    },
+    landmarkText: {
+        fontSize: FontSizes.tiny,
+        fontFamily: Fonts.regular,
+        color: Colors.textSecondary,
+    },
+    phoneRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+        marginTop: 8,
+    },
+    phoneText: {
+        fontSize: FontSizes.tiny,
+        fontFamily: Fonts.medium,
+        color: Colors.textSecondary,
     },
     scheduleRow: {
         flexDirection: "row",

@@ -179,11 +179,21 @@ export const getTop10Books = query({
 export const getTrendingBooks = query({
     args: {},
     handler: async (ctx) => {
-        const books = await ctx.db
+        const flagged = await ctx.db
             .query("books")
-            .withIndex("by_rankingScore")
-            .order("desc")
-            .take(10);
+            .withIndex("by_isTrending", (q) => q.eq("isTrending", true))
+            .collect();
+
+        let books = flagged;
+        if (books.length === 0) {
+            books = await ctx.db
+                .query("books")
+                .withIndex("by_rankingScore")
+                .order("desc")
+                .take(10);
+        } else {
+            books.sort((a, b) => (a.trendingPosition ?? 999) - (b.trendingPosition ?? 999));
+        }
         return Promise.all(books.map((book) => mapBookForClient(ctx, book)));
     },
 });
@@ -194,8 +204,9 @@ export const getFamousBooks = query({
         const books = await ctx.db
             .query("books")
             .withIndex("by_isFamous", (q) => q.eq("isFamous", true))
-            .order("desc")
-            .take(10);
+            .collect();
+
+        books.sort((a, b) => (a.famousPosition ?? 999) - (b.famousPosition ?? 999));
         return Promise.all(books.map((book) => mapBookForClient(ctx, book)));
     },
 });
@@ -234,6 +245,106 @@ export const getNewlyAddedBooks = query({
             .order("desc")
             .take(10);
         return Promise.all(books.map((book) => mapBookForClient(ctx, book)));
+    },
+});
+
+// ─── Admin Home Section Management Queries ────────────────────────────────────
+
+/**
+ * Returns all three admin-managed home sections with ordered books.
+ * Admin-only. Each section returns books sorted by their position field.
+ * Auto-assigns default position numbers for existing books if missing.
+ */
+export const getHomeSectionBooks = query({
+    args: { accessToken: v.string() },
+    handler: async (ctx, args) => {
+        await assertAdmin(ctx, args.accessToken);
+
+        // Top 10 — ordered by top10Position (max 10)
+        const top10Raw = await ctx.db
+            .query("books")
+            .withIndex("by_isTop10", (q) => q.eq("isTop10", true))
+            .take(10);
+        const top10Sorted = top10Raw
+            .sort((a, b) => (a.top10Position ?? 999) - (b.top10Position ?? 999))
+            .map((b, idx) => ({
+                ...b,
+                top10Position: b.top10Position ?? (idx + 1),
+            }));
+
+        // Famous — ordered by famousPosition (unlimited)
+        const famousRaw = await ctx.db
+            .query("books")
+            .withIndex("by_isFamous", (q) => q.eq("isFamous", true))
+            .collect();
+        const famousSorted = famousRaw
+            .sort((a, b) => (a.famousPosition ?? 999) - (b.famousPosition ?? 999))
+            .map((b, idx) => ({
+                ...b,
+                famousPosition: b.famousPosition ?? (idx + 1),
+            }));
+
+        // Trending — ordered by trendingPosition (unlimited)
+        const trendingRaw = await ctx.db
+            .query("books")
+            .withIndex("by_isTrending", (q) => q.eq("isTrending", true))
+            .collect();
+        const trendingSorted = trendingRaw
+            .sort((a, b) => (a.trendingPosition ?? 999) - (b.trendingPosition ?? 999))
+            .map((b, idx) => ({
+                ...b,
+                trendingPosition: b.trendingPosition ?? (idx + 1),
+            }));
+
+        const [top10, famous, trending] = await Promise.all([
+            Promise.all(top10Sorted.map((b) => mapBookForClient(ctx, b))),
+            Promise.all(famousSorted.map((b) => mapBookForClient(ctx, b))),
+            Promise.all(trendingSorted.map((b) => mapBookForClient(ctx, b))),
+        ]);
+
+        return { top10, famous, trending };
+    },
+});
+
+/**
+ * Lightweight search for the add-book modal.
+ * Filters out books already in the target section to prevent duplicates.
+ */
+export const searchBooksForSection = query({
+    args: {
+        accessToken: v.string(),
+        searchText: v.string(),
+        section: v.union(
+            v.literal("top10"),
+            v.literal("famous"),
+            v.literal("trending")
+        ),
+    },
+    handler: async (ctx, args) => {
+        await assertAdmin(ctx, args.accessToken);
+
+        const normalizedSearch = normalizeBookValue(args.searchText.trim());
+        if (!normalizedSearch) return [];
+
+        // Search using existing search index
+        const results = await ctx.db
+            .query("books")
+            .withSearchIndex("search_books", (q) =>
+                q.search("searchText", normalizedSearch)
+            )
+            .take(20);
+
+        // Filter out books already in the target section
+        const sectionFlag =
+            args.section === "top10" ? "isTop10" :
+            args.section === "famous" ? "isFamous" :
+            "isTrending";
+
+        const filtered = results.filter((book) => !book[sectionFlag]);
+
+        return Promise.all(
+            filtered.slice(0, 12).map((b) => mapBookForClient(ctx, b))
+        );
     },
 });
 
@@ -294,19 +405,29 @@ export const getDiscoverData = query({
             .filter((b) => typeof b.top10Position === "number")
             .sort((a, b) => (a.top10Position ?? 99) - (b.top10Position ?? 99));
 
-        // Trending — by ranking score desc
+        // Trending — ordered by admin-managed trendingPosition (unlimited)
         const trendingRaw = await ctx.db
             .query("books")
-            .withIndex("by_rankingScore")
-            .order("desc")
-            .take(5);
+            .withIndex("by_isTrending", (q) => q.eq("isTrending", true))
+            .collect();
+        let trendingSorted = trendingRaw
+            .sort((a, b) => (a.trendingPosition ?? 999) - (b.trendingPosition ?? 999));
 
-        // Famous — flagged books
+        if (trendingSorted.length === 0) {
+            trendingSorted = await ctx.db
+                .query("books")
+                .withIndex("by_rankingScore")
+                .order("desc")
+                .take(10);
+        }
+
+        // Famous — ordered by admin-managed famousPosition (unlimited)
         const famousRaw = await ctx.db
             .query("books")
             .withIndex("by_isFamous", (q) => q.eq("isFamous", true))
-            .order("desc")
-            .take(5);
+            .collect();
+        const famousSorted = famousRaw
+            .sort((a, b) => (a.famousPosition ?? 999) - (b.famousPosition ?? 999));
 
         // Newly Added — latest by creation
         const newlyAddedRaw = await ctx.db
@@ -355,8 +476,8 @@ export const getDiscoverData = query({
             await Promise.all([
                 Promise.all(topPicksRaw.map((b) => mapBookForClient(ctx, b))),
                 Promise.all(top10Sorted.map((b) => mapBookForClient(ctx, b))),
-                Promise.all(trendingRaw.map((b) => mapBookForClient(ctx, b))),
-                Promise.all(famousRaw.map((b) => mapBookForClient(ctx, b))),
+                Promise.all(trendingSorted.map((b) => mapBookForClient(ctx, b))),
+                Promise.all(famousSorted.map((b) => mapBookForClient(ctx, b))),
                 Promise.all(newlyAddedRaw.map((b) => mapBookForClient(ctx, b))),
             ]);
 
@@ -372,3 +493,4 @@ export const getDiscoverData = query({
         };
     },
 });
+

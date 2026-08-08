@@ -45,14 +45,6 @@ export default function AddBookScreen() {
         setPublisher,
         availableGenres,
         selectedGenres,
-        isTop10,
-        toggleTop10,
-        top10Position,
-        setTop10Position,
-        isFamous,
-        toggleFamous,
-        isTrending,
-        toggleTrending,
         isSeries,
         toggleSeries,
         series,
@@ -77,34 +69,37 @@ export default function AddBookScreen() {
 
     if (isLoadingFromScan) {
         return (
-            <SafeAreaView style={styles.container}>
-                <AdminHeader title="Add New Book" />
-                <View style={styles.center}>
-                    <BookLoader label="Fetching book details..." />
-                </View>
-            </SafeAreaView>
+            <View style={styles.container}>
+                <AdminHeader title="Add New Book" variant="dark" />
+                <SafeAreaView style={styles.flex} edges={["bottom", "left", "right"]}>
+                    <View style={styles.center}>
+                        <BookLoader label="Fetching book details..." />
+                    </View>
+                </SafeAreaView>
+            </View>
         );
     }
 
     return (
-        <SafeAreaView style={styles.container}>
+        <View style={styles.container}>
             <AdminHeader
                 title="Add New Book"
+                variant="dark"
                 rightComponent={
                     <TouchableOpacity
                         onPress={() => router.replace("/(admin)/scan-book")}
                         accessibilityRole="button"
                         accessibilityLabel="Scan ISBN"
                     >
-                        <Ionicons name="barcode-outline" size={22} color={Colors.text} />
+                        <Ionicons name="barcode-outline" size={22} color={Colors.white} />
                     </TouchableOpacity>
                 }
             />
-            <View style={styles.flex}>
+            <SafeAreaView style={styles.flex} edges={["bottom", "left", "right"]}>
                 <KeyboardAwareScrollView
                     contentContainerStyle={[
                         styles.scroll,
-                        { paddingBottom: Math.max(140, 80 + insets.bottom) },
+                        { paddingBottom: Math.max(40, 20 + insets.bottom) },
                     ]}
                     keyboardShouldPersistTaps="handled"
                     keyboardDismissMode="none"
@@ -177,25 +172,17 @@ export default function AddBookScreen() {
                     />
 
                     <FormSectionHeader
-                        title="Featured Sections"
-                        subtitle="Homepage placement controls."
+                        title="Book Series"
+                        subtitle="Assign book to a series (optional)."
                     />
                     <FeaturedSectionsFields
-                        isTop10={isTop10}
-                        top10Position={top10Position}
-                        isFamous={isFamous}
-                        isTrending={isTrending}
                         isSeries={isSeries}
                         series={series}
                         seriesId={seriesId}
                         seriesList={seriesList}
-                        onToggleTop10={toggleTop10}
-                        onToggleFamous={toggleFamous}
-                        onToggleTrending={toggleTrending}
                         onToggleSeries={toggleSeries}
                         onChangeSeries={setSeries}
                         onSelectSeriesId={setSeriesId}
-                        onChangeTop10Position={setTop10Position}
                     />
 
                     <Button
@@ -205,8 +192,8 @@ export default function AddBookScreen() {
                         style={{ marginTop: Spacing.md }}
                     />
                 </KeyboardAwareScrollView>
-            </View>
-        </SafeAreaView>
+            </SafeAreaView>
+        </View>
     );
 }
 
@@ -225,6 +212,7 @@ const styles = StyleSheet.create({
     },
     scroll: {
         paddingHorizontal: Spacing.lg,
+        paddingTop: Spacing.lg,
     },
     fetchInfoBtn: {
         marginBottom: Spacing.md,

@@ -47,6 +47,7 @@ export default function DropdownField({
             <Modal
                 visible={modalVisible}
                 transparent
+                statusBarTranslucent
                 animationType="slide"
                 onRequestClose={() => setModalVisible(false)}
             >

@@ -8,7 +8,7 @@ type LoadingOverlayProps = {
 
 export default function LoadingOverlay({ visible }: LoadingOverlayProps) {
     return (
-        <Modal transparent visible={visible} animationType="fade">
+        <Modal transparent statusBarTranslucent visible={visible} animationType="fade">
             <View style={styles.overlay}>
                 <ActivityIndicator size="large" color={Colors.white} />
             </View>

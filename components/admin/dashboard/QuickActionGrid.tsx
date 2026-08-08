@@ -25,7 +25,7 @@ export default function QuickActionGrid({ statusCounts = {} }: QuickActionGridPr
         },
         {
             key: "verify-students",
-            label: "Verify Students",
+            label: "Verifications",
             icon: "shield-checkmark" as const,
             iconColor: "#7C3AED",
             bgColor: "#7C3AED15",
@@ -46,6 +46,14 @@ export default function QuickActionGrid({ statusCounts = {} }: QuickActionGridPr
             iconColor: "#2563EB",
             bgColor: "#2563EB15",
             onPress: () => router.push("/(admin)/series" as any),
+        },
+        {
+            key: "home-sections",
+            label: "Home Sections",
+            icon: "home-outline" as const,
+            iconColor: "#0891B2",
+            bgColor: "#0891B215",
+            onPress: () => router.push("/(admin)/manage-home-sections" as any),
         },
         // Row 2: Orders Flow
         {

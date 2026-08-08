@@ -247,6 +247,7 @@ export default function BookReviews({ bookId, limit, hasMore, onLoadMore, isAdmi
             <Modal
                 visible={!!editingReview}
                 transparent
+                statusBarTranslucent
                 animationType="slide"
                 onRequestClose={() => setEditingReview(null)}
             >
@@ -313,6 +314,7 @@ export default function BookReviews({ bookId, limit, hasMore, onLoadMore, isAdmi
             <Modal
                 visible={!!reportingReviewId}
                 transparent
+                statusBarTranslucent
                 animationType="slide"
                 onRequestClose={() => setReportingReviewId(null)}
             >

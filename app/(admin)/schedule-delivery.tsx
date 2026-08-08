@@ -77,76 +77,77 @@ export default function ScheduleDeliveryScreen() {
     }
 
     return (
-        <SafeAreaView style={styles.container}>
-            <AdminHeader title="Schedule Delivery" />
-            <ScrollView
-                contentContainerStyle={[styles.scroll, { paddingBottom: Math.max(80, 40 + insets.bottom) }]}
-                keyboardShouldPersistTaps="handled"
-                refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={onRefresh}
-                        colors={[Colors.primary]}
-                    />
-                }
-            >
+        <View style={styles.container}>
+            <AdminHeader title="Schedule Delivery" variant="dark" />
+            <SafeAreaView style={styles.flex} edges={["bottom", "left", "right"]}>
+                <ScrollView
+                    contentContainerStyle={[styles.scroll, { paddingTop: Spacing.lg, paddingBottom: Math.max(80, 40 + insets.bottom) }]}
+                    keyboardShouldPersistTaps="handled"
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            colors={[Colors.primary]}
+                        />
+                    }
+                >
+                    <View style={styles.infoCard}>
+                        <Text style={styles.infoTitle}>{rental.book?.title}</Text>
 
-                <View style={styles.infoCard}>
-                    <Text style={styles.infoTitle}>{rental.book?.title}</Text>
-
-                    {/* User name */}
-                    <View style={styles.infoLine}>
-                        <Ionicons name="person-outline" size={14} color={Colors.textSecondary} />
-                        <Text style={styles.infoSub}>{rental.user?.name}</Text>
-                    </View>
-
-                    {/* Phone */}
-                    <View style={styles.infoLine}>
-                        <Ionicons name="call-outline" size={14} color={Colors.textSecondary} />
-                        <Text style={styles.infoSub}>{rental.user?.phone}</Text>
-                    </View>
-
-                    {/* Location */}
-                    <View style={styles.infoLine}>
-                        <Ionicons name="location-outline" size={14} color={Colors.textSecondary} />
-                        <Text style={styles.infoSub}>
-                            {rental.zone} {rental.deliveryLocation?.area}, {rental.deliveryLocation?.city}
-                        </Text>
-                    </View>
-
-                    {/* Landmark */}
-                    {rental.deliveryLocation?.landmark ? (
+                        {/* User name */}
                         <View style={styles.infoLine}>
-                            <Ionicons name="navigate-outline" size={14} color={Colors.textSecondary} />
+                            <Ionicons name="person-outline" size={14} color={Colors.textSecondary} />
+                            <Text style={styles.infoSub}>{rental.user?.name}</Text>
+                        </View>
+
+                        {/* Phone */}
+                        <View style={styles.infoLine}>
+                            <Ionicons name="call-outline" size={14} color={Colors.textSecondary} />
+                            <Text style={styles.infoSub}>{rental.user?.phone}</Text>
+                        </View>
+
+                        {/* Location */}
+                        <View style={styles.infoLine}>
+                            <Ionicons name="location-outline" size={14} color={Colors.textSecondary} />
                             <Text style={styles.infoSub}>
-                                {rental.deliveryLocation.landmark}
+                                {rental.zone} {rental.deliveryLocation?.area}, {rental.deliveryLocation?.city}
                             </Text>
                         </View>
-                    ) : null}
-                </View>
 
-                <SlotDatePicker
-                    label="Delivery Date"
-                    dates={availableDates}
-                    selectedDate={deliveryDate}
-                    onSelect={setDeliveryDate}
-                />
-                <SlotTimePicker
-                    label="Delivery Time"
-                    slots={availableTimeSlots}
-                    selectedTime={deliveryTime}
-                    onSelect={setDeliveryTime}
-                    emptyMessage="No slots available for this date. Please select another date."
-                />
+                        {/* Landmark */}
+                        {rental.deliveryLocation?.landmark ? (
+                            <View style={styles.infoLine}>
+                                <Ionicons name="navigate-outline" size={14} color={Colors.textSecondary} />
+                                <Text style={styles.infoSub}>
+                                    {rental.deliveryLocation.landmark}
+                                </Text>
+                            </View>
+                        ) : null}
+                    </View>
 
-                <Button
-                    title="Schedule Delivery"
-                    onPress={handleSchedule}
-                    loading={loading}
-                    style={{ marginTop: Spacing.md }}
-                />
-            </ScrollView>
-        </SafeAreaView>
+                    <SlotDatePicker
+                        label="Delivery Date"
+                        dates={availableDates}
+                        selectedDate={deliveryDate}
+                        onSelect={setDeliveryDate}
+                    />
+                    <SlotTimePicker
+                        label="Delivery Time"
+                        slots={availableTimeSlots}
+                        selectedTime={deliveryTime}
+                        onSelect={setDeliveryTime}
+                        emptyMessage="No slots available for this date. Please select another date."
+                    />
+
+                    <Button
+                        title="Schedule Delivery"
+                        onPress={handleSchedule}
+                        loading={loading}
+                        style={{ marginTop: Spacing.md }}
+                    />
+                </ScrollView>
+            </SafeAreaView>
+        </View>
     );
 }
 
@@ -154,6 +155,9 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: Colors.background,
+    },
+    flex: {
+        flex: 1,
     },
     center: {
         flex: 1,
@@ -163,21 +167,20 @@ const styles = StyleSheet.create({
     },
     scroll: {
         paddingHorizontal: Spacing.lg,
-        paddingTop: Spacing.lg,
     },
-    header: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: Spacing.md,
-        marginBottom: Spacing.lg,
+    infoCard: {
+        backgroundColor: Colors.white,
+        borderRadius: 16,
+        padding: Spacing.md,
+        marginBottom: Spacing.md,
+        borderWidth: 1,
+        borderColor: Colors.border,
     },
-    backBtn: {
-        alignSelf: "flex-start",
-        padding: 4,
-        marginLeft: -4,
-    },
-    headerText: {
-        flex: 1,
+    infoTitle: {
+        fontSize: FontSizes.subtitle,
+        fontFamily: Fonts.bold,
+        color: Colors.text,
+        marginBottom: Spacing.xs,
     },
     infoLine: {
         flexDirection: "row",
@@ -185,27 +188,9 @@ const styles = StyleSheet.create({
         gap: 6,
         marginTop: 4,
     },
-    title: {
-        fontSize: FontSizes.heading,
-        color: Colors.text,
-        fontFamily: Fonts.bold,
-    },
-    infoCard: {
-        backgroundColor: Colors.white,
-        borderRadius: 12,
-        padding: Spacing.md,
-        marginBottom: Spacing.lg,
-    },
-    infoTitle: {
-        fontSize: FontSizes.subtitle,
-        fontFamily: Fonts.bold,
-        color: Colors.text,
-        marginBottom: 4,
-    },
     infoSub: {
-        fontSize: FontSizes.small,
-        color: Colors.textSecondary,
-        marginTop: 2,
+        fontSize: FontSizes.caption,
         fontFamily: Fonts.regular,
+        color: Colors.textSecondary,
     },
 });

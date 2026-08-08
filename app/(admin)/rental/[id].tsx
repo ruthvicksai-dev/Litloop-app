@@ -250,15 +250,13 @@ export default function AdminRentalDetailScreen() {
           time={rental.deliveryTime}
         />
 
-        {rental.pickupLocation && (
-          <RentalLocationCard
-            type="Pickup"
-            zone={rental.zone}
-            location={rental.pickupLocation as any}
-            date={rental.pickupDate}
-            time={rental.pickupTime}
-          />
-        )}
+        <RentalLocationCard
+          type="Pickup"
+          zone={rental.zone}
+          location={(rental.pickupLocation || rental.deliveryLocation) as any}
+          date={rental.pickupDate}
+          time={rental.pickupTime}
+        />
 
         <RentalPaymentCard
           totalRent={rental.totalRent}

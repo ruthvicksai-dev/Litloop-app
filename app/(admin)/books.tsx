@@ -3,7 +3,7 @@ import DiscoverBookCard from "@/components/ui/cards/DiscoverBookCard";
 import ReviewCard from "@/components/ui/cards/ReviewCard";
 import BookLoader from "@/components/ui/feedback/BookLoader";
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Spacing } from "@/constants/theme";
+import { Colors, Spacing, Layout } from "@/constants/theme";
 import AdminHeader from "@/components/admin/core/AdminHeader";
 import { useAdminBooksScreen, useFadeSlideIn } from "@/hooks";
 import { useRouter } from "expo-router";
@@ -88,7 +88,7 @@ export default function AdminBooksScreen() {
     }
 
     return (
-        <SafeAreaView style={styles.container}>
+        <View style={styles.container}>
             <Animated.View
                 style={[
                     { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
@@ -96,159 +96,163 @@ export default function AdminBooksScreen() {
             >
                 <AdminHeader 
                     title="Manage Books" 
+                    variant="dark"
                     rightComponent={
                         <TouchableOpacity
                             style={styles.addBtn}
                             onPress={() => router.push("/(admin)/add-book")}
                         >
-                            <Ionicons name="add" size={20} color={Colors.white} />
+                            <Ionicons name="add" size={18} color={Colors.white} />
                             <Text style={styles.addBtnText}>Add</Text>
                         </TouchableOpacity>
                     }
                 />
             </Animated.View>
 
-            <Animated.View style={[styles.searchBox, { opacity: fadeAnim }]}>
-                <SearchInput
-                    value={search}
-                    onChangeText={setSearch}
-                    placeholder="Search by title or author..."
-                    icon="search"
-                    containerStyle={styles.searchInputContainer}
-                    inputStyle={styles.searchInput}
-                />
-            </Animated.View>
-
-            <FlatList
-                data={genreSections}
-                keyExtractor={(item) => item.genre}
-                contentContainerStyle={styles.list}
-                ListHeaderComponent={
-                    <View style={styles.adminExtraSection}>
-                        {(problemBooks && problemBooks.length > 0) && (
-                            <View style={styles.dashboardSection}>
-                                <View style={styles.sectionHeader}>
-                                    <Ionicons name="warning-outline" size={20} color={Colors.error} />
-                                    <Text style={[styles.sectionTitle, { color: Colors.error, marginBottom: 0 }]}>Attention Needed</Text>
-                                </View>
-                                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalScroll}>
-                                    {problemBooks.map((book) => (
-                                        <TouchableOpacity 
-                                            key={book._id} 
-                                            style={styles.problemBookCard}
-                                            onPress={() => router.push(`/(admin)/book-details?bookId=${book._id}` as any)}
-                                        >
-                                            <Text style={styles.problemBookTitle} numberOfLines={1}>{book.title}</Text>
-                                            <View style={styles.problemBadgeRow}>
-                                                {(book.avgRating ?? 0) < 3 && (
-                                                    <View style={[styles.badge, { backgroundColor: Colors.error + "20" }]}>
-                                                        <Text style={[styles.badgeText, { color: Colors.error }]}>Low Rating: {(book.avgRating ?? book.rating ?? 0).toFixed(1)}</Text>
-                                                    </View>
-                                                )}
-                                                {(book.flaggedCount ?? 0) > 0 && (
-                                                    <View style={[styles.badge, { backgroundColor: Colors.warning + "20" }]}>
-                                                        <Text style={[styles.badgeText, { color: Colors.warning }]}>{book.flaggedCount} Flagged</Text>
-                                                    </View>
-                                                )}
-                                            </View>
-                                        </TouchableOpacity>
-                                    ))}
-                                </ScrollView>
-                            </View>
-                        )}
-
-                        {(flaggedReviews && flaggedReviews.length > 0) && (
-                            <View style={styles.dashboardSection}>
-                                <View style={styles.sectionHeader}>
-                                    <Ionicons name="flag-outline" size={20} color={Colors.warning} />
-                                    <Text style={[styles.sectionTitle, { color: Colors.warning, marginBottom: 0 }]}>Flagged Reviews</Text>
-                                </View>
-                                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalScroll}>
-                                    {flaggedReviews.map((review) => (
-                                        <ReviewCard
-                                            key={review._id}
-                                            review={{
-                                                ...review,
-                                                _id: review._id,
-                                                userId: review.userId,
-                                            }}
-                                            isAdmin={true}
-                                            style={styles.dashboardReviewCard}
-                                            onFlag={() => handleFlagAction(review._id, false)}
-                                            onUnflag={() => handleFlagAction(review._id, true)}
-                                            onDelete={() => handleDeleteReview(review._id)}
-                                        />
-                                    ))}
-                                </ScrollView>
-                            </View>
-                        )}
-                    </View>
-                }
-                refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={onRefresh}
-                        colors={[Colors.primary]}
+            <SafeAreaView style={styles.flex} edges={["bottom", "left", "right"]}>
+                <Animated.View style={[styles.searchBox, { opacity: fadeAnim }]}>
+                    <SearchInput
+                        value={search}
+                        onChangeText={setSearch}
+                        placeholder="Search by title or author..."
+                        icon="search"
+                        containerStyle={styles.searchInputContainer}
+                        inputStyle={styles.searchInput}
                     />
-                }
-                renderItem={({ item, index }) => (
-                    <Animated.View
-                        style={[
-                            styles.section,
-                            {
-                                opacity: fadeAnim,
-                                transform: [
-                                    {
-                                        translateY: fadeAnim.interpolate({
-                                            inputRange: [0, 1],
-                                            outputRange: [20 + index * 5, 0],
-                                        }),
-                                    },
-                                ],
-                            },
-                        ]}
-                    >
-                        <Text style={styles.sectionTitle}>{item.genre}</Text>
-                        <FlatList
-                            data={item.books}
-                            horizontal
-                            keyExtractor={(book) => book._id}
-                            showsHorizontalScrollIndicator={false}
-                            contentContainerStyle={styles.genreRow}
-                            renderItem={({ item: book }) => (
-                                <DiscoverBookCard
-                                    _id={book._id}
-                                    title={book.title}
-                                    author={book.author}
-                                    rentPerDay={book.rentPerDay}
-                                    availableCopies={book.availableCopies}
-                                    coverUrl={book.coverUrl}
-                                    coverUrls={book.coverUrls}
-                                    rating={book.rating}
-                                    onPress={() => router.push(`/(admin)/book-details?bookId=${book._id}` as any)}
-                                />
+                </Animated.View>
+
+                <FlatList
+                    data={genreSections}
+                    keyExtractor={(item) => item.genre}
+                    contentContainerStyle={styles.list}
+                    ListHeaderComponent={
+                        <View style={styles.adminExtraSection}>
+                            {(problemBooks && problemBooks.length > 0) && (
+                                <View style={styles.dashboardSection}>
+                                    <View style={styles.sectionHeader}>
+                                        <Ionicons name="warning-outline" size={20} color={Colors.error} />
+                                        <Text style={[styles.sectionTitle, { color: Colors.error, marginBottom: 0 }]}>Attention Needed</Text>
+                                    </View>
+                                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalScroll}>
+                                        {problemBooks.map((book) => (
+                                            <TouchableOpacity 
+                                                key={book._id} 
+                                                style={styles.problemBookCard}
+                                                onPress={() => router.push(`/(admin)/book-details?bookId=${book._id}` as any)}
+                                            >
+                                                <Text style={styles.problemBookTitle} numberOfLines={1}>{book.title}</Text>
+                                                <View style={styles.problemBadgeRow}>
+                                                    {(book.avgRating ?? 0) < 3 && (
+                                                        <View style={[styles.badge, { backgroundColor: Colors.error + "20" }]}>
+                                                            <Text style={[styles.badgeText, { color: Colors.error }]}>Low Rating: {(book.avgRating ?? book.rating ?? 0).toFixed(1)}</Text>
+                                                        </View>
+                                                    )}
+                                                    {(book.flaggedCount ?? 0) > 0 && (
+                                                        <View style={[styles.badge, { backgroundColor: Colors.warning + "20" }]}>
+                                                            <Text style={[styles.badgeText, { color: Colors.warning }]}>{book.flaggedCount} Flagged</Text>
+                                                        </View>
+                                                    )}
+                                                </View>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </ScrollView>
+                                </View>
                             )}
+
+                            {(flaggedReviews && flaggedReviews.length > 0) && (
+                                <View style={styles.dashboardSection}>
+                                    <View style={styles.sectionHeader}>
+                                        <Ionicons name="flag-outline" size={20} color={Colors.warning} />
+                                        <Text style={[styles.sectionTitle, { color: Colors.warning, marginBottom: 0 }]}>Flagged Reviews</Text>
+                                    </View>
+                                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalScroll}>
+                                        {flaggedReviews.map((review) => (
+                                            <ReviewCard
+                                                key={review._id}
+                                                review={{
+                                                    ...review,
+                                                    _id: review._id,
+                                                    userId: review.userId,
+                                                }}
+                                                isAdmin={true}
+                                                style={styles.dashboardReviewCard}
+                                                onFlag={() => handleFlagAction(review._id, false)}
+                                                onUnflag={() => handleFlagAction(review._id, true)}
+                                                onDelete={() => handleDeleteReview(review._id)}
+                                            />
+                                        ))}
+                                    </ScrollView>
+                                </View>
+                            )}
+                        </View>
+                    }
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            colors={[Colors.primary]}
                         />
-                    </Animated.View>
-                )}
-                ListEmptyComponent={
-                    <View style={styles.empty}>
-                        <Ionicons
-                            name="book-outline"
-                            size={60}
-                            color={Colors.textLight}
-                            style={{ marginBottom: Spacing.md }}
-                        />
-                        <Text style={styles.emptyText}>No books found</Text>
-                    </View>
-                }
-            />
-        </SafeAreaView>
+                    }
+                    renderItem={({ item, index }) => (
+                        <Animated.View
+                            style={[
+                                styles.section,
+                                {
+                                    opacity: fadeAnim,
+                                    transform: [
+                                        {
+                                            translateY: fadeAnim.interpolate({
+                                                inputRange: [0, 1],
+                                                outputRange: [20 + index * 5, 0],
+                                            }),
+                                        },
+                                    ],
+                                },
+                            ]}
+                        >
+                            <Text style={styles.sectionTitle}>{item.genre}</Text>
+                            <FlatList
+                                data={item.books}
+                                horizontal
+                                keyExtractor={(book) => book._id}
+                                showsHorizontalScrollIndicator={false}
+                                contentContainerStyle={styles.genreRow}
+                                renderItem={({ item: book }) => (
+                                    <DiscoverBookCard
+                                        _id={book._id}
+                                        title={book.title}
+                                        author={book.author}
+                                        rentPerDay={book.rentPerDay}
+                                        availableCopies={book.availableCopies}
+                                        coverUrl={book.coverUrl}
+                                        coverUrls={book.coverUrls}
+                                        rating={book.rating}
+                                        onPress={() => router.push(`/(admin)/book-details?bookId=${book._id}` as any)}
+                                    />
+                                )}
+                            />
+                        </Animated.View>
+                    )}
+                    ListEmptyComponent={
+                        <View style={styles.empty}>
+                            <Ionicons
+                                name="book-outline"
+                                size={60}
+                                color={Colors.textLight}
+                                style={{ marginBottom: Spacing.md }}
+                            />
+                            <Text style={styles.emptyText}>No books found</Text>
+                        </View>
+                    }
+                />
+            </SafeAreaView>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: Colors.background },
+    flex: { flex: 1 },
     center: {
         flex: 1,
         justifyContent: "center",
@@ -275,18 +279,25 @@ const styles = StyleSheet.create({
         fontFamily: Fonts.bold,
     },
     addBtn: {
-        backgroundColor: Colors.primary,
+        backgroundColor: "rgba(255,255,255,0.18)",
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.3)",
         paddingHorizontal: 12,
-        paddingVertical: 8,
-        borderRadius: 10,
+        paddingVertical: 6,
+        borderRadius: 20,
         flexDirection: "row",
         alignItems: "center",
         gap: 4,
     },
-    addBtnText: { color: Colors.white, fontFamily: Fonts.bold, fontSize: FontSizes.small },
+    addBtnText: {
+        color: Colors.white,
+        fontFamily: Fonts.bold,
+        fontSize: FontSizes.small,
+    },
     searchBox: {
-        marginHorizontal: 25,
-        marginBottom: Spacing.lg,
+        marginHorizontal: Layout.screenPaddingWide,
+        marginTop: Spacing.md,
+        marginBottom: Spacing.md,
     },
     searchInputContainer: {
         borderWidth: 1.5,
@@ -305,15 +316,15 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.lg,
     },
     sectionTitle: {
-        paddingHorizontal: 25,
+        paddingHorizontal: Layout.screenPaddingWide,
         marginBottom: Spacing.sm,
         fontSize: FontSizes.titleLarge,
         color: Colors.text,
         fontFamily: Fonts.bold,
     },
     genreRow: {
-        paddingLeft: 20,
-        paddingRight: 10,
+        paddingLeft: Layout.screenPaddingWide,
+        paddingRight: Layout.screenPaddingWide,
         paddingBottom: 8,
         alignItems: "flex-start",
     },

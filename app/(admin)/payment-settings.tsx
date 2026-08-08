@@ -40,10 +40,12 @@ export default function PaymentSettingsScreen() {
 
     if (allSettings === undefined) {
         return (
-            <SafeAreaView style={styles.container}>
-                <AdminHeader title="Settings" />
-                <AdminSettingsSkeleton />
-            </SafeAreaView>
+            <View style={styles.container}>
+                <AdminHeader title="Settings" variant="dark" />
+                <SafeAreaView style={styles.flex} edges={["bottom", "left", "right"]}>
+                    <AdminSettingsSkeleton />
+                </SafeAreaView>
+            </View>
         );
     }
 
@@ -61,17 +63,18 @@ export default function PaymentSettingsScreen() {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
-            <AdminHeader title="Settings" />
+        <View style={styles.container}>
+            <AdminHeader title="Settings" variant="dark" />
 
-            <ScrollView
-                contentContainerStyle={styles.content}
-                showsVerticalScrollIndicator={false}
-                onScrollBeginDrag={() => menuTarget && setMenuTarget(null)}
-                onTouchStart={() => menuTarget && setMenuTarget(null)}
-            >
-                {/* ─── UPI Payment Settings ─── */}
-                <Text style={styles.sectionLabel}>PAYMENT CONFIGURATION</Text>
+            <SafeAreaView style={styles.flex} edges={["bottom", "left", "right"]}>
+                <ScrollView
+                    contentContainerStyle={[styles.content, { paddingTop: Spacing.md }]}
+                    showsVerticalScrollIndicator={false}
+                    onScrollBeginDrag={() => menuTarget && setMenuTarget(null)}
+                    onTouchStart={() => menuTarget && setMenuTarget(null)}
+                >
+                    {/* ─── UPI Payment Settings ─── */}
+                    <Text style={[styles.sectionLabel, { marginTop: Spacing.sm }]}>PAYMENT CONFIGURATION</Text>
 
                 {allDeactivated && (
                     <View style={styles.warningBanner}>
@@ -153,11 +156,13 @@ export default function PaymentSettingsScreen() {
                 {/* ─── Shared: Notifications, Legal, Danger, Sign Out ─── */}
                 <CommonSettingsSections />
             </ScrollView>
+            </SafeAreaView>
 
             {/* ─── Manage UPI Menu Modal ─── */}
             <Modal
                 visible={!!menuTarget}
                 transparent
+                statusBarTranslucent
                 animationType="fade"
                 onRequestClose={() => setMenuTarget(null)}
             >
@@ -237,6 +242,7 @@ export default function PaymentSettingsScreen() {
             <Modal
                 visible={showAddModal}
                 transparent
+                statusBarTranslucent
                 animationType="fade"
                 onRequestClose={() => setShowAddModal(false)}
             >
@@ -288,6 +294,7 @@ export default function PaymentSettingsScreen() {
             <Modal
                 visible={!!editTarget}
                 transparent
+                statusBarTranslucent
                 animationType="fade"
                 onRequestClose={() => setEditTarget(null)}
             >
@@ -359,7 +366,7 @@ export default function PaymentSettingsScreen() {
                     setRemoveTarget(null);
                 }}
             />
-        </SafeAreaView>
+        </View>
     );
 }
 
@@ -367,6 +374,9 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: Colors.background,
+    },
+    flex: {
+        flex: 1,
     },
     header: {
         flexDirection: "row",
