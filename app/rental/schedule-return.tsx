@@ -14,7 +14,6 @@ import { useToast } from "@/context/ToastContext";
 import { useScheduleReturnScreen } from "@/hooks";
 import { 
     getReliableCurrentLocation,
-    resolveDeliveryAreaFromLocation,
     validateDeliveryAreaSelection,
     formatDateString,
     getValidDates,
@@ -22,7 +21,7 @@ import {
 } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import React from "react";
 import {
     StyleSheet,
@@ -35,7 +34,6 @@ import { useAuthState } from "@/context/AuthContext";
 
 export default function ScheduleReturnScreen() {
     const { rentalId } = useLocalSearchParams<{ rentalId: string }>();
-    const router = useRouter();
     const { showToast } = useToast();
     const insets = useSafeAreaInsets();
     const { user } = useAuthState();
@@ -108,66 +106,6 @@ export default function ScheduleReturnScreen() {
                 .filter(Boolean)
                 .join(", ");
             setFormattedAddress(formatted);
-        }
-    };
-
-    const handleAutoDetectLocation = async () => {
-        setIsLocating(true);
-        try {
-            const { status } = await Location.requestForegroundPermissionsAsync();
-            if (status !== "granted") {
-                showToast("Location permission is needed to auto-detect your address.", "error");
-                return;
-            }
-
-            const current = await getReliableCurrentLocation();
-            if (!current) {
-                showToast("Unable to fetch your precise GPS location. Please enter your address manually.", "error");
-                return;
-            }
-
-            await updateAddressFromCoords(current.coords.latitude, current.coords.longitude);
-
-            if (pickupZone === "Home") {
-                const detected = resolveDeliveryAreaFromLocation({
-                    latitude: current.coords.latitude,
-                    longitude: current.coords.longitude,
-                });
-                if (detected?.area) {
-                    setArea(detected.area.name);
-                    showToast(`Detected area: ${detected.area.name}`, "success");
-                }
-            }
-        } catch {
-            showToast("Failed to fetch location automatically.", "error");
-        } finally {
-            setIsLocating(false);
-        }
-    };
-
-    const handleAddressCoordsFound = (nextLatitude: number, nextLongitude: number) => {
-        setLatitude(nextLatitude);
-        setLongitude(nextLongitude);
-
-        if (pickupZone === "Home" && area.trim()) {
-            const validation = validateDeliveryAreaSelection({
-                selectedArea: area,
-                formattedAddress,
-                latitude: nextLatitude,
-                longitude: nextLongitude,
-            });
-            if (!validation.isValid && validation.reason !== "missing_location") {
-                setMismatchConfig({
-                    title: "Location Mismatch",
-                    message: "Your current location does not match the selected pickup area.",
-                    confirmLabel: "Change Area",
-                    onConfirm: () => {
-                        setArea("");
-                        setMismatchModalVisible(false);
-                    }
-                });
-                setMismatchModalVisible(true);
-            }
         }
     };
 

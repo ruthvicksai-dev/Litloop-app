@@ -2,7 +2,7 @@ import AdminHeader from "@/components/admin/core/AdminHeader";
 import { CommonSettingsSections } from "@/components/shared/CommonSettingsSections";
 import { SettingsSkeleton } from "@/components/ui/skeletons/SettingsSkeleton";
 import { Fonts, FontSizes } from "@/constants/fonts";
-import { Colors, Layout, Spacing } from "@/constants/theme";
+import { Colors, Spacing } from "@/constants/theme";
 import { useAuthState } from "@/context/AuthContext";
 import { triggerHaptic } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";

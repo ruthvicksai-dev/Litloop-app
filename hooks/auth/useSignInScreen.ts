@@ -1,6 +1,7 @@
 import { useAuthActions, useAuthState } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
-import { useState } from "react";
+import { getRecentAuthEmails } from "@/utils/auth/recentEmails";
+import { useCallback, useEffect, useState } from "react";
 
 function getFriendlySignInError(error: unknown) {
     const rawMessage =
@@ -34,10 +35,19 @@ function getFriendlySignInError(error: unknown) {
 export function useSignInScreen() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [recentEmails, setRecentEmails] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
     const { signIn } = useAuthActions();
     const { user } = useAuthState();
     const { showToast } = useToast();
+
+    const loadRecentEmails = useCallback(async () => {
+        setRecentEmails(await getRecentAuthEmails());
+    }, []);
+
+    useEffect(() => {
+        void loadRecentEmails();
+    }, [loadRecentEmails]);
 
     const handleSignIn = async () => {
         if (!email.trim()) {
@@ -53,6 +63,7 @@ export function useSignInScreen() {
         setLoading(true);
         try {
             await signIn(email, password);
+            void loadRecentEmails();
         } catch (error: unknown) {
             showToast(getFriendlySignInError(error), "error");
         } finally {
@@ -65,6 +76,7 @@ export function useSignInScreen() {
         setEmail,
         password,
         setPassword,
+        recentEmails,
         loading,
         user,
         handleSignIn,

@@ -1,6 +1,7 @@
 import ConfirmActionModal from "@/components/ui/feedback/ConfirmActionModal";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { rememberRecentAuthEmail } from "@/utils/auth/recentEmails";
 import * as Sentry from "@sentry/react-native";
 import { useMutation, useQuery } from "convex/react";
 import * as Device from "expo-device";
@@ -418,6 +419,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 SecureStore.setItemAsync(REFRESH_TOKEN_KEY, result.refreshToken),
             ]);
             setAccessToken(result.accessToken);
+            void rememberRecentAuthEmail(email);
             queuePendingAuthToast({ message: "Welcome back!", type: "success" });
             scheduleRefresh(result.accessToken);
         },
@@ -466,6 +468,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 SecureStore.setItemAsync(REFRESH_TOKEN_KEY, result.refreshToken),
             ]);
             setAccessToken(result.accessToken);
+            void rememberRecentAuthEmail(email);
             scheduleRefresh(result.accessToken);
         },
         [decodeTokenPayload, verifySignupOTPMutation, scheduleRefresh]

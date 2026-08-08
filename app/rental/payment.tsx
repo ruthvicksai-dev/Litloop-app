@@ -9,9 +9,9 @@ import { Colors, scale, Spacing } from "@/constants/theme";
 import { useToast } from "@/context/ToastContext";
 import { usePaymentScreen } from "@/hooks";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
-import { buildUpiUri, UPI_ID_FALLBACK, PAYEE_NAME_FALLBACK } from "@/utils";
+import { buildUpiUri } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
     Image,
@@ -26,7 +26,6 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 
 export default function PaymentScreen() {
     const { rentalId } = useLocalSearchParams<{ rentalId: string }>();
-    const router = useRouter();
     const insets = useSafeAreaInsets();
     const {
         rental,

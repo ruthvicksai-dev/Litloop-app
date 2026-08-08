@@ -14,6 +14,7 @@ import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
+    Keyboard,
     Linking,
     StyleSheet,
     Text,
@@ -35,15 +36,66 @@ export default function SignInScreen() {
         setEmail,
         password,
         setPassword,
+        recentEmails,
         loading,
         user,
         handleSignIn,
     } = useSignInScreen();
+    const [isEmailFocused, setIsEmailFocused] = React.useState(false);
+    const emailBlurTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const { isOnline } = useNetworkStatus();
     const { showToast } = useToast();
 
+    const emailSuggestions = React.useMemo(() => {
+        const query = email.trim().toLowerCase();
+        return recentEmails
+            .filter((recentEmail) =>
+                query ? recentEmail.toLowerCase().includes(query) : true
+            )
+            .slice(0, 5);
+    }, [email, recentEmails]);
+
+    const showEmailSuggestions = isEmailFocused && emailSuggestions.length > 0;
+
+    React.useEffect(() => {
+        const subscription = Keyboard.addListener("keyboardDidHide", () => {
+            setIsEmailFocused(false);
+        });
+
+        return () => {
+            subscription.remove();
+            if (emailBlurTimeoutRef.current) {
+                clearTimeout(emailBlurTimeoutRef.current);
+            }
+        };
+    }, []);
+
+    const handleEmailFocus = () => {
+        if (emailBlurTimeoutRef.current) {
+            clearTimeout(emailBlurTimeoutRef.current);
+            emailBlurTimeoutRef.current = null;
+        }
+        setIsEmailFocused(true);
+    };
+
+    const handleEmailBlur = () => {
+        emailBlurTimeoutRef.current = setTimeout(() => {
+            setIsEmailFocused(false);
+        }, 120);
+    };
+
+    const handleEmailSuggestionPress = (suggestedEmail: string) => {
+        if (emailBlurTimeoutRef.current) {
+            clearTimeout(emailBlurTimeoutRef.current);
+            emailBlurTimeoutRef.current = null;
+        }
+        setEmail(suggestedEmail);
+        setIsEmailFocused(false);
+    };
+
     const onSignInPress = () => {
+        setIsEmailFocused(false);
         if (!isOnline) {
             showToast("Internet connection is required to sign in.", "error");
             return;
@@ -81,14 +133,57 @@ export default function SignInScreen() {
                     </Text>
 
                     <View style={styles.form}>
-                        <InputField
-                            label="Email"
-                            placeholder="Enter your email"
-                            value={email}
-                            onChangeText={setEmail}
-                            keyboardType="email-address"
-                            autoCapitalize="none"
-                        />
+                        <View style={styles.emailFieldWrapper}>
+                            <InputField
+                                label="Email"
+                                placeholder="Enter your email"
+                                value={email}
+                                onChangeText={(value) => {
+                                    setEmail(value);
+                                    setIsEmailFocused(true);
+                                }}
+                                keyboardType="email-address"
+                                autoCapitalize="none"
+                                onFocus={handleEmailFocus}
+                                onBlur={handleEmailBlur}
+                                onSubmitEditing={() => setIsEmailFocused(false)}
+                                autoComplete="email"
+                                textContentType="emailAddress"
+                                containerStyle={
+                                    showEmailSuggestions
+                                        ? styles.emailInputWithSuggestions
+                                        : undefined
+                                }
+                            />
+                            {showEmailSuggestions ? (
+                                <View style={styles.emailSuggestions} pointerEvents="box-none">
+                                    <View style={styles.emailSuggestionArrow}>
+                                        <View style={styles.emailSuggestionArrowInner} />
+                                    </View>
+                                    <View style={styles.emailSuggestionBubble}>
+                                        {emailSuggestions.map((suggestedEmail, index) => (
+                                            <TouchableOpacity
+                                                key={suggestedEmail}
+                                                style={[
+                                                    styles.emailSuggestionItem,
+                                                    index === emailSuggestions.length - 1 &&
+                                                    styles.emailSuggestionItemLast,
+                                                ]}
+                                                onPressIn={() => handleEmailSuggestionPress(suggestedEmail)}
+                                                activeOpacity={0.75}
+                                            >
+                                                <Text
+                                                    style={styles.emailSuggestionText}
+                                                    numberOfLines={1}
+                                                >
+                                                    {suggestedEmail}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </View>
+                                </View>
+                            ) : null}
+                        </View>
                         <InputField
                             label="Password"
                             placeholder="Enter your password"
@@ -221,5 +316,70 @@ const styles = StyleSheet.create({
         color: Colors.primary,
         fontFamily: Fonts.medium,
         textDecorationLine: "underline",
+    },
+    emailInputWithSuggestions: {
+        marginBottom: 0,
+    },
+    emailFieldWrapper: {
+        position: "relative",
+        zIndex: 20,
+    },
+    emailSuggestions: {
+        position: "absolute",
+        top: scale(74),
+        left: scale(48),
+        width: "68%",
+        zIndex: 30,
+        elevation: 8,
+    },
+    emailSuggestionArrow: {
+        width: 0,
+        height: 0,
+        marginLeft: Spacing.md,
+        borderLeftWidth: 12,
+        borderRightWidth: 12,
+        borderBottomWidth: 12,
+        borderLeftColor: "transparent",
+        borderRightColor: "transparent",
+        borderBottomColor: Colors.border,
+    },
+    emailSuggestionArrowInner: {
+        position: "absolute",
+        top: 2,
+        left: -10,
+        width: 0,
+        height: 0,
+        borderLeftWidth: 10,
+        borderRightWidth: 10,
+        borderBottomWidth: 10,
+        borderLeftColor: "transparent",
+        borderRightColor: "transparent",
+        borderBottomColor: Colors.surfaceCard,
+    },
+    emailSuggestionBubble: {
+        backgroundColor: Colors.surfaceCard,
+        borderWidth: 1,
+        borderColor: Colors.border,
+        borderRadius: Layout.borderRadius,
+        overflow: "hidden",
+        shadowColor: Colors.shadow,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.12,
+        shadowRadius: 10,
+    },
+    emailSuggestionItem: {
+        minHeight: scale(42),
+        justifyContent: "center",
+        paddingHorizontal: Spacing.md,
+        borderBottomWidth: 1,
+        borderBottomColor: Colors.borderSubtle,
+    },
+    emailSuggestionItemLast: {
+        borderBottomWidth: 0,
+    },
+    emailSuggestionText: {
+        color: Colors.text,
+        fontFamily: Fonts.bold,
+        fontSize: FontSizes.body,
     },
 });

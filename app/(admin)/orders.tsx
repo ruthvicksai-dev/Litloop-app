@@ -20,6 +20,11 @@ import {
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useAuthState } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
+
 const ZONE_TAB_OPTIONS: SegmentOption[] = [
     { label: "Home", value: "Home", icon: "home-outline", activeIcon: "home" },
     { label: "College", value: "College", icon: "school-outline", activeIcon: "school" },
@@ -46,11 +51,6 @@ const SUBTITLE_MAP: Record<string, string> = {
     paid: "Completed payments verified by admin",
     returned: "Books returned and added back to inventory",
 };
-
-import { useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { useAuthState } from "@/context/AuthContext";
-import { useToast } from "@/context/ToastContext";
 
 export default function AdminOrdersScreen() {
     const router = useRouter();
