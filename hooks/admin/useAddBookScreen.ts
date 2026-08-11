@@ -48,9 +48,11 @@ export function useAddBookScreen(params?: AddBookPrefillParams) {
     const prefillApplied = useRef(false);
     const shouldAutoFetchCover = useRef(false);
 
-    const seriesList = useQuery(api.series.list, {
-        paginationOpts: SERIES_PAGINATION_OPTS,
-    });
+    const seriesList = useQuery(api.series.list,
+        hasFetchedBookInfo || isManualLookupVisible
+            ? { paginationOpts: SERIES_PAGINATION_OPTS }
+            : "skip"
+    );
 
     const coverManager = useBookCoverManager({
         title,

@@ -32,8 +32,12 @@ export default function AdminBooksScreen() {
     const { books, search, setSearch, genreSections } = useAdminBooksScreen();
     const { fadeAnim, slideAnim } = useFadeSlideIn({ slideFrom: 20, duration: 400 });
 
-    const problemBooks = useQuery(api.books.getProblemBooks, { accessToken: accessToken ?? "" });
-    const flaggedReviews = useQuery(api.reviews.getAllFlaggedReviews, { accessToken: accessToken ?? "" });
+    const problemBooks = useQuery(api.books.getProblemBooks,
+        accessToken ? { accessToken } : "skip"
+    );
+    const flaggedReviews = useQuery(api.reviews.getAllFlaggedReviews,
+        accessToken ? { accessToken } : "skip"
+    );
 
     const flagReview = useMutation(api.reviews.flagReview);
     const unflagReview = useMutation(api.reviews.unflagReview);

@@ -22,8 +22,8 @@ export type RetryConfig = {
 
 const DEFAULT_RETRY_CONFIG: Required<RetryConfig> = {
     maxAttempts: 3,
-    baseDelayMs: 1000,
-    maxDelayMs: 5000,
+    baseDelayMs: 2000,
+    maxDelayMs: 8000,
     jitterMs: 500,
 };
 

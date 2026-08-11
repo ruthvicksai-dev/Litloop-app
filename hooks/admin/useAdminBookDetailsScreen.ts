@@ -14,23 +14,27 @@ export function useAdminBookDetailsScreen(bookId: string) {
     const [reviewsLimit, setReviewsLimit] = useState(3);
     const [rentalsLimit, setRentalsLimit] = useState(5);
 
-    const book = useQuery(api.books.get, {
-        bookId: bookId as Id<"books">,
-    });
+    const book = useQuery(api.books.get,
+        bookId ? { bookId: bookId as Id<"books"> } : "skip"
+    );
 
-    const reviews = useQuery(api.reviews.getBookReviews, {
-        bookId: bookId as Id<"books">,
-        accessToken: accessToken ?? undefined,
-        limit: reviewsLimit,
-    });
+    const reviews = useQuery(api.reviews.getBookReviews,
+        bookId
+            ? {
+                bookId: bookId as Id<"books">,
+                accessToken: accessToken ?? undefined,
+                limit: reviewsLimit,
+            }
+            : "skip"
+    );
 
-    const reviewSummary = useQuery(api.reviews.getBookReviewSummary, {
-        bookId: bookId as Id<"books">,
-    });
+    const reviewSummary = useQuery(api.reviews.getBookReviewSummary,
+        bookId ? { bookId: bookId as Id<"books"> } : "skip"
+    );
 
     const bookRentals = useQuery(
         api.rentals.getBookRentals,
-        accessToken ? { bookId: bookId as Id<"books">, accessToken, limit: rentalsLimit } : "skip"
+        bookId && accessToken ? { bookId: bookId as Id<"books">, accessToken, limit: rentalsLimit } : "skip"
     );
 
     const removeBook = useMutation(api.books.remove);

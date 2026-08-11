@@ -57,7 +57,8 @@ export default defineSchema({
     })
         .index("by_userId", ["userId"])
         .index("by_refreshTokenHash", ["refreshTokenHash"])
-        .index("by_userId_active", ["userId", "isRevoked"]),
+        .index("by_userId_active", ["userId", "isRevoked"])
+        .index("by_expiresAt", ["expiresAt"]),
 
     // OTP Email Verification Requests
     otp_requests: defineTable({
@@ -67,7 +68,9 @@ export default defineSchema({
         expiresAt: v.number(),
         isVerified: v.boolean(),
         createdAt: v.number(), // Timestamp for cleanup
-    }).index("by_email", ["email"]),
+    })
+        .index("by_email", ["email"])
+        .index("by_expiresAt", ["expiresAt"]),
 
     reviews: defineTable({
         bookId: v.id("books"),
@@ -427,4 +430,15 @@ export default defineSchema({
         .index("by_reportId", ["reportId"])
         .index("by_userId_createdAt", ["userId", "createdAt"])
         .index("by_createdAt", ["createdAt"]),
+
+    // Metadata cache for book lookups — avoids repeated external API calls
+    metadata_cache: defineTable({
+        lookupKey: v.string(),
+        provider: v.string(),
+        metadata: v.string(),
+        createdAt: v.number(),
+        expiresAt: v.number(),
+    })
+        .index("by_lookupKey", ["lookupKey"])
+        .index("by_expiresAt", ["expiresAt"]),
 });

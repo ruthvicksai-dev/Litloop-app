@@ -1,7 +1,7 @@
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { Id } from "../_generated/dataModel";
-import { mutation, query } from "../_generated/server";
+import { internalMutation, mutation, query } from "../_generated/server";
 import { assertAdmin, getAccessTokenSecret, getRefreshTokenSecret, getUserIdFromAccessToken } from "../lib/authHelpers";
 import { sha256, verifyToken } from "../lib/jwt";
 import { createSessionTokens, getSessionRefreshTokenHash, isSessionRevoked } from "./helpers";
@@ -287,3 +287,59 @@ export const backfillUsers = mutation({
         };
     },
 });
+
+/**
+ * Internal mutation: cleanup expired sessions in batches.
+ * Removes expired or stale sessions to prevent database bloat and keep index compact.
+ */
+export const cleanupExpiredSessions = internalMutation({
+    args: { batchSize: v.optional(v.number()) },
+    handler: async (ctx, args) => {
+        const limit = args.batchSize ?? 200;
+        const now = Date.now();
+
+        const expired = await ctx.db
+            .query("sessions")
+            .withIndex("by_expiresAt", (q) => q.lt("expiresAt", now))
+            .take(limit);
+
+        let deleted = 0;
+        for (const session of expired) {
+            await ctx.db.delete(session._id);
+            deleted++;
+        }
+
+        if (deleted > 0) {
+            console.log(`[Sessions] Cleaned up ${deleted} expired sessions.`);
+        }
+        return { deleted };
+    },
+});
+
+/**
+ * Internal mutation: cleanup expired OTP verification requests in batches.
+ */
+export const cleanupExpiredOtpRequests = internalMutation({
+    args: { batchSize: v.optional(v.number()) },
+    handler: async (ctx, args) => {
+        const limit = args.batchSize ?? 200;
+        const now = Date.now();
+
+        const expired = await ctx.db
+            .query("otp_requests")
+            .withIndex("by_expiresAt", (q) => q.lt("expiresAt", now))
+            .take(limit);
+
+        let deleted = 0;
+        for (const otp of expired) {
+            await ctx.db.delete(otp._id);
+            deleted++;
+        }
+
+        if (deleted > 0) {
+            console.log(`[OTP] Cleaned up ${deleted} expired OTP requests.`);
+        }
+        return { deleted };
+    },
+});
+

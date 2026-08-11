@@ -26,5 +26,37 @@ crons.daily(
     internal.notifications.reconcileAvailableCopies,
     {}
 );
+/**
+ * Weekly metadata cache cleanup — deletes expired entries (older than 90 days).
+ * Runs every Saturday at 4:00 AM UTC. Capped at 200 deletions per run.
+ */
+crons.weekly(
+    "cleanup-metadata-cache",
+    { dayOfWeek: "saturday", hourUTC: 4, minuteUTC: 0 },
+    internal.bookMetadata.cache.cleanupExpiredCache,
+    { batchSize: 200 }
+);
+
+/**
+ * Weekly expired sessions cleanup.
+ * Runs every Sunday at 3:00 AM UTC. Capped at 200 deletions per run.
+ */
+crons.weekly(
+    "cleanup-expired-sessions",
+    { dayOfWeek: "sunday", hourUTC: 3, minuteUTC: 0 },
+    internal.auth.session.cleanupExpiredSessions,
+    { batchSize: 200 }
+);
+
+/**
+ * Daily expired OTP requests cleanup.
+ * Runs every day at 4:00 AM UTC. Capped at 200 deletions per run.
+ */
+crons.daily(
+    "cleanup-expired-otp-requests",
+    { hourUTC: 4, minuteUTC: 0 },
+    internal.auth.session.cleanupExpiredOtpRequests,
+    { batchSize: 200 }
+);
 
 export default crons;

@@ -8,9 +8,9 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 
 export function useRequestRentalScreen(bookId: string) {
-    const book = useQuery(api.books.get, {
-        bookId: bookId as Id<"books">,
-    });
+    const book = useQuery(api.books.get,
+        bookId ? { bookId: bookId as Id<"books"> } : "skip"
+    );
     const { accessToken } = useAuthState();
     const { showToast } = useToast();
     const router = useRouter();

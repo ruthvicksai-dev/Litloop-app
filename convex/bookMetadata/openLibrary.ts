@@ -79,7 +79,7 @@ export async function fetchOpenLibraryMetadata(isbn: string): Promise<RawOpenLib
     const headers = { "User-Agent": USER_AGENT, Accept: "application/json" };
     const url = `https://openlibrary.org/isbn/${encodeURIComponent(isbn)}.json`;
 
-    const response = await fetchWithRetry(url, { headers }, 10000);
+    const response = await fetchWithRetry(url, { headers }, 20000);
 
     if (response.status === 404) {
         return null;
@@ -107,7 +107,7 @@ export async function fetchOpenLibraryMetadata(isbn: string): Promise<RawOpenLib
     if (!author && authorKey) {
         try {
             const authorUrl = `https://openlibrary.org${authorKey}.json`;
-            const authorRes = await fetchWithRetry(authorUrl, { headers }, 8000);
+            const authorRes = await fetchWithRetry(authorUrl, { headers }, 15000);
             if (authorRes.ok) {
                 const authorData: OpenLibraryAuthorResponse = await authorRes.json();
                 author = authorData.name?.trim() || authorData.personal_name?.trim();
@@ -121,7 +121,7 @@ export async function fetchOpenLibraryMetadata(isbn: string): Promise<RawOpenLib
     if (workKey && (!description || genres.length === 0 || !title)) {
         try {
             const workUrl = `https://openlibrary.org${workKey}.json`;
-            const workRes = await fetchWithRetry(workUrl, { headers }, 8000);
+            const workRes = await fetchWithRetry(workUrl, { headers }, 15000);
             if (workRes.ok) {
                 const workData: OpenLibraryWorkResponse = await workRes.json();
 
@@ -167,7 +167,7 @@ export async function fetchOpenLibraryMetadata(isbn: string): Promise<RawOpenLib
     if (workKey && (!publisher || !pageCount)) {
         try {
             const editionsUrl = `https://openlibrary.org${workKey}/editions.json?limit=10`;
-            const editionsRes = await fetchWithRetry(editionsUrl, { headers }, 8000);
+            const editionsRes = await fetchWithRetry(editionsUrl, { headers }, 15000);
             if (editionsRes.ok) {
                 const editionsData: OpenLibraryEditionsResponse = await editionsRes.json();
                 if (editionsData.entries && editionsData.entries.length > 0) {
@@ -219,7 +219,7 @@ export async function fetchOpenLibraryMetadataBySearch(
     if (authorQuery && authorQuery.trim()) params.append("author", authorQuery.trim());
 
     const url = `https://openlibrary.org/search.json?${params.toString()}`;
-    const response = await fetchWithRetry(url, { headers }, 10000);
+    const response = await fetchWithRetry(url, { headers }, 20000);
 
     if (!response.ok) return null;
 
@@ -253,7 +253,7 @@ export async function fetchOpenLibraryMetadataBySearch(
     if (workKey) {
         try {
             const workUrl = `https://openlibrary.org${workKey}.json`;
-            const workRes = await fetchWithRetry(workUrl, { headers }, 8000);
+            const workRes = await fetchWithRetry(workUrl, { headers }, 15000);
             if (workRes.ok) {
                 const workData: OpenLibraryWorkResponse = await workRes.json();
 

@@ -16,9 +16,9 @@ export function useBookDetailsScreen(bookId: string) {
         scaleFrom: 0.8,
     });
     const incrementBookViews = useMutation(api.books.incrementBookViews);
-    const book = useQuery(api.books.get, {
-        bookId: bookId as Id<"books">,
-    });
+    const book = useQuery(api.books.get,
+        bookId ? { bookId: bookId as Id<"books"> } : "skip"
+    );
     const relatedBooks = useQuery(
         api.books.getRelatedBooks,
         bookId ? { bookId: bookId as Id<"books"> } : "skip"

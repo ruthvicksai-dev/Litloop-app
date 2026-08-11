@@ -61,14 +61,20 @@ export default function BookReviews({ bookId, limit, hasMore, onLoadMore, isAdmi
     const { accessToken, userId } = useAuthState();
     const { showToast } = useToast();
     
-    const reviewsData = useQuery(api.reviews.getBookReviews, {
-        bookId: bookId as Id<"books">,
-        accessToken: accessToken ?? undefined,
-        ...(limit ? { limit } : {})
-    });
+    const reviewsData = useQuery(api.reviews.getBookReviews,
+        bookId
+            ? {
+                bookId: bookId as Id<"books">,
+                accessToken: accessToken ?? undefined,
+                ...(limit ? { limit } : {})
+            }
+            : "skip"
+    );
     const reviews = reviewsData as Review[] | undefined;
     
-    const summaryData = useQuery(api.reviews.getBookReviewSummary, { bookId: bookId as Id<"books"> });
+    const summaryData = useQuery(api.reviews.getBookReviewSummary,
+        bookId ? { bookId: bookId as Id<"books"> } : "skip"
+    );
     const summary = summaryData as ReviewSummary | undefined;
     
     const reportReviewMutation = useMutation(api.reviews.reportReview);

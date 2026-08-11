@@ -20,7 +20,9 @@ export function useEditBookScreen(bookId: string) {
     const { showToast } = useToast();
     const { accessToken } = useAuthState();
 
-    const book = useQuery(api.books.get, { bookId: bookId as Id<"books"> });
+    const book = useQuery(api.books.get,
+        bookId ? { bookId: bookId as Id<"books"> } : "skip"
+    );
     const updateBook = useMutation(api.books.update);
     const removeBook = useMutation(api.books.remove);
     const generateUploadUrl = useMutation(api.books.generateUploadUrl);

@@ -13,7 +13,20 @@ export const getUser = query({
             throw new Error("Unauthorized");
         }
 
-        return await ctx.db.get(args.userId);
+        const user = await ctx.db.get(args.userId);
+        if (!user) return null;
+
+        return {
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            avatarUrl: user.avatarUrl,
+            role: user.role,
+            isVerifiedStudent: user.isVerifiedStudent,
+            acceptedTerms: user.acceptedTerms,
+            createdAt: user.createdAt,
+        };
     },
 });
 
@@ -21,6 +34,25 @@ export const listUsers = query({
     args: { accessToken: v.string(), paginationOpts: paginationOptsValidator },
     handler: async (ctx, args) => {
         await assertAdmin(ctx, args.accessToken);
-        return await ctx.db.query("users").order("desc").paginate(args.paginationOpts);
+        const results = await ctx.db
+            .query("users")
+            .withIndex("by_createdAt")
+            .order("desc")
+            .paginate(args.paginationOpts);
+
+        return {
+            ...results,
+            page: results.page.map((user) => ({
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                phone: user.phone,
+                avatarUrl: user.avatarUrl,
+                role: user.role,
+                isVerifiedStudent: user.isVerifiedStudent,
+                acceptedTerms: user.acceptedTerms,
+                createdAt: user.createdAt,
+            })),
+        };
     },
 });

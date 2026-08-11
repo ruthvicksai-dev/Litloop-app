@@ -23,7 +23,7 @@ export async function fetchOpenLibraryCoverCandidate(isbn: string): Promise<stri
     const cleanUrl = `https://covers.openlibrary.org/b/isbn/${encodeURIComponent(isbn)}-L.jpg`;
 
     try {
-        const response = await fetchWithTimeout(rawUrl, { method: "GET" }, 8000);
+        const response = await fetchWithTimeout(rawUrl, { method: "GET" }, 15000);
 
         if (!response.ok) return null;
 
@@ -76,7 +76,7 @@ export async function fetchSerpApiCoverCandidates(
         const response = await fetchWithTimeout(
             `https://serpapi.com/search.json?${params.toString()}`,
             { method: "GET" },
-            10000
+            20000
         );
 
         if (!response.ok) return [];
