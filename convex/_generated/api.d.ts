@@ -12,6 +12,7 @@ import type * as analytics from "../analytics.js";
 import type * as analytics_helpers from "../analytics/helpers.js";
 import type * as analytics_read from "../analytics/read.js";
 import type * as analytics_write from "../analytics/write.js";
+import type * as appVersion from "../appVersion.js";
 import type * as auth from "../auth.js";
 import type * as auth_helpers from "../auth/helpers.js";
 import type * as auth_password from "../auth/password.js";
@@ -105,6 +106,7 @@ declare const fullApi: ApiFromModules<{
   "analytics/helpers": typeof analytics_helpers;
   "analytics/read": typeof analytics_read;
   "analytics/write": typeof analytics_write;
+  appVersion: typeof appVersion;
   auth: typeof auth;
   "auth/helpers": typeof auth_helpers;
   "auth/password": typeof auth_password;

@@ -1,9 +1,11 @@
 import AppSplash from "@/components/ui/AppSplash";
 import ErrorBoundary from "@/components/ui/feedback/ErrorBoundary";
+import ForceUpdateGate from "@/components/ui/feedback/ForceUpdateGate";
 import { NotificationPermissionModal, useNotificationRationale } from "@/components/ui/feedback/NotificationPermissionModal";
 import { Colors } from "@/constants/theme";
 import { useAuthState } from "@/context/AuthContext";
 import { api } from "@/convex/_generated/api";
+import { useForceUpdate } from "@/hooks/useForceUpdate";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useMutation } from "convex/react";
 import Constants from "expo-constants";
@@ -21,6 +23,9 @@ export default function AppGate({ fontsLoaded }: { fontsLoaded: boolean }) {
   const [isSplashAnimationDone, setIsSplashAnimationDone] = useState(hasCompletedStartupSplash);
   const [hasResolvedInitialAuth, setHasResolvedInitialAuth] = useState(false);
   const showSplash = !isSplashAnimationDone || !hasResolvedInitialAuth;
+
+  // Force update gate — Google native (primary) + Convex backend (fallback)
+  const { showFallbackModal, storeUrl, currentVersion, minVersion } = useForceUpdate();
 
   // Initialize push notifications for the logged-in user
   useNotifications(userId, accessToken, user?.role);
@@ -106,6 +111,14 @@ export default function AppGate({ fontsLoaded }: { fontsLoaded: boolean }) {
         onAllow={onAllow}
         onDecline={onDecline}
         onGranted={requestSystemNotificationPermission}
+      />
+
+      {/* Force update fallback gate — blocks app if backend detects outdated version */}
+      <ForceUpdateGate
+        visible={showFallbackModal}
+        storeUrl={storeUrl}
+        currentVersion={currentVersion}
+        minVersion={minVersion}
       />
     </>
   );
