@@ -178,27 +178,56 @@ export default function MyRentalsScreen() {
   }
 
   const handleRentalPress = (rental: (typeof rentals)[number]) => {
-    if (rental.status === "delivered") {
-      const deliveryTimestamp = rental.deliveredAt
-        ? rental.deliveredAt
-        : (rental.deliveryDate ? new Date(rental.deliveryDate).getTime() : 0);
-      const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
-      const elapsed = Date.now() - deliveryTimestamp;
+    switch (rental.status) {
+      case "delivered": {
+        const deliveryTimestamp = rental.deliveredAt
+          ? rental.deliveredAt
+          : (rental.deliveryDate ? new Date(rental.deliveryDate).getTime() : 0);
+        const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
+        const elapsed = Date.now() - deliveryTimestamp;
 
-      if (deliveryTimestamp > 0 && elapsed < TWELVE_HOURS_MS) {
-        const hoursLeft = Math.ceil((TWELVE_HOURS_MS - elapsed) / (1000 * 60 * 60));
-        showToast(
-          `Pickup Will be enabled after 12 hours from delivery (${hoursLeft}h remaining).`,
-          "info"
-        );
+        if (deliveryTimestamp > 0 && elapsed < TWELVE_HOURS_MS) {
+          const hoursLeft = Math.ceil((TWELVE_HOURS_MS - elapsed) / (1000 * 60 * 60));
+          showToast(
+            `Pickup will be enabled after 12 hours from delivery (${hoursLeft}h remaining).`,
+            "info"
+          );
+          return;
+        }
+
+        router.push(`/rental/schedule-return?rentalId=${rental._id}`);
         return;
       }
-    } else if (rental.status === "pickup_scheduled" || rental.status === "payment_pending") {
-      if (rental.paymentStatus === "cash_pending" || rental.paymentMethod === "cash" || rental.paymentStatus === "paid") {
-        showToast("Your return pickup is scheduled. Please keep the book ready for collection!", "info");
-      } else {
-        router.push(`/rental/payment?rentalId=${rental._id}`);
+
+      case "pickup_scheduled":
+      case "payment_pending": {
+        if (rental.paymentStatus === "cash_pending" || rental.paymentMethod === "cash" || rental.paymentStatus === "paid") {
+          showToast("Your return pickup is scheduled. Please keep the book ready for collection!", "info");
+        } else {
+          router.push(`/rental/payment?rentalId=${rental._id}`);
+        }
+        return;
       }
+
+      case "requested": {
+        showToast("Your rental request is pending approval. We'll notify you once confirmed!", "info");
+        return;
+      }
+
+      case "delivery_scheduled": {
+        const timeInfo = rental.deliveryTime ? ` at ${rental.deliveryTime}` : "";
+        const dateInfo = rental.deliveryDate ? ` on ${rental.deliveryDate}` : "";
+        showToast(`Your book is scheduled for delivery${dateInfo}${timeInfo}.`, "info");
+        return;
+      }
+
+      case "paid": {
+        showToast("Payment completed! Your book return will be collected as scheduled.", "info");
+        return;
+      }
+
+      default:
+        return;
     }
   };
 
